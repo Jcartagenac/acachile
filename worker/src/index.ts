@@ -57,6 +57,48 @@ import {
   handleInscripcionesEvento
 } from './inscripciones-handlers';
 
+// Importamos los handlers de noticias
+import {
+  handleNoticias as handleNoticiasNew,
+  handleNoticiaBySlug,
+  handleNoticiaCategorias,
+  handleNoticiaTags
+} from './news-handlers';
+
+// Importamos los handlers de comentarios
+import {
+  handleComentarios,
+  handleModerarComentarios,
+  handleLikes,
+  handleCompartir
+} from './comments-handlers';
+
+// Importamos los handlers de autenticación
+import {
+  handleLogin as handleLoginNew,
+  handleRegistro,
+  handlePerfil,
+  handleVerificarToken,
+  handleLogout
+} from './auth-handlers';
+
+// Importamos los handlers de administración
+import {
+  handleAdminDashboard,
+  handleAdminUsuarios,
+  handleAdminComentarios,
+  handleAdminActividad,
+  handleAdminHerramientas
+} from './admin-handlers';
+
+// Importamos los handlers de búsqueda
+import {
+  handleBusqueda,
+  handleSugerencias,
+  handleBusquedaAvanzada,
+  handleBusquedasPopulares
+} from './search-handlers';
+
 // Importamos la migración a D1
 import { runMigration } from './migration';
 
@@ -94,16 +136,37 @@ export default {
           return handleEventos(request, env);
         
         case '/api/noticias':
-          return handleNoticias(request, env);
+          return handleNoticiasNew(request, env);
+        
+        case '/api/noticias/categorias':
+          return handleNoticiaCategorias(request, env);
+        
+        case '/api/noticias/tags':
+          return handleNoticiaTags(request, env);
+        
+        case '/api/comentarios':
+          return handleComentarios(request, env);
         
         case '/api/auth/login':
-          return handleLogin(request, env);
+          return handleLoginNew(request, env);
+        
+        case '/api/auth/registro':
+          return handleRegistro(request, env);
         
         case '/api/auth/register':
           return handleRegister(request, env);
         
         case '/api/auth/profile':
           return handleProfile(request, env);
+        
+        case '/api/auth/perfil':
+          return handlePerfil(request, env);
+        
+        case '/api/auth/verificar-token':
+          return handleVerificarToken(request, env);
+        
+        case '/api/auth/logout':
+          return handleLogout(request, env);
         
         case '/api/auth/forgot-password':
           return handleForgotPassword(request, env);
@@ -132,6 +195,33 @@ export default {
         case '/api/admin/migrate-to-d1':
           return handleMigrationToD1(request, env);
         
+        case '/api/admin/dashboard':
+          return handleAdminDashboard(request, env);
+        
+        case '/api/admin/usuarios':
+          return handleAdminUsuarios(request, env);
+        
+        case '/api/admin/comentarios':
+          return handleAdminComentarios(request, env);
+        
+        case '/api/admin/actividad':
+          return handleAdminActividad(request, env);
+        
+        case '/api/admin/herramientas':
+          return handleAdminHerramientas(request, env);
+        
+        case '/api/busqueda':
+          return handleBusqueda(request, env);
+        
+        case '/api/busqueda/sugerencias':
+          return handleSugerencias(request, env);
+        
+        case '/api/busqueda/avanzada':
+          return handleBusquedaAvanzada(request, env);
+        
+        case '/api/busqueda/populares':
+          return handleBusquedasPopulares(request, env);
+        
         default:
           // Handle dynamic routes
           if (url.pathname.startsWith('/api/eventos/') && url.pathname.includes('/inscribirse')) {
@@ -148,6 +238,31 @@ export default {
           
           if (url.pathname.startsWith('/api/eventos/')) {
             return handleEventosById(request, env);
+          }
+          
+          // Rutas dinámicas para noticias
+          if (url.pathname.startsWith('/api/noticias/') && !url.pathname.includes('/categorias') && !url.pathname.includes('/tags')) {
+            return handleNoticiaBySlug(request, env);
+          }
+          
+          // Rutas dinámicas para comentarios de moderación
+          if (url.pathname.startsWith('/api/admin/comentarios/')) {
+            return handleModerarComentarios(request, env);
+          }
+          
+          // Rutas dinámicas para usuarios admin
+          if (url.pathname.startsWith('/api/admin/usuarios/')) {
+            return handleAdminUsuarios(request, env);
+          }
+          
+          // Rutas para likes
+          if (url.pathname.startsWith('/api/likes/')) {
+            return handleLikes(request, env);
+          }
+          
+          // Rutas para compartir
+          if (url.pathname.startsWith('/api/compartir/')) {
+            return handleCompartir(request, env);
           }
           
           return new Response('Not Found', { 
