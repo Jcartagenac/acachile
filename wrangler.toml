@@ -7,3 +7,6 @@ publish = "frontend/dist"
 
 [build.environment_variables]
 NODE_VERSION = "18"
+
+# Required property for Pages
+pages_build_output_dir = "frontend/dist"
