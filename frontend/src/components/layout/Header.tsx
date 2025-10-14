@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Container } from './Container';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserMenu, AuthModal } from '../auth';
+import SearchBar from '../SearchBar';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,7 +39,15 @@ export const Header: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Search Bar and Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4 flex-1 max-w-2xl mx-8">
+            <SearchBar 
+              placeholder="Buscar eventos, noticias..."
+              size="medium"
+              className="flex-1"
+            />
+          </div>
+
           <nav className="hidden md:flex items-center space-x-2">
             {navigation.map((item) => (
               <Link

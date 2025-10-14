@@ -12,3 +12,9 @@ export { BlogPage, PostDetailPage } from './BlogPage';
 export { ContactPage } from './ContactPage';
 export { NotFoundPage } from './NotFoundPage';
 export { default as AdminPanelPage } from './AdminPanelPage';
+
+// Nuevas páginas
+export { default as NewsPage } from './NewsPage';
+export { default as NewsDetailPage } from './NewsDetailPage';
+export { default as SearchResultsPage } from './SearchResultsPage';
+export { default as AdminDashboard } from './AdminDashboard';

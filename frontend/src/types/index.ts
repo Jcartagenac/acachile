@@ -36,6 +36,67 @@ export interface Post {
   updatedAt: Date;
 }
 
+// Nuevos tipos para el sistema de noticias
+export interface NewsArticle {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featured_image?: string;
+  author_id: number;
+  author_name: string;
+  category_id: number;
+  category: NewsCategory;
+  tags: NewsTag[];
+  status: 'draft' | 'published' | 'archived';
+  is_featured: boolean;
+  view_count: number;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewsCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewsTag {
+  id: number;
+  name: string;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Comment {
+  id: number;
+  article_id: number;
+  author_name: string;
+  author_email: string;
+  content: string;
+  status: 'pending' | 'approved' | 'spam' | 'rejected';
+  parent_id?: number;
+  created_at: string;
+  replies?: Comment[];
+}
+
+export interface SearchResult {
+  type: 'evento' | 'noticia' | 'usuario';
+  id: number;
+  title: string;
+  description: string;
+  url: string;
+  date: string;
+  relevance: number;
+}
+
 export interface Member {
   id: string;
   firstName: string;
