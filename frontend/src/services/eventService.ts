@@ -92,28 +92,28 @@ class EventService {
   }
 
   // Inscribirse en evento
-  async inscribirseEvento(eventId: number): Promise<ApiResponse<EventInscription>> {
-    return this.request<ApiResponse<EventInscription>>('/api/eventos/inscripcion', {
+  async inscribirseEvento(eventId: number, notes?: string): Promise<ApiResponse<EventInscription>> {
+    return this.request<ApiResponse<EventInscription>>(`/api/eventos/${eventId}/inscribirse`, {
       method: 'POST',
-      body: JSON.stringify({ eventId }),
+      body: JSON.stringify({ notes }),
     });
   }
 
   // Cancelar inscripción
-  async cancelarInscripcion(inscriptionId: number): Promise<ApiResponse<null>> {
-    return this.request<ApiResponse<null>>(`/api/eventos/inscripcion/${inscriptionId}`, {
+  async cancelarInscripcion(inscriptionId: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/api/inscripciones/${inscriptionId}`, {
       method: 'DELETE',
     });
   }
 
   // Obtener inscripciones del usuario
   async getMyInscripciones(): Promise<ApiResponse<EventInscription[]>> {
-    return this.request<ApiResponse<EventInscription[]>>('/api/eventos/mis-inscripciones');
+    return this.request<ApiResponse<EventInscription[]>>('/api/mis-inscripciones');
   }
 
   // Obtener participantes de un evento (solo organizadores)
   async getEventParticipants(eventId: number): Promise<ApiResponse<EventInscription[]>> {
-    return this.request<ApiResponse<EventInscription[]>>(`/api/eventos/${eventId}/participantes`);
+    return this.request<ApiResponse<EventInscription[]>>(`/api/eventos/${eventId}/inscripciones`);
   }
 
   // Subir imagen de evento

@@ -1,7 +1,8 @@
 export { HomePage } from './HomePage';
 export { AboutPage } from './AboutPage';
 export { JoinPage } from './JoinPage';
-export { EventsPage, EventDetailPage } from './EventsPage';
+export { EventsPage } from './EventsPage';
+export { default as EventDetailPage } from './EventDetailPage';
 export { CreateEventPage } from './CreateEventPage';
 export { MyEventsPage } from './MyEventsPage';
 export { AuthPage } from './AuthPage';

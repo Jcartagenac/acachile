@@ -51,13 +51,28 @@ export interface EventoForm {
 }
 
 export interface EventInscription {
-  id: number;
-  eventId: number;
+  id: string;
   userId: number;
+  eventId: number;
+  userInfo: {
+    name: string;
+    email: string;
+    phone?: string;
+    region?: string;
+  };
+  eventInfo: {
+    title: string;
+    date: string;
+    location: string;
+    price?: number;
+  };
+  status: 'confirmed' | 'pending' | 'cancelled' | 'waitlist';
   inscriptionDate: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  paymentStatus?: 'pending' | 'paid' | 'refunded';
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentAmount?: number;
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Noticias

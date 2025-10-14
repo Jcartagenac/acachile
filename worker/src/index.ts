@@ -48,6 +48,14 @@ import {
 // Importamos el handler de inicialización de eventos
 import { handleInitEventos } from './eventos-handler';
 
+// Importamos los handlers de inscripciones
+import {
+  handleInscribirseEvento,
+  handleMisInscripciones,
+  handleCancelarInscripcion,
+  handleInscripcionesEvento
+} from './inscripciones-handlers';
+
 // CORS headers para permitir requests del frontend
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Permitimos todos los orígenes por simplicidad
@@ -114,8 +122,23 @@ export default {
         case '/api/admin/eventos/init':
           return handleInitEventos(request, env);
         
+        case '/api/mis-inscripciones':
+          return handleMisInscripciones(request, env);
+        
         default:
           // Handle dynamic routes
+          if (url.pathname.startsWith('/api/eventos/') && url.pathname.includes('/inscribirse')) {
+            return handleInscribirseEvento(request, env);
+          }
+          
+          if (url.pathname.startsWith('/api/eventos/') && url.pathname.includes('/inscripciones')) {
+            return handleInscripcionesEvento(request, env);
+          }
+          
+          if (url.pathname.startsWith('/api/inscripciones/')) {
+            return handleCancelarInscripcion(request, env);
+          }
+          
           if (url.pathname.startsWith('/api/eventos/')) {
             return handleEventosById(request, env);
           }
