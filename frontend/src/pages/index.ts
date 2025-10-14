@@ -10,3 +10,4 @@ export { default as ResetPasswordPage } from './ResetPasswordPage';
 export { BlogPage, PostDetailPage } from './BlogPage';
 export { ContactPage } from './ContactPage';
 export { NotFoundPage } from './NotFoundPage';
+export { default as AdminPanelPage } from './AdminPanelPage';

@@ -96,6 +96,9 @@ export interface User {
   avatar?: string;
   joinDate: string;
   active: boolean;
+  roles?: string[];
+  status?: 'active' | 'pending' | 'suspended';
+  emailVerified?: boolean;
 }
 
 export interface AuthUser {

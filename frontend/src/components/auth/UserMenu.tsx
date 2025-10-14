@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings, ChevronDown, Calendar } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Calendar, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,9 @@ export const UserMenu: React.FC = () => {
     logout();
     setIsOpen(false);
   };
+
+  // Verificar si el usuario es admin
+  const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
 
   return (
     <div className="relative">
@@ -111,6 +114,21 @@ export const UserMenu: React.FC = () => {
                 <Calendar className="w-4 h-4 mr-3" />
                 Mis Eventos
               </button>
+
+              {/* Admin Panel Link - Solo visible para admins */}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/admin');
+                  }}
+                  className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
+                  style={{ color: '#DC2626' }}
+                >
+                  <Shield className="w-4 h-4 mr-3" />
+                  Panel Administrativo
+                </button>
+              )}
               
               <button
                 onClick={() => {

@@ -14,7 +14,8 @@ import {
   BlogPage,
   PostDetailPage,
   ContactPage,
-  NotFoundPage 
+  NotFoundPage,
+  AdminPanelPage 
 } from './pages';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/admin" element={<AdminPanelPage />} />
           <Route path="/noticias" element={<BlogPage />} />
           <Route path="/noticias/:slug" element={<PostDetailPage />} />
           <Route path="/contacto" element={<ContactPage />} />
