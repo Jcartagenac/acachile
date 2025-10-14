@@ -1,5 +1,6 @@
 import { ApiResponse, AuthResponse, User } from '@shared/index';
 import Cookies from 'js-cookie';
+import { logger } from '../utils/logger';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-api-production.juecart.workers.dev';
 
@@ -37,6 +38,9 @@ const authService = {
   // Login
   login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
+      logger.auth.debug('Iniciando login', { email, api: API_BASE_URL });
+      logger.time('auth-login');
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -45,9 +49,23 @@ const authService = {
         body: JSON.stringify({ email, password }),
       });
 
+      logger.timeEnd('auth-login');
+      logger.auth.debug('Login response received', { 
+        status: response.status, 
+        statusText: response.statusText 
+      });
+
       const data = await response.json();
+      
+      if (data.success) {
+        logger.auth.info('Login exitoso', { userId: data.user?.id });
+      } else {
+        logger.auth.warn('Login falló', { error: data.error });
+      }
+      
       return data;
     } catch (error) {
+      logger.auth.error('Error en login request', error);
       return {
         success: false,
         error: 'Error de conexión',

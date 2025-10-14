@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Clock, TrendingUp } from 'lucide-react';
 import { searchService } from '../services/searchService';
+import { logger } from '../utils/logger';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -55,15 +56,24 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const loadSuggestions = async () => {
     try {
+      logger.search.debug('Cargando sugerencias', { query });
       setLoading(true);
       const response = await searchService.getSuggestions(query);
       
       if (response.success && response.data) {
+        logger.search.info('Sugerencias cargadas', { 
+          count: response.data.length,
+          suggestions: response.data 
+        });
         setSuggestions(response.data);
         setShowSuggestions(true);
+      } else {
+        logger.search.warn('No se pudieron cargar sugerencias', { 
+          error: response.error 
+        });
       }
     } catch (err) {
-      console.error('Error cargando sugerencias:', err);
+      logger.search.error('Error cargando sugerencias', err);
     } finally {
       setLoading(false);
     }
@@ -71,9 +81,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleSearch = (searchQuery: string = query) => {
     if (searchQuery.trim()) {
+      logger.search.info('Ejecutando búsqueda', { 
+        query: searchQuery.trim(),
+        source: 'SearchBar' 
+      });
       navigate(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
       setShowSuggestions(false);
       setQuery('');
+    } else {
+      logger.search.warn('Búsqueda vacía ignorada');
     }
   };
 

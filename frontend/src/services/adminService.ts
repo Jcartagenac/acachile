@@ -45,7 +45,7 @@ export interface DashboardStats {
   };
 }*/
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://acachile-api.juecart.workers.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-api-production.juecart.workers.dev';
 
 export interface AdminStats {
   usuarios: {

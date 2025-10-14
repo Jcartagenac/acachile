@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/layout';
+import { DebugPanel } from './components/debug';
 import { 
   HomePage, 
   AboutPage, 
@@ -60,6 +61,7 @@ function App() {
           <Route path="/contacto" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        <DebugPanel />
       </Layout>
     </Router>
   );

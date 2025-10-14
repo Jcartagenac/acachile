@@ -32,7 +32,7 @@ type EventAction =
   | { type: 'DELETE_EVENTO'; payload: number }
   | { type: 'SET_MY_INSCRIPCIONES'; payload: EventInscription[] }
   | { type: 'ADD_INSCRIPCION'; payload: EventInscription }
-  | { type: 'REMOVE_INSCRIPCION'; payload: number }
+  | { type: 'REMOVE_INSCRIPCION'; payload: string }
   | { type: 'SET_FILTERS'; payload: Partial<EventState['filters']> };
 
 const initialState: EventState = {
@@ -130,7 +130,7 @@ interface EventContextType extends EventState {
   updateEvento: (id: number, eventoData: Partial<EventoForm>) => Promise<Evento>;
   deleteEvento: (id: number) => Promise<void>;
   inscribirseEvento: (eventId: number) => Promise<void>;
-  cancelarInscripcion: (inscriptionId: number) => Promise<void>;
+  cancelarInscripcion: (inscriptionId: string) => Promise<void>;
   fetchMyInscripciones: () => Promise<void>;
   setFilters: (filters: Partial<EventState['filters']>) => void;
   clearError: () => void;
@@ -280,7 +280,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const cancelarInscripcion = useCallback(async (inscriptionId: number) => {
+  const cancelarInscripcion = useCallback(async (inscriptionId: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const response = await eventService.cancelarInscripcion(inscriptionId);

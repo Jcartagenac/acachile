@@ -12,7 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import authService from '../services/authService';
+import { authService } from '../services';
 
 interface PendingRegistration {
   id: string;

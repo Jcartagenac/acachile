@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 
 const loginSchema = z.object({
   email: z
@@ -41,12 +42,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      logger.auth.info('🔐 Iniciando proceso de login', { email: data.email });
       clearError();
+      
+      logger.time('login-form-submit');
       await login(data);
+      logger.timeEnd('login-form-submit');
+      
+      logger.auth.info('✅ Login exitoso desde formulario');
       reset();
       onSuccess?.();
     } catch (error) {
-      // El error ya está manejado en el contexto
+      logger.auth.error('❌ Error en login desde formulario:', error);
       console.error('Error en login:', error);
     }
   };

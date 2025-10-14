@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '@shared/index';
+import { logger } from '../utils/logger';
 
 interface AuthState {
   user: User | null;
@@ -117,9 +118,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (credentials: LoginRequest) => {
+    logger.auth.info('🔄 AuthContext: Iniciando login', { email: credentials.email });
     dispatch({ type: 'AUTH_START' });
     
     try {
+      logger.auth.debug('🌐 AuthContext: Enviando request a API', { url: `${API_BASE_URL}/api/auth/login` });
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -129,6 +133,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const data: AuthResponse = await response.json();
+      logger.auth.debug('📥 AuthContext: Response recibida', { 
+        success: data.success, 
+        status: response.status,
+        hasUser: !!data.data?.user,
+        hasToken: !!data.data?.token
+      });
 
       if (!response.ok) {
         throw new Error(data.error || 'Error en el login');
@@ -136,6 +146,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data.success && data.data) {
         const { user, token } = data.data;
+        logger.auth.info('✅ AuthContext: Login exitoso', { 
+          userId: user.id, 
+          userEmail: user.email,
+          tokenLength: token.length 
+        });
         
         // Guardar en cookies
         Cookies.set('auth_token', token, { expires: 7 }); // 7 días
@@ -148,6 +163,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      logger.auth.error('❌ AuthContext: Error en login', { 
+        error: errorMessage,
+        type: error instanceof Error ? 'Error' : typeof error
+      });
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }

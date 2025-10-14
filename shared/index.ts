@@ -112,7 +112,7 @@ export interface User {
   joinDate: string;
   active: boolean;
   roles?: string[];
-  status?: 'active' | 'pending' | 'suspended';
+  status?: 'active' | 'pending' | 'suspended' | 'banned';
   emailVerified?: boolean;
 }
 
