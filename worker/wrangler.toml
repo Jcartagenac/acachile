@@ -1,26 +1,33 @@
-name = "acachile-worker"
+# Configuración principal del Worker ACA Chile
+name = "acachile-api"
 main = "src/index.ts"
 compatibility_date = "2024-10-14"
-compatibility_flags = ["nodejs_compat"]
 
-[env.production]
-name = "acachile-worker"
-
-[env.staging]
-name = "acachile-worker-staging"
-
-# Variables de entorno
+# Variables de entorno para desarrollo
 [vars]
-ENVIRONMENT = "production"
+ENVIRONMENT = "development"
 
-# CORS settings para el frontend
+# Configuración de KV para almacenamiento
 [[kv_namespaces]]
 binding = "ACA_KV"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
+id = "b080082921d447e6995c8085f1033286"
+preview_id = "deda506587a1476a96578cb545f0128e"
 
-# D1 Database (si es necesario)
-# [[d1_databases]]
-# binding = "ACA_DB"
-# database_name = "acachile-db"
-# database_id = "your-database-id"
+# Entorno de producción
+[env.production]
+name = "acachile-api-production"
+vars = { ENVIRONMENT = "production" }
+
+# KV para producción
+[[env.production.kv_namespaces]]
+binding = "ACA_KV"
+id = "60fff9f10819406cad241e326950f056"
+
+# Entorno de staging
+[env.staging]
+name = "acachile-api-staging"
+vars = { ENVIRONMENT = "staging" }
+
+[[env.staging.kv_namespaces]]
+binding = "ACA_KV"
+id = "b080082921d447e6995c8085f1033286"

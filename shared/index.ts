@@ -8,13 +8,56 @@ export interface Evento {
   id: number;
   title: string;
   date: string;
+  time?: string;
   location: string;
   description: string;
   image: string;
   type: 'campeonato' | 'taller' | 'encuentro' | 'torneo';
-  registrationOpen?: boolean;
+  registrationOpen: boolean;
   maxParticipants?: number;
-  currentParticipants?: number;
+  currentParticipants: number;
+  price?: number;
+  requirements?: string[];
+  organizerId: number;
+  createdAt: string;
+  updatedAt: string;
+  status: 'draft' | 'published' | 'cancelled' | 'completed';
+  tags?: string[];
+  contactInfo?: {
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+}
+
+export interface EventoForm {
+  title: string;
+  date: string;
+  time?: string;
+  location: string;
+  description: string;
+  image?: string;
+  type: 'campeonato' | 'taller' | 'encuentro' | 'torneo';
+  registrationOpen: boolean;
+  maxParticipants?: number;
+  price?: number;
+  requirements?: string[];
+  tags?: string[];
+  contactInfo?: {
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+}
+
+export interface EventInscription {
+  id: number;
+  eventId: number;
+  userId: number;
+  inscriptionDate: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  paymentStatus?: 'pending' | 'paid' | 'refunded';
+  notes?: string;
 }
 
 // Noticias
