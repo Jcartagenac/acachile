@@ -1,7 +1,10 @@
 # Configuración principal del Worker ACA Chile
+# IMPORTANTE: Siempre usar la cuenta juecart@gmail.com
+# Account ID: 172194a6569df504cbb8a638a94d3d2c
 name = "acachile-api"
 main = "src/index.ts"
 compatibility_date = "2024-10-14"
+account_id = "172194a6569df504cbb8a638a94d3d2c"
 
 # Variables de entorno para desarrollo
 [vars]

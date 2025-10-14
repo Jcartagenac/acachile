@@ -1,5 +1,21 @@
 # Configuraciones Recomendadas en Cloudflare Dashboard
 
+## ⚠️ CUENTA CLOUDFLARE - CONFIGURACIÓN CRÍTICA
+
+**IMPORTANTE**: Siempre usar la siguiente cuenta para todos los despliegues:
+
+- **Email**: `juecart@gmail.com`
+- **Account ID**: `172194a6569df504cbb8a638a94d3d2c`
+
+**NUNCA usar**: `ps.patriciacartagenachel@gmail.com`
+
+### Verificación de Cuenta
+```bash
+npx wrangler whoami
+```
+
+---
+
 ## 🎯 Configuraciones OBLIGATORIAS
 
 ### 1. Variables de Entorno Secretas
