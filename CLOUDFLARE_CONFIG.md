@@ -14,13 +14,14 @@ Ya configurado:
 Agregar estas variables:
 ```
 ADMIN_EMAIL = tu-email@acachile.com
-CORS_ORIGIN = https://acachile.com,http://localhost:5173
+CORS_ORIGIN = https://acachile.pages.dev,http://localhost:5173
 ```
 
 **B) Workers & Pages → acachile-api-staging → Settings → Triggers → Custom Domains**
-Si tienes el dominio acachile.com:
-- Agregar: `api-staging.acachile.com`
-- Para producción: `api.acachile.com`
+Para el frontend en Cloudflare Pages:
+- Frontend URL: `https://acachile.pages.dev`
+- API Staging: `https://acachile-api-staging.juecart.workers.dev`
+- API Producción: `https://acachile-api-production.juecart.workers.dev`
 
 **C) Workers & Pages → acachile-api-staging → Settings → General → Usage Model**
 - Cambiar a "Bundled" si esperas mucho tráfico
@@ -53,10 +54,11 @@ wrangler secret put JWT_SECRET --env production
 wrangler secret put DATABASE_URL --env production  # Si usas base de datos
 ```
 
-### Dominios Recomendados:
-- **Staging**: `https://api-staging.acachile.com`
-- **Producción**: `https://api.acachile.com`
-- **Desarrollo**: `http://localhost:8787`
+### URLs del Proyecto:
+- **Frontend**: `https://acachile.pages.dev`
+- **API Staging**: `https://acachile-api-staging.juecart.workers.dev`
+- **API Producción**: `https://acachile-api-production.juecart.workers.dev`
+- **Desarrollo Local**: `http://localhost:5173`
 
 ---
 

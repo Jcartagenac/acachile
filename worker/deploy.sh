@@ -15,7 +15,8 @@ deploy_staging() {
   wrangler deploy --env staging
   if [ $? -eq 0 ]; then
     echo "✅ Staging desplegado correctamente"
-    echo "🌐 URL: https://acachile-api-staging.{tu-subdomain}.workers.dev"
+    echo "🌐 API URL: https://acachile-api-staging.juecart.workers.dev"
+    echo "🌐 Frontend: https://acachile.pages.dev"
   else
     echo "❌ Error en despliegue de staging"
     exit 1
@@ -32,7 +33,8 @@ deploy_production() {
     wrangler deploy --env production
     if [ $? -eq 0 ]; then
       echo "✅ Producción desplegada correctamente"
-      echo "🌐 URL: https://acachile-api-production.{tu-subdomain}.workers.dev"
+      echo "🌐 API URL: https://acachile-api-production.juecart.workers.dev"
+      echo "🌐 Frontend: https://acachile.pages.dev"
     else
       echo "❌ Error en despliegue de producción"
       exit 1

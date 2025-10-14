@@ -12,8 +12,9 @@ export interface Env {
 }
 
 // CORS headers para permitir requests del frontend
+// Permitimos el dominio de Cloudflare Pages y desarrollo local
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // Permitimos todos los orígenes por ahora
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
