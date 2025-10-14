@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Calendar } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -98,6 +100,18 @@ export const UserMenu: React.FC = () => {
 
             {/* Menu Items */}
             <div className="py-2">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/eventos/mis-eventos');
+                }}
+                className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
+                style={{ color: '#374151' }}
+              >
+                <Calendar className="w-4 h-4 mr-3" />
+                Mis Eventos
+              </button>
+              
               <button
                 onClick={() => {
                   setIsOpen(false);

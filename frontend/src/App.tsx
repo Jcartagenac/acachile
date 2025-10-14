@@ -6,6 +6,9 @@ import {
   JoinPage, 
   EventsPage, 
   EventDetailPage,
+  CreateEventPage,
+  MyEventsPage,
+  AuthPage,
   BlogPage,
   PostDetailPage,
   ContactPage,
@@ -21,7 +24,10 @@ function App() {
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
           <Route path="/eventos" element={<EventsPage />} />
+          <Route path="/eventos/crear" element={<CreateEventPage />} />
+          <Route path="/eventos/mis-eventos" element={<MyEventsPage />} />
           <Route path="/eventos/:id" element={<EventDetailPage />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/noticias" element={<BlogPage />} />
           <Route path="/noticias/:slug" element={<PostDetailPage />} />
           <Route path="/contacto" element={<ContactPage />} />

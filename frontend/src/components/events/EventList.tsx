@@ -109,7 +109,7 @@ export const EventList: React.FC = () => {
 
         {isAuthenticated && (
           <Link
-            to="/eventos/nuevo"
+            to="/eventos/crear"
             className="flex items-center space-x-2 px-6 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
             style={{ 
               background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
