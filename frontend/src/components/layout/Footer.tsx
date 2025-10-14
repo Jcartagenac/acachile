@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container } from '../ui/Container';
+import { Container } from './Container';
 
 export const Footer: React.FC = () => {
   return (

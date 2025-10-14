@@ -1,0 +1,17 @@
+{
+  "name": "@acachile/shared",
+  "version": "1.0.0",
+  "description": "Tipos y utilidades compartidas entre frontend y worker",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint **/*.ts"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.6.0"
+  }
+}

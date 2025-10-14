@@ -1,0 +1,26 @@
+name = "acachile-worker"
+main = "src/index.ts"
+compatibility_date = "2024-10-14"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "acachile-worker"
+
+[env.staging]
+name = "acachile-worker-staging"
+
+# Variables de entorno
+[vars]
+ENVIRONMENT = "production"
+
+# CORS settings para el frontend
+[[kv_namespaces]]
+binding = "ACA_KV"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+# D1 Database (si es necesario)
+# [[d1_databases]]
+# binding = "ACA_DB"
+# database_name = "acachile-db"
+# database_id = "your-database-id"

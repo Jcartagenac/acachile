@@ -1,73 +1,132 @@
-# React + TypeScript + Vite
+# ACA Chile - Asociación Chilena de Asadores
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 🔥 Monorepo Full-Stack
 
-Currently, two official plugins are available:
+Este proyecto contiene tanto el frontend como el backend de la plataforma ACA Chile, construido como un monorepo para máxima eficiencia y mantenibilidad.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🏗️ Estructura del Proyecto
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+acachile/
+├── frontend/          # React + TypeScript + TailwindCSS
+│   ├── src/           # Código fuente del frontend
+│   ├── public/        # Assets estáticos
+│   └── dist/          # Build de producción
+├── worker/            # Cloudflare Worker (API/Backend)
+│   ├── src/           # Código fuente del worker
+│   └── wrangler.toml  # Configuración de Cloudflare
+├── shared/            # Tipos y utilidades compartidas
+│   └── index.ts       # Tipos TypeScript compartidos
+└── package.json       # Configuración del workspace
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Tecnologías
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Frontend
+- **React 18** con TypeScript
+- **Vite** como build tool
+- **TailwindCSS** con diseño neumórfico
+- **React Router** para navegación
+- **Cloudflare Pages** para deployment
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Backend/Worker
+- **Cloudflare Workers** (Edge computing)
+- **TypeScript** 
+- **KV Storage** para datos
+- **Wrangler** para deployment
+
+### Shared
+- **TypeScript** para tipos compartidos
+- **Utilidades** comunes entre frontend y backend
+
+## 📦 Instalación
+
+```bash
+# Instalar dependencias del monorepo
+npm install
+
+# Instalar dependencias específicas
+npm install --workspace=frontend
+npm install --workspace=worker
+npm install --workspace=shared
 ```
+
+## 🛠️ Desarrollo
+
+```bash
+# Frontend (React + Vite)
+npm run dev
+
+# Worker (Cloudflare Worker)
+npm run dev --workspace=worker
+
+# Ambos en paralelo
+npm run dev:all
+```
+
+## 🏗️ Build
+
+```bash
+# Build del frontend
+npm run build
+
+# Build del worker
+npm run build:worker
+
+# Build completo
+npm run build:all
+```
+
+## 🚀 Deployment
+
+### Cloudflare Pages (Frontend)
+```bash
+# Configuración automática desde GitHub
+# Rama: main
+# Build command: cd frontend && npm run build
+# Build output: frontend/dist
+```
+
+### Cloudflare Workers (Backend)
+```bash
+npm run deploy:worker
+```
+
+## 🔧 Scripts Disponibles
+
+| Script | Descripción |
+|--------|-------------|
+| `npm run dev` | Inicia servidor de desarrollo del frontend |
+| `npm run build` | Build del frontend |
+| `npm run build:worker` | Build del worker |
+| `npm run build:all` | Build completo (worker + frontend) |
+| `npm run deploy` | Deploy completo |
+| `npm run deploy:frontend` | Deploy solo frontend |
+| `npm run deploy:worker` | Deploy solo worker |
+
+## 🌍 URLs
+
+- **Frontend**: https://acachile.pages.dev
+- **Worker API**: https://acachile-worker.your-subdomain.workers.dev
+
+## 🔗 API Endpoints
+
+- `GET /api/health` - Health check del worker
+- `GET /api/eventos` - Lista de eventos
+- `GET /api/noticias` - Lista de noticias
+
+## 👥 Desarrollo
+
+1. **Fork** el repositorio
+2. **Crear rama** para tu feature: `git checkout -b feature/nueva-funcionalidad`
+3. **Commit** cambios: `git commit -m 'Add nueva funcionalidad'`
+4. **Push** a la rama: `git push origin feature/nueva-funcionalidad`
+5. **Crear Pull Request**
+
+## 📄 Licencia
+
+MIT License - Ver [LICENSE](LICENSE) para detalles.
+
+---
+
+**🔥 ACA Chile - Asociación Chilena de Asadores**
