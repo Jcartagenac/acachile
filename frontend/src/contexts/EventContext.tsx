@@ -301,19 +301,14 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
   const fetchMyInscripciones = useCallback(async () => {
     if (!user) return;
     
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const response = await eventService.getMyInscripciones();
       if (response.success && response.data) {
         dispatch({ type: 'SET_MY_INSCRIPCIONES', payload: response.data });
       }
     } catch (error) {
-      dispatch({
-        type: 'SET_ERROR',
-        payload: error instanceof Error ? error.message : 'Error al cargar inscripciones',
-      });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      // No seteamos error global para inscripciones, solo log para debug
+      console.error('Error loading user inscriptions:', error);
     }
   }, [user]);
 
