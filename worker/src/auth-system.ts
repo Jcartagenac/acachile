@@ -9,6 +9,9 @@ export interface Env {
   JWT_SECRET?: string;
   ADMIN_EMAIL?: string;
   CORS_ORIGIN?: string;
+  RESEND_API_KEY?: string;
+  FROM_EMAIL?: string;
+  FRONTEND_URL?: string;
 }
 
 // Importamos las funciones de gestión de usuarios
@@ -19,6 +22,9 @@ import {
   updateUserPassword as updateUserPasswordKV,
   getAllUsers
 } from './user-migration';
+
+// Importamos el servicio de email
+import { createEmailService } from './email-service';
 
 // CORS headers
 const corsHeaders = {
@@ -84,17 +90,33 @@ export async function handleForgotPassword(request: Request, env: Env): Promise<
       expirationTtl: 3600 // 1 hora en segundos
     });
 
-    // En producción aquí enviarías el email
-    // Por ahora simulamos el envío exitoso
-    console.log(`Reset token for ${email}: ${resetToken}`);
+    // Enviar email de recuperación
+    const emailService = createEmailService(env);
+    let emailSent = false;
+    
+    if (emailService) {
+      try {
+        emailSent = await emailService.sendPasswordResetEmail(
+          user.email, 
+          resetToken,
+          env.FRONTEND_URL || env.CORS_ORIGIN
+        );
+        console.log(`Email de recuperación ${emailSent ? 'enviado' : 'falló'} para ${email}`);
+      } catch (error) {
+        console.error('Error enviando email de recuperación:', error);
+      }
+    } else {
+      console.log(`Reset token for ${email} (email service not configured): ${resetToken}`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
       message: 'Si el email existe en nuestro sistema, recibirás un enlace de recuperación',
-      // Solo para desarrollo - remover en producción
+      // Solo para desarrollo - mostrar info adicional
       ...(env.ENVIRONMENT === 'development' && { 
         resetToken,
-        resetUrl: `${env.CORS_ORIGIN}/reset-password?token=${resetToken}`
+        resetUrl: `${env.FRONTEND_URL || env.CORS_ORIGIN}/reset-password?token=${resetToken}`,
+        emailSent
       })
     }), {
       headers: {

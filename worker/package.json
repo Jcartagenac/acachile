@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@acachile/shared": "*",
-    "@tsndr/cloudflare-worker-jwt": "^3.2.0"
+    "@emailjs/nodejs": "^5.0.2",
+    "@tsndr/cloudflare-worker-jwt": "^3.2.0",
+    "resend": "^6.1.3"
   }
 }

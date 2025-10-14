@@ -9,6 +9,8 @@ account_id = "172194a6569df504cbb8a638a94d3d2c"
 # Variables de entorno para desarrollo
 [vars]
 ENVIRONMENT = "development"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
+FRONTEND_URL = "http://localhost:5173"
 
 # Configuración de KV para almacenamiento
 [[kv_namespaces]]
@@ -19,7 +21,7 @@ preview_id = "deda506587a1476a96578cb545f0128e"
 # Entorno de producción
 [env.production]
 name = "acachile-api-production"
-vars = { ENVIRONMENT = "production" }
+vars = { ENVIRONMENT = "production", FROM_EMAIL = "noreply@mail.juancartagena.cl", FRONTEND_URL = "https://acachile.pages.dev" }
 
 # KV para producción
 [[env.production.kv_namespaces]]

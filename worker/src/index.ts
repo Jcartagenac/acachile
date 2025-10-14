@@ -9,6 +9,9 @@ export interface Env {
   JWT_SECRET?: string;
   ADMIN_EMAIL?: string;
   CORS_ORIGIN?: string;
+  RESEND_API_KEY?: string;
+  FROM_EMAIL?: string;
+  FRONTEND_URL?: string;
 }
 
 // Importamos las funciones de autenticación
