@@ -1,0 +1,9 @@
+# Cloudflare Pages configuration for frontend
+# This file tells Cloudflare Pages to build only the frontend
+
+[build]
+command = "npm run build --workspace=frontend"
+publish = "frontend/dist"
+
+[build.environment_variables]
+NODE_VERSION = "18"
