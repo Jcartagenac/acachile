@@ -35,6 +35,19 @@ import {
   getAllUsers
 } from './user-migration';
 
+// Importamos las funciones de gestión de eventos
+import {
+  initializeEventos,
+  getEventos,
+  getEventoById,
+  createEvento,
+  updateEvento,
+  deleteEvento
+} from './eventos-service';
+
+// Importamos el handler de inicialización de eventos
+import { handleInitEventos } from './eventos-handler';
+
 // CORS headers para permitir requests del frontend
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Permitimos todos los orígenes por simplicidad
@@ -97,6 +110,9 @@ export default {
         
         case '/api/admin/registrations/reject':
           return handleRejectRegistration(request, env);
+        
+        case '/api/admin/eventos/init':
+          return handleInitEventos(request, env);
         
         default:
           // Handle dynamic routes
@@ -162,139 +178,32 @@ async function handleEventos(request: Request, env: Env): Promise<Response> {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '12');
 
-    // Datos de ejemplo más completos
-    let eventos = [
-      {
-        id: 1,
-        title: 'Campeonato Nacional de Asadores 2025',
-        date: '2025-11-15',
-        time: '09:00',
-        location: 'Parque O\'Higgins, Santiago',
-        description: 'El evento más importante del año para asadores chilenos. Competencia por categorías con premiación especial y degustación para el público.',
-        image: 'https://acachile.com/wp-content/uploads/2025/03/64694334-bbdc-4e97-b4a7-ef75e6bbe50d-500x375.jpg',
-        type: 'campeonato' as const,
-        registrationOpen: true,
-        maxParticipants: 50,
-        currentParticipants: 32,
-        price: 15000,
-        organizerId: 1,
-        createdAt: '2024-10-01T10:00:00Z',
-        updatedAt: '2024-10-14T15:30:00Z',
-        status: 'published' as const,
-        requirements: ['Parrilla propia', 'Implementos de cocina', 'Delantal'],
-        tags: ['campeonato', 'nacional', 'asadores'],
-        contactInfo: {
-          email: 'campeonato@acachile.com',
-          phone: '+56912345678'
-        }
-      },
-      {
-        id: 2,
-        title: 'Taller: Técnicas de Ahumado',
-        date: '2025-10-25',
-        time: '14:00',
-        location: 'Escuela Culinaria ACA, Las Condes',
-        description: 'Aprende las mejores técnicas de ahumado con el chef internacional Pablo Ibáñez. Incluye degustación y certificado.',
-        image: 'https://acachile.com/wp-content/uploads/2025/06/post-_2025-12-500x375.png',
-        type: 'taller' as const,
-        registrationOpen: true,
-        maxParticipants: 20,
-        currentParticipants: 8,
-        price: 45000,
-        organizerId: 1,
-        createdAt: '2024-09-15T09:00:00Z',
-        updatedAt: '2024-10-10T11:20:00Z',
-        status: 'published' as const,
-        requirements: ['Sin experiencia previa necesaria'],
-        tags: ['taller', 'ahumado', 'técnicas'],
-        contactInfo: {
-          email: 'talleres@acachile.com',
-          phone: '+56987654321'
-        }
-      },
-      {
-        id: 3,
-        title: 'Encuentro Regional Valparaíso',
-        date: '2025-12-08',
-        time: '11:00',
-        location: 'Viña del Mar, Quinta Región',
-        description: 'Encuentro gastronómico regional con asadores de la V Región. Actividades familiares y competencias amistosas.',
-        image: 'https://acachile.com/wp-content/uploads/2024/08/post-alemania-500x375.jpg',
-        type: 'encuentro' as const,
-        registrationOpen: true,
-        maxParticipants: undefined,
-        currentParticipants: 15,
-        price: 0,
-        organizerId: 2,
-        createdAt: '2024-10-05T16:00:00Z',
-        updatedAt: '2024-10-12T09:45:00Z',
-        status: 'published' as const,
-        requirements: ['Solo ganas de compartir'],
-        tags: ['encuentro', 'regional', 'familia'],
-        contactInfo: {
-          email: 'valparaiso@acachile.com'
-        }
-      },
-      {
-        id: 4,
-        title: 'Torneo de Costillares',
-        date: '2025-11-30',
-        time: '10:00',
-        location: 'Club de Campo Los Leones',
-        description: 'Torneo especializado en preparación de costillares. Modalidad equipos de 3 personas.',
-        image: 'https://acachile.com/wp-content/uploads/2024/08/1697587321850-500x375.jpg',
-        type: 'torneo' as const,
-        registrationOpen: false,
-        maxParticipants: 30,
-        currentParticipants: 30,
-        price: 25000,
-        organizerId: 1,
-        createdAt: '2024-09-20T12:00:00Z',
-        updatedAt: '2024-10-01T14:15:00Z',
-        status: 'published' as const,
-        requirements: ['Equipo de 3 personas', 'Costillar por equipo'],
-        tags: ['torneo', 'costillares', 'equipos'],
-        contactInfo: {
-          email: 'torneos@acachile.com',
-          website: 'https://torneos.acachile.com'
-        }
-      }
-    ];
+    // Obtener eventos desde KV con filtros
+    const result = await getEventos(env, {
+      type: type || undefined,
+      status: status,
+      search: search || undefined,
+      page,
+      limit
+    });
 
-    // Aplicar filtros
-    if (type) {
-      eventos = eventos.filter(evento => evento.type === type);
+    if (!result.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: result.error
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
     }
-
-    if (status) {
-      eventos = eventos.filter(evento => evento.status === status);
-    }
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      eventos = eventos.filter(evento => 
-        evento.title.toLowerCase().includes(searchLower) ||
-        evento.description.toLowerCase().includes(searchLower) ||
-        evento.location.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Paginación
-    const total = eventos.length;
-    const pages = Math.ceil(total / limit);
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedEventos = eventos.slice(startIndex, endIndex);
 
     return new Response(JSON.stringify({
       success: true,
-      data: paginatedEventos,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages
-      }
+      data: result.data,
+      pagination: result.pagination
     }), {
       headers: {
         'Content-Type': 'application/json',
@@ -306,22 +215,45 @@ async function handleEventos(request: Request, env: Env): Promise<Response> {
   // POST /api/eventos - Crear nuevo evento
   if (method === 'POST') {
     try {
-      const body = await request.json() as any;
+      // Verificar autenticación
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Token de autorización requerido'
+        }), {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      // TODO: Verificar y decodificar JWT para obtener userId
+      const userId = 1; // Por ahora usamos un ID fijo
+
+      const eventoData = await request.json() as any;
       
-      // Simular creación de evento
-      const nuevoEvento = {
-        id: Date.now(),
-        ...body,
-        currentParticipants: 0,
-        organizerId: 1, // TODO: Obtener del token
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'published' as const
-      };
+      // Crear evento en KV
+      const result = await createEvento(env, eventoData, userId);
+
+      if (!result.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: result.error
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
 
       return new Response(JSON.stringify({
         success: true,
-        data: nuevoEvento,
+        data: result.data,
         message: 'Evento creado exitosamente'
       }), {
         headers: {
@@ -689,41 +621,24 @@ async function handleEventosById(request: Request, env: Env): Promise<Response> 
 
   // GET /api/eventos/:id - Obtener evento específico
   if (request.method === 'GET') {
-    // Evento de ejemplo (normalmente desde base de datos)
-    const evento = {
-      id: eventId,
-      title: 'Campeonato Nacional de Asadores 2025',
-      date: '2025-11-15',
-      time: '09:00',
-      location: 'Parque O\'Higgins, Santiago',
-      description: 'El evento más importante del año para asadores chilenos. Competencia por categorías con premiación especial y degustación para el público.\n\nEn este campeonato nacional participarán los mejores asadores de todas las regiones del país, compitiendo en diferentes categorías como mejor asado, mejor chorizo, y mejor acompañamiento.\n\nEl evento incluye:\n- Competencias oficiales por categorías\n- Degustación abierta al público\n- Actividades para toda la familia\n- Premiación con trofeos y premios en efectivo\n- Música en vivo y entretenimiento',
-      image: 'https://acachile.com/wp-content/uploads/2025/03/64694334-bbdc-4e97-b4a7-ef75e6bbe50d-500x375.jpg',
-      type: 'campeonato' as const,
-      registrationOpen: true,
-      maxParticipants: 50,
-      currentParticipants: 32,
-      price: 15000,
-      organizerId: 1,
-      createdAt: '2024-10-01T10:00:00Z',
-      updatedAt: '2024-10-14T15:30:00Z',
-      status: 'published' as const,
-      requirements: [
-        'Parrilla propia (tamaño mínimo 60x40cm)',
-        'Implementos de cocina básicos',
-        'Delantal y gorro de cocinero',
-        'Carne proporcionada por la organización'
-      ],
-      tags: ['campeonato', 'nacional', 'asadores', '2025'],
-      contactInfo: {
-        email: 'campeonato@acachile.com',
-        phone: '+56912345678',
-        website: 'https://campeonato.acachile.com'
-      }
-    };
+    const result = await getEventoById(env, eventId);
+
+    if (!result.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: result.error
+      }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
-      data: evento
+      data: result.data
     }), {
       headers: {
         'Content-Type': 'application/json',
@@ -735,18 +650,44 @@ async function handleEventosById(request: Request, env: Env): Promise<Response> 
   // PUT /api/eventos/:id - Actualizar evento
   if (request.method === 'PUT') {
     try {
-      const body = await request.json() as any;
+      // Verificar autenticación
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Token de autorización requerido'
+        }), {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      // TODO: Verificar y decodificar JWT para obtener userId
+      const userId = 1; // Por ahora usamos un ID fijo
+
+      const eventoData = await request.json() as any;
       
-      // TODO: Verificar permisos y actualizar en base de datos
-      const eventoActualizado = {
-        id: eventId,
-        ...body,
-        updatedAt: new Date().toISOString()
-      };
+      const result = await updateEvento(env, eventId, eventoData, userId);
+
+      if (!result.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: result.error
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
 
       return new Response(JSON.stringify({
         success: true,
-        data: eventoActualizado,
+        data: result.data,
         message: 'Evento actualizado exitosamente'
       }), {
         headers: {
@@ -770,17 +711,61 @@ async function handleEventosById(request: Request, env: Env): Promise<Response> 
 
   // DELETE /api/eventos/:id - Eliminar evento
   if (request.method === 'DELETE') {
-    // TODO: Verificar permisos y eliminar de base de datos
-    
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Evento eliminado exitosamente'
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
-    });
+    try {
+      // Verificar autenticación
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Token de autorización requerido'
+        }), {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      // TODO: Verificar y decodificar JWT para obtener userId
+      const userId = 1; // Por ahora usamos un ID fijo
+
+      const result = await deleteEvento(env, eventId, userId);
+
+      if (!result.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: result.error
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Evento eliminado exitosamente'
+      }), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Error al eliminar evento'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
   }
 
   return new Response('Method not allowed', {
