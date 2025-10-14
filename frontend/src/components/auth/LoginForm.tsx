@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 const loginSchema = z.object({
   email: z
@@ -204,13 +205,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
         {/* Forgot Password */}
         <div className="text-center">
-          <button
-            type="button"
-            className="text-sm hover:underline"
+          <Link
+            to="/forgot-password"
+            className="text-sm hover:underline transition-colors"
             style={{ color: '#6B7280' }}
           >
             ¿Olvidaste tu contraseña?
-          </button>
+          </Link>
         </div>
       </form>
     </div>

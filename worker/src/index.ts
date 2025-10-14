@@ -11,6 +11,27 @@ export interface Env {
   CORS_ORIGIN?: string;
 }
 
+// Importamos las funciones de autenticación
+import {
+  handleForgotPassword,
+  handleResetPassword,
+  handleChangePassword,
+  handlePendingRegistrations,
+  handleApproveRegistration,
+  handleRejectRegistration
+} from './auth-system';
+
+// Importamos las funciones de migración y gestión de usuarios
+import {
+  migrateUsersToKV,
+  findUserByEmail,
+  findUserById,
+  verifyUserPassword,
+  updateUserPassword,
+  getNextUserId,
+  getAllUsers
+} from './user-migration';
+
 // CORS headers para permitir requests del frontend
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Permitimos todos los orígenes por simplicidad
@@ -38,6 +59,9 @@ export default {
         case '/api/health':
           return handleHealth();
         
+        case '/api/admin/migrate-users':
+          return handleMigrateUsers(request, env);
+        
         case '/api/eventos':
           return handleEventos(request, env);
         
@@ -52,6 +76,24 @@ export default {
         
         case '/api/auth/profile':
           return handleProfile(request, env);
+        
+        case '/api/auth/forgot-password':
+          return handleForgotPassword(request, env);
+        
+        case '/api/auth/reset-password':
+          return handleResetPassword(request, env);
+        
+        case '/api/auth/change-password':
+          return handleChangePassword(request, env);
+        
+        case '/api/admin/registrations/pending':
+          return handlePendingRegistrations(request, env);
+        
+        case '/api/admin/registrations/approve':
+          return handleApproveRegistration(request, env);
+        
+        case '/api/admin/registrations/reject':
+          return handleRejectRegistration(request, env);
         
         default:
           // Handle dynamic routes
@@ -331,6 +373,40 @@ async function handleNoticias(request: Request, env: Env): Promise<Response> {
   });
 }
 
+// Función de migración de usuarios
+async function handleMigrateUsers(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  try {
+    // Ejecutar migración automáticamente al hacer el primer deploy
+    const result = await migrateUsersToKV(env);
+    
+    return new Response(JSON.stringify(result), {
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Error interno durante la migración'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+  }
+}
+
 // Funciones de autenticación
 async function handleLogin(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'POST') {
@@ -358,33 +434,26 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
       });
     }
 
-    // Usuarios de demo (en producción usar base de datos)
-    const demoUsers = [
-      {
-        id: 1,
-        email: 'admin@acachile.com',
-        password: '123456', // En producción usar hash
-        name: 'Administrador ACA',
-        membershipType: 'vip',
-        region: 'Metropolitana',
-        joinDate: '2024-01-01',
-        active: true
-      },
-      {
-        id: 2,
-        email: 'usuario@acachile.com',
-        password: '123456',
-        name: 'Usuario Demo',
-        membershipType: 'basic',
-        region: 'Valparaíso',
-        joinDate: '2024-06-15',
-        active: true
-      }
-    ];
-
-    const user = demoUsers.find(u => u.email === email && u.password === password);
+    // Buscar usuario en KV storage
+    const user = await findUserByEmail(email, env);
     
     if (!user) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Credenciales inválidas'
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Verificar contraseña usando KV storage
+    const passwordValid = await verifyUserPassword(user.id, password, env);
+    
+    if (!passwordValid) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Credenciales inválidas'
@@ -449,9 +518,13 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
       password: string; 
       name: string; 
       phone?: string; 
-      region?: string; 
+      region?: string;
+      motivation?: string;
+      experience?: string;
+      references?: string;
+      preferredRole?: 'user' | 'organizer';
     };
-    const { email, password, name, phone, region } = body;
+    const { email, password, name, phone, region, motivation, experience, references, preferredRole } = body;
 
     // Validación básica
     if (!email || !password || !name) {
@@ -467,33 +540,75 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
       });
     }
 
-    // Simulación de registro exitoso
-    const newUser = {
-      id: Date.now(),
-      email,
-      name,
-      phone: phone || null,
-      region: region || null,
-      membershipType: 'basic',
-      joinDate: new Date().toISOString().split('T')[0],
-      active: true
+    // Verificar si el email ya existe (en usuarios existentes y pendientes)
+    const existingUsers = await env.ACA_KV.get('users:all');
+    const pendingRegistrations = await env.ACA_KV.get('registrations:pending');
+    
+    if (existingUsers) {
+      const users = JSON.parse(existingUsers);
+      if (users.find((u: any) => u.email === email)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'El email ya está registrado'
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+    }
+
+    if (pendingRegistrations) {
+      const pending = JSON.parse(pendingRegistrations);
+      if (pending.find((p: any) => p.userData.email === email)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Ya existe una solicitud de registro pendiente con este email'
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+    }
+
+    // Crear solicitud de registro pendiente
+    const registrationId = `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const pendingRegistration = {
+      id: registrationId,
+      userData: {
+        email,
+        password: btoa(password), // Codificar password (en producción usar hash)
+        name,
+        phone: phone || null,
+        region: region || null,
+        motivation: motivation || null,
+        experience: experience || null,
+        references: references || null,
+        preferredRole: preferredRole || 'user'
+      },
+      status: 'pending',
+      submittedAt: new Date().toISOString()
     };
 
-    // Crear token
-    const token = btoa(JSON.stringify({
-      userId: newUser.id,
-      email: newUser.email,
-      exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
-    }));
+    // Guardar en KV
+    const currentPending = pendingRegistrations ? JSON.parse(pendingRegistrations) : [];
+    currentPending.push(pendingRegistration);
+    await env.ACA_KV.put('registrations:pending', JSON.stringify(currentPending));
 
     return new Response(JSON.stringify({
       success: true,
+      message: 'Solicitud de registro enviada exitosamente. Un administrador revisará tu solicitud pronto.',
       data: {
-        user: newUser,
-        token,
-        expiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString()
-      },
-      message: 'Cuenta creada exitosamente'
+        registrationId,
+        status: 'pending',
+        submittedAt: pendingRegistration.submittedAt
+      }
     }), {
       headers: {
         'Content-Type': 'application/json',

@@ -9,6 +9,8 @@ import {
   CreateEventPage,
   MyEventsPage,
   AuthPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
   BlogPage,
   PostDetailPage,
   ContactPage,
@@ -28,6 +30,8 @@ function App() {
           <Route path="/eventos/mis-eventos" element={<MyEventsPage />} />
           <Route path="/eventos/:id" element={<EventDetailPage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/noticias" element={<BlogPage />} />
           <Route path="/noticias/:slug" element={<PostDetailPage />} />
           <Route path="/contacto" element={<ContactPage />} />

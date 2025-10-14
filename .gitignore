@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Wrangler temporary files
+worker/.wrangler/
+.wrangler/
+
+# Process ID files
+*.pid

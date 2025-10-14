@@ -14,7 +14,7 @@ const registerSchema = z.object({
   password: z
     .string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Debe contener al menos una mayúscula, una minúscula y un número'),
+    .max(100, 'La contraseña es demasiado larga'),
   confirmPassword: z
     .string()
     .min(1, 'Confirma tu contraseña'),
@@ -28,6 +28,24 @@ const registerSchema = z.object({
     .refine((val) => !val || /^\+?[1-9]\d{8,14}$/.test(val), 'Número de teléfono inválido'),
   region: z
     .string()
+    .optional(),
+  motivation: z
+    .string()
+    .min(10, 'Por favor cuéntanos un poco más (mín. 10 caracteres)')
+    .max(500, 'Máximo 500 caracteres')
+    .optional(),
+  experience: z
+    .string()
+    .max(500, 'Máximo 500 caracteres')
+    .optional(),
+  references: z
+    .string()
+    .max(200, 'Máximo 200 caracteres')
+    .optional(),
+  preferredRole: z
+    .enum(['user', 'organizer'], {
+      errorMap: () => ({ message: 'Selecciona un rol válido' })
+    })
     .optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',

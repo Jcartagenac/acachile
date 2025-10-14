@@ -185,3 +185,6 @@ export function slugify(text: string): string {
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .trim();
 }
+
+// Exportar tipos de auth-roles
+export * from './auth-roles';

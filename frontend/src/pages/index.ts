@@ -5,6 +5,8 @@ export { EventsPage, EventDetailPage } from './EventsPage';
 export { CreateEventPage } from './CreateEventPage';
 export { MyEventsPage } from './MyEventsPage';
 export { AuthPage } from './AuthPage';
+export { default as ForgotPasswordPage } from './ForgotPasswordPage';
+export { default as ResetPasswordPage } from './ResetPasswordPage';
 export { BlogPage, PostDetailPage } from './BlogPage';
 export { ContactPage } from './ContactPage';
 export { NotFoundPage } from './NotFoundPage';
