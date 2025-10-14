@@ -1,6 +1,12 @@
 import { ApiResponse, AuthResponse, User } from '@shared/index';
+import Cookies from 'js-cookie';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-api-production.juecart.workers.dev';
+
+// Helper function to get auth token
+const getAuthToken = (): string | null => {
+  return Cookies.get('auth_token') || null;
+};
 
 interface PendingRegistration {
   id: string;
@@ -171,7 +177,7 @@ const authService = {
   // Admin: Get pending registrations
   getPendingRegistrations: async (): Promise<ApiResponse<PendingRegistration[]>> => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       if (!token) {
         return {
           success: false,
@@ -202,7 +208,7 @@ const authService = {
     options: ApprovalOptions = {}
   ): Promise<ApiResponse<any>> => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       if (!token) {
         return {
           success: false,
@@ -238,7 +244,7 @@ const authService = {
     reason?: string
   ): Promise<ApiResponse<any>> => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getAuthToken();
       if (!token) {
         return {
           success: false,
