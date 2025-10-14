@@ -20,6 +20,7 @@
     "wrangler": "^3.80.0"
   },
   "dependencies": {
-    "@acachile/shared": "*"
+    "@acachile/shared": "*",
+    "@tsndr/cloudflare-worker-jwt": "^3.2.0"
   }
 }

@@ -41,6 +41,15 @@ export default {
         case '/api/noticias':
           return handleNoticias(request, env);
         
+        case '/api/auth/login':
+          return handleLogin(request, env);
+        
+        case '/api/auth/register':
+          return handleRegister(request, env);
+        
+        case '/api/auth/profile':
+          return handleProfile(request, env);
+        
         default:
           return new Response('Not Found', { 
             status: 404,
@@ -137,6 +146,225 @@ async function handleNoticias(request: Request, env: Env): Promise<Response> {
   ];
 
   return new Response(JSON.stringify(noticias), {
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders,
+    },
+  });
+}
+
+// Funciones de autenticación
+async function handleLogin(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  try {
+    const body = await request.json() as { email: string; password: string };
+    const { email, password } = body;
+
+    // Validación básica
+    if (!email || !password) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Email y contraseña son requeridos'
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Usuarios de demo (en producción usar base de datos)
+    const demoUsers = [
+      {
+        id: 1,
+        email: 'admin@acachile.com',
+        password: '123456', // En producción usar hash
+        name: 'Administrador ACA',
+        membershipType: 'vip',
+        region: 'Metropolitana',
+        joinDate: '2024-01-01',
+        active: true
+      },
+      {
+        id: 2,
+        email: 'usuario@acachile.com',
+        password: '123456',
+        name: 'Usuario Demo',
+        membershipType: 'basic',
+        region: 'Valparaíso',
+        joinDate: '2024-06-15',
+        active: true
+      }
+    ];
+
+    const user = demoUsers.find(u => u.email === email && u.password === password);
+    
+    if (!user) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Credenciales inválidas'
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Crear token JWT simple (en producción usar librería JWT)
+    const token = btoa(JSON.stringify({
+      userId: user.id,
+      email: user.email,
+      exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 días
+    }));
+
+    // Respuesta sin la contraseña
+    const { password: _, ...userResponse } = user;
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        user: userResponse,
+        token,
+        expiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString()
+      }
+    }), {
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Error interno del servidor'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+  }
+}
+
+async function handleRegister(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  try {
+    const body = await request.json() as { 
+      email: string; 
+      password: string; 
+      name: string; 
+      phone?: string; 
+      region?: string; 
+    };
+    const { email, password, name, phone, region } = body;
+
+    // Validación básica
+    if (!email || !password || !name) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Email, contraseña y nombre son requeridos'
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
+
+    // Simulación de registro exitoso
+    const newUser = {
+      id: Date.now(),
+      email,
+      name,
+      phone: phone || null,
+      region: region || null,
+      membershipType: 'basic',
+      joinDate: new Date().toISOString().split('T')[0],
+      active: true
+    };
+
+    // Crear token
+    const token = btoa(JSON.stringify({
+      userId: newUser.id,
+      email: newUser.email,
+      exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
+    }));
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        user: newUser,
+        token,
+        expiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toISOString()
+      },
+      message: 'Cuenta creada exitosamente'
+    }), {
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Error interno del servidor'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+  }
+}
+
+async function handleProfile(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'GET') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  // TODO: Implementar verificación de token
+  const authHeader = request.headers.get('Authorization');
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Token de autorización requerido'
+    }), {
+      status: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+  }
+
+  return new Response(JSON.stringify({
+    success: true,
+    message: 'Perfil de usuario (implementar)'
+  }), {
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,

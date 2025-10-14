@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Container } from './Container';
+import { useAuth } from '../../contexts/AuthContext';
+import { UserMenu, AuthModal } from '../auth';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   const navigation = [
     { name: 'Inicio', href: '/' },
@@ -50,14 +55,32 @@ export const Header: React.FC = () => {
             ))}
           </nav>
 
-          {/* CTA Buttons */}
+          {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-3">
-            <button className="px-6 py-3 rounded-xl text-primary-700 font-medium shadow-neuro-outset hover:shadow-neuro-pressed transition-all duration-300">
-              Iniciar Sesión
-            </button>
-            <button className="px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-br from-primary-500 to-primary-600 shadow-neuro-card hover:shadow-neuro-pressed hover:from-primary-600 hover:to-primary-700 transition-all duration-300">
-              Únete
-            </button>
+            {isAuthenticated ? (
+              <UserMenu />
+            ) : (
+              <>
+                <button 
+                  onClick={() => {
+                    setAuthMode('login');
+                    setAuthModalOpen(true);
+                  }}
+                  className="px-6 py-3 rounded-xl text-primary-700 font-medium shadow-neuro-outset hover:shadow-neuro-pressed transition-all duration-300"
+                >
+                  Iniciar Sesión
+                </button>
+                <button 
+                  onClick={() => {
+                    setAuthMode('register');
+                    setAuthModalOpen(true);
+                  }}
+                  className="px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-br from-primary-500 to-primary-600 shadow-neuro-card hover:shadow-neuro-pressed hover:from-primary-600 hover:to-primary-700 transition-all duration-300"
+                >
+                  Únete
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -99,17 +122,46 @@ export const Header: React.FC = () => {
                 </Link>
               ))}
               <div className="px-2 pt-4 space-y-3">
-                <button className="w-full px-4 py-3 rounded-xl text-primary-700 font-medium shadow-neuro-outset hover:shadow-neuro-pressed transition-all duration-300">
-                  Iniciar Sesión
-                </button>
-                <button className="w-full px-4 py-3 rounded-xl text-white font-medium bg-gradient-to-br from-primary-500 to-primary-600 shadow-neuro-card hover:shadow-neuro-pressed transition-all duration-300">
-                  Únete
-                </button>
+                {isAuthenticated ? (
+                  <div className="px-4">
+                    <UserMenu />
+                  </div>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => {
+                        setAuthMode('login');
+                        setAuthModalOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl text-primary-700 font-medium shadow-neuro-outset hover:shadow-neuro-pressed transition-all duration-300"
+                    >
+                      Iniciar Sesión
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setAuthMode('register');
+                        setAuthModalOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl text-white font-medium bg-gradient-to-br from-primary-500 to-primary-600 shadow-neuro-card hover:shadow-neuro-pressed transition-all duration-300"
+                    >
+                      Únete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
       </Container>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </header>
   );
 };

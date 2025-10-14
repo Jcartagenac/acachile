@@ -42,6 +42,47 @@ export interface Miembro {
   active: boolean;
 }
 
+// Autenticación
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  phone?: string;
+  region?: RegionChile;
+  membershipType?: 'basic' | 'premium' | 'vip';
+  avatar?: string;
+  joinDate: string;
+  active: boolean;
+}
+
+export interface AuthUser {
+  user: User;
+  token: string;
+  expiresAt: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+  phone?: string;
+  region?: RegionChile;
+}
+
+export interface AuthResponse extends ApiResponse<AuthUser> {}
+
+// Sesión
+export interface UserSession {
+  user: User;
+  token: string;
+  isAuthenticated: boolean;
+}
+
 // API Responses
 export interface ApiResponse<T> {
   success: boolean;
