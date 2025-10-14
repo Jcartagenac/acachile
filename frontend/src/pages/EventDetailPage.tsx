@@ -89,6 +89,9 @@ const EventDetailPage: React.FC = () => {
           });
           return;
         }
+      } else if (!inscripciones.success) {
+        console.error('Error fetching inscriptions:', inscripciones.error);
+        // No bloquear el flujo, continuar con verificación de capacidad
       }
 
       // Verificar si puede inscribirse
@@ -101,6 +104,13 @@ const EventDetailPage: React.FC = () => {
 
     } catch (error) {
       console.error('Error checking inscription status:', error);
+      // En caso de error, permitir intentar inscribirse
+      const canInscribe = checkCanInscribe(evento);
+      setInscriptionStatus({
+        isInscribed: false,
+        canInscribe: canInscribe.can,
+        message: canInscribe.message
+      });
     }
   };
 
@@ -156,7 +166,15 @@ const EventDetailPage: React.FC = () => {
         // Mostrar mensaje de éxito
         alert(response.message || 'Inscripción exitosa!');
       } else {
-        alert(response.error || 'Error en la inscripción');
+        // Manejo específico de errores conocidos
+        if (response.error?.includes('ya está inscrito') || response.error?.includes('already registered')) {
+          // Si ya está inscrito, recargar el estado en lugar de mostrar error
+          await checkInscriptionStatus();
+          setShowInscriptionModal(false);
+          alert('Ya estás inscrito en este evento');
+        } else {
+          alert(response.error || 'Error en la inscripción');
+        }
       }
     } catch (error) {
       alert('Error procesando la inscripción');
