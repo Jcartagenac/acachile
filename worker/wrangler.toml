@@ -12,21 +12,33 @@ ENVIRONMENT = "development"
 FROM_EMAIL = "noreply@mail.juancartagena.cl"
 FRONTEND_URL = "http://localhost:5173"
 
-# Configuración de KV para almacenamiento
+# Configuración de KV para almacenamiento (legacy)
 [[kv_namespaces]]
 binding = "ACA_KV"
 id = "b080082921d447e6995c8085f1033286"
 preview_id = "deda506587a1476a96578cb545f0128e"
+
+# Configuración de D1 para base de datos principal
+[[d1_databases]]
+binding = "DB"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 
 # Entorno de producción
 [env.production]
 name = "acachile-api-production"
 vars = { ENVIRONMENT = "production", FROM_EMAIL = "noreply@mail.juancartagena.cl", FRONTEND_URL = "https://acachile.pages.dev" }
 
-# KV para producción
+# KV para producción (legacy)
 [[env.production.kv_namespaces]]
 binding = "ACA_KV"
 id = "60fff9f10819406cad241e326950f056"
+
+# D1 para producción (same database for both envs)
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 
 # Entorno de staging
 [env.staging]

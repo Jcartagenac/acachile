@@ -10,10 +10,19 @@ import {
   getInscripcionesEvento
 } from './inscripciones-service';
 
+// Nuevos servicios D1
+import {
+  inscribirseEventoD1,
+  cancelarInscripcionD1,
+  getInscripcionesUsuarioD1,
+  getInscripcionesEventoD1
+} from './inscripciones-d1-service';
+
 import { findUserById } from './user-migration';
 
 export interface Env {
   ACA_KV: KVNamespace;
+  DB: D1Database;
   ENVIRONMENT: string;
   JWT_SECRET?: string;
   ADMIN_EMAIL?: string;
@@ -117,8 +126,8 @@ export async function handleInscribirseEvento(request: Request, env: Env): Promi
     }
     const { notes } = body || {};
 
-    // Inscribirse al evento
-    const result = await inscribirseEvento(env, userId, eventId, user, notes);
+    // Inscribirse al evento usando D1
+    const result = await inscribirseEventoD1(env, userId, eventId, notes);
 
     return new Response(JSON.stringify(result), {
       status: result.success ? 200 : 400,
@@ -187,8 +196,8 @@ export async function handleMisInscripciones(request: Request, env: Env): Promis
       }
     }
 
-    // Obtener inscripciones del usuario
-    const result = await getInscripcionesUsuario(env, userId);
+    // Obtener inscripciones del usuario usando D1
+    const result = await getInscripcionesUsuarioD1(env, userId);
 
     return new Response(JSON.stringify(result), {
       status: result.success ? 200 : 500,

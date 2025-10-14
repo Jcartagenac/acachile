@@ -5,6 +5,7 @@
 
 export interface Env {
   ACA_KV: KVNamespace;
+  DB: D1Database;
   ENVIRONMENT: string;
   JWT_SECRET?: string;
   ADMIN_EMAIL?: string;
@@ -55,6 +56,9 @@ import {
   handleCancelarInscripcion,
   handleInscripcionesEvento
 } from './inscripciones-handlers';
+
+// Importamos la migración a D1
+import { runMigration } from './migration';
 
 // CORS headers para permitir requests del frontend
 const corsHeaders = {
@@ -124,6 +128,9 @@ export default {
         
         case '/api/mis-inscripciones':
           return handleMisInscripciones(request, env);
+
+        case '/api/admin/migrate-to-d1':
+          return handleMigrationToD1(request, env);
         
         default:
           // Handle dynamic routes
@@ -795,4 +802,40 @@ async function handleEventosById(request: Request, env: Env): Promise<Response> 
     status: 405,
     headers: corsHeaders,
   });
+}
+/**
+ * Handler para migración de KV a D1
+ */
+async function handleMigrationToD1(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  try {
+    const result = await runMigration(env);
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Error ejecutando migración',
+      details: error instanceof Error ? error.message : String(error)
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    });
+  }
 }
