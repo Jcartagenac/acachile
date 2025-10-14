@@ -284,8 +284,8 @@ export async function handleCancelarInscripcion(request: Request, env: Env): Pro
       });
     }
 
-    // Cancelar inscripción
-    const result = await cancelarInscripcion(env, userId, inscriptionId);
+    // Cancelar inscripción usando D1
+    const result = await cancelarInscripcionD1(env, userId, inscriptionId);
 
     return new Response(JSON.stringify(result), {
       status: result.success ? 200 : 400,
