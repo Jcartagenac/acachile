@@ -55,10 +55,25 @@ export async function handleInscribirseEvento(request: Request, env: Env): Promi
     }
 
     // TODO: Decodificar JWT real para obtener usuario
-    // Por ahora simulamos obtener el usuario
+    // Por ahora simulamos obtener el usuario (modo desarrollo)
     const token = authHeader.substring(7);
-    const decoded = JSON.parse(atob(token)); // Decodificación simple
-    const userId = decoded.userId || 1;
+    
+    let userId = 1; // Usuario por defecto para desarrollo
+    
+    // Si el token contiene "test-token" o es un número, usar como userId
+    if (token === 'test-token' || token.match(/^\d+$/)) {
+      userId = token === 'test-token' ? 1 : parseInt(token);
+    } else {
+      // Intentar decodificar JWT básico si es necesario
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        userId = decoded.userId || decoded.sub || 1;
+      } catch (e) {
+        // Si falla, usar usuario por defecto
+        userId = 1;
+      }
+    }
 
     // Buscar información del usuario
     const user = await findUserById(userId, env);
@@ -154,8 +169,23 @@ export async function handleMisInscripciones(request: Request, env: Env): Promis
 
     // TODO: Decodificar JWT real
     const token = authHeader.substring(7);
-    const decoded = JSON.parse(atob(token));
-    const userId = decoded.userId || 1;
+    
+    let userId = 1; // Usuario por defecto para desarrollo
+    
+    // Si el token contiene "test-token" o es un número, usar como userId
+    if (token === 'test-token' || token.match(/^\d+$/)) {
+      userId = token === 'test-token' ? 1 : parseInt(token);
+    } else {
+      // Intentar decodificar JWT básico si es necesario
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        userId = decoded.userId || decoded.sub || 1;
+      } catch (e) {
+        // Si falla, usar usuario por defecto
+        userId = 1;
+      }
+    }
 
     // Obtener inscripciones del usuario
     const result = await getInscripcionesUsuario(env, userId);
@@ -209,8 +239,23 @@ export async function handleCancelarInscripcion(request: Request, env: Env): Pro
 
     // TODO: Decodificar JWT real
     const token = authHeader.substring(7);
-    const decoded = JSON.parse(atob(token));
-    const userId = decoded.userId || 1;
+    
+    let userId = 1; // Usuario por defecto para desarrollo
+    
+    // Si el token contiene "test-token" o es un número, usar como userId
+    if (token === 'test-token' || token.match(/^\d+$/)) {
+      userId = token === 'test-token' ? 1 : parseInt(token);
+    } else {
+      // Intentar decodificar JWT básico si es necesario
+      try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        userId = decoded.userId || decoded.sub || 1;
+      } catch (e) {
+        // Si falla, usar usuario por defecto
+        userId = 1;
+      }
+    }
 
     // Extraer inscription ID de la URL
     const url = new URL(request.url);
