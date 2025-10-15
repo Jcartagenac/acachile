@@ -2,6 +2,7 @@
   "name": "acachile-monorepo",
   "version": "1.0.0",
   "description": "ACA Chile - Asociación Chilena de Asadores - Monorepo",
+  "type": "module",
   "private": true,
   "workspaces": [
     "frontend"
@@ -14,5 +15,9 @@
     "url": "https://github.com/Jcartagenac/acachile.git"
   },
   "author": "ACA Chile",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.910.0",
+    "node-fetch": "^3.3.2"
+  }
 }
