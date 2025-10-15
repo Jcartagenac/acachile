@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
+import {
   Calendar, 
   Clock, 
   MapPin, 
@@ -11,7 +11,7 @@ import {
   X,
   Info
 } from 'lucide-react';
-import { Evento, EventInscription } from '../../../shared';
+import { Evento, EventInscription } from '@shared/index';
 import { eventService } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
 

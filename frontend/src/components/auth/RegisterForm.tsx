@@ -82,7 +82,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       const { confirmPassword, ...registerData } = data;
       await registerUser({
         ...registerData,
-        region: registerData.region as any // Type assertion for region
+        region: registerData.region || undefined
       });
       reset();
       onSuccess?.();

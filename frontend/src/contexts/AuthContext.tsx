@@ -1,10 +1,133 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { User, LoginRequest, RegisterRequest, AuthResponse } from '../types/shared';
+import {
+  AppUser,
+  AuthApiUser,
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
+} from '@shared/index';
 import { logger } from '../utils/logger';
 
+const TOKEN_COOKIE_KEY = 'auth_token';
+const USER_COOKIE_KEY = 'auth_user';
+
+const persistAuth = (token: string, user: AppUser) => {
+  Cookies.set(TOKEN_COOKIE_KEY, token, { expires: 7 });
+  Cookies.set(USER_COOKIE_KEY, JSON.stringify(user), { expires: 7 });
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(TOKEN_COOKIE_KEY, token);
+    window.localStorage.setItem(USER_COOKIE_KEY, JSON.stringify(user));
+  }
+};
+
+const clearPersistedAuth = () => {
+  Cookies.remove(TOKEN_COOKIE_KEY);
+  Cookies.remove(USER_COOKIE_KEY);
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(TOKEN_COOKIE_KEY);
+    window.localStorage.removeItem(USER_COOKIE_KEY);
+  }
+};
+
+const mapApiUserToAppUser = (apiUser: AuthApiUser, overrides?: Partial<AppUser>): AppUser => {
+  const firstName = (apiUser.nombre ?? '').trim();
+  const lastName = (apiUser.apellido ?? '').trim();
+
+  const base: AppUser = {
+    id: apiUser.id,
+    email: apiUser.email,
+    firstName,
+    lastName,
+    name: [firstName, lastName].filter(Boolean).join(' ').trim() || apiUser.email,
+    roles: [apiUser.role],
+    avatar: null,
+    phone: apiUser.telefono ?? null,
+    rut: apiUser.rut ?? null,
+    city: apiUser.ciudad ?? null,
+    region: apiUser.ciudad ?? null,
+    membershipType: null,
+    isActive: Boolean(apiUser.activo),
+    createdAt: apiUser.created_at,
+    lastLogin: apiUser.last_login ?? null,
+  };
+
+  return { ...base, ...overrides };
+};
+
+const parseStoredUser = (raw: string | undefined): AppUser | null => {
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') {
+      return null;
+    }
+
+    // Datos antiguos almacenados como AuthApiUser
+    if ('nombre' in parsed || 'apellido' in parsed) {
+      return mapApiUserToAppUser(parsed as AuthApiUser);
+    }
+
+    const firstName = (parsed.firstName ?? parsed.nombre ?? '').toString().trim();
+    const lastName = (parsed.lastName ?? parsed.apellido ?? '').toString().trim();
+    const roles = Array.isArray(parsed.roles) && parsed.roles.length > 0
+      ? parsed.roles
+      : parsed.role
+        ? [parsed.role]
+        : ['user'];
+
+    return {
+      id: Number(parsed.id),
+      email: String(parsed.email ?? ''),
+      firstName,
+      lastName,
+      name:
+        (parsed.name ??
+          [firstName, lastName].filter(Boolean).join(' ').trim() ??
+          String(parsed.email ?? '')).trim(),
+      roles,
+      avatar: parsed.avatar ?? null,
+      phone: parsed.phone ?? parsed.telefono ?? null,
+      rut: parsed.rut ?? null,
+      city: parsed.city ?? parsed.ciudad ?? null,
+      region: parsed.region ?? null,
+      membershipType: parsed.membershipType ?? null,
+      isActive:
+        typeof parsed.isActive === 'boolean'
+          ? parsed.isActive
+          : Boolean(parsed.activo ?? true),
+      createdAt: parsed.createdAt ?? parsed.created_at ?? new Date().toISOString(),
+      lastLogin: parsed.lastLogin ?? parsed.last_login ?? null,
+    };
+  } catch (error) {
+    console.error('Error parsing stored user data:', error);
+    return null;
+  }
+};
+
+const buildRegisterPayload = (userData: RegisterRequest) => {
+  const trimmedName = userData.name.trim();
+  const [firstName, ...lastNameParts] = trimmedName.split(/\s+/);
+  const lastName = lastNameParts.join(' ');
+
+  return {
+    email: userData.email,
+    password: userData.password,
+    nombre: firstName || userData.email,
+    apellido: lastName || firstName || userData.email,
+    telefono: userData.phone || null,
+    rut: userData.rut || null,
+    ciudad: userData.region || null,
+    role: userData.preferredRole === 'organizer' ? 'editor' : 'user',
+  };
+};
+
 interface AuthState {
-  user: User | null;
+  user: AppUser | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -13,7 +136,7 @@ interface AuthState {
 
 type AuthAction =
   | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string } }
+  | { type: 'AUTH_SUCCESS'; payload: { user: AppUser; token: string } }
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'LOGOUT' }
   | { type: 'CLEAR_ERROR' };
@@ -95,13 +218,26 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  const handleAuthSuccess = (
+    token: string,
+    apiUser: AuthApiUser,
+    overrides?: Partial<AppUser>,
+  ) => {
+    const mappedUser = mapApiUserToAppUser(apiUser, overrides);
+    persistAuth(token, mappedUser);
+    dispatch({
+      type: 'AUTH_SUCCESS',
+      payload: { user: mappedUser, token },
+    });
+  };
+
   const login = async (credentials: LoginRequest) => {
     logger.auth.info('🔄 AuthContext: Iniciando login', { email: credentials.email });
     dispatch({ type: 'AUTH_START' });
-    
+
     try {
       logger.auth.debug('🌐 AuthContext: Enviando request a API', { url: '/api/auth/login' });
-      
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -111,107 +247,114 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const data: AuthResponse = await response.json();
-      logger.auth.debug('📥 AuthContext: Response recibida', { 
-        success: data.success, 
+      logger.auth.debug('📥 AuthContext: Response recibida', {
+        success: data.success,
         status: response.status,
         hasUser: !!data.data?.user,
-        hasToken: !!data.data?.token
+        hasToken: !!data.data?.token,
       });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Error en el login');
+      if (!response.ok || !data.success || !data.data) {
+        const errorMessage = data.error || 'Error en el login';
+        throw new Error(errorMessage);
       }
 
-      if (data.success && data.data) {
-        const { user, token } = data.data;
-        logger.auth.info('✅ AuthContext: Login exitoso', { 
-          userId: user.id, 
-          userEmail: user.email,
-          tokenLength: token.length 
-        });
-        
-        // Guardar en cookies
-        Cookies.set('auth_token', token, { expires: 7 }); // 7 días
-        Cookies.set('auth_user', JSON.stringify(user), { expires: 7 });
-
-        dispatch({ 
-          type: 'AUTH_SUCCESS', 
-          payload: { user, token } 
-        });
-      }
+      handleAuthSuccess(data.data.token, data.data.user);
+      logger.auth.info('✅ AuthContext: Login exitoso', {
+        userId: data.data.user.id,
+        userEmail: data.data.user.email,
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logger.auth.error('❌ AuthContext: Error en login', { 
+      logger.auth.error('❌ AuthContext: Error en login', {
         error: errorMessage,
-        type: error instanceof Error ? 'Error' : typeof error
+        type: error instanceof Error ? 'Error' : typeof error,
       });
+      clearPersistedAuth();
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
   };
 
   const register = async (userData: RegisterRequest) => {
+    logger.auth.info('🆕 AuthContext: Iniciando registro', { email: userData.email });
     dispatch({ type: 'AUTH_START' });
-    
+
     try {
+      const payload = buildRegisterPayload(userData);
+      logger.auth.debug('🌐 AuthContext: Enviando request de registro', {
+        payload: { ...payload, password: '[REDACTED]' },
+      });
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(payload),
       });
 
-      const data: AuthResponse = await response.json();
+      const data: RegisterResponse = await response.json();
+      logger.auth.debug('📥 AuthContext: Response registro recibida', {
+        success: data.success,
+        status: response.status,
+        hasUser: !!data.data?.user,
+        hasToken: !!data.data?.token,
+      });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Error en el registro');
+      if (!response.ok || !data.success) {
+        const errorMessage = data.error || 'Error en el registro';
+        throw new Error(errorMessage);
       }
 
-      if (data.success && data.data) {
-        const { user, token } = data.data;
-        
-        // Guardar en cookies
-        Cookies.set('auth_token', token, { expires: 7 });
-        Cookies.set('auth_user', JSON.stringify(user), { expires: 7 });
-
-        dispatch({ 
-          type: 'AUTH_SUCCESS', 
-          payload: { user, token } 
+      if (data.data?.token && data.data.user) {
+        logger.auth.info('✅ AuthContext: Registro exitoso con token recibido', {
+          userId: data.data.user.id,
+        });
+        handleAuthSuccess(data.data.token, data.data.user, {
+          region: userData.region ?? null,
+        });
+      } else {
+        logger.auth.info('ℹ️ AuthContext: Registro exitoso, iniciando login automático');
+        await login({
+          email: userData.email,
+          password: userData.password,
         });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      logger.auth.error('❌ AuthContext: Error en registro', {
+        error: errorMessage,
+        type: error instanceof Error ? 'Error' : typeof error,
+      });
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
   };
 
-  // Verificar token al cargar la aplicación
   useEffect(() => {
-    const token = Cookies.get('auth_token');
-    const userStr = Cookies.get('auth_user');
-    
+    const token = Cookies.get(TOKEN_COOKIE_KEY);
+    const userStr = Cookies.get(USER_COOKIE_KEY);
+
     if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        dispatch({ 
-          type: 'AUTH_SUCCESS', 
-          payload: { user, token } 
+      const storedUser = parseStoredUser(userStr);
+      if (storedUser) {
+        dispatch({
+          type: 'AUTH_SUCCESS',
+          payload: { user: storedUser, token },
         });
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        logout();
+      } else {
+        clearPersistedAuth();
       }
     }
   }, []);
 
-
   const logout = () => {
-    // Limpiar cookies
-    Cookies.remove('auth_token');
-    Cookies.remove('auth_user');
-    
+    logger.auth.info('🚪 AuthContext: Logout solicitado', {
+      userId: state.user?.id,
+      userEmail: state.user?.email,
+    });
+    clearPersistedAuth();
     dispatch({ type: 'LOGOUT' });
   };
 
