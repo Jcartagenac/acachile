@@ -1,5 +1,4 @@
 // Servicio para gestión de perfil de usuario
-import { authService } from './authService';
 import { AppUser } from '../../../shared';
 
 export interface UserProfile {
@@ -201,8 +200,13 @@ class UserService {
         return { success: false, error: 'El archivo no puede ser mayor a 5MB' };
       }
 
-      // Simulate successful upload
-      const avatarUrl = `/avatars/${Date.now()}-${file.name}`;
+      // Create a preview URL for the uploaded file
+      const avatarUrl = URL.createObjectURL(file);
+      
+      // Update the user's avatar in AuthContext if available
+      if (this.authContext?.user && this.authContext.updateUser) {
+        this.authContext.updateUser({ avatar: avatarUrl });
+      }
       
       return { 
         success: true, 

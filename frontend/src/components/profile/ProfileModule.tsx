@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const ProfileModule: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const userService = useUserService();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,8 @@ export const ProfileModule: React.FC = () => {
     email: '',
     phone: '',
     direccion: '',
-    avatar: ''
+    avatar: '',
+    region: ''
   });
 
   // Cargar perfil al montar el componente
@@ -39,10 +40,18 @@ export const ProfileModule: React.FC = () => {
     loadProfile();
   }, []);
 
+  // Reload profile when user data changes in AuthContext
+  useEffect(() => {
+    if (user) {
+      console.log('👤 ProfileModule: User data changed, reloading profile');
+      loadProfile();
+    }
+  }, [user]);
+
     const loadProfile = async () => {
     try {
       setIsLoading(true);
-      setError(null);
+      setMessage(null);
       
       console.log('🔄 ProfileModule: Loading profile from userService');
       const response = await userService.getProfile();
@@ -56,16 +65,17 @@ export const ProfileModule: React.FC = () => {
           email: response.data.email,
           phone: response.data.phone || '',
           direccion: response.data.direccion || '',
+          avatar: response.data.avatar || '',
           region: response.data.region || ''
         });
         console.log('✅ ProfileModule: Profile loaded successfully', response.data);
       } else {
-        setError(response.error || 'Error cargando perfil');
+        setMessage({ type: 'error', text: response.error || 'Error cargando perfil' });
         console.error('❌ ProfileModule: Error loading profile:', response.error);
       }
     } catch (error) {
       console.error('❌ ProfileModule: Exception loading profile:', error);
-      setError('Error cargando perfil de usuario');
+      setMessage({ type: 'error', text: 'Error cargando perfil de usuario' });
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +95,11 @@ export const ProfileModule: React.FC = () => {
         setMessage({ type: 'success', text: response.message || 'Perfil actualizado exitosamente' });
         setIsEditing(false);
         console.log('✅ ProfileModule: Profile updated successfully');
+        
+        // Reload profile to ensure we have the latest data from AuthContext
+        setTimeout(() => {
+          loadProfile();
+        }, 100);
       } else {
         setMessage({ type: 'error', text: response.error || 'Error actualizando perfil' });
         console.error('❌ ProfileModule: Error updating profile:', response.error);
@@ -105,7 +120,8 @@ export const ProfileModule: React.FC = () => {
         email: profile.email,
         phone: profile.phone || '',
         direccion: profile.direccion || '',
-        avatar: profile.avatar || ''
+        avatar: profile.avatar || '',
+        region: profile.region || ''
       });
     }
     setIsEditing(false);
@@ -129,6 +145,16 @@ export const ProfileModule: React.FC = () => {
       if (response.success && response.data) {
         setFormData({ ...formData, avatar: response.data.avatarUrl });
         setMessage({ type: 'success', text: response.message || 'Avatar subido exitosamente' });
+        
+        // Update the profile display with new avatar
+        if (profile) {
+          setProfile({ ...profile, avatar: response.data.avatarUrl });
+        }
+        
+        // Reload profile to get updated data from AuthContext
+        setTimeout(() => {
+          loadProfile();
+        }, 100);
       } else {
         setMessage({ type: 'error', text: response.error || 'Error subiendo imagen' });
       }
