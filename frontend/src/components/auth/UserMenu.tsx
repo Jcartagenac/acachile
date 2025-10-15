@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings, ChevronDown, Calendar, Shield, Users, Edit } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Calendar, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from './PermissionGuard';
@@ -10,11 +10,7 @@ export const UserMenu: React.FC = () => {
   const {
     isAdmin,
     isDirector,
-    isDirectorEditor,
-    canAccessAdminPanel,
-    canAccessDirectorPanel,
-    canAccessEditorPanel,
-    canManageEvents
+    isDirectorEditor
   } = usePermissions();
   const navigate = useNavigate();
 
@@ -100,17 +96,6 @@ export const UserMenu: React.FC = () => {
 
             {/* Menu Items */}
             <div className="py-2">
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/eventos/mis-eventos');
-                }}
-                className="flex items-center w-full px-4 py-3 text-left text-neutral-700 hover:bg-white/50 hover:text-primary-600 transition-all duration-200 rounded-lg mx-2"
-              >
-                <Calendar className="w-4 h-4 mr-3" />
-                Mis Eventos
-              </button>
-
               {/* Panel Administrativo - Solo para admins y directores */}
               {(isAdmin || isDirector || isDirectorEditor) && (
                 <button
@@ -125,33 +110,7 @@ export const UserMenu: React.FC = () => {
                 </button>
               )}
 
-              {/* Panel Director - Para directores y admins */}
-              {(isDirector || isAdmin) && !isAdmin && (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/director');
-                  }}
-                  className="flex items-center w-full px-4 py-3 text-left text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200 rounded-lg mx-2"
-                >
-                  <Users className="w-4 h-4 mr-3" />
-                  Panel Director
-                </button>
-              )}
 
-              {/* Panel Editor - Para directores editores */}
-              {(isDirectorEditor) && !isDirector && !isAdmin && (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/editor');
-                  }}
-                  className="flex items-center w-full px-4 py-3 text-left text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-lg mx-2"
-                >
-                  <Edit className="w-4 h-4 mr-3" />
-                  Panel Editor
-                </button>
-              )}
               
               <button
                 onClick={() => {
