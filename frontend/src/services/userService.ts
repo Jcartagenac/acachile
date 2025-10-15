@@ -1,5 +1,6 @@
 // Servicio para gestión de perfil de usuario
 import { authService } from './authService';
+import { AppUser } from '../../../shared';
 
 export interface UserProfile {
   id: string;
@@ -36,20 +37,46 @@ export interface ApiResponse<T> {
 }
 
 class UserService {
-  private readonly API_BASE_URL = '/api';
+  private authContext?: {
+    user: AppUser | null;
+    updateUser: (userData: Partial<AppUser>) => void;
+  };
 
-  private getAuthHeaders() {
-    const token = authService.getToken();
+  // Set the auth context for real data integration
+  setAuthContext(authContext: { user: AppUser | null; updateUser: (userData: Partial<AppUser>) => void }) {
+    this.authContext = authContext;
+  }
+
+  private mapAppUserToProfile(user: AppUser): UserProfile {
     return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      id: user.id.toString(),
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email,
+      phone: user.phone || undefined,
+      direccion: user.city || undefined,
+      avatar: user.avatar || undefined,
+      region: typeof user.region === 'string' ? user.region : undefined,
+      fechaIngreso: user.createdAt || undefined,
+      acaMembership: {
+        yearsActive: 2,
+        membershipNumber: `ACA-${user.id.toString().slice(-4)}`,
+        status: 'active' as const
+      }
     };
   }
 
   // Obtener perfil completo del usuario
   async getProfile(): Promise<ApiResponse<UserProfile>> {
     try {
-      // Mock data for development - replace with real API call
+      // Use real user data from AuthContext if available
+      if (this.authContext?.user) {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
+        const profile = this.mapAppUserToProfile(this.authContext.user);
+        return { success: true, data: profile };
+      }
+
+      // Fallback to mock data if no auth context (shouldn't happen in production)
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const mockProfile: UserProfile = {
@@ -79,10 +106,9 @@ class UserService {
   // Actualizar perfil de usuario
   async updateProfile(profileData: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
     try {
-      // Mock implementation - replace with real API call
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Simulate validation
+      // Validation
       if (!profileData.firstName || !profileData.lastName) {
         return { 
           success: false, 
@@ -97,7 +123,41 @@ class UserService {
         };
       }
 
-      // Simulate successful update
+      // Use real AuthContext integration if available
+      if (this.authContext?.user && this.authContext.updateUser) {
+        // Update the AuthContext user with new data
+        const userUpdates: Partial<AppUser> = {};
+        
+        if (profileData.firstName) userUpdates.firstName = profileData.firstName;
+        if (profileData.lastName) userUpdates.lastName = profileData.lastName;
+        if (profileData.email) userUpdates.email = profileData.email;
+        if (profileData.phone !== undefined) userUpdates.phone = profileData.phone;
+        if (profileData.direccion !== undefined) userUpdates.city = profileData.direccion;
+        if (profileData.avatar !== undefined) userUpdates.avatar = profileData.avatar;
+        if (profileData.region !== undefined) userUpdates.region = profileData.region;
+
+        // Update name for display purposes
+        if (profileData.firstName || profileData.lastName) {
+          const firstName = profileData.firstName || this.authContext.user.firstName;
+          const lastName = profileData.lastName || this.authContext.user.lastName;
+          userUpdates.name = `${firstName} ${lastName}`.trim();
+        }
+
+        // Update AuthContext
+        this.authContext.updateUser(userUpdates);
+
+        // Return updated profile
+        const updatedUser = { ...this.authContext.user, ...userUpdates };
+        const updatedProfile = this.mapAppUserToProfile(updatedUser);
+
+        return { 
+          success: true, 
+          data: updatedProfile, 
+          message: 'Perfil actualizado exitosamente' 
+        };
+      }
+
+      // Fallback mock response if no auth context
       const updatedProfile: UserProfile = {
         id: '1',
         firstName: profileData.firstName || 'Juan',

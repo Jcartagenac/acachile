@@ -178,6 +178,7 @@ type AuthAction =
   | { type: 'AUTH_START' }
   | { type: 'AUTH_SUCCESS'; payload: { user: AppUser; token: string } }
   | { type: 'AUTH_ERROR'; payload: string }
+  | { type: 'UPDATE_USER'; payload: Partial<AppUser> }
   | { type: 'LOGOUT' }
   | { type: 'CLEAR_ERROR' };
 
@@ -215,6 +216,15 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isLoading: false,
         error: action.payload,
       };
+    case 'UPDATE_USER':
+      if (!state.user) return state;
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          ...action.payload,
+        },
+      };
     case 'LOGOUT':
       return {
         ...state,
@@ -239,6 +249,7 @@ interface AuthContextType extends AuthState {
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  updateUser: (userData: Partial<AppUser>) => void;
   // Role and permission utilities
   hasPermission: (permission: Permission) => boolean;
   hasRole: (role: UserRole) => boolean;
@@ -413,6 +424,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
+  const updateUser = (userData: Partial<AppUser>) => {
+    logger.auth.info('🔄 AuthContext: Actualizando usuario', {
+      userId: state.user?.id,
+      updateFields: Object.keys(userData),
+    });
+    
+    if (!state.user || !state.token) {
+      logger.auth.warn('⚠️ AuthContext: No se puede actualizar usuario - no autenticado');
+      return;
+    }
+
+    const updatedUser = {
+      ...state.user,
+      ...userData,
+    };
+
+    // Update the state
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+    
+    // Persist the updated user to cookies
+    persistAuth(state.token, updatedUser);
+    
+    logger.auth.info('✅ AuthContext: Usuario actualizado exitosamente', {
+      userId: updatedUser.id,
+      updatedFields: Object.keys(userData),
+    });
+  };
+
   // Role and permission utility functions
   const hasPermission = (permission: Permission): boolean => {
     if (!state.user || !state.isAuthenticated) return false;
@@ -457,6 +496,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     clearError,
+    updateUser,
     hasPermission,
     hasRole,
     canManage,

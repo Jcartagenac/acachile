@@ -14,7 +14,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { NotificationPreferences } from '@shared/index';
-import { userService } from '../../services/userService';
+import { useUserService } from '../../hooks/useUserService';
 
 interface PasswordChangeForm {
   currentPassword: string;
@@ -23,6 +23,7 @@ interface PasswordChangeForm {
 }
 
 export const SettingsModule: React.FC = () => {
+  const userService = useUserService();
   const [activeSection, setActiveSection] = useState<'password' | 'notifications'>('password');
   const [showPasswords, setShowPasswords] = useState({
     current: false,

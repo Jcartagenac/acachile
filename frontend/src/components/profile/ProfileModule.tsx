@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { userService, UserProfile } from '../../services/userService';
+import { UserProfile } from '../../services/userService';
+import { useUserService } from '../../hooks/useUserService';
 import { 
   User, 
   Mail, 
@@ -17,7 +18,8 @@ import {
 } from 'lucide-react';
 
 export const ProfileModule: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const userService = useUserService();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -37,10 +39,15 @@ export const ProfileModule: React.FC = () => {
     loadProfile();
   }, []);
 
-  const loadProfile = async () => {
-    setIsLoading(true);
+    const loadProfile = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('🔄 ProfileModule: Loading profile from userService');
       const response = await userService.getProfile();
+      console.log('📊 ProfileModule: Profile response:', response);
+      
       if (response.success && response.data) {
         setProfile(response.data);
         setFormData({
@@ -49,13 +56,16 @@ export const ProfileModule: React.FC = () => {
           email: response.data.email,
           phone: response.data.phone || '',
           direccion: response.data.direccion || '',
-          avatar: response.data.avatar || ''
+          region: response.data.region || ''
         });
+        console.log('✅ ProfileModule: Profile loaded successfully', response.data);
       } else {
-        setMessage({ type: 'error', text: response.error || 'Error cargando perfil' });
+        setError(response.error || 'Error cargando perfil');
+        console.error('❌ ProfileModule: Error loading profile:', response.error);
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Error cargando perfil' });
+      console.error('❌ ProfileModule: Exception loading profile:', error);
+      setError('Error cargando perfil de usuario');
     } finally {
       setIsLoading(false);
     }
@@ -66,17 +76,22 @@ export const ProfileModule: React.FC = () => {
     setMessage(null);
     
     try {
+      console.log('💾 ProfileModule: Saving profile data:', formData);
       const response = await userService.updateProfile(formData);
+      console.log('📊 ProfileModule: Update response:', response);
       
       if (response.success && response.data) {
         setProfile(response.data);
         setMessage({ type: 'success', text: response.message || 'Perfil actualizado exitosamente' });
         setIsEditing(false);
+        console.log('✅ ProfileModule: Profile updated successfully');
       } else {
         setMessage({ type: 'error', text: response.error || 'Error actualizando perfil' });
+        console.error('❌ ProfileModule: Error updating profile:', response.error);
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Error actualizando perfil' });
+      console.error('❌ ProfileModule: Exception updating profile:', error);
     } finally {
       setIsSaving(false);
     }
