@@ -177,7 +177,7 @@ export const MyEventsPage: React.FC = () => {
                         className="px-3 py-1 rounded-full text-white text-sm font-medium"
                         style={{ backgroundColor: getEventTypeColor(evento.type) }}
                       >
-                        {evento.type.charAt(0).toUpperCase() + evento.type.slice(1)}
+                        {evento.type?.charAt(0)?.toUpperCase() + evento.type?.slice(1) || 'Evento'}
                       </span>
                     </div>
 

@@ -39,8 +39,17 @@ const EventDetailPage: React.FC = () => {
   const [inscriptionNotes, setInscriptionNotes] = useState('');
 
   useEffect(() => {
-    if (id) {
-      loadEventDetail(parseInt(id));
+    if (id && id !== undefined) {
+      const eventId = parseInt(id);
+      if (!isNaN(eventId)) {
+        loadEventDetail(eventId);
+      } else {
+        setError('ID de evento inválido');
+        setLoading(false);
+      }
+    } else {
+      setError('ID de evento no encontrado');
+      setLoading(false);
     }
   }, [id]);
 

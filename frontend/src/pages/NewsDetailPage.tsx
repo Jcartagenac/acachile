@@ -43,8 +43,11 @@ const NewsDetailPage: React.FC = () => {
   const [showShareMenu, setShowShareMenu] = useState(false);
 
   useEffect(() => {
-    if (slug) {
+    if (slug && slug !== undefined && slug.trim() !== '') {
       loadArticle();
+    } else {
+      setError('Slug del artículo no encontrado');
+      setLoading(false);
     }
   }, [slug]);
 

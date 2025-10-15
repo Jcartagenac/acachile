@@ -169,7 +169,7 @@ export const EventCard: React.FC<EventCardProps> = ({
               className="px-3 py-1 rounded-full text-sm font-medium text-white"
               style={{ backgroundColor: getEventTypeColor(evento.type) }}
             >
-              {evento.type.charAt(0).toUpperCase() + evento.type.slice(1)}
+              {evento.type?.charAt(0)?.toUpperCase() + evento.type?.slice(1) || 'Evento'}
             </span>
           </div>
 
@@ -288,7 +288,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             style={{ backgroundColor: getEventTypeColor(evento.type) }}
           >
             <Tag className="w-3 h-3" />
-            <span>{evento.type.charAt(0).toUpperCase() + evento.type.slice(1)}</span>
+            <span>{evento.type?.charAt(0)?.toUpperCase() + evento.type?.slice(1) || 'Evento'}</span>
           </span>
         </div>
 

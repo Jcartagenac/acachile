@@ -707,7 +707,7 @@ const EventPreview: React.FC<EventPreviewProps> = ({ data, image }) => {
                 className="px-3 py-1 rounded-full text-white text-sm font-medium"
                 style={{ backgroundColor: getEventTypeColor(data.type) }}
               >
-                {data.type.charAt(0).toUpperCase() + data.type.slice(1)}
+                {data.type?.charAt(0)?.toUpperCase() + data.type?.slice(1) || 'Evento'}
               </span>
             </div>
           )}

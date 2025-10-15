@@ -45,7 +45,7 @@ export const UserMenu: React.FC = () => {
             />
           ) : (
             <span className="text-white font-bold text-sm">
-              {user.name.charAt(0).toUpperCase()}
+              {user.name?.charAt(0)?.toUpperCase() || 'U'}
             </span>
           )}
         </div>
