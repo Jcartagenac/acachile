@@ -21,11 +21,11 @@ const CONFIG = {
       id: '60fff9f10819406cad241e326950f056'
     }],
     envVars: {
-      ENVIRONMENT: 'production',
-      CORS_ORIGIN: 'https://acachile-prod.pages.dev',
-      FROM_EMAIL: 'noreply@mail.juancartagena.cl',
-      ADMIN_EMAIL: 'admin@acachile.cl',
-      FRONTEND_URL: 'https://acachile-prod.pages.dev'
+      ENVIRONMENT: process.env.VITE_ENVIRONMENT || 'production',
+      CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://acachile.pages.dev',
+      FROM_EMAIL: process.env.FROM_EMAIL || 'noreply@mail.juancartagena.cl',
+      ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@acachile.cl',
+      FRONTEND_URL: process.env.FRONTEND_URL || 'https://acachile.pages.dev'
     }
   }
 };
