@@ -200,11 +200,27 @@ id = "tu-kv-id"
 - Desarrollo local tiene limitaciones, pero deploy real funciona perfectamente
 - Middleware y endpoints funcionando correctamente en producción
 
+### ✅ COMPLETADO SPRINT 2:
+- ✅ Estructura `/functions/api/eventos/` y `/functions/api/inscripciones/` creada
+- ✅ Endpoints de eventos migrados:
+  - ✅ GET/POST /api/eventos (listar y crear eventos)
+  - ✅ GET/PUT/DELETE /api/eventos/[id] (CRUD eventos individuales)
+  - ✅ POST /api/eventos/init (inicializar eventos con datos de ejemplo)
+  - ✅ POST /api/eventos/[id]/inscribirse (inscripción a evento específico)
+  - ✅ GET /api/eventos/[id]/inscripciones (ver inscripciones del evento)
+- ✅ Endpoints de inscripciones migrados:
+  - ✅ GET/POST /api/inscripciones (listar y crear inscripciones)
+  - ✅ GET/DELETE /api/inscripciones/[id] (CRUD inscripciones individuales)
+  - ✅ GET /api/inscripciones/mis-inscripciones (inscripciones del usuario)
+- ✅ Servicios de KV Storage para eventos e inscripciones
+- ✅ Validaciones y control de límites de participantes
+- ✅ Sistema de autenticación integrado
+- ✅ **DEPLOY SPRINT 2 LISTO PARA TESTING**
+
 ### 🔄 EN PROCESO:
-- **SPRINT 2**: Eventos y inscripciones (PRÓXIMO)
+- **SPRINT 3**: Noticias y búsqueda (PRÓXIMO)
 
 ### ⏳ PENDIENTE:
-- Sprint 2: Eventos y inscripciones
 - Sprint 3: Noticias y búsqueda  
 - Sprint 4: Admin y limpieza
 
