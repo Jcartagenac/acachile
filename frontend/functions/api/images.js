@@ -1,7 +1,6 @@
 // Proxy principal para servir imágenes desde R2 con CORS apropiado
 // GET /api/images?path=categoria/archivo.jpg - Servir imágenes desde R2
-
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+// Usa R2 binding nativo de Cloudflare Workers
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -41,46 +40,23 @@ export async function onRequest(context) {
       });
     }
 
-    // Configurar cliente S3 para R2
-    const s3Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: env.R2_ACCESS_KEY_ID,
-        secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-      },
-    });
-
-    // Obtener imagen desde R2
-    const command = new GetObjectCommand({
-      Bucket: 'aca-chile-images',
-      Key: imagePath,
-    });
-
-    const response = await s3Client.send(command);
-    
-    if (!response.Body) {
-      return new Response('Image not found', {
-        status: 404,
+    // Verificar que el binding IMAGES esté disponible
+    if (!env.IMAGES) {
+      console.error('R2 binding IMAGES not found');
+      return new Response('Image service not available', {
+        status: 503,
         headers: corsHeaders,
       });
     }
 
-    // Convertir stream a buffer
-    const chunks = [];
-    const reader = response.Body.getReader();
+    // Obtener imagen desde R2 usando binding nativo
+    const object = await env.IMAGES.get(imagePath);
     
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-    }
-    
-    const buffer = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
-    let offset = 0;
-    for (const chunk of chunks) {
-      buffer.set(chunk, offset);
-      offset += chunk.length;
+    if (!object) {
+      return new Response('Image not found', {
+        status: 404,
+        headers: corsHeaders,
+      });
     }
 
     // Determinar content type
@@ -93,11 +69,14 @@ export async function onRequest(context) {
       'gif': 'image/gif'
     }[extension] || 'image/jpeg';
 
-    return new Response(buffer, {
+    // Servir la imagen directamente
+    return new Response(object.body, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Content-Length': buffer.length.toString(),
+        'ETag': object.etag,
+        'Cache-Control': 'public, max-age=31536000', // 1 año
+        'Content-Length': object.size.toString(),
         ...corsHeaders,
       },
     });
