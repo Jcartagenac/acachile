@@ -229,6 +229,98 @@ export interface AuthResponse {
   error?: string;
 }
 
+// User profile and account types
+export interface UserProfile extends AppUser {
+  direccion?: string;
+  fechaIngreso?: string;
+  yearsInACA?: number;
+  avatar?: string;
+}
+
+export interface MembershipPayment {
+  id: number;
+  userId: number;
+  month: number;
+  year: number;
+  amount: number;
+  paid: boolean;
+  paidDate?: string;
+  paymentMethod?: 'efectivo' | 'transferencia' | 'tarjeta';
+  notes?: string;
+}
+
+export interface Tournament {
+  id: number;
+  name: string;
+  date: string;
+  position?: number;
+  participants: number;
+  category: string;
+}
+
+export interface Award {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  category: 'torneo' | 'reconocimiento' | 'participacion';
+  imageUrl?: string;
+}
+
+export interface UserAccount {
+  payments: MembershipPayment[];
+  tournaments: Tournament[];
+  awards: Award[];
+  eventsParticipated: Evento[];
+}
+
+export interface NotificationPreferences {
+  noticiasImportantes: boolean;
+  noticiasCorrientes: boolean;
+  comunicadosUrgentes: boolean;
+  medios: {
+    whatsapp: boolean;
+    email: boolean;
+    sms: boolean;
+  };
+}
+
+export interface UserSettings {
+  notifications: NotificationPreferences;
+  privacy: {
+    showProfile: boolean;
+    showParticipation: boolean;
+    allowMessages: boolean;
+  };
+}
+
+// Admin panel types
+export interface AdminNews {
+  id: number;
+  title: string;
+  content: string;
+  type: 'importante' | 'corriente' | 'urgente';
+  publishDate: string;
+  authorId: number;
+  published: boolean;
+}
+
+export interface CommunicationType {
+  id: number;
+  name: string;
+  type: 'importante' | 'corriente' | 'urgente';
+  template: string;
+}
+
+export interface MemberManagement {
+  id: number;
+  userId: number;
+  action: 'agregar' | 'quitar' | 'editar' | 'pago_cuota';
+  details: Record<string, unknown>;
+  performedBy: number;
+  date: string;
+}
+
 export interface RegisterResponse {
   success: boolean;
   data?: {
