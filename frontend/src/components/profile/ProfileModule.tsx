@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { userService, UserProfile } from '../../services/userService';
 import { 
   User, 
   Mail, 
@@ -9,53 +10,133 @@ import {
   Camera,
   Edit2,
   Save,
-  X
+  X,
+  Loader2,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 export const ProfileModule: React.FC = () => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     direccion: '',
-    avatar: user?.avatar || ''
+    avatar: ''
   });
 
-  // Calcular años en ACA (mock data por ahora)
-  const fechaIngreso = new Date('2020-03-15'); // Mock date
-  const yearsInACA = new Date().getFullYear() - fechaIngreso.getFullYear();
+  // Cargar perfil al montar el componente
+  useEffect(() => {
+    loadProfile();
+  }, []);
 
-  const handleSave = () => {
-    // TODO: Implementar guardado de datos
-    console.log('Guardando datos:', formData);
-    setIsEditing(false);
+  const loadProfile = async () => {
+    setIsLoading(true);
+    try {
+      const response = await userService.getProfile();
+      if (response.success && response.data) {
+        setProfile(response.data);
+        setFormData({
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          phone: response.data.phone || '',
+          direccion: response.data.direccion || '',
+          avatar: response.data.avatar || ''
+        });
+      } else {
+        setMessage({ type: 'error', text: response.error || 'Error cargando perfil' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error cargando perfil' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setMessage(null);
+    
+    try {
+      const response = await userService.updateProfile(formData);
+      
+      if (response.success && response.data) {
+        setProfile(response.data);
+        setMessage({ type: 'success', text: response.message || 'Perfil actualizado exitosamente' });
+        setIsEditing(false);
+      } else {
+        setMessage({ type: 'error', text: response.error || 'Error actualizando perfil' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error actualizando perfil' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setFormData({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      direccion: '',
-      avatar: user?.avatar || ''
-    });
+    if (profile) {
+      setFormData({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone || '',
+        direccion: profile.direccion || '',
+        avatar: profile.avatar || ''
+      });
+    }
     setIsEditing(false);
+    setMessage(null);
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Calcular años en ACA desde el perfil
+  const yearsInACA = profile?.acaMembership?.yearsActive || 0;
+  const fechaIngreso = profile?.fechaIngreso ? new Date(profile.fechaIngreso) : new Date();
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFormData({ ...formData, avatar: e.target?.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await userService.uploadAvatar(file);
+      
+      if (response.success && response.data) {
+        setFormData({ ...formData, avatar: response.data.avatarUrl });
+        setMessage({ type: 'success', text: response.message || 'Avatar subido exitosamente' });
+      } else {
+        setMessage({ type: 'error', text: response.error || 'Error subiendo imagen' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error subiendo imagen' });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Mostrar estado de carga inicial
+  if (isLoading && !profile) {
+    return (
+      <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center space-x-3">
+            <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
+            <span className="text-neutral-600">Cargando perfil...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -65,13 +146,21 @@ export const ProfileModule: React.FC = () => {
           <h2 className="text-2xl font-bold text-neutral-700">Mi Perfil</h2>
           <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105"
+            disabled={isSaving}
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isEditing ? (
-              <>
-                <Save className="w-4 h-4" />
-                <span>Guardar</span>
-              </>
+              isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Guardando...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Guardar</span>
+                </>
+              )
             ) : (
               <>
                 <Edit2 className="w-4 h-4" />
@@ -80,6 +169,24 @@ export const ProfileModule: React.FC = () => {
             )}
           </button>
         </div>
+
+        {/* Message Display */}
+        {message && (
+          <div className={`mb-6 p-4 rounded-xl border ${
+            message.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-700' 
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}>
+            <div className="flex items-center space-x-2">
+              {message.type === 'success' ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <AlertCircle className="w-5 h-5" />
+              )}
+              <span className="font-medium">{message.text}</span>
+            </div>
+          </div>
+        )}
 
         {/* Profile Photo Section */}
         <div className="flex flex-col sm:flex-row sm:items-start space-y-6 sm:space-y-0 sm:space-x-8 mb-8">

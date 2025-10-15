@@ -10,9 +10,11 @@ import {
   Check,
   AlertTriangle,
   Save,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Loader2
 } from 'lucide-react';
 import { NotificationPreferences } from '@shared/index';
+import { userService } from '../../services/userService';
 
 interface PasswordChangeForm {
   currentPassword: string;
@@ -76,13 +78,20 @@ export const SettingsModule: React.FC = () => {
     }
 
     setIsLoading(true);
+    setSaveMessage(null);
     
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await userService.changePassword(
+        passwordForm.currentPassword, 
+        passwordForm.newPassword
+      );
       
-      setSaveMessage({ type: 'success', message: 'Contraseña actualizada exitosamente' });
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      if (response.success) {
+        setSaveMessage({ type: 'success', message: response.message || 'Contraseña actualizada exitosamente' });
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setSaveMessage({ type: 'error', message: response.error || 'Error al cambiar la contraseña' });
+      }
     } catch (error) {
       setSaveMessage({ type: 'error', message: 'Error al cambiar la contraseña' });
     } finally {
@@ -109,12 +118,16 @@ export const SettingsModule: React.FC = () => {
 
   const saveNotifications = async () => {
     setIsLoading(true);
+    setSaveMessage(null);
     
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await userService.updateNotificationPreferences(notifications);
       
-      setSaveMessage({ type: 'success', message: 'Preferencias de notificaciones guardadas' });
+      if (response.success) {
+        setSaveMessage({ type: 'success', message: response.message || 'Preferencias de notificaciones guardadas' });
+      } else {
+        setSaveMessage({ type: 'error', message: response.error || 'Error al guardar las preferencias' });
+      }
     } catch (error) {
       setSaveMessage({ type: 'error', message: 'Error al guardar las preferencias' });
     } finally {
