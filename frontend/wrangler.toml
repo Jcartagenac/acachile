@@ -42,3 +42,7 @@ id = "60fff9f10819406cad241e326950f056"
 binding = "DB"
 database_name = "acachile-db"
 database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
+
+[[env.production.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "aca-chile-images"

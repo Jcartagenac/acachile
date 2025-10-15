@@ -1,10 +1,11 @@
-// Proxy para servir imágenes desde R2 con CORS apropiado
-// GET /api/images/[...path] - Servir imágenes desde R2
+// Proxy principal para servir imágenes desde R2 con CORS apropiado
+// GET /api/images?path=categoria/archivo.jpg - Servir imágenes desde R2
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 export async function onRequest(context) {
-  const { request, env, params } = context;
+  const { request, env } = context;
+  const url = new URL(request.url);
   const method = request.method;
 
   const corsHeaders = {
@@ -30,8 +31,8 @@ export async function onRequest(context) {
   }
 
   try {
-    // Obtener path de la imagen
-    const imagePath = params.path ? params.path.join('/') : '';
+    // Obtener path de la imagen desde query parameter
+    const imagePath = url.searchParams.get('path');
     
     if (!imagePath) {
       return new Response('Image path required', {

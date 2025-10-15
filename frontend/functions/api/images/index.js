@@ -1,6 +1,7 @@
-// Endpoint para gestión de imágenes en R2
-// POST /api/images/upload - Subir imagen a R2
-// GET /api/images/[path] - Servir imagen desde R2
+// Proxy principal para servir imágenes desde R2 con CORS apropiado
+// GET /api/images?path=categoria/archivo.jpg - Servir imágenes desde R2
+
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -9,8 +10,9 @@ export async function onRequest(context) {
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': env.CORS_ORIGIN || '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Cache-Control': 'public, max-age=86400', // Cache por 24 horas
   };
 
   // Manejar preflight requests
