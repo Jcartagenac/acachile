@@ -46,14 +46,14 @@ export const HomePage: React.FC = () => {
           <div className="lg:grid lg:grid-cols-12 lg:gap-12">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:flex-col lg:justify-center">
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl" style={{ color: '#374151' }}>
-                <span className="block">Bienvenidos a la</span>
+                <span className="block">ACA</span>
                 <span className="block mt-2" style={{ color: '#4B5563' }}>
-                  Asociación Chilena de Asadores
+                  ASOCIACIÓN CHILENA DE ASADORES
                 </span>
               </h1>
               <p className="mt-6 text-lg sm:mt-8 sm:text-xl leading-relaxed" style={{ color: '#4B5563' }}>
-                Únete a la comunidad más apasionada del asado en Chile. 
-                Comparte técnicas, recetas, eventos y vive la cultura de la parrilla.
+                ACA es una asociación de Asadores en donde nos reunimos amantes de los fuegos,
+                la parrilla y la buena compañía.
               </p>
               <div className="mt-10 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -63,6 +63,7 @@ export const HomePage: React.FC = () => {
                       background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
                       boxShadow: '0 10px 20px rgba(239, 68, 68, 0.3)'
                     }}
+                    onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform', '_blank')}
                   >
                     Únete Ahora
                   </button>
@@ -101,11 +102,67 @@ export const HomePage: React.FC = () => {
                       className="backdrop-blur-sm rounded-xl px-4 py-3"
                       style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
                     >
-                      <h3 className="font-bold text-lg">Campeonato Nacional</h3>
-                      <p className="text-gray-200">Próximo evento destacado</p>
+                      <h3 className="font-bold text-lg">WBQA International BBQ Championship Chile 2025</h3>
+                      <p className="text-gray-200">29-30 Noviembre 2025 - Viña del Mar</p>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Somos Internacionales */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-3xl font-bold sm:text-4xl mb-6" style={{ color: '#374151' }}>
+                Somos internacionales
+              </h2>
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold" style={{ color: '#4B5563' }}>
+                  ÚNETE A ACA
+                </h3>
+                <p className="text-lg leading-relaxed" style={{ color: '#4B5563' }}>
+                  El 29 y 30 de noviembre de 2025, el tradicional Sporting Club de Viña del Mar
+                  será el escenario de uno de los eventos más esperados del mundo parrillero. 80
+                  equipos, de 40 países de todo el mundo, quienes competirán "Con toda la carne a la
+                  parrilla", por ser el mejor equipo.
+                </p>
+                <p className="text-lg leading-relaxed" style={{ color: '#4B5563' }}>
+                  Organizado en conjunto, por la World Barbecue Association, la Asociación Chilena de Asadores y Feria Sobremesa.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                  <button 
+                    className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all duration-300 transform hover:scale-105"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                      boxShadow: '0 10px 20px rgba(239, 68, 68, 0.3)'
+                    }}
+                    onClick={() => window.open('https://wbqachile2025.cl/', '_blank')}
+                  >
+                    Más info aquí
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="mt-12 lg:mt-0">
+              <div 
+                className="rounded-3xl p-6"
+                style={{ 
+                  backgroundColor: '#e8ecf4',
+                  boxShadow: '20px 20px 40px #bec8d7, -20px -20px 40px #ffffff'
+                }}
+              >
+                <img
+                  className="w-full h-80 object-cover rounded-2xl"
+                  src="https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png"
+                  alt="World Barbecue Association - ACA Internacional"
+                  onLoad={() => handleImageLoad('internacional')}
+                  onError={(e) => handleImageError('internacional', e)}
+                />
               </div>
             </div>
           </div>
@@ -298,6 +355,69 @@ export const HomePage: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pertenecemos a */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold sm:text-4xl mb-4" style={{ color: '#374151' }}>
+              PERTENECEMOS A:
+            </h2>
+            <p className="text-lg max-w-3xl mx-auto leading-relaxed" style={{ color: '#4B5563' }}>
+              Luego de un arduo, silencioso y transparente trabajo estamos orgullosos de ser
+              la única asociación nacional que pertenece a la CONFEDERACIÓN PANAMERICANA DE
+              ASADORES y a la WORLD BARBECUE ASSOCIATION (ASOCIACIÓN MUNDIAL DE ASADORES).
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                img: "https://acachile.com/wp-content/uploads/2024/07/chile2.png",
+                title: "Chile"
+              },
+              {
+                img: "https://acachile.com/wp-content/uploads/2024/07/BB.png",
+                title: "World Barbecue Association"
+              },
+              {
+                img: "https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png",
+                title: "Confederación Panamericana"
+              }
+            ].map((org, index) => (
+              <div 
+                key={index}
+                className="rounded-3xl p-8 transition-all duration-300 hover:transform hover:scale-105"
+                style={{ 
+                  backgroundColor: '#e8ecf4',
+                  boxShadow: '15px 15px 30px #bec8d7, -15px -15px 30px #ffffff'
+                }}
+              >
+                <div className="text-center">
+                  <div 
+                    className="mx-auto w-32 h-32 rounded-2xl mb-6 flex items-center justify-center overflow-hidden"
+                    style={{ 
+                      backgroundColor: 'white',
+                      boxShadow: 'inset 8px 8px 16px #bec8d7, inset -8px -8px 16px #ffffff'
+                    }}
+                  >
+                    <img
+                      src={org.img}
+                      alt={org.title}
+                      className="w-full h-full object-contain p-4"
+                      onLoad={() => handleImageLoad(`org-${index}`)}
+                      onError={(e) => handleImageError(`org-${index}`, e)}
+                    />
+                  </div>
+                  <h3 className="text-lg font-bold" style={{ color: '#374151' }}>
+                    {org.title}
+                  </h3>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
