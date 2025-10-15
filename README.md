@@ -21,20 +21,15 @@
 
 ### **📊 Arquitectura Técnica Actual**
 
-#### **Backend Stack (Cloudflare Workers)**
-- **Database**: Cloudflare D1 (SQLite) - Datos persistentes principales
-- **Cache**: Cloudflare KV - Cache de likes, shares, estadísticas
-- **Email**: Resend API con dominio personalizado
-- **Auth**: JWT personalizado sin bibliotecas externas
-- **APIs**: 25+ endpoints RESTful completamente funcionales
-
-#### **Frontend Stack (React + TypeScript)**
+#### **Arquitectura Unificada (Cloudflare Pages + Functions)**
 - **Framework**: React 18 + TypeScript + Vite 5
 - **Styling**: Tailwind CSS con componentes personalizados
 - **State**: Context API + hooks personalizados
 - **Routing**: React Router DOM con rutas protegidas
-- **Services**: 4 servicios API completamente integrados
-- **Components**: Layout responsive, SearchBar, AdminLayout
+- **Backend**: Cloudflare Pages Functions (`/frontend/functions`)
+- **Database**: Cloudflare D1 (SQLite)
+- **Cache**: Cloudflare KV
+- **Email**: Resend API
 
 #### **Infraestructura de Producción**
 - **Frontend**: Cloudflare Pages (https://acachile.pages.dev)
@@ -45,14 +40,103 @@
 
 ---
 
-## 🗂️ Estructura Completa del Proyecto
+## 🎯 FUNCIONALIDADES IMPLEMENTADAS Y OPERATIVAS
 
+### � **Sistema de Autenticación (Sprint 1)**
+- **Login/Registro**: Con validación de email y password
+- **JWT**: Implementación personalizada sin bibliotecas externas
+- **Recuperación de contraseña**: Via email con tokens únicos
+- **Roles**: Admin/User con control de acceso granular
+- **Sessions**: Gestión de sesiones con expiración configurable
+
+### 📅 **Eventos e Inscripciones (Sprint 2)**
+- **CRUD Eventos**: Crear, editar, listar, eliminar eventos
+- **Inscripciones**: Sistema completo de registro a eventos
+- **Gestión**: Panel para administrar participantes
+- **Estados**: Activo/Inactivo/Archivado con workflows
+- **Notificaciones**: Email automático en inscripciones
+
+### 📰 **Noticias y Contenido (Sprint 3)**
+- **CMS**: Sistema completo de gestión de contenido
+- **Comentarios**: Con likes, moderación y respuestas
+- **Búsqueda**: Engine avanzado con filtros y sugerencias
+- **SEO**: URLs amigables y metadatos optimizados
+- **Social**: Shares, engagement tracking
+
+### 🛠️ **Panel de Administración (Sprint 4)**
+- **Dashboard**: Métricas en tiempo real y KPIs
+- **User Management**: CRUD completo de usuarios y roles
+- **System Monitoring**: Health checks y logs estructurados
+- **Configuraciones**: Settings granulares del sistema
+- **Mantenimiento**: Operaciones automatizadas (cache, backups, stats)
+
+---
+
+## 🏗️ ARQUITECTURA TÉCNICA DETALLADA
+
+### 📁 **Estructura del Proyecto**
 ```
 acachile/
-├── 📁 frontend/          # React App - Frontend completo
+├── 📁 frontend/                    # Aplicación React Principal
 │   ├── src/
-│   │   ├── components/   # Componentes UI reutilizables
-│   │   │   ├── layout/   # Layout principal y AdminLayout
+│   │   ├── components/            # Componentes UI Reutilizables
+│   │   │   ├── layout/           # Layout, Header, Footer, AdminLayout
+│   │   │   ├── auth/             # Componentes de autenticación
+│   │   │   ├── events/           # Componentes de eventos
+│   │   │   ├── news/             # Componentes de noticias
+│   │   │   └── common/           # Componentes comunes (buttons, modals, etc.)
+│   │   ├── pages/                # Páginas de la aplicación
+│   │   │   ├── HomePage.tsx      # Landing page
+│   │   │   ├── EventsPage.tsx    # Lista de eventos
+│   │   │   ├── NewsPage.tsx      # Blog/Noticias
+│   │   │   ├── AdminDashboard.tsx    # Dashboard admin
+│   │   │   ├── AdminUsers.tsx        # Gestión usuarios
+│   │   │   ├── AdminSettings.tsx     # Configuraciones
+│   │   │   └── AdminMonitoring.tsx   # Monitoreo sistema
+│   │   ├── services/             # Servicios API
+│   │   │   ├── authService.ts    # Autenticación
+│   │   │   ├── eventService.ts   # Eventos
+│   │   │   ├── newsService.ts    # Noticias
+│   │   │   ├── adminService.ts   # Administración
+│   │   │   └── searchService.ts  # Búsqueda
+│   │   ├── contexts/             # Contextos React
+│   │   └── hooks/                # Custom Hooks
+│   │
+│   ├── functions/                # Cloudflare Pages Functions (Backend)
+│   │   └── api/
+│   │       ├── auth/            # APIs de autenticación
+│   │       │   ├── login.js     # POST /api/auth/login
+│   │       │   ├── register.js  # POST /api/auth/register
+│   │       │   ├── me.js        # GET /api/auth/me
+│   │       │   └── forgot-password.js  # Password recovery
+│   │       ├── eventos/         # APIs de eventos
+│   │       │   ├── index.js     # GET/POST /api/eventos
+│   │       │   └── [id].js      # GET/PUT/DELETE /api/eventos/:id
+│   │       ├── noticias/        # APIs de noticias
+│   │       ├── search/          # APIs de búsqueda
+│   │       ├── comments/        # APIs de comentarios
+│   │       ├── admin/           # APIs de administración
+│   │       │   ├── dashboard.js # Dashboard stats
+│   │       │   ├── stats.js     # Analytics avanzadas
+│   │       │   └── users/       # Gestión de usuarios
+│   │       └── system/          # APIs de sistema
+│   │           ├── health.js    # Health checks
+│   │           ├── config.js    # Configuraciones
+│   │           ├── logs.js      # Sistema de logs
+│   │           └── maintenance.js # Mantenimiento
+│   │
+│   ├── dist/                    # Build de producción
+│   ├── _headers                 # Headers HTTP para Cloudflare
+│   ├── _routes.json            # Configuración de rutas
+│   └── package.json            # Dependencias frontend
+│
+├── 📁 shared/                   # Utilidades compartidas
+├── 📁 docs/                    # Documentación técnica
+├── 📄 wrangler.toml            # Configuración Cloudflare
+├── 📄 SPRINT.txt               # Plan de sprints original
+├── 📄 SPRINT-4-COMPLETADO.md   # Documentación del Sprint 4
+└── 📄 package.json             # Configuración monorepo
+```
 │   │   │   ├── auth/     # Componentes de autenticación
 │   │   │   └── SearchBar.tsx # Búsqueda global con sugerencias
 │   │   ├── contexts/     # Context API (AuthContext)
@@ -67,53 +151,196 @@ acachile/
 │   │   │   ├── searchService.ts    # Búsqueda avanzada
 │   │   │   └── adminService.ts     # Panel administrativo
 │   │   └── types/        # TypeScript interfaces
-├── 📁 worker/            # Cloudflare Worker - Backend API
-│   ├── src/
-│   │   ├── handlers/     # Handlers por funcionalidad
-│   │   │   ├── news-handlers.ts     # APIs noticias/blog
-│   │   │   ├── comments-handlers.ts # APIs comentarios
-│   │   │   ├── search-handlers.ts   # APIs búsqueda
-│   │   │   └── admin-handlers.ts    # APIs administración
-│   │   ├── migrations/   # Migraciones D1 database
-│   │   ├── auth.ts      # Autenticación JWT personalizada
-│   │   └── index.ts     # Worker principal con todas las rutas
-├── 📁 shared/           # Tipos TypeScript compartidos
-└── 📄 wrangler.toml    # Configuración Cloudflare Workers
+│
+├── 📁 shared/           # Utilidades compartidas entre frontend/backend
+├── 📁 docs/            # Documentación técnica del proyecto
+├── 📄 wrangler.toml    # Configuración Cloudflare (RESPALDO - no usar)
+├── 📄 SPRINT.txt       # Plan original de desarrollo por sprints
+├── � SPRINT-4-COMPLETADO.md  # Documentación detallada Sprint 4
+└── 📄 package.json     # Configuración del monorepo
 ```
 
 ---
 
-## 🚀 URLs de Despliegue Actuales
+## � APIS COMPLETAS - 30+ ENDPOINTS FUNCIONALES
 
-### **Producción (100% Funcional)**
-- **Frontend**: https://acachile.pages.dev
-- **API Backend**: https://acachile-api-production.juecart.workers.dev
-- **Email Domain**: noreply@mail.juancartagena.cl (Resend verificado)
-- **Admin Panel**: https://acachile.pages.dev/admin
+### 🔐 **Autenticación** (`/api/auth/*`)
+```bash
+POST /api/auth/login            # Login con email/password ✅
+POST /api/auth/register         # Registro de nuevos usuarios ✅  
+POST /api/auth/forgot-password  # Envío email recuperación ✅
+POST /api/auth/reset-password   # Reset con token por email ✅
+GET  /api/auth/me              # Perfil del usuario actual ✅
+PUT  /api/auth/profile         # Actualizar datos de perfil ✅
+```
 
-### **Desarrollo Local**  
-- **Frontend**: http://localhost:5173 (Vite dev server)
-- **Backend API**: http://localhost:8787 (Wrangler dev)
-- **Database**: D1 local para desarrollo
+### 📅 **Eventos** (`/api/eventos/*`)
+```bash
+GET    /api/eventos            # Lista de eventos con filtros ✅
+POST   /api/eventos            # Crear nuevo evento ✅
+GET    /api/eventos/:id        # Detalle de evento específico ✅
+PUT    /api/eventos/:id        # Actualizar evento ✅
+DELETE /api/eventos/:id        # Eliminar evento ✅
+POST   /api/eventos/:id/inscribirse    # Inscribirse a evento ✅
+DELETE /api/eventos/:id/cancelar       # Cancelar inscripción ✅
+GET    /api/mis-inscripciones   # Eventos del usuario actual ✅
+```
+
+### 📰 **Noticias/Blog** (`/api/noticias/*`)
+```bash
+GET    /api/noticias           # Lista de noticias ✅
+POST   /api/noticias           # Crear nueva noticia ✅
+GET    /api/noticias/:slug     # Detalle de noticia por slug ✅
+PUT    /api/noticias/:id       # Actualizar noticia ✅
+DELETE /api/noticias/:id       # Eliminar noticia ✅
+```
+
+### 💬 **Comentarios** (`/api/comments/*`)
+```bash
+GET    /api/comments           # Comentarios por tipo/ID ✅
+POST   /api/comments           # Crear comentario ✅
+PUT    /api/comments/:id       # Editar comentario ✅  
+DELETE /api/comments/:id       # Eliminar comentario ✅
+POST   /api/comments/like      # Like/Unlike comentario ✅
+GET    /api/comments/stats     # Estadísticas de comentarios ✅
+PUT    /api/comments/moderate  # Moderar comentarios ✅
+```
+
+### 🔍 **Búsqueda** (`/api/search/*`)
+```bash
+GET    /api/search            # Búsqueda global con filtros ✅
+GET    /api/search/suggestions # Sugerencias de búsqueda ✅
+```
+
+### 🛠️ **Administración** (`/api/admin/*`)
+```bash
+GET    /api/admin/dashboard   # Estadísticas del sistema ✅
+GET    /api/admin/users       # Lista de usuarios ✅
+POST   /api/admin/users       # Crear usuario ✅
+GET    /api/admin/users/:id   # Detalle de usuario ✅
+PUT    /api/admin/users/:id   # Actualizar usuario ✅
+DELETE /api/admin/users/:id   # Eliminar usuario ✅
+GET    /api/admin/stats       # Analytics avanzadas ✅
+```
+
+### 🏥 **Sistema** (`/api/system/*`)
+```bash
+GET    /api/system/health     # Health check del sistema ✅
+GET    /api/system/config     # Configuraciones ✅
+PUT    /api/system/config     # Actualizar configuraciones ✅
+GET    /api/system/logs       # Logs del sistema ✅
+POST   /api/system/logs       # Crear log ✅
+GET    /api/system/maintenance # Estado de mantenimiento ✅
+POST   /api/system/maintenance # Operaciones de mantenimiento ✅
+```
 
 ---
 
-## 📊 APIs Completamente Implementadas (25+ Endpoints)
+## 🗄️ ESQUEMA DE BASE DE DATOS (Cloudflare D1)
 
-### **🔐 Autenticación** (`/api/auth/*`)
-```bash
-POST   /api/auth/login                    # Login usuario
-POST   /api/auth/register                 # Registro usuario
-POST   /api/auth/forgot-password          # Recuperar contraseña ✅
-POST   /api/auth/reset-password           # Cambiar contraseña ✅
-POST   /api/auth/change-password          # Cambiar contraseña logueado
-GET    /api/auth/me                       # Perfil usuario actual
-PUT    /api/auth/profile                  # Actualizar perfil
+### **Tablas Principales**
+```sql
+-- Usuarios con roles y autenticación
+users (
+  id TEXT PRIMARY KEY,
+  username TEXT UNIQUE,
+  email TEXT UNIQUE,
+  password_hash TEXT,
+  role TEXT DEFAULT 'user',
+  created_at DATETIME,
+  updated_at DATETIME,
+  deleted_at DATETIME,
+  last_login DATETIME
+)
+
+-- Eventos con gestión completa
+events (
+  id TEXT PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  date DATETIME,
+  location TEXT,
+  max_attendees INTEGER,
+  current_attendees INTEGER,
+  created_by TEXT,
+  created_at DATETIME,
+  updated_at DATETIME,
+  archived BOOLEAN
+)
+
+-- Inscripciones a eventos
+event_inscriptions (
+  id TEXT PRIMARY KEY,
+  event_id TEXT,
+  user_id TEXT,
+  inscription_date DATETIME,
+  cancelled_at DATETIME
+)
+
+-- Sistema de noticias/blog
+news (
+  id TEXT PRIMARY KEY,
+  title TEXT,
+  slug TEXT UNIQUE,
+  content TEXT,
+  excerpt TEXT,
+  author_id TEXT,
+  published BOOLEAN,
+  created_at DATETIME,
+  updated_at DATETIME
+)
+
+-- Comentarios con likes y moderación
+comments (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  content TEXT,
+  item_type TEXT,
+  item_id TEXT,
+  parent_id TEXT,
+  status TEXT DEFAULT 'pending',
+  likes INTEGER DEFAULT 0,
+  created_at DATETIME,
+  updated_at DATETIME
+)
+
+-- Tokens para recuperación de contraseña
+password_reset_tokens (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  token TEXT UNIQUE,
+  expires_at DATETIME,
+  used_at DATETIME
+)
 ```
 
-### **📰 Noticias/Blog** (`/api/news/*`)
-```bash
-GET    /api/news                         # Lista noticias con filtros
+### **Cloudflare KV Storage Structure**
+```javascript
+// Cache de eventos
+eventos:all = [array de eventos]
+eventos:stats = {total, active, archived}
+
+// Cache de noticias  
+noticias:all = [array de noticias]
+noticias:slug:{slug} = {noticia completa}
+
+// Sistema de comentarios
+comments:{tipo}:{id} = [array de comentarios]
+comments:stats:{tipo}:{id} = {total, likes}
+
+// Configuraciones del sistema
+system:config = {configuraciones globales}
+stats:users:total = {count, last_updated}
+
+// Logs del sistema
+logs:system:list = [array de IDs de logs]
+logs:system:{id} = {log completo}
+audit:config:list = [array de cambios de config]
+
+// Operaciones de mantenimiento  
+maintenance:log = [historial de operaciones]
+backup:{id} = {backup completo del sistema}
+```
 GET    /api/news/categories              # Categorías disponibles
 GET    /api/news/tags                    # Tags disponibles
 GET    /api/news/:slug                   # Detalle noticia por slug
@@ -268,24 +495,14 @@ npx wrangler secret put RESEND_API_KEY
 # Valor actual: re_Yk8S9iyk_63xGiXBqE3K2wG6ckLzq9zyM
 ```
 
----
 
-## 🚀 Comandos de Desarrollo
+## 🚀 Comandos Principales (desde la raíz)
 
-### **Frontend Development**
 ```bash
-cd frontend
-npm run dev          # Servidor desarrollo (localhost:5173)
-npm run build        # Build para producción
-npm run preview      # Preview del build
-```
-
-### **Backend Development**
-```bash
-cd worker
-npm run dev          # Worker local (localhost:8787)
-npm run build        # Build worker
-npm run deploy       # Deploy a Cloudflare Workers
+npm run dev          # Inicia el entorno de desarrollo unificado.
+npm run build        # Construye el proyecto para producción.
+npm run deploy       # Despliega en Cloudflare Pages.
+npm run lint         # Revisa la calidad del código.
 ```
 
 ### **Database Management**
@@ -1159,6 +1376,148 @@ From: noreply@mail.juancartagena.cl
 
 ---
 
-**📝 Última actualización**: 14 de octubre de 2025  
-**🔄 Versión**: 1.0.0 (Sistema completo funcional)  
-**⚡ Status**: Producción - Sistema estable y operativo
+---
+
+## 🤖 GUÍA PARA IA DE CONTINUACIÓN
+
+### 🚀 **Comandos Esenciales de Desarrollo**
+```bash
+# INSTALACIÓN Y SETUP INICIAL
+npm install                           # Instalar todas las dependencias
+cd frontend && npm install            # Dependencias del frontend
+
+# DESARROLLO LOCAL
+npm run dev                          # Iniciar frontend (React + Vite)
+cd frontend && npm run dev           # Solo frontend en puerto 5173
+cd frontend && npx wrangler pages dev dist # Desarrollo con Functions
+
+# BUILD Y DEPLOY
+npm run build                        # Build completo del proyecto
+cd frontend && npm run build         # Solo build del frontend
+cd frontend && npx wrangler pages deploy dist --project-name acachile-prod
+
+# BASE DE DATOS (Si necesitas hacer migraciones)
+npx wrangler d1 migrations list --database-name acachile-prod-db
+npx wrangler d1 migrations apply --database-name acachile-prod-db
+
+# GIT (Siempre hacer antes de cambios importantes)
+git add . && git commit -m "feat: descripción del cambio" && git push origin main
+```
+
+### 📋 **Archivos Críticos a Revisar**
+```bash
+# CONFIGURACIÓN PRINCIPAL
+frontend/package.json           # Dependencias y scripts
+frontend/wrangler.toml         # Config Cloudflare Pages
+frontend/_headers              # Headers HTTP importantes  
+frontend/_routes.json          # Routing configuration
+
+# SERVICIOS API (para agregar nuevos endpoints)
+frontend/src/services/         # Todos los servicios del frontend
+frontend/functions/api/        # Backend APIs (Pages Functions)
+
+# COMPONENTES PRINCIPALES
+frontend/src/pages/            # Todas las páginas de la app
+frontend/src/components/layout/ # Layout principal y AdminLayout
+frontend/src/App.tsx           # Configuración de rutas
+
+# DOCUMENTACIÓN
+SPRINT.txt                     # Plan original de desarrollo
+SPRINT-4-COMPLETADO.md         # Documentación detallada Sprint 4
+```
+
+### 🔑 **Variables de Entorno y Secretos**
+```bash
+# EN CLOUDFLARE DASHBOARD (Pages > Settings > Environment Variables)
+RESEND_API_KEY=re_***          # Para envío de emails
+JWT_SECRET=***                 # Para firmar tokens JWT
+ENVIRONMENT=production         # Ambiente actual
+
+# BINDINGS (en wrangler.toml y Cloudflare Dashboard)  
+ACA_DB         # Cloudflare D1 Database
+ACA_KV         # Cloudflare KV Storage
+EMAIL_API_KEY  # Resend API Key binding
+```
+
+### 🎯 **Contexto para Tomar Decisiones**
+1. **Arquitectura**: Todo está en Cloudflare (Pages + Functions + D1 + KV)
+2. **Monorepo**: El proyecto usa un workspace con frontend/ como principal
+3. **No Workers separados**: Todo el backend está en Pages Functions  
+4. **Base de datos**: D1 (SQLite) con KV para cache y datos temporales
+5. **Email**: Resend API configurado y funcionando
+6. **Autenticación**: JWT personalizado (sin bibliotecas externas)
+7. **Frontend**: React 18 + TypeScript + Tailwind CSS
+
+### ⚠️ **Cosas Importantes que NO Debes Cambiar**
+- ❌ No mover archivos de `/frontend/functions/api/` (son las APIs del backend)
+- ❌ No cambiar la estructura de D1 sin migraciones
+- ❌ No modificar `frontend/_headers` (configuración MIME types crítica)
+- ❌ No usar bibliotecas JWT externas (implementación personalizada funciona)
+- ❌ No cambiar los bindings de wrangler.toml sin confirmar en Cloudflare
+
+### ✅ **Lo que SÍ Puedes Hacer Libremente**  
+- ✅ Agregar nuevas páginas en `frontend/src/pages/`
+- ✅ Crear nuevos endpoints en `frontend/functions/api/`
+- ✅ Modificar componentes React existentes
+- ✅ Agregar nuevas tablas D1 (con migraciones)
+- ✅ Actualizar estilos y UI/UX
+- ✅ Optimizar performance y SEO
+- ✅ Agregar nuevas funcionalidades al admin panel
+
+### 🧭 **Roadmap de Funcionalidades Sugeridas**
+```bash
+# PRIORIDAD ALTA (listo para implementar)
+- Sistema de notificaciones push
+- Optimización de performance (lazy loading, code splitting)
+- PWA features (service worker, offline support)
+- Analytics avanzadas y reportes
+
+# PRIORIDAD MEDIA  
+- Sistema de favoritos para eventos/noticias
+- Upload de imágenes para eventos y noticias
+- Sistema de tags y categorías avanzado
+- Chat en tiempo real entre usuarios
+
+# PRIORIDAD BAJA
+- Integración con redes sociales
+- Sistema de pagos para eventos premium  
+- App móvil nativa (React Native)
+- Multi-idioma (i18n)
+```
+
+### 🎯 **Testing y Quality Assurance**
+```bash
+# URLs para probar funcionalidades
+https://f0191c48.acachile-prod.pages.dev/          # Homepage
+https://f0191c48.acachile-prod.pages.dev/eventos   # Eventos
+https://f0191c48.acachile-prod.pages.dev/noticias  # Noticias  
+https://f0191c48.acachile-prod.pages.dev/admin     # Panel Admin
+
+# Usuarios de prueba (crear si necesitas)
+Admin: admin@acachile.cl / password123
+User: user@acachile.cl / password123
+
+# Health check del sistema
+curl https://f0191c48.acachile-prod.pages.dev/api/system/health?detailed=true
+```
+
+---
+
+## 📞 **INFORMACIÓN DE CONTACTO Y CONTINUIDAD**
+
+**Para cualquier IA que continúe este proyecto:**
+
+1. **Lee completamente** este README y `SPRINT-4-COMPLETADO.md`
+2. **Revisa la estructura** de archivos antes de hacer cambios
+3. **Haz siempre backup** con git commit antes de cambios mayores  
+4. **Respeta la arquitectura** existente (Cloudflare ecosystem)
+5. **Documenta** los cambios que hagas en commits descriptivos
+
+**El proyecto está en excelente estado y listo para desarrollo continuo.**
+
+---
+
+**📝 Última actualización**: 15 de octubre de 2025  
+**🔄 Versión**: 1.0.0 (4 Sprints completados - Sistema completo funcional)  
+**⚡ Status**: Producción - Listo para desarrollo continuo por cualquier IA
+**🚀 Completitud**: 100% - Todas las funcionalidades principales implementadas
