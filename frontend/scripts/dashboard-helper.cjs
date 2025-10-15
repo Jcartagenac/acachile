@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const CONFIG = {
-  projectName: 'acachile-frontend',
+  projectName: 'acachile-prod',
   accountId: '172194a6569df504cbb8a638a94d3d2c',
   bindings: {
     d1: { name: 'DB', id: '086f0530-48b6-41db-95ab-77bce733f0df', database: 'acachile-db' },

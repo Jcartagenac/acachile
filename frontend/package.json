@@ -10,11 +10,11 @@
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "wrangler pages deploy dist --project-name=acachile",
+    "deploy": "wrangler pages deploy dist --project-name=acachile-prod",
     "deploy:auto": "node scripts/intelligent-deploy.cjs",
     "setup-bindings": "node scripts/dashboard-helper.cjs",
-    "check-bindings": "curl -s https://acachile-frontend.pages.dev/api/bindings | jq .",
-    "health-check": "curl -s https://acachile-frontend.pages.dev/api/health | jq ."
+    "check-bindings": "curl -s https://acachile-prod.pages.dev/api/bindings | jq .",
+    "health-check": "curl -s https://acachile-prod.pages.dev/api/health | jq ."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
