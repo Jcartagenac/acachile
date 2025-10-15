@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
@@ -17,6 +18,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = 'login' 
 }) => {
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMode(initialMode);
@@ -38,6 +40,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSuccess = () => {
     onClose();
+    // Redirigir al usuario a eventos después del login exitoso
+    navigate('/eventos');
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
