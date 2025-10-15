@@ -227,6 +227,9 @@ async function resetEventosData(env) {
     const eventosIndex = eventosACA.map(e => ({ id: e.id, title: e.title, date: e.date, type: e.type }));
     await env.ACA_KV.put('eventos:index', JSON.stringify(eventosIndex));
 
+    // ¡IMPORTANTE! Guardar todos los eventos para el endpoint GET
+    await env.ACA_KV.put('eventos:all', JSON.stringify(eventosACA));
+
     console.log(`Successfully reset ${eventosACA.length} eventos with ACA Chile data`);
     
     return {
