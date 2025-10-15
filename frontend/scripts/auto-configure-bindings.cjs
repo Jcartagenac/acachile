@@ -10,7 +10,7 @@ const { execSync } = require('child_process');
 
 const CONFIG = {
   accountId: '172194a6569df504cbb8a638a94d3d2c',
-  projectName: 'acachile-frontend',
+  projectName: 'acachile-prod',
   bindings: {
     d1Databases: [{
       binding: 'DB',
@@ -22,10 +22,10 @@ const CONFIG = {
     }],
     vars: {
       ENVIRONMENT: 'production',
-      CORS_ORIGIN: 'https://acachile-frontend.pages.dev',
+      CORS_ORIGIN: 'https://acachile-prod.pages.dev',
       FROM_EMAIL: 'noreply@mail.juancartagena.cl',
       ADMIN_EMAIL: 'admin@acachile.cl',
-      FRONTEND_URL: 'https://acachile-frontend.pages.dev'
+      FRONTEND_URL: 'https://acachile-prod.pages.dev'
     }
   }
 };
@@ -163,8 +163,8 @@ async function deployWithBindings() {
     const result = execSync(deployCmd, { encoding: 'utf8', stdio: 'pipe' });
     
     // Extraer URL del deployment
-    const urlMatch = result.match(/https:\/\/[a-f0-9]+\.acachile-frontend\.pages\.dev/);
-    const deploymentUrl = urlMatch ? urlMatch[0] : 'https://acachile-frontend.pages.dev';
+    const urlMatch = result.match(/https:\/\/[a-f0-9]+\.acachile-prod\.pages\.dev/);
+    const deploymentUrl = urlMatch ? urlMatch[0] : 'https://acachile-prod.pages.dev';
     
     console.log('✅ Deployment completado!');
     console.log('🌐 URL:', deploymentUrl);

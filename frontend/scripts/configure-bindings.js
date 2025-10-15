@@ -9,7 +9,7 @@ const https = require('https');
 
 // Configuración
 const ACCOUNT_ID = '172194a6569df504cbb8a638a94d3d2c';
-const PROJECT_NAME = 'acachile-frontend';
+const PROJECT_NAME = 'acachile-prod';
 
 // Bindings a configurar
 const BINDINGS = {
@@ -27,10 +27,10 @@ const BINDINGS = {
   ],
   environment_variables: [
     { name: 'ENVIRONMENT', value: 'production' },
-    { name: 'CORS_ORIGIN', value: 'https://acachile-frontend.pages.dev' },
+    { name: 'CORS_ORIGIN', value: 'https://acachile-prod.pages.dev' },
     { name: 'FROM_EMAIL', value: 'noreply@mail.juancartagena.cl' },
     { name: 'ADMIN_EMAIL', value: 'admin@acachile.cl' },
-    { name: 'FRONTEND_URL', value: 'https://acachile-frontend.pages.dev' }
+    { name: 'FRONTEND_URL', value: 'https://acachile-prod.pages.dev' }
   ]
 };
 
@@ -98,7 +98,7 @@ async function configureBindings() {
     console.log('   - KV Namespace: Variable="ACA_KV", Namespace="[seleccionar producción]"');
     
     console.log('\n✅ Las bindings están funcionando correctamente via wrangler.toml');
-    console.log('✅ Verificación: curl https://acachile-frontend.pages.dev/api/bindings');
+    console.log('✅ Verificación: curl https://acachile-prod.pages.dev/api/bindings');
     
     return true;
   } catch (error) {

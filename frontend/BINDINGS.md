@@ -12,7 +12,7 @@ Hacer que las bindings aparezcan en la pestaña "Functions" del dashboard de Clo
 
 ### 1. Acceder al Dashboard
 ```
-https://dash.cloudflare.com/172194a6569df504cbb8a638a94d3d2c/pages/view/acachile-frontend
+https://dash.cloudflare.com/172194a6569df504cbb8a638a94d3d2c/pages/view/acachile-prod
 ```
 
 ### 2. Ir a Functions Tab
@@ -37,10 +37,10 @@ https://dash.cloudflare.com/172194a6569df504cbb8a638a94d3d2c/pages/view/acachile
 ### 5. Variables de Entorno (Opcional)
 ```
 • ENVIRONMENT: production
-• CORS_ORIGIN: https://acachile-frontend.pages.dev
+• CORS_ORIGIN: https://acachile-prod.pages.dev
 • FROM_EMAIL: noreply@mail.juancartagena.cl
 • ADMIN_EMAIL: admin@acachile.cl
-• FRONTEND_URL: https://acachile-frontend.pages.dev
+• FRONTEND_URL: https://acachile-prod.pages.dev
 ```
 
 ### 6. Guardar
@@ -51,12 +51,12 @@ https://dash.cloudflare.com/172194a6569df504cbb8a638a94d3d2c/pages/view/acachile
 
 ### Estado de Bindings:
 ```bash
-curl https://acachile-frontend.pages.dev/api/bindings
+curl https://acachile-prod.pages.dev/api/bindings
 ```
 
 ### Health Check:
 ```bash
-curl https://acachile-frontend.pages.dev/api/health
+curl https://acachile-prod.pages.dev/api/health
 ```
 
 ### Resultado Esperado:
