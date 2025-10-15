@@ -84,7 +84,7 @@ const NewsPage: React.FC = () => {
 
   const getSuggestions = async () => {
     try {
-      const response = await searchService.getSuggestions(searchQuery, 'noticias');
+      const response = await searchService.getSuggestions(searchQuery);
       if (response.success && response.data) {
         setSearchSuggestions(response.data);
         setShowSuggestions(true);
@@ -123,19 +123,19 @@ const NewsPage: React.FC = () => {
 
   if (loading && articles.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-8"></div>
+            <div className="h-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-1/3 mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className="h-48 bg-gray-200"></div>
+                <div key={i} className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] overflow-hidden">
+                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff]"></div>
                   <div className="p-6">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-1/2 mb-4"></div>
+                    <div className="h-3 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-full mb-2"></div>
+                    <div className="h-3 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-2/3"></div>
                   </div>
                 </div>
               ))}
@@ -147,7 +147,7 @@ const NewsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -159,8 +159,8 @@ const NewsPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Barra de búsqueda y filtros */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        {/* Barra de búsqueda y filtros - Neumórfico */}
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Búsqueda */}
             <div className="relative md:col-span-2">
@@ -171,7 +171,7 @@ const NewsPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff] border-0 focus:outline-none focus:shadow-[inset_6px_6px_12px_#bebebe,inset_-6px_-6px_12px_#ffffff] transition-all duration-200"
                 />
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 <button
@@ -202,7 +202,7 @@ const NewsPage: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff] border-0 focus:outline-none focus:shadow-[inset_6px_6px_12px_#bebebe,inset_-6px_-6px_12px_#ffffff] transition-all duration-200"
             >
               <option value="">Todas las categorías</option>
               {categories.map((category) => (
@@ -219,7 +219,7 @@ const NewsPage: React.FC = () => {
                   type="checkbox"
                   checked={showFeaturedOnly}
                   onChange={(e) => setShowFeaturedOnly(e.target.checked)}
-                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  className="w-5 h-5 rounded-lg border-0 bg-gradient-to-br from-gray-100 to-gray-50 shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] checked:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff] checked:bg-gradient-to-br checked:from-red-400 checked:to-red-500 focus:outline-none transition-all duration-200"
                 />
                 <span className="ml-2 text-sm text-gray-700">Destacadas</span>
               </label>
@@ -247,7 +247,7 @@ const NewsPage: React.FC = () => {
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {articles.map((article) => (
-              <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={article.id} className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] overflow-hidden hover:shadow-[4px_4px_8px_#bebebe,-4px_-4px_8px_#ffffff] transition-shadow">
                 {/* Imagen destacada */}
                 {article.featured_image && (
                   <Link to={`/noticias/${article.slug}`}>
@@ -265,13 +265,13 @@ const NewsPage: React.FC = () => {
                   {/* Categoría y fecha */}
                   <div className="flex items-center justify-between mb-3">
                     <span
-                      className="inline-block px-3 py-1 rounded-full text-xs font-medium text-white"
+                      className="inline-block px-3 py-1 rounded-lg text-xs font-medium text-white shadow-[inset_2px_2px_4px_rgba(0,0,0,0.2)]"
                       style={{ backgroundColor: article.category.color }}
                     >
                       {article.category.name}
                     </span>
                     {article.is_featured && (
-                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded">
+                      <span className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-yellow-800 text-xs font-medium px-3 py-1 rounded-lg shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1)]">
                         Destacada
                       </span>
                     )}
