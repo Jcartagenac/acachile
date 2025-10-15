@@ -168,14 +168,14 @@ class SearchService {
   }
 
   // Obtener sugerencias de autocompletado
-  async getSuggestions(query: string, type?: 'eventos' | 'noticias'): Promise<SuggestionsResponse> {
+  async getSuggestions(query: string, limit?: number): Promise<SuggestionsResponse> {
     try {
       const searchParams = new URLSearchParams();
       searchParams.append('q', query);
-      if (type) searchParams.append('type', type);
+      if (limit) searchParams.append('limit', limit.toString());
 
       const response = await fetch(
-        `${API_BASE_URL}/api/search/suggestions?query=${encodeURIComponent(query)}${type ? `&type=${type}` : ''}`,
+        `${API_BASE_URL}/api/search/suggestions?${searchParams.toString()}`,
         {
           method: 'GET',
           headers: this.getAuthHeaders(),
@@ -204,10 +204,18 @@ class SearchService {
   // Búsqueda avanzada
   async advancedSearch(filters: AdvancedSearchFilters): Promise<AdvancedSearchResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/busqueda/avanzada`, {
-        method: 'POST',
+      const searchParams = new URLSearchParams();
+      if (filters.query) searchParams.append('q', filters.query);
+      if (filters.tipo) searchParams.append('type', filters.tipo);
+      if (filters.limit) searchParams.append('limit', filters.limit.toString());
+      if (filters.page) {
+        const offset = (filters.page - 1) * (filters.limit || 10);
+        searchParams.append('offset', offset.toString());
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/search?${searchParams.toString()}`, {
+        method: 'GET',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(filters),
       });
 
       if (!response.ok) {
@@ -215,9 +223,24 @@ class SearchService {
       }
 
       const result = await response.json();
+      
+      // Adaptar la respuesta al formato esperado
+      const total = result.data?.total || 0;
+      const limit = filters.limit || 10;
+      const page = filters.page || 1;
+      
       return {
         success: true,
-        data: result
+        data: {
+          results: result.data?.combined || [],
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+          },
+          filters
+        }
       };
     } catch (error) {
       console.error('Error in advanced search:', error);
@@ -231,19 +254,22 @@ class SearchService {
   // Obtener búsquedas populares
   async getPopularSearches(): Promise<PopularSearchesResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/busqueda/populares`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      // Por ahora, devolvemos datos simulados hasta implementar el endpoint
       return {
         success: true,
-        data: result
+        data: {
+          eventos: [
+            { titulo: "Campeonato Nacional de Ajedrez", popularidad: 95 },
+            { titulo: "Torneo Blitz Nocturno", popularidad: 78 },
+            { titulo: "Encuentro de Ajedrez Rápido", popularidad: 65 }
+          ],
+          noticias: [
+            { titulo: "Gran Torneo Nacional de Ajedrez 2025", vistas: 1250 },
+            { titulo: "Nuevo Taller de Aperturas", vistas: 890 },
+            { titulo: "Masterclass de Finales", vistas: 650 }
+          ],
+          terminos: ["ajedrez", "torneo", "campeonato", "blitz", "rápido"]
+        }
       };
     } catch (error) {
       console.error('Error getting popular searches:', error);
