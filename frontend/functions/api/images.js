@@ -1,6 +1,7 @@
-// Proxy principal para servir imágenes desde R2 con CORS apropiado
+// Proxy principal para servir imágenes desde R2 con CORS apropiado  
 // GET /api/images?path=categoria/archivo.jpg - Servir imágenes desde R2
-// Usa R2 binding nativo de Cloudflare Workers
+// Usa R2 binding nativo de Cloudflare Workers (sin AWS SDK)
+// Build: 2025-10-15 v2.0
 
 export async function onRequest(context) {
   const { request, env } = context;
