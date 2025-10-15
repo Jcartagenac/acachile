@@ -251,11 +251,45 @@ class UserService {
     }
   }
 
+  // Obtener preferencias de notificación
+  async getNotificationPreferences(): Promise<ApiResponse<any>> {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (!this.authContext?.user) {
+        return { success: false, error: 'Usuario no autenticado' };
+      }
+
+      // Mock data - en producción vendrá de la BD del usuario
+      const preferences = {
+        noticiasImportantes: true,
+        noticiasCorrientes: false,
+        comunicadosUrgentes: true,
+        medios: {
+          email: true,
+          whatsapp: true,
+          sms: false
+        }
+      };
+
+      return { success: true, data: preferences };
+    } catch (error) {
+      console.error('Error getting notification preferences:', error);
+      return { success: false, error: 'Error obteniendo preferencias' };
+    }
+  }
+
   // Actualizar preferencias de notificación
   async updateNotificationPreferences(preferences: any): Promise<ApiResponse<void>> {
     try {
-      // Mock implementation - replace with real API call
       await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (!this.authContext?.user) {
+        return { success: false, error: 'Usuario no autenticado' };
+      }
+
+      // En producción aquí se actualizaría en la BD
+      console.log('Actualizando preferencias de notificación:', preferences);
       
       return { 
         success: true, 

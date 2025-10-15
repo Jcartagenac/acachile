@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   Trophy, 
@@ -7,42 +7,73 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Search
+  Search,
+  Loader2
 } from 'lucide-react';
-import { MembershipPayment, Tournament, Award as AwardType } from '@shared/index';
+import { useAccountService } from '../../hooks/useAccountService';
+import { MembershipPayment, Tournament, Award as AwardType, UserEvent } from '../../services/accountService';
 
 export const AccountModule: React.FC = () => {
+  const accountService = useAccountService();
   const [activeTab, setActiveTab] = useState<'payments' | 'tournaments' | 'awards' | 'events'>('payments');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState<string>('2024');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Data states
+  const [payments, setPayments] = useState<MembershipPayment[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [awards, setAwards] = useState<AwardType[]>([]);
+  const [events, setEvents] = useState<UserEvent[]>([]);
 
-  // Mock data - En producción vendrá de API
-  const payments: MembershipPayment[] = [
-    { id: 1, userId: 1, month: 10, year: 2024, amount: 25000, paid: true, paidDate: '2024-10-05', paymentMethod: 'transferencia' },
-    { id: 2, userId: 1, month: 9, year: 2024, amount: 25000, paid: true, paidDate: '2024-09-03', paymentMethod: 'efectivo' },
-    { id: 3, userId: 1, month: 8, year: 2024, amount: 25000, paid: false },
-    { id: 4, userId: 1, month: 7, year: 2024, amount: 25000, paid: true, paidDate: '2024-07-02', paymentMethod: 'tarjeta' },
-    { id: 5, userId: 1, month: 6, year: 2024, amount: 25000, paid: true, paidDate: '2024-06-05', paymentMethod: 'transferencia' },
-  ];
+  // Load data from services
+  useEffect(() => {
+    loadAccountData();
+  }, []);
 
-  const tournaments: Tournament[] = [
-    { id: 1, name: 'Campeonato Nacional de Asado 2024', date: '2024-09-15', position: 3, participants: 24, category: 'Profesional' },
-    { id: 2, name: 'Torneo Regional Santiago', date: '2024-07-20', position: 1, participants: 16, category: 'Amateur' },
-    { id: 3, name: 'Copa ACA Primavera', date: '2024-06-10', position: 5, participants: 32, category: 'Profesional' },
-    { id: 4, name: 'Desafío Parrilleros del Sur', date: '2024-05-05', position: 2, participants: 12, category: 'Regional' },
-  ];
+  // Reload payments when filter year changes
+  useEffect(() => {
+    const loadPayments = async () => {
+      const response = await accountService.getMembershipPayments(parseInt(filterYear));
+      if (response.success && response.data) {
+        setPayments(response.data);
+      }
+    };
+    loadPayments();
+  }, [filterYear]);
 
-  const awards: AwardType[] = [
-    { id: 1, title: 'Mejor Asado Tradicional', description: 'Primer lugar en categoría tradicional', date: '2024-09-15', category: 'torneo' },
-    { id: 2, title: 'Participación Destacada', description: 'Por excelente participación en eventos 2024', date: '2024-08-01', category: 'reconocimiento' },
-    { id: 3, title: 'Asistencia Perfecta', description: 'Asistió a todos los eventos del año', date: '2024-07-15', category: 'participacion' },
-  ];
+  const loadAccountData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [paymentsRes, tournamentsRes, awardsRes, eventsRes] = await Promise.all([
+        accountService.getMembershipPayments(parseInt(filterYear)),
+        accountService.getUserTournaments(),
+        accountService.getUserAwards(),
+        accountService.getUserEvents()
+      ]);
 
-  const eventsParticipated = [
-    { id: 1, title: 'Workshop de Técnicas Avanzadas', date: '2024-10-01', type: 'taller' },
-    { id: 2, title: 'Encuentro Mensual Octubre', date: '2024-10-15', type: 'encuentro' },
-    { id: 3, title: 'Masterclass con Chef Invitado', date: '2024-09-20', type: 'masterclass' },
-  ];
+      if (paymentsRes.success && paymentsRes.data) {
+        setPayments(paymentsRes.data);
+      }
+      if (tournamentsRes.success && tournamentsRes.data) {
+        setTournaments(tournamentsRes.data);
+      }
+      if (awardsRes.success && awardsRes.data) {
+        setAwards(awardsRes.data);
+      }
+      if (eventsRes.success && eventsRes.data) {
+        setEvents(eventsRes.data);
+      }
+    } catch (error) {
+      console.error('Error loading account data:', error);
+      setError('Error cargando datos de la cuenta');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getMonthName = (month: number) => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -80,8 +111,38 @@ export const AccountModule: React.FC = () => {
     { id: 'payments', title: 'Cuotas', icon: CreditCard, count: filteredPayments.length },
     { id: 'tournaments', title: 'Torneos', icon: Trophy, count: tournaments.length },
     { id: 'awards', title: 'Premios', icon: Award, count: awards.length },
-    { id: 'events', title: 'Eventos', icon: Calendar, count: eventsParticipated.length },
+    { id: 'events', title: 'Eventos', icon: Calendar, count: events.length },
   ];
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+          <span className="ml-2 text-neutral-600">Cargando datos de la cuenta...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6">
+        <div className="text-center py-12">
+          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <button 
+            onClick={loadAccountData}
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -270,7 +331,7 @@ export const AccountModule: React.FC = () => {
 
         {activeTab === 'events' && (
           <div className="space-y-3">
-            {eventsParticipated.map((event) => (
+            {events.map((event: UserEvent) => (
               <div key={event.id} className="flex items-center justify-between p-4 bg-white/40 backdrop-blur-soft border border-white/20 rounded-xl hover:shadow-soft-sm transition-shadow">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary-100 to-primary-200 flex items-center justify-center">

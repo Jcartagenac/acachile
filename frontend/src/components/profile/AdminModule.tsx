@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users,
   UserPlus,
@@ -14,47 +14,100 @@ import {
   Eye,
   Plus,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-
-interface Member {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  memberSince: string;
-  status: 'active' | 'inactive';
-  lastPayment: string;
-  role: string;
-}
-
-interface Communication {
-  id: number;
-  title: string;
-  content: string;
-  type: 'importante' | 'corriente' | 'urgente';
-  recipients: string[];
-  sentAt: string;
-  status: 'draft' | 'sent';
-}
+import { useAdminService, Member, Communication, PaymentRecord } from '../../hooks/useAdminService';
 
 export const AdminModule: React.FC = () => {
   const { hasPermission } = useAuth();
+  const adminService = useAdminService();
   const [activeSection, setActiveSection] = useState<'members' | 'content' | 'payments' | 'communications'>('members');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Data states
+  const [members, setMembers] = useState<Member[]>([]);
+  const [communications, setCommunications] = useState<Communication[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
 
-  // Mock data
-  const members: Member[] = [
-    { id: 1, name: 'Juan Pérez', email: 'juan@email.com', phone: '+56912345678', memberSince: '2023-01-15', status: 'active', lastPayment: '2024-10-01', role: 'usuario' },
-    { id: 2, name: 'María González', email: 'maria@email.com', phone: '+56987654321', memberSince: '2022-06-10', status: 'active', lastPayment: '2024-09-15', role: 'director' },
-    { id: 3, name: 'Carlos Silva', email: 'carlos@email.com', phone: '+56911222333', memberSince: '2024-02-01', status: 'inactive', lastPayment: '2024-07-01', role: 'usuario' },
-  ];
+  // Load admin data
+  useEffect(() => {
+    loadAdminData();
+  }, []);
 
-  const communications: Communication[] = [
-    { id: 1, title: 'Evento Especial - Campeonato Nacional', content: 'Se aproxima nuestro evento más importante del año...', type: 'importante', recipients: ['todos'], sentAt: '2024-10-15', status: 'sent' },
-    { id: 2, title: 'Recordatorio de Cuotas', content: 'Les recordamos que las cuotas de octubre...', type: 'corriente', recipients: ['morosos'], sentAt: '', status: 'draft' },
-  ];
+  const loadAdminData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [membersRes, communicationsRes, paymentsRes] = await Promise.all([
+        adminService.getMembers(searchTerm),
+        adminService.getCommunications(),
+        adminService.getPaymentRecords()
+      ]);
+
+      if (membersRes.success && membersRes.data) {
+        setMembers(membersRes.data);
+      }
+      if (communicationsRes.success && communicationsRes.data) {
+        setCommunications(communicationsRes.data);
+      }
+      if (paymentsRes.success && paymentsRes.data) {
+        setPayments(paymentsRes.data);
+      }
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+      setError('Error cargando datos administrativos');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Search members when search term changes
+  useEffect(() => {
+    const searchMembers = async () => {
+      const response = await adminService.getMembers(searchTerm);
+      if (response.success && response.data) {
+        setMembers(response.data);
+      }
+    };
+    
+    const timeoutId = setTimeout(searchMembers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+          <span className="ml-2 text-neutral-600">Cargando panel administrativo...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6">
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <button 
+            onClick={loadAdminData}
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Only allow access to admin and director_editor roles
   if (!hasPermission('access_admin_panel')) {

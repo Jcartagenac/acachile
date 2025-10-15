@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Lock, 
   Bell, 
@@ -47,6 +47,18 @@ export const SettingsModule: React.FC = () => {
       sms: false
     }
   });
+
+  // Load notification preferences on component mount
+  useEffect(() => {
+    const loadNotificationPreferences = async () => {
+      const response = await userService.getNotificationPreferences();
+      if (response.success && response.data) {
+        setNotifications(response.data);
+      }
+    };
+    
+    loadNotificationPreferences();
+  }, []);
 
   const [isLoading, setIsLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
