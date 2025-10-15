@@ -185,11 +185,10 @@ class UserService {
     }
   }
 
-  // Subir avatar
+    // Subir avatar de usuario (DEPRECATED - use imageService instead)
   async uploadAvatar(file: File): Promise<ApiResponse<{ avatarUrl: string }>> {
     try {
-      // Mock implementation - replace with real file upload
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.warn('⚠️ userService.uploadAvatar is deprecated. Use imageService.uploadAvatar instead.');
       
       // Validate file
       if (!file.type.startsWith('image/')) {
@@ -200,8 +199,10 @@ class UserService {
         return { success: false, error: 'El archivo no puede ser mayor a 5MB' };
       }
 
-      // Create a preview URL for the uploaded file
+      // Create a temporary preview URL (will be lost on refresh)
       const avatarUrl = URL.createObjectURL(file);
+      
+      console.warn('⚠️ Esta imagen es temporal y se perderá al refrescar la página. Use imageService para persistencia en R2.');
       
       // Update the user's avatar in AuthContext if available
       if (this.authContext?.user && this.authContext.updateUser) {
@@ -211,7 +212,7 @@ class UserService {
       return { 
         success: true, 
         data: { avatarUrl }, 
-        message: 'Avatar subido exitosamente' 
+        message: 'Avatar subido exitosamente (temporal)' 
       };
     } catch (error) {
       console.error('Error uploading avatar:', error);

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAvatarPersistence } from '../../hooks/useImagePersistence';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../services/userService';
 import { useUserService } from '../../hooks/useUserService';
+import { useImageService } from '../../hooks/useImageService';
 import { 
   User, 
   Mail, 
@@ -20,6 +22,8 @@ import {
 export const ProfileModule: React.FC = () => {
   const { user } = useAuth();
   const userService = useUserService();
+  const imageService = useImageService();
+  const { updateAvatar, avatarUrl: persistedAvatarUrl } = useAvatarPersistence();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -59,13 +63,16 @@ export const ProfileModule: React.FC = () => {
       
       if (response.success && response.data) {
         setProfile(response.data);
+        // Priorizar avatar persistido sobre el del perfil
+        const avatarToUse = persistedAvatarUrl || response.data.avatar || '';
+        
         setFormData({
           firstName: response.data.firstName,
           lastName: response.data.lastName,
           email: response.data.email,
           phone: response.data.phone || '',
           direccion: response.data.direccion || '',
-          avatar: response.data.avatar || '',
+          avatar: avatarToUse,
           region: response.data.region || ''
         });
         console.log('✅ ProfileModule: Profile loaded successfully', response.data);
@@ -131,6 +138,9 @@ export const ProfileModule: React.FC = () => {
   // Calcular años en ACA desde el perfil
   const yearsInACA = profile?.acaMembership?.yearsActive || 0;
   const fechaIngreso = profile?.fechaIngreso ? new Date(profile.fechaIngreso) : new Date();
+  
+  // Determinar la URL del avatar a mostrar (priorizar avatar persistido)
+  const displayAvatarUrl = persistedAvatarUrl || formData.avatar || profile?.avatar || '';
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -140,26 +150,41 @@ export const ProfileModule: React.FC = () => {
     setMessage(null);
 
     try {
-      const response = await userService.uploadAvatar(file);
+      console.log('🖼️ Subiendo avatar a Cloudflare R2...');
+      const response = await imageService.uploadAvatar(file);
       
       if (response.success && response.data) {
-        setFormData({ ...formData, avatar: response.data.avatarUrl });
-        setMessage({ type: 'success', text: response.message || 'Avatar subido exitosamente' });
+        const avatarUrl = response.data.publicUrl;
+        const filename = response.data.filename;
         
-        // Update the profile display with new avatar
+        // Actualizar estado local
+        setFormData({ ...formData, avatar: avatarUrl });
+        
+        // Persistir en cache con hook especializado
+        updateAvatar(avatarUrl, filename);
+        
+        // Actualizar perfil visual inmediatamente
         if (profile) {
-          setProfile({ ...profile, avatar: response.data.avatarUrl });
+          setProfile({ ...profile, avatar: avatarUrl });
         }
         
-        // Reload profile to get updated data from AuthContext
+        setMessage({ 
+          type: 'success', 
+          text: 'Avatar subido y guardado exitosamente en R2' 
+        });
+        
+        console.log('✅ Avatar persistido en R2 y cache:', { avatarUrl, filename });
+        
+        // Sincronizar con AuthContext
         setTimeout(() => {
           loadProfile();
         }, 100);
       } else {
-        setMessage({ type: 'error', text: response.error || 'Error subiendo imagen' });
+        setMessage({ type: 'error', text: response.error || 'Error subiendo imagen a R2' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Error subiendo imagen' });
+      console.error('❌ Error subiendo avatar:', error);
+      setMessage({ type: 'error', text: 'Error subiendo imagen. Inténtalo nuevamente.' });
     } finally {
       setIsLoading(false);
     }
@@ -234,11 +259,17 @@ export const ProfileModule: React.FC = () => {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <div className="w-32 h-32 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg flex items-center justify-center overflow-hidden">
-                {formData.avatar ? (
+                {displayAvatarUrl ? (
                   <img
-                    src={formData.avatar}
+                    src={displayAvatarUrl}
                     alt="Foto de perfil"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback si la imagen no carga
+                      console.warn('⚠️ Error cargando avatar:', displayAvatarUrl);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <span className="text-white font-bold text-4xl">
