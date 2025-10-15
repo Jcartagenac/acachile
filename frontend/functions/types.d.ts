@@ -26,9 +26,9 @@ export interface PagesFunction<Env = {}> {
 // Request handler types for different HTTP methods
 export interface PagesRequestHandler<Env = {}> extends PagesFunction<Env> {}
 
-export const onRequestGet: PagesRequestHandler<Env>;
-export const onRequestPost: PagesRequestHandler<Env>;
-export const onRequestPut: PagesRequestHandler<Env>;
-export const onRequestPatch: PagesRequestHandler<Env>;
-export const onRequestDelete: PagesRequestHandler<Env>;
-export const onRequest: PagesRequestHandler<Env>;
+declare const onRequestGet: PagesRequestHandler<Env>;
+declare const onRequestPost: PagesRequestHandler<Env>;
+declare const onRequestPut: PagesRequestHandler<Env>;
+declare const onRequestPatch: PagesRequestHandler<Env>;
+declare const onRequestDelete: PagesRequestHandler<Env>;
+declare const onRequest: PagesRequestHandler<Env>;
