@@ -1,0 +1,220 @@
+# 🚀 MIGRACIÓN A CLOUDFLARE PAGES FUNCTIONS - PLAN DE SPRINTS
+
+## 📋 CONTEXTO
+Migrar el backend actual de Cloudflare Workers a Cloudflare Pages Functions para unificar frontend y backend en una sola aplicación de Pages.
+
+### 🎯 OBJETIVO
+- ✅ Mantener toda la funcionalidad existente
+- ✅ Unificar deployment en Cloudflare Pages  
+- ✅ Simplificar arquitectura y desarrollo
+- ✅ Mantener compatibilidad con D1, KV, Resend, etc.
+
+## 🏗️ ARQUITECTURA ACTUAL vs NUEVA
+
+### ACTUAL (Workers)
+```
+- frontend/ (Pages)
+- worker/ (Worker separado)
+- shared/ (Types compartidos)
+```
+
+### NUEVA (Pages Functions)
+```
+- frontend/
+  - src/ (React app)
+  - functions/ (Backend API)
+  - shared/ (Types compartidos)
+```
+
+---
+
+## 🎯 SPRINT 1: CONFIGURACIÓN BASE Y AUTH
+**Objetivo**: Migrar autenticación y configurar base de Pages Functions
+
+### ✅ TAREAS SPRINT 1:
+- [ ] Crear estructura `/functions` en frontend
+- [ ] Configurar TypeScript para functions
+- [ ] Configurar bindings (D1, KV, variables de entorno)
+- [ ] Migrar autenticación (login/register/forgot-password)
+- [ ] Migrar middleware de CORS y auth
+- [ ] Configurar rutas de auth: `/api/auth/*`
+- [ ] Testing de funciones auth
+
+### 📁 ESTRUCTURA SPRINT 1:
+```
+frontend/
+├── functions/
+│   ├── types.d.ts
+│   ├── tsconfig.json
+│   ├── _middleware.ts
+│   └── api/
+│       └── auth/
+│           ├── login.ts
+│           ├── register.ts
+│           ├── forgot-password.ts
+│           ├── reset-password.ts
+│           └── change-password.ts
+```
+
+---
+
+## 🎯 SPRINT 2: EVENTOS Y INSCRIPCIONES  
+**Objetivo**: Migrar gestión completa de eventos
+
+### ✅ TAREAS SPRINT 2:
+- [ ] Migrar servicios de eventos
+- [ ] Migrar handlers de eventos CRUD
+- [ ] Migrar sistema de inscripciones
+- [ ] Configurar rutas: `/api/eventos/*` y `/api/inscripciones/*`
+- [ ] Testing de eventos e inscripciones
+
+### 📁 ESTRUCTURA SPRINT 2:
+```
+frontend/functions/api/
+├── eventos/
+│   ├── index.ts (GET /api/eventos)
+│   ├── [id].ts (GET/PUT/DELETE /api/eventos/:id)
+│   └── init.ts (POST /api/eventos/init)
+└── inscripciones/
+    ├── index.ts (GET /api/inscripciones)
+    ├── [id].ts (POST/DELETE /api/inscripciones/:id)
+    └── mis-inscripciones.ts
+```
+
+---
+
+## 🎯 SPRINT 3: NOTICIAS Y BÚSQUEDA
+**Objetivo**: Migrar sistema de noticias y búsqueda
+
+### ✅ TAREAS SPRINT 3:
+- [ ] Migrar servicios de noticias
+- [ ] Migrar handlers de noticias CRUD
+- [ ] Migrar sistema de búsqueda
+- [ ] Migrar sistema de comentarios
+- [ ] Configurar rutas: `/api/news/*`, `/api/search/*`, `/api/comments/*`
+- [ ] Testing de funcionalidades
+
+### 📁 ESTRUCTURA SPRINT 3:
+```
+frontend/functions/api/
+├── news/
+│   ├── index.ts
+│   ├── [slug].ts
+│   └── admin/
+├── search/
+│   ├── index.ts
+│   └── suggestions.ts
+└── comments/
+    ├── index.ts
+    └── [id].ts
+```
+
+---
+
+## 🎯 SPRINT 4: ADMIN Y LIMPIEZA
+**Objetivo**: Migrar panel admin y finalizar migración
+
+### ✅ TAREAS SPRINT 4:
+- [ ] Migrar servicios de administración
+- [ ] Migrar handlers de admin
+- [ ] Migrar gestión de usuarios
+- [ ] Configurar rutas: `/api/admin/*`
+- [ ] Crear `_routes.json` para optimizar invocaciones
+- [ ] Testing completo del sistema
+- [ ] Deprecar Worker original
+- [ ] Documentación de la nueva arquitectura
+
+### 📁 ESTRUCTURA SPRINT 4:
+```
+frontend/functions/api/
+└── admin/
+    ├── users/
+    │   ├── index.ts
+    │   └── [id].ts
+    ├── dashboard.ts
+    └── stats.ts
+```
+
+---
+
+## 🔧 CONFIGURACIÓN TÉCNICA
+
+### Bindings Necesarios:
+- **D1**: Base de datos (`ACA_DB`)
+- **KV**: Cache y storage (`ACA_KV`) 
+- **Variables**: JWT_SECRET, ADMIN_EMAIL, etc.
+- **Secrets**: RESEND_API_KEY
+
+### TypeScript Config:
+```json
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext", 
+    "lib": ["esnext"],
+    "types": ["./types.d.ts"]
+  }
+}
+```
+
+### Wrangler Config (functions/wrangler.toml):
+```toml
+compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2024-09-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aca-chile-db"
+database_id = "tu-database-id"
+
+[[kv_namespaces]]
+binding = "ACA_KV"
+id = "tu-kv-id"
+```
+
+---
+
+## 📊 PROGRESO ACTUAL
+
+### ✅ COMPLETADO SPRINT 1:
+- ✅ Estructura `/functions` creada
+- ✅ TypeScript configurado para functions
+- ✅ Bindings configurados (wrangler.toml)
+- ✅ Middleware de CORS y auth (_middleware.ts)
+- ✅ Sistema de autenticación migrado:
+  - ✅ /api/auth/login.ts
+  - ✅ /api/auth/register.ts
+  - ✅ /api/auth/forgot-password.ts
+  - ✅ /api/auth/reset-password.ts
+  - ✅ /api/auth/change-password.ts
+  - ✅ /api/auth/me.ts (GET/PUT perfil)
+- ✅ Health check (/api/health.ts)
+- ✅ Optimización con _routes.json
+- ✅ Build funcional del frontend
+
+### 🔄 EN PROCESO:
+- **SPRINT 2**: Eventos y inscripciones (PRÓXIMO)
+
+### ⏳ PENDIENTE:
+- Sprint 2: Eventos y inscripciones
+- Sprint 3: Noticias y búsqueda  
+- Sprint 4: Admin y limpieza
+
+---
+
+## 📚 REFERENCIAS
+- [Pages Functions Docs](https://developers.cloudflare.com/pages/functions/)
+- [Pages Functions Routing](https://developers.cloudflare.com/pages/functions/routing/)
+- [Pages Functions TypeScript](https://developers.cloudflare.com/pages/functions/typescript/)
+- [Pages Functions Bindings](https://developers.cloudflare.com/pages/functions/bindings/)
+
+---
+
+## 🚨 NOTAS IMPORTANTES
+- Mantener worker original hasta completar migración
+- Testear cada sprint antes del siguiente
+- Documentar diferencias encontradas
+- Backup de configuraciones antes de cambios
+
+**Última actualización**: Sprint 1 iniciando
+**Siguiente milestone**: Autenticación funcionando en Pages Functions

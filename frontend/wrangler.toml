@@ -1,0 +1,30 @@
+name = "acachile-frontend"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+# Bindings para Pages Functions
+[[d1_databases]]
+binding = "DB"
+database_name = "aca-chile-db" 
+database_id = "your-database-id"
+preview_database_id = "your-preview-database-id"
+
+[[kv_namespaces]]
+binding = "ACA_KV"
+id = "your-kv-id"
+preview_id = "your-preview-kv-id"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://acachile.pages.dev"
+FRONTEND_URL = "https://acachile.pages.dev"
+FROM_EMAIL = "noreply@acachile.cl"
+ADMIN_EMAIL = "admin@acachile.cl"
+
+[env.preview.vars]
+ENVIRONMENT = "preview"
+CORS_ORIGIN = "*"
+FRONTEND_URL = "https://preview.acachile.pages.dev"
+FROM_EMAIL = "noreply@acachile.cl"
+ADMIN_EMAIL = "admin@acachile.cl"
