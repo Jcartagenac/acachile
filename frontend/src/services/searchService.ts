@@ -3,7 +3,7 @@
  * ACA Chile Frontend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://4ea0451b.acachile-prod.pages.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile.pages.dev';
 
 export interface SearchResult {
   type: 'evento' | 'noticia' | 'usuario';
