@@ -51,7 +51,8 @@ export const MyEventsPage: React.FC = () => {
       case 'campeonato': return '#EF4444';
       case 'taller': return '#3B82F6';
       case 'encuentro': return '#10B981';
-      case 'torneo': return '#F59E0B';
+      case 'competencia': return '#F59E0B';
+      case 'masterclass': return '#8B5CF6';
       default: return '#6B7280';
     }
   };

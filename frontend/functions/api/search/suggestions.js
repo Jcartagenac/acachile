@@ -86,11 +86,11 @@ export async function onRequestGet(context) {
 
     // Agregar términos comunes predefinidos
     const commonTerms = [
-      'campeonato', 'taller', 'encuentro', 'torneo', 
-      'asado', 'parrilla', 'carne', 'técnicas',
-      'nacional', 'regional', 'local',
+      'campeonato', 'taller', 'encuentro', 'competencia', 'masterclass',
+      'asado', 'parrilla', 'carne', 'técnicas', 'fuego',
+      'nacional', 'regional', 'local', 'internacional',
       'chile', 'santiago', 'valparaíso', 'concepción',
-      'barbacoa', 'costillar', 'chorizo', 'ahumado'
+      'barbacoa', 'costillar', 'chorizo', 'ahumado', 'vacuno', 'cerdo', 'cordero'
     ];
 
     commonTerms.forEach(term => {

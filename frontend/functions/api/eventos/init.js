@@ -97,134 +97,141 @@ async function initializeEventos(env) {
   try {
     const now = new Date();
     
-    // Eventos de ejemplo
+    // Eventos de la Asociación Chilena de Asadores
     const eventosIniciales = [
       {
         id: 1,
-        title: "Campeonato Nacional de Ajedrez Clásico",
+        title: "Campeonato Nacional de Asado 2024",
         date: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +30 días
-        time: "09:00",
-        location: "Centro de Convenciones Santiago",
-        description: "El torneo más importante del año con participantes de todo Chile. Modalidad clásica con controles de tiempo largos para partidas de máxima calidad.",
-        image: "/images/campeonato-clasico.jpg",
+        time: "10:00",
+        location: "Parque O'Higgins, Santiago",
+        description: "El evento más importante del año para los asadores de Chile. Competencia oficial con jurado internacional y participación de los mejores asadores del país. Categorías: Vacuno, Cerdo, Cordero y Parrilla Mixta.",
+        image: "/images/campeonato-nacional-asado.jpg",
         type: "campeonato",
         registrationOpen: true,
-        maxParticipants: 200,
+        maxParticipants: 100,
         currentParticipants: 0,
-        price: 25000,
+        price: 50000,
         requirements: [
-          "Ser socio de ACA Chile",
-          "Presentar carnet de identidad",
-          "Completar formulario de inscripción"
+          "Ser socio activo de ACA Chile",
+          "Presentar certificado de manipulación de alimentos",
+          "Completar formulario de inscripción oficial",
+          "Traer equipos propios de asado"
         ],
         organizerId: 1,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         status: "published",
-        tags: ["campeonato", "clásico", "nacional"],
+        tags: ["campeonato", "nacional", "asado", "competencia"],
         contactInfo: {
-          email: "torneos@acachile.cl",
+          email: "campeonatos@acachile.cl",
           phone: "+56912345678"
         }
       },
       {
         id: 2,
-        title: "Taller de Aperturas para Principiantes",
+        title: "Taller de Técnicas de Asado para Principiantes",
         date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +7 días
         time: "15:00",
-        location: "Sede ACA Chile - Sala Principal",
-        description: "Aprende los fundamentos de las aperturas más importantes. Taller interactivo con análisis de partidas y ejercicios prácticos.",
-        image: "/images/taller-aperturas.jpg",
+        location: "Sede ACA Chile - Parrillas de Práctica",
+        description: "Aprende las técnicas fundamentales del asado chileno. Taller práctico con maestros asadores que enseñan cortes de carne, manejo del fuego, tiempos de cocción y secretos tradicionales.",
+        image: "/images/taller-principiantes-asado.jpg",
         type: "taller",
         registrationOpen: true,
-        maxParticipants: 30,
+        maxParticipants: 20,
         currentParticipants: 0,
-        price: 8000,
+        price: 25000,
         requirements: [
-          "Nivel principiante a intermedio",
-          "Conocimientos básicos de ajedrez"
+          "Sin experiencia previa necesaria",
+          "Traer delantal y guantes",
+          "Certificado de salud vigente"
         ],
         organizerId: 1,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         status: "published",
-        tags: ["taller", "principiantes", "aperturas", "educativo"],
+        tags: ["taller", "principiantes", "técnicas", "educativo"],
         contactInfo: {
           email: "talleres@acachile.cl"
         }
       },
       {
         id: 3,
-        title: "Encuentro de Ajedrez Rápido",
+        title: "Encuentro de Asadores del Fin de Semana",
         date: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +3 días
-        time: "18:30",
-        location: "Plaza de Armas - Stand ACA",
-        description: "Partidas casuales de ajedrez rápido al aire libre. Ambiente relajado para conocer otros jugadores y disfrutar del juego.",
-        image: "/images/encuentro-rapido.jpg",
+        time: "12:00",
+        location: "Quintas de Recreo Las Condes",
+        description: "Encuentro informal de asadores para compartir experiencias, técnicas y disfrutar de un buen asado en ambiente familiar. Cada participante trae sus ingredientes y compartimos conocimientos.",
+        image: "/images/encuentro-asadores.jpg",
         type: "encuentro",
         registrationOpen: true,
         maxParticipants: null, // Sin límite
         currentParticipants: 0,
         price: null, // Gratis
-        requirements: [],
+        requirements: [
+          "Traer sus propios ingredientes",
+          "Actitud de compartir y aprender"
+        ],
         organizerId: 1,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         status: "published",
-        tags: ["encuentro", "rápido", "casual", "gratis"],
+        tags: ["encuentro", "informal", "compartir", "gratis"],
         contactInfo: {
           email: "eventos@acachile.cl"
         }
       },
       {
         id: 4,
-        title: "Torneo Blitz Nocturno",
+        title: "Competencia de Asado Rápido",
         date: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +14 días
-        time: "20:00",
-        location: "Sede ACA Chile - Salón Principal",
-        description: "Torneo de partidas blitz (5 minutos por jugador). Alta adrenalina y diversión garantizada en formato suizo.",
-        image: "/images/torneo-blitz.jpg",
-        type: "torneo",
+        time: "11:00",
+        location: "Centro de Eventos ACA - Zona de Parrillas",
+        description: "Desafío contra el tiempo: los participantes deben preparar un asado completo en tiempo récord manteniendo la calidad. Categorías por experiencia y premios especiales.",
+        image: "/images/competencia-rapida.jpg",
+        type: "competencia",
         registrationOpen: true,
-        maxParticipants: 64,
+        maxParticipants: 40,
         currentParticipants: 0,
-        price: 5000,
+        price: 15000,
         requirements: [
-          "Nivel intermedio mínimo",
-          "Inscripción previa obligatoria"
+          "Experiencia previa en asados",
+          "Inscripción anticipada obligatoria",
+          "Traer equipos básicos propios"
         ],
         organizerId: 1,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         status: "published",
-        tags: ["torneo", "blitz", "nocturno", "rápido"],
+        tags: ["competencia", "rápido", "desafío", "tiempo"],
         contactInfo: {
-          email: "torneos@acachile.cl",
+          email: "competencias@acachile.cl",
           phone: "+56912345678"
         }
       },
       {
         id: 5,
-        title: "Masterclass: Finales de Torres",
+        title: "Masterclass: Parrilla Argentina con Chef Invitado",
         date: new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +21 días
-        time: "11:00",
-        location: "Aula Magna Universidad Católica",
-        description: "Clase magistral sobre finales de torres impartida por el MI Carlos Matamoros. Análisis profundo de posiciones complejas.",
-        image: "/images/masterclass-finales.jpg",
-        type: "taller",
+        time: "14:00",
+        location: "Auditorio Gourmet - Hotel Ritz Carlton",
+        description: "Clase magistral sobre técnicas de parrilla argentina impartida por el reconocido parrillero Martín Fierro. Aprende cortes especiales, marinados únicos y el arte del fuego perfecto.",
+        image: "/images/masterclass-parrilla.jpg",
+        type: "masterclass",
         registrationOpen: true,
-        maxParticipants: 50,
+        maxParticipants: 30,
         currentParticipants: 0,
-        price: 15000,
+        price: 45000,
         requirements: [
           "Nivel intermedio-avanzado",
-          "Conocimientos básicos de finales"
+          "Conocimientos básicos de asado",
+          "Material de apuntes incluido"
         ],
         organizerId: 1,
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         status: "published",
-        tags: ["masterclass", "finales", "torres", "avanzado"],
+        tags: ["masterclass", "argentina", "chef", "avanzado"],
         contactInfo: {
           email: "masterclass@acachile.cl",
           website: "https://acachile.cl/masterclass"
@@ -252,7 +259,8 @@ async function initializeEventos(env) {
           campeonato: eventosIniciales.filter(e => e.type === 'campeonato').length,
           taller: eventosIniciales.filter(e => e.type === 'taller').length,
           encuentro: eventosIniciales.filter(e => e.type === 'encuentro').length,
-          torneo: eventosIniciales.filter(e => e.type === 'torneo').length
+          competencia: eventosIniciales.filter(e => e.type === 'competencia').length,
+          masterclass: eventosIniciales.filter(e => e.type === 'masterclass').length
         }
       }
     };

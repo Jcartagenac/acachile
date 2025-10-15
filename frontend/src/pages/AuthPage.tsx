@@ -139,7 +139,7 @@ export const AuthPage: React.FC = () => {
                 <li>• Participa en eventos exclusivos de asadores</li>
                 <li>• Conecta con la comunidad de parrilleros</li>
                 <li>• Accede a talleres y workshops especializados</li>
-                <li>• Compite en torneos nacionales</li>
+                <li>• Compite en campeonatos de asado</li>
               </ul>
             </div>
           </div>

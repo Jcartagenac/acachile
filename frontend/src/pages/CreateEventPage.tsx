@@ -42,7 +42,7 @@ const eventSchema = z.object({
     .min(5, 'La ubicación debe tener al menos 5 caracteres')
     .max(100, 'La ubicación no puede exceder 100 caracteres'),
   
-  type: z.enum(['campeonato', 'taller', 'encuentro', 'torneo'], {
+  type: z.enum(['campeonato', 'taller', 'encuentro', 'competencia', 'masterclass'], {
     errorMap: () => ({ message: 'Selecciona un tipo de evento válido' })
   }),
   
@@ -300,7 +300,8 @@ export const CreateEventPage: React.FC = () => {
                           <option value="campeonato">Campeonato</option>
                           <option value="taller">Taller</option>
                           <option value="encuentro">Encuentro</option>
-                          <option value="torneo">Torneo</option>
+                          <option value="competencia">Competencia</option>
+                          <option value="masterclass">Masterclass</option>
                         </select>
                         {errors.type && (
                           <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>
@@ -675,7 +676,8 @@ const EventPreview: React.FC<EventPreviewProps> = ({ data, image }) => {
       case 'campeonato': return '#EF4444';
       case 'taller': return '#3B82F6';
       case 'encuentro': return '#10B981';
-      case 'torneo': return '#F59E0B';
+      case 'competencia': return '#F59E0B';
+      case 'masterclass': return '#8B5CF6';
       default: return '#6B7280';
     }
   };

@@ -192,29 +192,29 @@ async function getNoticias(env) {
       return JSON.parse(noticiasData);
     }
 
-    // Si no existen, crear noticias de ejemplo
+    // Si no existen, crear noticias de la ACA Chile
     const noticiasEjemplo = [
       {
         id: 1,
-        title: "Gran Torneo Nacional de Ajedrez 2025",
-        slug: "gran-torneo-nacional-ajedrez-2025",
-        excerpt: "Se acerca el evento ajedrecístico más importante del año con participantes de todo el país.",
+        title: "Campeonato Mundial de Barbacoa 2024: Chile Participará",
+        slug: "campeonato-mundial-barbacoa-2024-chile-participara",
+        excerpt: "La Asociación Chilena de Asadores enviará su selección al prestigioso campeonato mundial en Kansas City.",
         content: `
-          <p>La Asociación de Ajedrez de Chile se complace en anunciar la realización del <strong>Gran Torneo Nacional de Ajedrez 2025</strong>, el evento más esperado del calendario ajedrecístico nacional.</p>
+          <p>La <strong>Asociación Chilena de Asadores (ACA)</strong> se enorgullece en anunciar que Chile participará en el <strong>Campeonato Mundial de Barbacoa 2024</strong> en Kansas City, Estados Unidos.</p>
           
-          <h3>Detalles del Torneo:</h3>
+          <h3>Detalles de la Participación:</h3>
           <ul>
-            <li><strong>Fecha:</strong> 15-17 de Noviembre, 2025</li>
-            <li><strong>Lugar:</strong> Centro de Convenciones Santiago</li>
-            <li><strong>Modalidad:</strong> Suizo a 9 rondas</li>
-            <li><strong>Control de tiempo:</strong> 90 minutos + 30 segundos por jugada</li>
+            <li><strong>Fecha:</strong> 15-17 de Noviembre, 2024</li>
+            <li><strong>Lugar:</strong> Kansas City, Missouri, USA</li>
+            <li><strong>Delegación:</strong> 8 maestros asadores chilenos</li>
+            <li><strong>Categorías:</strong> Cerdo, Vacuno, Pollo y Costillas</li>
           </ul>
           
-          <p>Este año contaremos con la participación de más de 200 jugadores, incluyendo grandes maestros internacionales y los mejores talentos nacionales.</p>
+          <p>Nuestros representantes competirán contra más de 500 equipos internacionales, llevando las técnicas tradicionales del asado chileno al escenario mundial.</p>
         `,
-        image: "/images/torneo-nacional-2025.jpg",
-        category: "torneos",
-        tags: ["torneo", "nacional", "2025", "competencia"],
+        image: "/images/mundial-barbacoa-2024.jpg",
+        category: "competencias",
+        tags: ["mundial", "barbacoa", "2024", "internacional"],
         author: "ACA Chile",
         publishedAt: "2025-10-14T10:00:00Z",
         status: "published",
@@ -224,26 +224,26 @@ async function getNoticias(env) {
       },
       {
         id: 2,
-        title: "Nuevo Taller de Aperturas para Principiantes",
-        slug: "nuevo-taller-aperturas-principiantes",
-        excerpt: "Aprende las aperturas fundamentales del ajedrez en nuestro taller especializado.",
+        title: "Curso de Técnicas Básicas de Asado: Cupos Limitados",
+        slug: "curso-tecnicas-basicas-asado-cupos-limitados",
+        excerpt: "Aprende las técnicas fundamentales del asado chileno con nuestros maestros certificados.",
         content: `
-          <p>¿Quieres mejorar tu juego desde las primeras jugadas? Nuestro <strong>Taller de Aperturas para Principiantes</strong> es perfecto para ti.</p>
+          <p>¿Quieres dominar el arte del asado desde cero? Nuestro <strong>Curso de Técnicas Básicas de Asado</strong> es perfecto para principiantes.</p>
           
           <h3>¿Qué aprenderás?</h3>
           <ul>
-            <li>Principios fundamentales de las aperturas</li>
-            <li>Las aperturas más populares: Italiana, Española, Francesa</li>
-            <li>Errores comunes y cómo evitarlos</li>
-            <li>Transiciones al medio juego</li>
+            <li>Selección y cortes de carne premium</li>
+            <li>Técnicas de encendido y manejo del fuego</li>
+            <li>Tiempos de cocción y puntos de carne</li>
+            <li>Marinados y condimentación tradicional</li>
           </ul>
           
-          <p>El taller se realizará en formato presencial con análisis interactivo de partidas.</p>
+          <p>El curso incluye degustación y material teórico. ¡Solo 20 cupos disponibles!</p>
         `,
-        image: "/images/taller-aperturas.jpg",
+        image: "/images/curso-basico-asado.jpg",
         category: "educacion",
-        tags: ["taller", "principiantes", "aperturas", "educación"],
-        author: "MI Carlos Matamoros",
+        tags: ["curso", "principiantes", "técnicas", "educación"],
+        author: "Maestro Asador Juan Pérez",
         publishedAt: "2025-10-12T15:30:00Z",
         status: "published",
         featured: false,
@@ -252,26 +252,26 @@ async function getNoticias(env) {
       },
       {
         id: 3,
-        title: "Resultados del Campeonato Juvenil Regional",
-        slug: "resultados-campeonato-juvenil-regional",
-        excerpt: "Conoce a los nuevos campeones juveniles y sus destacadas actuaciones.",
+        title: "Resultados del Campeonato Regional de Asadores 2024",
+        slug: "resultados-campeonato-regional-asadores-2024",
+        excerpt: "Conoce a los nuevos campeones regionales y sus increíbles técnicas de asado.",
         content: `
-          <p>El pasado fin de semana se realizó el <strong>Campeonato Juvenil Regional</strong> con excelente participación de jóvenes talentos.</p>
+          <p>El pasado fin de semana se realizó el <strong>Campeonato Regional de Asadores 2024</strong> con excelente participación de maestros asadores de todo Chile.</p>
           
-          <h3>Resultados por categorías:</h3>
+          <h3>Ganadores por categorías:</h3>
           <ul>
-            <li><strong>Sub-12:</strong> María González (8.5/9 puntos)</li>
-            <li><strong>Sub-14:</strong> Pedro Martínez (8/9 puntos)</li>
-            <li><strong>Sub-16:</strong> Ana Silva (7.5/9 puntos)</li>
-            <li><strong>Sub-18:</strong> Diego Torres (8/9 puntos)</li>
+            <li><strong>Asado de Vacuno:</strong> Carlos Mendoza (Región Metropolitana)</li>
+            <li><strong>Asado de Cerdo:</strong> Roberto Silva (Valparaíso)</li>
+            <li><strong>Parrilla Mixta:</strong> Ana García (Maule)</li>
+            <li><strong>Cordero al Palo:</strong> Diego Fernández (Magallanes)</li>
           </ul>
           
-          <p>Felicitamos a todos los participantes por su dedicación y fair play demostrado durante el torneo.</p>
+          <p>Felicitamos a todos los participantes por su técnica excepcional y el compañerismo demostrado durante la competencia.</p>
         `,
-        image: "/images/campeonato-juvenil.jpg",
+        image: "/images/campeonato-regional-asadores.jpg",
         category: "resultados",
-        tags: ["juvenil", "campeonato", "resultados", "regional"],
-        author: "Comité de Torneos",
+        tags: ["regional", "campeonato", "resultados", "asadores"],
+        author: "Comité de Competencias ACA",
         publishedAt: "2025-10-10T09:15:00Z",
         status: "published",
         featured: false,
@@ -280,25 +280,25 @@ async function getNoticias(env) {
       },
       {
         id: 4,
-        title: "Inauguración de Nueva Sede en Valparaíso",
-        slug: "inauguracion-nueva-sede-valparaiso",
-        excerpt: "ACA Chile expande su presencia con una moderna sede en la Región de Valparaíso.",
+        title: "Nueva Sede de la ACA en Valparaíso: Centro de Excelencia",
+        slug: "nueva-sede-aca-valparaiso-centro-excelencia",
+        excerpt: "ACA Chile inaugura un moderno centro de capacitación en asados en la Región de Valparaíso.",
         content: `
-          <p>Con gran orgullo anunciamos la <strong>inauguración de nuestra nueva sede en Valparaíso</strong>, fortaleciendo nuestra presencia en la región.</p>
+          <p>Con gran orgullo anunciamos la <strong>inauguración de nuestro Centro de Excelencia en Valparaíso</strong>, fortaleciendo la formación de asadores en la región.</p>
           
-          <h3>Características de la nueva sede:</h3>
+          <h3>Instalaciones del nuevo centro:</h3>
           <ul>
-            <li>Salón principal para 50 jugadores</li>
-            <li>Sala de estudio y análisis</li>
-            <li>Biblioteca especializada</li>
-            <li>Área de recreación</li>
+            <li>15 parrillas profesionales individuales</li>
+            <li>Aula teórica con capacidad para 40 personas</li>
+            <li>Cámara frigorífica para carnes premium</li>
+            <li>Laboratorio de marinados y especias</li>
           </ul>
           
-          <p>La ceremonia de inauguración será el 25 de octubre con un torneo amistoso y actividades para toda la familia.</p>
+          <p>La inauguración será el 25 de octubre con un gran asado comunitario y demostraciones gratuitas.</p>
         `,
-        image: "/images/sede-valparaiso.jpg",
+        image: "/images/centro-excelencia-valparaiso.jpg",
         category: "institucional",
-        tags: ["sede", "valparaíso", "inauguración", "expansión"],
+        tags: ["sede", "valparaíso", "inauguración", "capacitación"],
         author: "Directorio ACA Chile",
         publishedAt: "2025-10-08T12:00:00Z",
         status: "published",
@@ -308,26 +308,26 @@ async function getNoticias(env) {
       },
       {
         id: 5,
-        title: "Masterclass: Estrategia en el Final de Partida",
-        slug: "masterclass-estrategia-final-partida",
-        excerpt: "Clase magistral sobre técnicas avanzadas para dominar los finales de partida.",
+        title: "Masterclass: Secretos del Asado Patagónico",
+        slug: "masterclass-secretos-asado-patagonico",
+        excerpt: "Clase magistral sobre las técnicas ancestrales del asado patagónico con el Maestro Raúl Barrientos.",
         content: `
-          <p>No te pierdas esta <strong>Masterclass sobre Estrategia en el Final de Partida</strong> impartida por el Gran Maestro Internacional Roberto Cifuentes.</p>
+          <p>No te pierdas esta <strong>Masterclass sobre los Secretos del Asado Patagónico</strong> impartida por el legendario Maestro Asador Raúl Barrientos.</p>
           
-          <h3>Temas a tratar:</h3>
+          <h3>Temas a desarrollar:</h3>
           <ul>
-            <li>Finales de peones: técnicas de promoción</li>
-            <li>Finales de torres: posiciones ganadoras</li>
-            <li>Coordinación de piezas en el final</li>
-            <li>Cálculo preciso en posiciones complejas</li>
+            <li>Técnicas ancestrales de los gauchos patagónicos</li>
+            <li>Cordero al palo: desde la selección hasta el emplatado</li>
+            <li>Manejo del fuego con leña de ñire y calafate</li>
+            <li>Marinados con hierbas autóctonas de la Patagonia</li>
           </ul>
           
-          <p>Una oportunidad única para aprender de uno de los mejores jugadores del país.</p>
+          <p>Una oportunidad única para aprender de uno de los mayores exponentes del asado tradicional chileno.</p>
         `,
-        image: "/images/masterclass-finales.jpg",
+        image: "/images/masterclass-patagonico.jpg",
         category: "educacion",
-        tags: ["masterclass", "finales", "estrategia", "avanzado"],
-        author: "GM Roberto Cifuentes",
+        tags: ["masterclass", "patagónico", "tradicional", "avanzado"],
+        author: "Maestro Raúl Barrientos",
         publishedAt: "2025-10-06T16:45:00Z",
         status: "published",
         featured: false,

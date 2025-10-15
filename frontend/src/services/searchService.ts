@@ -259,16 +259,16 @@ class SearchService {
         success: true,
         data: {
           eventos: [
-            { titulo: "Campeonato Nacional de Ajedrez", popularidad: 95 },
-            { titulo: "Torneo Blitz Nocturno", popularidad: 78 },
-            { titulo: "Encuentro de Ajedrez Rápido", popularidad: 65 }
+            { titulo: "Campeonato Nacional de Asado", popularidad: 95 },
+            { titulo: "Competencia de Asado Rápido", popularidad: 78 },
+            { titulo: "Encuentro de Asadores", popularidad: 65 }
           ],
           noticias: [
-            { titulo: "Gran Torneo Nacional de Ajedrez 2025", vistas: 1250 },
-            { titulo: "Nuevo Taller de Aperturas", vistas: 890 },
-            { titulo: "Masterclass de Finales", vistas: 650 }
+            { titulo: "Campeonato Mundial de Barbacoa 2024", vistas: 1250 },
+            { titulo: "Curso de Técnicas Básicas de Asado", vistas: 890 },
+            { titulo: "Masterclass: Secretos del Asado Patagónico", vistas: 650 }
           ],
-          terminos: ["ajedrez", "torneo", "campeonato", "blitz", "rápido"]
+          terminos: ["asado", "parrilla", "campeonato", "barbacoa", "técnicas"]
         }
       };
     } catch (error) {

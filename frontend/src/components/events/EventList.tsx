@@ -180,7 +180,8 @@ export const EventList: React.FC = () => {
               <option value="campeonato">Campeonatos</option>
               <option value="taller">Talleres</option>
               <option value="encuentro">Encuentros</option>
-              <option value="torneo">Torneos</option>
+              <option value="competencia">Competencias</option>
+              <option value="masterclass">Masterclass</option>
             </select>
 
             {/* Status Filter */}
