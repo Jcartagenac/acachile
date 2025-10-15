@@ -123,19 +123,41 @@ const NewsPage: React.FC = () => {
 
   if (loading && articles.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12">
+      <div className="min-h-screen bg-soft-gradient-light py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-1/3 mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="animate-soft-pulse">
+            {/* Header skeleton */}
+            <div className="text-center mb-16">
+              <div className="h-12 bg-white/60 backdrop-blur-soft rounded-2xl shadow-soft-sm w-64 mx-auto mb-8"></div>
+              <div className="h-16 bg-white/40 backdrop-blur-soft rounded-2xl shadow-soft-sm w-96 mx-auto mb-4"></div>
+              <div className="h-6 bg-white/40 backdrop-blur-soft rounded-xl shadow-soft-sm w-80 mx-auto"></div>
+            </div>
+            
+            {/* Search bar skeleton */}
+            <div className="bg-white/60 backdrop-blur-soft rounded-3xl shadow-soft-lg p-8 mb-12">
+              <div className="h-14 bg-white/80 rounded-2xl shadow-soft-inset-sm"></div>
+            </div>
+            
+            {/* Cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] overflow-hidden">
-                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff]"></div>
-                  <div className="p-6">
-                    <div className="h-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-1/2 mb-4"></div>
-                    <div className="h-3 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-full mb-2"></div>
-                    <div className="h-3 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] w-2/3"></div>
+                <div key={i} className="bg-white/60 backdrop-blur-soft rounded-3xl shadow-soft-lg overflow-hidden">
+                  <div className="h-48 bg-white/80 shadow-soft-inset-sm"></div>
+                  <div className="p-6 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div className="h-6 bg-white/80 rounded-xl shadow-soft-inset-sm w-20"></div>
+                      <div className="h-6 bg-white/80 rounded-xl shadow-soft-inset-sm w-16"></div>
+                    </div>
+                    <div className="h-6 bg-white/80 rounded-xl shadow-soft-inset-sm w-3/4"></div>
+                    <div className="h-4 bg-white/80 rounded-lg shadow-soft-inset-sm w-full"></div>
+                    <div className="h-4 bg-white/80 rounded-lg shadow-soft-inset-sm w-2/3"></div>
+                    <div className="flex justify-between items-center pt-2">
+                      <div className="flex space-x-2">
+                        <div className="h-6 bg-white/80 rounded-lg shadow-soft-inset-sm w-16"></div>
+                        <div className="h-6 bg-white/80 rounded-lg shadow-soft-inset-sm w-16"></div>
+                      </div>
+                      <div className="h-6 bg-white/80 rounded-lg shadow-soft-inset-sm w-12"></div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -147,20 +169,25 @@ const NewsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12">
+    <div className="min-h-screen bg-soft-gradient-light py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Noticias ACA Chile
+        {/* Header - Soft UI 2.0 */}
+        <div className="text-center mb-16 animate-slide-up">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-soft rounded-full shadow-soft-sm border border-white/40 mb-8">
+            <span className="text-2xl">📰</span>
+            <span className="text-primary-600 font-semibold text-sm tracking-wide uppercase">Blog & Noticias</span>
+          </div>
+          
+          <h1 className="text-5xl font-bold text-neutral-900 mb-6 lg:text-6xl">
+            Noticias <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">ACA Chile</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-neutral-600 font-light max-w-3xl mx-auto leading-relaxed">
             Mantente al día con las últimas noticias, técnicas y eventos del mundo del asado
           </p>
         </div>
 
-        {/* Barra de búsqueda y filtros - Neumórfico */}
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] p-6 mb-8">
+        {/* Barra de búsqueda y filtros - Soft UI 2.0 */}
+        <div className="bg-white/60 backdrop-blur-soft rounded-3xl shadow-soft-lg border border-white/30 p-8 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Búsqueda */}
             <div className="relative md:col-span-2">
@@ -171,12 +198,12 @@ const NewsPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-10 pr-4 py-3 bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff] border-0 focus:outline-none focus:shadow-[inset_6px_6px_12px_#bebebe,inset_-6px_-6px_12px_#ffffff] transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-4 bg-white/80 backdrop-blur-soft rounded-2xl shadow-soft-inset-sm border border-white/40 focus:outline-none focus:shadow-soft-inset-md focus:border-primary-300 transition-all duration-300 text-neutral-700 placeholder-neutral-400"
                 />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-4 top-4 h-5 w-5 text-neutral-400" />
                 <button
                   onClick={handleSearch}
-                  className="absolute right-2 top-1.5 p-1 text-gray-400 hover:text-red-500"
+                  className="absolute right-3 top-3 p-2 bg-primary-500/10 hover:bg-primary-500/20 rounded-xl text-primary-600 hover:text-primary-700 transition-all duration-200"
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -184,12 +211,12 @@ const NewsPage: React.FC = () => {
               
               {/* Sugerencias */}
               {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full bg-white/95 backdrop-blur-soft border border-white/40 rounded-2xl shadow-soft-lg mt-2 max-h-60 overflow-y-auto">
                   {searchSuggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                      className="w-full text-left px-4 py-3 hover:bg-primary-50/50 text-neutral-700 hover:text-primary-700 transition-colors duration-200 border-b border-neutral-100/50 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl"
                     >
                       {suggestion}
                     </button>
@@ -202,7 +229,7 @@ const NewsPage: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff] border-0 focus:outline-none focus:shadow-[inset_6px_6px_12px_#bebebe,inset_-6px_-6px_12px_#ffffff] transition-all duration-200"
+              className="w-full px-4 py-4 bg-white/80 backdrop-blur-soft rounded-2xl shadow-soft-inset-sm border border-white/40 focus:outline-none focus:shadow-soft-inset-md focus:border-primary-300 transition-all duration-300 text-neutral-700"
             >
               <option value="">Todas las categorías</option>
               {categories.map((category) => (
@@ -219,27 +246,30 @@ const NewsPage: React.FC = () => {
                   type="checkbox"
                   checked={showFeaturedOnly}
                   onChange={(e) => setShowFeaturedOnly(e.target.checked)}
-                  className="w-5 h-5 rounded-lg border-0 bg-gradient-to-br from-gray-100 to-gray-50 shadow-[inset_2px_2px_4px_#bebebe,inset_-2px_-2px_4px_#ffffff] checked:shadow-[inset_4px_4px_8px_#bebebe,inset_-4px_-4px_8px_#ffffff] checked:bg-gradient-to-br checked:from-red-400 checked:to-red-500 focus:outline-none transition-all duration-200"
+                  className="w-5 h-5 rounded-lg border-0 bg-white/80 shadow-soft-inset-xs checked:shadow-soft-inset-sm checked:bg-primary-500 focus:outline-none transition-all duration-200 text-white"
                 />
-                <span className="ml-2 text-sm text-gray-700">Destacadas</span>
+                <span className="ml-3 text-sm text-neutral-700 font-medium">Destacadas</span>
               </label>
               
               {(selectedCategory || showFeaturedOnly) && (
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-red-600 hover:text-red-800"
+                  className="px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 hover:text-primary-700 rounded-xl font-medium text-sm transition-all duration-200"
                 >
-                  Limpiar
+                  Limpiar filtros
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Error */}
+        {/* Error - Soft UI 2.0 */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-700">{error}</p>
+          <div className="bg-red-50/80 backdrop-blur-soft border border-red-200/50 rounded-2xl p-6 mb-8 shadow-soft-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <p className="text-red-700 font-medium">{error}</p>
+            </div>
           </div>
         )}
 
@@ -247,16 +277,17 @@ const NewsPage: React.FC = () => {
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {articles.map((article) => (
-              <div key={article.id} className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[8px_8px_16px_#bebebe,-8px_-8px_16px_#ffffff] overflow-hidden hover:shadow-[4px_4px_8px_#bebebe,-4px_-4px_8px_#ffffff] transition-shadow">
+              <div key={article.id} className="group bg-white/60 backdrop-blur-soft rounded-3xl shadow-soft-lg hover:shadow-soft-xl overflow-hidden border border-white/30 transition-all duration-500 transform hover:-translate-y-2">
                 {/* Imagen destacada */}
                 {article.featured_image && (
                   <Link to={`/noticias/${article.slug}`}>
-                    <div className="h-48 overflow-hidden">
+                    <div className="h-48 overflow-hidden relative">
                       <img
                         src={article.featured_image}
                         alt={article.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/30 via-transparent to-transparent"></div>
                     </div>
                   </Link>
                 )}
@@ -265,45 +296,45 @@ const NewsPage: React.FC = () => {
                   {/* Categoría y fecha */}
                   <div className="flex items-center justify-between mb-3">
                     <span
-                      className="inline-block px-3 py-1 rounded-lg text-xs font-medium text-white shadow-[inset_2px_2px_4px_rgba(0,0,0,0.2)]"
+                      className="inline-block px-3 py-2 rounded-xl text-xs font-semibold text-white shadow-soft-sm"
                       style={{ backgroundColor: article.category.color }}
                     >
                       {article.category.name}
                     </span>
                     {article.is_featured && (
-                      <span className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-yellow-800 text-xs font-medium px-3 py-1 rounded-lg shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1)]">
-                        Destacada
+                      <span className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-soft-sm">
+                        ⭐ Destacada
                       </span>
                     )}
                   </div>
 
                   {/* Título */}
                   <Link to={`/noticias/${article.slug}`}>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 hover:text-red-600 transition-colors line-clamp-2">
+                    <h3 className="text-xl font-bold text-neutral-800 mb-3 group-hover:text-primary-600 transition-colors duration-300 line-clamp-2">
                       {article.title}
                     </h3>
                   </Link>
 
                   {/* Excerpt */}
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-neutral-600 mb-6 line-clamp-3 font-light leading-relaxed">
                     {article.excerpt}
                   </p>
 
                   {/* Meta información */}
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center justify-between text-sm text-neutral-500">
                     <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(article.published_at)}
+                      <div className="flex items-center bg-neutral-100/50 px-2 py-1 rounded-lg">
+                        <Calendar className="h-4 w-4 mr-2 text-neutral-400" />
+                        <span className="font-medium">{formatDate(article.published_at)}</span>
                       </div>
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 mr-1" />
-                        {article.author_name}
+                      <div className="flex items-center bg-neutral-100/50 px-2 py-1 rounded-lg">
+                        <User className="h-4 w-4 mr-2 text-neutral-400" />
+                        <span className="font-medium">{article.author_name}</span>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      {article.view_count}
+                    <div className="flex items-center bg-primary-50/50 px-2 py-1 rounded-lg text-primary-600">
+                      <Eye className="h-4 w-4 mr-2" />
+                      <span className="font-semibold">{article.view_count}</span>
                     </div>
                   </div>
                 </div>
@@ -312,51 +343,76 @@ const NewsPage: React.FC = () => {
           </div>
         ) : (
           !loading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No se encontraron noticias</p>
-              {(selectedCategory || showFeaturedOnly) && (
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 text-red-600 hover:text-red-800"
-                >
-                  Limpiar filtros
-                </button>
-              )}
+            <div className="text-center py-16">
+              <div className="bg-white/60 backdrop-blur-soft rounded-3xl p-12 shadow-soft-lg border border-white/30 max-w-md mx-auto">
+                <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">📰</span>
+                </div>
+                <h3 className="text-xl font-bold text-neutral-800 mb-3">No se encontraron noticias</h3>
+                <p className="text-neutral-600 mb-6">
+                  {(selectedCategory || showFeaturedOnly) 
+                    ? 'Prueba ajustando los filtros o busca algo diferente.' 
+                    : 'Actualmente no hay noticias disponibles.'}
+                </p>
+                {(selectedCategory || showFeaturedOnly) && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-soft-sm hover:shadow-soft-md"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
             </div>
           )
         )}
 
-        {/* Paginación */}
+        {/* Paginación - Soft UI 2.0 */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center space-x-2">
+          <div className="flex justify-center items-center space-x-3 mt-16">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 text-sm font-semibold text-neutral-600 bg-white/60 backdrop-blur-soft border border-white/30 rounded-xl hover:bg-white/80 hover:shadow-soft-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-soft-sm"
             >
-              Anterior
+              ← Anterior
             </button>
             
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-2 text-sm font-medium rounded-md ${
-                  currentPage === i + 1
-                    ? 'text-white bg-red-600'
-                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            <div className="flex space-x-2">
+              {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-12 h-12 text-sm font-semibold rounded-xl transition-all duration-300 ${
+                      currentPage === pageNum
+                        ? 'text-white bg-primary-500 shadow-soft-colored-red transform scale-110'
+                        : 'text-neutral-600 bg-white/60 backdrop-blur-soft border border-white/30 hover:bg-white/80 hover:shadow-soft-md shadow-soft-sm'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
             
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 text-sm font-semibold text-neutral-600 bg-white/60 backdrop-blur-soft border border-white/30 rounded-xl hover:bg-white/80 hover:shadow-soft-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-soft-sm"
             >
-              Siguiente
+              Siguiente →
             </button>
           </div>
         )}
