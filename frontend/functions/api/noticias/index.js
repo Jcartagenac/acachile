@@ -212,7 +212,7 @@ async function getNoticias(env) {
           
           <p>Nuestros representantes competirán contra más de 500 equipos internacionales, llevando las técnicas tradicionales del asado chileno al escenario mundial.</p>
         `,
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop&auto=format",
+        image: "https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/aca-chile-images/noticias/mundial-barbacoa-2024.jpg",
         category: "competencias",
         tags: ["mundial", "barbacoa", "2024", "internacional"],
         author: "ACA Chile",
@@ -240,7 +240,7 @@ async function getNoticias(env) {
           
           <p>El curso incluye degustación y material teórico. ¡Solo 20 cupos disponibles!</p>
         `,
-        image: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=600&h=400&fit=crop&auto=format",
+        image: "https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/aca-chile-images/noticias/curso-basico-asado.jpg",
         category: "educacion",
         tags: ["curso", "principiantes", "técnicas", "educación"],
         author: "Maestro Asador Juan Pérez",
@@ -268,7 +268,7 @@ async function getNoticias(env) {
           
           <p>Felicitamos a todos los participantes por su técnica excepcional y el compañerismo demostrado durante la competencia.</p>
         `,
-        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&auto=format",
+        image: "https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/aca-chile-images/noticias/campeonato-regional-asadores.jpg",
         category: "resultados",
         tags: ["regional", "campeonato", "resultados", "asadores"],
         author: "Comité de Competencias ACA",
@@ -296,7 +296,7 @@ async function getNoticias(env) {
           
           <p>La inauguración será el 25 de octubre con un gran asado comunitario y demostraciones gratuitas.</p>
         `,
-        image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop&auto=format",
+        image: "https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/aca-chile-images/noticias/centro-excelencia-valparaiso.jpg",
         category: "institucional",
         tags: ["sede", "valparaíso", "inauguración", "capacitación"],
         author: "Directorio ACA Chile",
@@ -324,7 +324,7 @@ async function getNoticias(env) {
           
           <p>Una oportunidad única para aprender de uno de los mayores exponentes del asado tradicional chileno.</p>
         `,
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop&auto=format",
+        image: "https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/aca-chile-images/noticias/masterclass-patagonico.jpg",
         category: "educacion",
         tags: ["masterclass", "patagónico", "tradicional", "avanzado"],
         author: "Maestro Raúl Barrientos",
