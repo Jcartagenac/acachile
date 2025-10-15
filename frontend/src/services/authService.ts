@@ -2,7 +2,7 @@ import { ApiResponse, AuthResponse, User } from '@shared/index';
 import Cookies from 'js-cookie';
 import { logger } from '../utils/logger';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-api-production.juecart.workers.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
 
 // Helper function to get auth token
 const getAuthToken = (): string | null => {

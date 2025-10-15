@@ -22,7 +22,7 @@ export const DebugPanel: React.FC = () => {
   const testApiConnection = async () => {
     logger.api.info('🧪 Test: Verificando conexión API...');
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://acachile-api-production.juecart.workers.dev';
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
       const response = await fetch(`${apiUrl}/api/health`);
       const data = await response.json();
       
