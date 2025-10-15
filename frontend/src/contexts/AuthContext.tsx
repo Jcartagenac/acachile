@@ -95,8 +95,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // API Base URL - usar variable de entorno o fallback local
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+  // API Base URL - usar variable de entorno o fallback de producción
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
 
   // Verificar token al cargar la aplicación
   useEffect(() => {

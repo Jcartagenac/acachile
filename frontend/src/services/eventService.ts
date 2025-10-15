@@ -4,7 +4,7 @@ class EventService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
