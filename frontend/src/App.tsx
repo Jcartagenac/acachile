@@ -23,6 +23,9 @@ import {
   AdminDashboard
 } from './pages';
 import AdminLayout from './components/layout/AdminLayout';
+import AdminUsers from './pages/AdminUsers';
+import AdminSettings from './pages/AdminSettings';
+import AdminMonitoring from './pages/AdminMonitoring';
 
 function App() {
   return (
@@ -54,8 +57,11 @@ function App() {
           <Route path="/buscar" element={<SearchResultsPage />} />
           
           {/* Administración */}
-          <Route path="/admin" element={<AdminLayout><AdminPanelPage /></AdminLayout>} />
+          <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+          <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+          <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
+          <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />
           
           {/* Páginas generales */}
           <Route path="/contacto" element={<ContactPage />} />

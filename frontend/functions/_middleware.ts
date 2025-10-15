@@ -46,10 +46,15 @@ function verifyToken(token: string, jwtSecret: string): any {
   }
 }
 
-// Middleware principal
+// Middleware principal - Solo aplicar a rutas de API
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next } = context;
   const url = new URL(request.url);
+  
+  // Solo aplicar middleware a rutas de API
+  if (!url.pathname.startsWith('/api/')) {
+    return next();
+  }
   
   console.log(`[MIDDLEWARE] ${request.method} ${url.pathname}`);
   
@@ -62,7 +67,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   try {
     const response = await next();
     
-    // Agregar headers CORS a todas las respuestas
+    // Agregar headers CORS solo a respuestas de API
     return setCORSHeaders(response, env.CORS_ORIGIN);
   } catch (error) {
     console.error('[MIDDLEWARE] Error:', error);

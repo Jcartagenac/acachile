@@ -1,47 +1,60 @@
-import { ApiResponse, AuthResponse, User } from '@shared/index';
-import Cookies from 'js-cookie';
-import { logger } from '../utils/logger';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
-
-// Helper function to get auth token
-const getAuthToken = (): string | null => {
-  return Cookies.get('auth_token') || null;
-};
-
-interface PendingRegistration {
+// Servicio de autenticación
+export interface User {
   id: string;
-  userData: {
-    email: string;
-    name: string;
-    phone?: string;
-    region?: string;
-    motivation?: string;
-    experience?: string;
-    references?: string;
-    preferredRole?: string;
-  };
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: string;
-  reviewedBy?: number;
-  reviewedAt?: string;
-  reviewNotes?: string;
+  username: string;
+  email: string;
+  role: 'admin' | 'user';
 }
 
-interface ApprovalOptions {
-  assignedRole?: string;
-  membershipType?: string;
-  notes?: string;
+export interface AuthResponse {
+  success: boolean;
+  token?: string;
+  user?: User;
+  message?: string;
 }
 
-const authService = {
+class AuthService {
+  private readonly TOKEN_KEY = 'auth_token';
+  private readonly USER_KEY = 'auth_user';
+
+  // Obtener token guardado
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  // Obtener usuario guardado
+  getUser(): User | null {
+    const userStr = localStorage.getItem(this.USER_KEY);
+    return userStr ? JSON.parse(userStr) : null;
+  }
+
+  // Guardar datos de autenticación
+  setAuth(token: string, user: User): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+  }
+
+  // Limpiar datos de autenticación
+  clearAuth(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+  }
+
+  // Verificar si está autenticado
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+
+  // Verificar si es admin
+  isAdmin(): boolean {
+    const user = this.getUser();
+    return user?.role === 'admin';
+  }
+
   // Login
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      logger.auth.debug('Iniciando login', { email, api: API_BASE_URL });
-      logger.time('auth-login');
-      
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,248 +62,56 @@ const authService = {
         body: JSON.stringify({ email, password }),
       });
 
-      logger.timeEnd('auth-login');
-      logger.auth.debug('Login response received', { 
-        status: response.status, 
-        statusText: response.statusText 
-      });
-
       const data = await response.json();
-      
-      if (data.success) {
-        logger.auth.info('Login exitoso', { userId: data.user?.id });
-      } else {
-        logger.auth.warn('Login falló', { error: data.error });
-      }
-      
-      return data;
-    } catch (error) {
-      logger.auth.error('Error en login request', error);
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
 
-  // Register
-  register: async (userData: {
-    email: string;
-    password: string;
-    name: string;
-    phone?: string;
-    region?: string;
-    motivation?: string;
-    experience?: string;
-    references?: string;
-    preferredRole?: string;
-  }): Promise<ApiResponse<any>> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
-
-  // Get user profile
-  getProfile: async (token: string): Promise<ApiResponse<User>> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
-
-  // Forgot password
-  forgotPassword: async (email: string): Promise<ApiResponse<any>> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
-
-  // Reset password
-  resetPassword: async (token: string, newPassword: string): Promise<ApiResponse<any>> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, newPassword }),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
-
-  // Change password
-  changePassword: async (
-    token: string, 
-    currentPassword: string, 
-    newPassword: string
-  ): Promise<ApiResponse<any>> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
-
-  // Admin: Get pending registrations
-  getPendingRegistrations: async (): Promise<ApiResponse<PendingRegistration[]>> => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        return {
-          success: false,
-          error: 'No autorizado - token requerido',
-        };
+      if (data.success && data.token && data.user) {
+        this.setAuth(data.token, data.user);
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/admin/registrations/pending`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
       return data;
     } catch (error) {
+      console.error('Error en login:', error);
       return {
         success: false,
-        error: 'Error de conexión',
+        message: 'Error de conexión'
       };
     }
-  },
+  }
 
-  // Admin: Approve registration
-  approveRegistration: async (
-    registrationId: string, 
-    options: ApprovalOptions = {}
-  ): Promise<ApiResponse<any>> => {
+  // Logout
+  logout(): void {
+    this.clearAuth();
+  }
+
+  // Verificar sesión actual
+  async verifySession(): Promise<User | null> {
+    const token = this.getToken();
+    if (!token) return null;
+
     try {
-      const token = getAuthToken();
-      if (!token) {
-        return {
-          success: false,
-          error: 'No autorizado - token requerido',
-        };
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          // Actualizar datos del usuario
+          localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
+          return data.user;
+        }
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/admin/registrations/approve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          registrationId,
-          ...options
-        }),
-      });
-
-      const data = await response.json();
-      return data;
+      // Token inválido, limpiar
+      this.clearAuth();
+      return null;
     } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
+      console.error('Error verificando sesión:', error);
+      return null;
     }
-  },
+  }
+}
 
-  // Admin: Reject registration
-  rejectRegistration: async (
-    registrationId: string, 
-    reason?: string
-  ): Promise<ApiResponse<any>> => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        return {
-          success: false,
-          error: 'No autorizado - token requerido',
-        };
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/admin/registrations/reject`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          registrationId,
-          reason
-        }),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Error de conexión',
-      };
-    }
-  },
-};
-
-export default authService;
+export const authService = new AuthService();

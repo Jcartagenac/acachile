@@ -3,7 +3,7 @@
  * ACA Chile Frontend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://4ea0451b.acachile-prod.pages.dev';
 
 export interface SearchResult {
   type: 'evento' | 'noticia' | 'usuario';
@@ -142,7 +142,7 @@ class SearchService {
       if (params.offset) searchParams.append('offset', params.offset.toString());
 
       const response = await fetch(
-        `${API_BASE_URL}/api/busqueda?${searchParams.toString()}`,
+        `${API_BASE_URL}/api/search?${searchParams.toString()}`,
         {
           method: 'GET',
           headers: this.getAuthHeaders(),
@@ -155,8 +155,8 @@ class SearchService {
 
       const result = await response.json();
       return {
-        success: true,
-        data: result
+        success: result.success,
+        data: result.data
       };
     } catch (error) {
       console.error('Error searching:', error);
@@ -175,7 +175,7 @@ class SearchService {
       if (type) searchParams.append('type', type);
 
       const response = await fetch(
-        `${API_BASE_URL}/api/busqueda/sugerencias?${searchParams.toString()}`,
+        `${API_BASE_URL}/api/search/suggestions?query=${encodeURIComponent(query)}${type ? `&type=${type}` : ''}`,
         {
           method: 'GET',
           headers: this.getAuthHeaders(),
@@ -188,8 +188,8 @@ class SearchService {
 
       const result = await response.json();
       return {
-        success: true,
-        data: result.sugerencias || []
+        success: result.success,
+        data: result.data || []
       };
     } catch (error) {
       console.error('Error getting suggestions:', error);

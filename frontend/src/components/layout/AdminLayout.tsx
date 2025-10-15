@@ -32,12 +32,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Usuarios', href: '/admin/usuarios', icon: Users },
+    { name: 'Usuarios', href: '/admin/users', icon: Users },
     { name: 'Eventos', href: '/admin/eventos', icon: Calendar },
     { name: 'Noticias', href: '/admin/noticias', icon: FileText },
     { name: 'Comentarios', href: '/admin/comentarios', icon: MessageSquare },
-    { name: 'Analíticas', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Configuración', href: '/admin/configuracion', icon: Settings },
+    { name: 'Monitoreo', href: '/admin/monitoring', icon: BarChart3 },
+    { name: 'Configuración', href: '/admin/settings', icon: Settings },
   ];
 
   // Verificar si el usuario es admin

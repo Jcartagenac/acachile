@@ -3,18 +3,19 @@
  * ACA Chile Frontend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://4ea0451b.acachile-prod.pages.dev';
 
 export interface Comment {
-  id: number;
-  article_id: number;
+  id: string;
+  article_id: string;
   author_name: string;
   author_email: string;
   content: string;
   status: 'pending' | 'approved' | 'spam' | 'rejected';
-  parent_id?: number;
+  parent_id?: string;
   created_at: string;
   replies?: Comment[];
+  likes?: number;
 }
 
 export interface CommentResponse {
@@ -50,10 +51,10 @@ class CommentsService {
   }
 
   // Obtener comentarios de un artículo
-  async getComments(articleId: number): Promise<CommentsResponse> {
+  async getComments(articleId: string, type: string = 'noticia'): Promise<CommentsResponse> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/comentarios?article_id=${articleId}`,
+        `${API_BASE_URL}/api/comments?article_id=${articleId}&type=${type}`,
         {
           method: 'GET',
           headers: this.getAuthHeaders(),
@@ -66,8 +67,8 @@ class CommentsService {
 
       const result = await response.json();
       return {
-        success: true,
-        data: result.comentarios || []
+        success: result.success,
+        data: result.data?.comments || []
       };
     } catch (error) {
       console.error('Error getting comments:', error);
@@ -80,17 +81,21 @@ class CommentsService {
 
   // Crear nuevo comentario
   async createComment(commentData: {
-    article_id: number;
+    article_id: string;
+    type?: string;
     author_name: string;
     author_email: string;
     content: string;
     parent_id?: number;
   }): Promise<CommentResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/comentarios`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(commentData),
+        body: JSON.stringify({
+          ...commentData,
+          type: commentData.type || 'noticia'
+        }),
       });
 
       if (!response.ok) {
@@ -99,8 +104,8 @@ class CommentsService {
 
       const result = await response.json();
       return {
-        success: true,
-        data: result.comentario
+        success: result.success,
+        data: result.data?.comment
       };
     } catch (error) {
       console.error('Error creating comment:', error);
@@ -113,14 +118,21 @@ class CommentsService {
 
   // Moderar comentario (admin)
   async moderateComment(
-    commentId: number, 
-    status: 'approved' | 'rejected' | 'spam'
+    commentId: string, 
+    action: 'approve' | 'reject',
+    articleId: string,
+    type: string = 'noticia'
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/comentarios/${commentId}`, {
-        method: 'PUT',
+      const response = await fetch(`${API_BASE_URL}/api/comments/moderate`, {
+        method: 'PATCH',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ 
+          comment_id: commentId,
+          action,
+          article_id: articleId,
+          type 
+        }),
       });
 
       if (!response.ok) {
@@ -138,11 +150,16 @@ class CommentsService {
   }
 
   // Eliminar comentario (admin)
-  async deleteComment(commentId: number): Promise<{ success: boolean; error?: string }> {
+  async deleteComment(commentId: string, articleId: string, type: string = 'noticia'): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/comentarios/${commentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments/moderate`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
+        body: JSON.stringify({
+          comment_id: commentId,
+          article_id: articleId,
+          type
+        }),
       });
 
       if (!response.ok) {
@@ -185,11 +202,45 @@ class CommentsService {
     }
   }
 
-  // Toggle like en un artículo
-  async toggleLike(articleId: number): Promise<LikesResponse> {
+  // Toggle like en un comentario
+  async toggleCommentLike(commentId: string, articleId: string, type: string = 'noticia'): Promise<LikesResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/likes/${articleId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments/like`, {
         method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({
+          comment_id: commentId,
+          article_id: articleId,
+          type
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return {
+        success: result.success,
+        data: {
+          totalLikes: result.data?.likes_count || 0,
+          userLiked: result.data?.liked || false
+        }
+      };
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error procesando like'
+      };
+    }
+  }
+
+  // Obtener estadísticas de comentarios
+  async getCommentsStats(articleId: string, type: string = 'noticia'): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/comments/stats?article_id=${articleId}&type=${type}`, {
+        method: 'GET',
         headers: this.getAuthHeaders(),
       });
 
@@ -197,16 +248,12 @@ class CommentsService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return {
-        success: true,
-        data
-      };
+      return await response.json();
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('Error getting comments stats:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Error procesando like'
+        error: error instanceof Error ? error.message : 'Error obteniendo estadísticas'
       };
     }
   }

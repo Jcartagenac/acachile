@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "description": "Configuración de rutas para ACA Chile - Pages Functions",
+  "include": [
+    "/api/*"
+  ],
+  "exclude": [
+    "/assets/*",
+    "/images/*",
+    "/favicon.ico",
+    "/vite.svg",
+    "/*.css",
+    "/*.js",
+    "/*.png",
+    "/*.jpg",
+    "/*.jpeg",
+    "/*.svg",
+    "/*.webp",
+    "/*.woff",
+    "/*.woff2",
+    "/*.ttf"
+  ]
+}

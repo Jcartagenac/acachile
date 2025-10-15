@@ -1,0 +1,29 @@
+# Ignorar archivos fuente en deployments de Pages
+src/
+public/
+node_modules/
+.git/
+.gitignore
+*.md
+*.json
+*.config.*
+*.lock
+.env*
+.DS_Store
+*.log
+coverage/
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
+.vscode/
+.idea/
+
+# Solo incluir dist/ y archivos de configuración de Pages
+!dist/
+!functions/
+!_headers
+!_redirects
+!_routes.json
+!wrangler.toml

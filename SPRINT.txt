@@ -30,15 +30,16 @@ Migrar el backend actual de Cloudflare Workers a Cloudflare Pages Functions para
 
 ## 🎯 SPRINT 1: CONFIGURACIÓN BASE Y AUTH
 **Objetivo**: Migrar autenticación y configurar base de Pages Functions
+**Estado**: ✅ COMPLETADO
 
 ### ✅ TAREAS SPRINT 1:
-- [ ] Crear estructura `/functions` en frontend
-- [ ] Configurar TypeScript para functions
-- [ ] Configurar bindings (D1, KV, variables de entorno)
-- [ ] Migrar autenticación (login/register/forgot-password)
-- [ ] Migrar middleware de CORS y auth
-- [ ] Configurar rutas de auth: `/api/auth/*`
-- [ ] Testing de funciones auth
+- [x] Crear estructura `/functions` en frontend
+- [x] Configurar TypeScript para functions
+- [x] Configurar bindings (D1, KV, variables de entorno)
+- [x] Migrar autenticación (login/register/forgot-password)
+- [x] Migrar middleware de CORS y auth
+- [x] Configurar rutas de auth: `/api/auth/*`
+- [x] Testing de funciones auth
 
 ### 📁 ESTRUCTURA SPRINT 1:
 ```
@@ -58,15 +59,17 @@ frontend/
 
 ---
 
-## 🎯 SPRINT 2: EVENTOS Y INSCRIPCIONES  
-**Objetivo**: Migrar gestión completa de eventos
+## 🎯 SPRINT 2: EVENTOS E INSCRIPCIONES
+**Objetivo**: Migrar sistema de eventos e inscripciones
+**Estado**: ✅ COMPLETADO
 
 ### ✅ TAREAS SPRINT 2:
-- [ ] Migrar servicios de eventos
-- [ ] Migrar handlers de eventos CRUD
-- [ ] Migrar sistema de inscripciones
-- [ ] Configurar rutas: `/api/eventos/*` y `/api/inscripciones/*`
-- [ ] Testing de eventos e inscripciones
+- [x] Migrar servicios de eventos
+- [x] Migrar handlers de eventos CRUD
+- [x] Migrar servicios de inscripciones
+- [x] Migrar handlers de inscripciones
+- [x] Configurar rutas: `/api/eventos/*`, `/api/inscripciones/*`
+- [x] Testing de eventos e inscripciones
 
 ### 📁 ESTRUCTURA SPRINT 2:
 ```
@@ -85,29 +88,42 @@ frontend/functions/api/
 
 ## 🎯 SPRINT 3: NOTICIAS Y BÚSQUEDA
 **Objetivo**: Migrar sistema de noticias y búsqueda
+**Estado**: ✅ COMPLETADO
 
 ### ✅ TAREAS SPRINT 3:
-- [ ] Migrar servicios de noticias
-- [ ] Migrar handlers de noticias CRUD
-- [ ] Migrar sistema de búsqueda
-- [ ] Migrar sistema de comentarios
-- [ ] Configurar rutas: `/api/news/*`, `/api/search/*`, `/api/comments/*`
-- [ ] Testing de funcionalidades
+- [x] Migrar servicios de noticias
+- [x] Migrar handlers de noticias CRUD
+- [x] Migrar sistema de búsqueda
+- [x] Migrar sistema de comentarios
+- [x] Configurar rutas: `/api/noticias/*`, `/api/search/*`, `/api/comments/*`
+- [x] Testing de funcionalidades
 
 ### 📁 ESTRUCTURA SPRINT 3:
 ```
 frontend/functions/api/
-├── news/
-│   ├── index.ts
-│   ├── [slug].ts
-│   └── admin/
+├── noticias/
+│   ├── index.js (listado de noticias)
+│   └── [slug].js (noticia individual + vistas)
 ├── search/
-│   ├── index.ts
-│   └── suggestions.ts
+│   ├── index.js (búsqueda global)
+│   └── suggestions.js (autocompletado)
 └── comments/
-    ├── index.ts
-    └── [id].ts
+    ├── index.js (CRUD comentarios)
+    ├── moderate.js (moderación admin)
+    ├── like.js (sistema de likes)
+    └── stats.js (estadísticas)
 ```
+
+### 🧪 ENDPOINTS IMPLEMENTADOS:
+- `GET /api/noticias` - Listado de noticias ✅
+- `GET /api/noticias/[slug]` - Noticia individual con contador de vistas ✅
+- `GET /api/search?query=...` - Búsqueda global con relevancia ✅
+- `GET /api/search/suggestions?query=...` - Sugerencias autocompletado ✅
+- `GET /api/comments?article_id=...&type=...` - Obtener comentarios ✅
+- `POST /api/comments` - Crear comentario ✅
+- `PATCH /api/comments/moderate` - Aprobar/rechazar comentarios ✅
+- `POST /api/comments/like` - Dar/quitar like ✅
+- `GET /api/comments/stats` - Estadísticas de comentarios ✅
 
 ---
 
