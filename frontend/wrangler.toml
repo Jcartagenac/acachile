@@ -6,25 +6,34 @@ pages_build_output_dir = "dist"
 # Bindings para Pages Functions
 [[d1_databases]]
 binding = "DB"
-database_name = "aca-chile-db" 
-database_id = "your-database-id"
-preview_database_id = "your-preview-database-id"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 
 [[kv_namespaces]]
 binding = "ACA_KV"
-id = "your-kv-id"
-preview_id = "your-preview-kv-id"
+id = "b080082921d447e6995c8085f1033286"
+preview_id = "deda506587a1476a96578cb545f0128e"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-CORS_ORIGIN = "https://acachile.pages.dev"
-FRONTEND_URL = "https://acachile.pages.dev"
-FROM_EMAIL = "noreply@acachile.cl"
+CORS_ORIGIN = "https://acachile-frontend.pages.dev"
+FRONTEND_URL = "https://acachile-frontend.pages.dev"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
 
 [env.preview.vars]
 ENVIRONMENT = "preview"
 CORS_ORIGIN = "*"
-FRONTEND_URL = "https://preview.acachile.pages.dev"
-FROM_EMAIL = "noreply@acachile.cl"
+FRONTEND_URL = "https://acachile-frontend.pages.dev"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
+
+# Bindings específicas para producción
+[[env.production.kv_namespaces]]
+binding = "ACA_KV"
+id = "60fff9f10819406cad241e326950f056"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
