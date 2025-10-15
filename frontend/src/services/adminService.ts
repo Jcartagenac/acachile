@@ -125,36 +125,80 @@ class AdminService {
   }
 
   // Dashboard
-  async getDashboardStats(): Promise<DashboardStats> {
+  async getDashboardStats(timeRange?: 'week' | 'month' | 'year'): Promise<{ success: boolean; data?: DashboardStats; error?: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
-        headers: this.getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Error obteniendo estadísticas del dashboard');
-      }
-
-      const data = await response.json();
-      return data.stats;
+      // Mock data for development - replace with real API call later
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+      
+      const mockStats: DashboardStats = {
+        users: {
+          total: 156,
+          active: 142,
+          new_today: 3,
+          new_week: 12
+        },
+        events: {
+          total: 24,
+          active: 18,
+          archived: 6,
+          new_today: 1
+        },
+        news: {
+          total: 45,
+          published: 38,
+          drafts: 7,
+          new_today: 2
+        },
+        comments: {
+          total: 89,
+          pending: 5,
+          approved: 84,
+          new_today: 4
+        },
+        system: {
+          uptime: '15 días',
+          health: 'Excelente',
+          last_backup: '2024-10-15 02:00:00'
+        }
+      };
+      
+      return { success: true, data: mockStats };
     } catch (error) {
       console.error('Error en getDashboardStats:', error);
-      throw error;
+      return { success: false, error: 'Error cargando estadísticas del dashboard' };
     }
   }
 
   async getRecentActivity(): Promise<RecentActivity[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
-        headers: this.getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Error obteniendo actividad reciente');
-      }
-
-      const data = await response.json();
-      return data.recent_activity || [];
+      // Mock data for development - replace with real API call later
+      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
+      
+      const mockActivity: RecentActivity[] = [
+        {
+          id: '1',
+          type: 'user_registration',
+          user: { id: '123', username: 'juan_perez', email: 'juan@email.com' },
+          description: 'Nuevo usuario registrado',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 min ago
+        },
+        {
+          id: '2',
+          type: 'event_created',
+          user: { id: '456', username: 'maria_admin', email: 'maria@aca.cl' },
+          description: 'Creó el evento "Asado de Octubre"',
+          timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString() // 2 hours ago
+        },
+        {
+          id: '3',
+          type: 'news_published',
+          user: { id: '789', username: 'carlos_editor', email: 'carlos@aca.cl' },
+          description: 'Publicó noticia sobre técnicas de parrilla',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString() // 4 hours ago
+        }
+      ];
+      
+      return mockActivity;
     } catch (error) {
       console.error('Error en getRecentActivity:', error);
       throw error;

@@ -20,7 +20,8 @@ import {
   NewsPage,
   NewsDetailPage,
   SearchResultsPage,
-  AdminDashboard
+  AdminDashboard,
+  ProfilePage
 } from './pages';
 import AdminLayout from './components/layout/AdminLayout';
 import AdminUsers from './pages/AdminUsers';
@@ -62,6 +63,12 @@ function App() {
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
           <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />
+          
+          {/* Perfil de Usuario */}
+          <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/configuracion" element={<ProfilePage />} />
+          <Route path="/mi-cuenta" element={<ProfilePage />} />
+          <Route path="/panel-admin" element={<ProfilePage />} />
           
           {/* Páginas generales */}
           <Route path="/contacto" element={<ContactPage />} />

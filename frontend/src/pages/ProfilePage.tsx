@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container } from '../components/layout/Container';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../components/auth/PermissionGuard';
+import { useLocation } from 'react-router-dom';
 import { 
-  User, 
-  CreditCard, 
-  Settings, 
   Shield, 
   ChevronRight,
   UserCircle,
   Wallet,
-  Bell,
-  Admin
+  Bell
 } from 'lucide-react';
 import { ProfileModule } from '../components/profile/ProfileModule';
 import { AccountModule } from '../components/profile/AccountModule';
@@ -21,9 +18,24 @@ import { AdminModule } from '../components/profile/AdminModule';
 type ActiveModule = 'profile' | 'account' | 'settings' | 'admin';
 
 export const ProfilePage: React.FC = () => {
-  const [activeModule, setActiveModule] = useState<ActiveModule>('profile');
+  const location = useLocation();
   const { user, getRoleDisplayName } = useAuth();
   const { isAdmin, isDirector, isDirectorEditor } = usePermissions();
+
+  // Determine active module based on route
+  const getActiveModuleFromRoute = (): ActiveModule => {
+    const path = location.pathname;
+    if (path === '/mi-cuenta') return 'account';
+    if (path === '/configuracion') return 'settings';
+    if (path === '/panel-admin') return 'admin';
+    return 'profile';
+  };
+
+  const [activeModule, setActiveModule] = useState<ActiveModule>(getActiveModuleFromRoute());
+
+  useEffect(() => {
+    setActiveModule(getActiveModuleFromRoute());
+  }, [location.pathname]);
 
   if (!user) {
     return (

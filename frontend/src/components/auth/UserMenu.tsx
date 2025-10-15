@@ -111,12 +111,12 @@ export const UserMenu: React.FC = () => {
                 Mis Eventos
               </button>
 
-              {/* Panel Administrativo - Solo para admins */}
-              {isAdmin && (
+              {/* Panel Administrativo - Solo para admins y directores */}
+              {(isAdmin || isDirector || isDirectorEditor) && (
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    navigate('/admin');
+                    navigate('/panel-admin');
                   }}
                   className="flex items-center w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 rounded-lg mx-2"
                 >
@@ -162,6 +162,17 @@ export const UserMenu: React.FC = () => {
               >
                 <User className="w-4 h-4 mr-3" />
                 Mi Perfil
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/mi-cuenta');
+                }}
+                className="flex items-center w-full px-4 py-3 text-left text-neutral-700 hover:bg-white/50 hover:text-primary-600 transition-all duration-200 rounded-lg mx-2"
+              >
+                <Calendar className="w-4 h-4 mr-3" />
+                Mi Cuenta
               </button>
 
               <button
