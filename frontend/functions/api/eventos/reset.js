@@ -33,13 +33,17 @@ export async function onRequest(context) {
   }
 
   try {
+    // Limpiar cache primero
+    await env.ACA_KV.delete('eventos:all');
+    
     // Inicializar datos directamente sin autenticación
     await resetEventosData(env);
 
     return new Response(JSON.stringify({
       success: true,
       message: 'Eventos de ACA Chile inicializados exitosamente',
-      count: 5
+      count: 5,
+      timestamp: new Date().toISOString()
     }), {
       status: 200,
       headers: {
