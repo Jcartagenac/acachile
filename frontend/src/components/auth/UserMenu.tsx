@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings, ChevronDown, Calendar, Shield } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Calendar, Shield, Users, Edit } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePermissions } from './PermissionGuard';
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, getRoleDisplayName, getRoleColor } = useAuth();
+  const {
+    isAdmin,
+    isDirector,
+    isDirectorEditor,
+    canAccessAdminPanel,
+    canAccessDirectorPanel,
+    canAccessEditorPanel,
+    canManageEvents
+  } = usePermissions();
   const navigate = useNavigate();
 
   if (!user) return null;
@@ -15,28 +25,15 @@ export const UserMenu: React.FC = () => {
     setIsOpen(false);
   };
 
-  // Verificar si el usuario es admin
-  const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin');
-
   return (
     <div className="relative">
       {/* User Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 px-4 py-2 rounded-2xl transition-all duration-300 hover:scale-105"
-        style={{ 
-          backgroundColor: '#e8ecf4',
-          boxShadow: '6px 6px 12px #bec8d7, -6px -6px 12px #ffffff'
-        }}
+        className="flex items-center space-x-3 px-4 py-2 bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105 group"
       >
         {/* Avatar */}
-        <div 
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ 
-            backgroundColor: '#EF4444',
-            boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.1)'
-          }}
-        >
+        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-xs flex items-center justify-center">
           {user.avatar ? (
             <img
               src={user.avatar}
@@ -53,18 +50,17 @@ export const UserMenu: React.FC = () => {
         {/* User Info */}
         <div className="flex items-center space-x-2">
           <div className="text-left">
-            <p className="font-medium text-sm" style={{ color: '#374151' }}>
+            <p className="font-medium text-sm text-neutral-700 group-hover:text-primary-600 transition-colors">
               {user.name}
             </p>
-            <p className="text-xs" style={{ color: '#6B7280' }}>
-              {user.membershipType || 'Miembro'}
+            <p className="text-xs text-neutral-500">
+              {getRoleDisplayName()}
             </p>
           </div>
           <ChevronDown 
-            className={`w-4 h-4 transition-transform duration-200 ${
+            className={`w-4 h-4 transition-transform duration-200 text-neutral-500 group-hover:text-primary-500 ${
               isOpen ? 'rotate-180' : ''
             }`}
-            style={{ color: '#6B7280' }}
           />
         </div>
       </button>
@@ -79,26 +75,27 @@ export const UserMenu: React.FC = () => {
           />
           
           {/* Menu */}
-          <div 
-            className="absolute right-0 mt-2 w-56 rounded-2xl py-2 shadow-lg z-20"
-            style={{ 
-              backgroundColor: '#e8ecf4',
-              boxShadow: '10px 10px 20px #bec8d7, -10px -10px 20px #ffffff'
-            }}
-          >
+          <div className="absolute right-0 mt-2 w-64 bg-white/70 backdrop-blur-soft border border-white/30 rounded-2xl py-2 shadow-soft-lg z-20">
             {/* User Info Header */}
-            <div className="px-4 py-3 border-b border-gray-200">
-              <p className="font-semibold" style={{ color: '#374151' }}>
+            <div className="px-4 py-3 border-b border-neutral-200/50">
+              <p className="font-semibold text-neutral-700">
                 {user.name}
               </p>
-              <p className="text-sm" style={{ color: '#6B7280' }}>
+              <p className="text-sm text-neutral-600">
                 {user.email}
               </p>
-              {user.region && (
-                <p className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
-                  📍 {user.region}
-                </p>
-              )}
+              <div className="flex items-center justify-between mt-2">
+                {user.region && (
+                  <p className="text-xs text-neutral-500">
+                    📍 {user.region}
+                  </p>
+                )}
+                <span 
+                  className={`px-2 py-1 text-xs rounded-full bg-${getRoleColor()}-50 text-${getRoleColor()}-600 border border-${getRoleColor()}-200/50`}
+                >
+                  {getRoleDisplayName()}
+                </span>
+              </div>
             </div>
 
             {/* Menu Items */}
@@ -108,35 +105,60 @@ export const UserMenu: React.FC = () => {
                   setIsOpen(false);
                   navigate('/eventos/mis-eventos');
                 }}
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
-                style={{ color: '#374151' }}
+                className="flex items-center w-full px-4 py-3 text-left text-neutral-700 hover:bg-white/50 hover:text-primary-600 transition-all duration-200 rounded-lg mx-2"
               >
                 <Calendar className="w-4 h-4 mr-3" />
                 Mis Eventos
               </button>
 
-              {/* Admin Panel Link - Solo visible para admins */}
+              {/* Panel Administrativo - Solo para admins */}
               {isAdmin && (
                 <button
                   onClick={() => {
                     setIsOpen(false);
                     navigate('/admin');
                   }}
-                  className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
-                  style={{ color: '#DC2626' }}
+                  className="flex items-center w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 rounded-lg mx-2"
                 >
                   <Shield className="w-4 h-4 mr-3" />
                   Panel Administrativo
+                </button>
+              )}
+
+              {/* Panel Director - Para directores y admins */}
+              {(isDirector || isAdmin) && !isAdmin && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/director');
+                  }}
+                  className="flex items-center w-full px-4 py-3 text-left text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200 rounded-lg mx-2"
+                >
+                  <Users className="w-4 h-4 mr-3" />
+                  Panel Director
+                </button>
+              )}
+
+              {/* Panel Editor - Para directores editores */}
+              {(isDirectorEditor) && !isDirector && !isAdmin && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/editor');
+                  }}
+                  className="flex items-center w-full px-4 py-3 text-left text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-lg mx-2"
+                >
+                  <Edit className="w-4 h-4 mr-3" />
+                  Panel Editor
                 </button>
               )}
               
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  // TODO: Navigate to profile
+                  navigate('/perfil');
                 }}
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
-                style={{ color: '#374151' }}
+                className="flex items-center w-full px-4 py-3 text-left text-neutral-700 hover:bg-white/50 hover:text-primary-600 transition-all duration-200 rounded-lg mx-2"
               >
                 <User className="w-4 h-4 mr-3" />
                 Mi Perfil
@@ -145,21 +167,19 @@ export const UserMenu: React.FC = () => {
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  // TODO: Navigate to settings
+                  navigate('/configuracion');
                 }}
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
-                style={{ color: '#374151' }}
+                className="flex items-center w-full px-4 py-3 text-left text-neutral-700 hover:bg-white/50 hover:text-primary-600 transition-all duration-200 rounded-lg mx-2"
               >
                 <Settings className="w-4 h-4 mr-3" />
                 Configuración
               </button>
 
-              <hr className="my-2 border-gray-200" />
+              <hr className="my-2 border-neutral-200/50 mx-2" />
 
               <button
                 onClick={handleLogout}
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-opacity-50 transition-colors duration-200"
-                style={{ color: '#EF4444' }}
+                className="flex items-center w-full px-4 py-3 text-left text-red-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 rounded-lg mx-2"
               >
                 <LogOut className="w-4 h-4 mr-3" />
                 Cerrar Sesión

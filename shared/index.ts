@@ -25,7 +25,65 @@ export const REGIONES_CHILE = [
 
 export type RegionName = (typeof REGIONES_CHILE)[number];
 
-export type UserRole = 'admin' | 'editor' | 'user' | 'organizer' | 'super_admin';
+export type UserRole = 'admin' | 'director' | 'director_editor' | 'usuario';
+
+// Legacy role mappings for backward compatibility
+export type LegacyUserRole = 'editor' | 'user' | 'organizer' | 'super_admin';
+
+// Role hierarchy and permissions
+export const ROLE_HIERARCHY = {
+  admin: 4,
+  director: 3,
+  director_editor: 2,
+  usuario: 1
+} as const;
+
+// Role permissions mapping
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  admin: [
+    'manage_users',
+    'manage_events',
+    'manage_content',
+    'manage_system',
+    'view_analytics',
+    'moderate_community',
+    'access_admin_panel'
+  ],
+  director: [
+    'manage_events',
+    'manage_content',
+    'view_analytics',
+    'moderate_community',
+    'access_director_panel'
+  ],
+  director_editor: [
+    'manage_events',
+    'manage_content',
+    'moderate_community',
+    'access_editor_panel'
+  ],
+  usuario: [
+    'view_events',
+    'join_events',
+    'view_content',
+    'access_profile'
+  ]
+};
+
+export type Permission = 
+  | 'manage_users'
+  | 'manage_events'
+  | 'manage_content'
+  | 'manage_system'
+  | 'view_analytics'
+  | 'moderate_community'
+  | 'access_admin_panel'
+  | 'access_director_panel'
+  | 'access_editor_panel'
+  | 'view_events'
+  | 'join_events'
+  | 'view_content'
+  | 'access_profile';
 
 export interface Pagination {
   page: number;
@@ -180,3 +238,42 @@ export interface RegisterResponse {
   message?: string;
   error?: string;
 }
+
+// Role utility functions
+export const roleUtils = {
+  hasPermission: (userRole: UserRole, permission: Permission): boolean => {
+    return ROLE_PERMISSIONS[userRole]?.includes(permission) || false;
+  },
+  
+  canManage: (userRole: UserRole, targetRole: UserRole): boolean => {
+    return ROLE_HIERARCHY[userRole] > ROLE_HIERARCHY[targetRole];
+  },
+  
+  getRoleDisplayName: (role: UserRole): string => {
+    const displayNames = {
+      admin: 'Administrador',
+      director: 'Director',
+      director_editor: 'Director Editor',
+      usuario: 'Usuario'
+    };
+    return displayNames[role];
+  },
+  
+  getRoleColor: (role: UserRole): string => {
+    const colors = {
+      admin: 'red',
+      director: 'purple',
+      director_editor: 'blue',
+      usuario: 'green'
+    };
+    return colors[role];
+  },
+  
+  getAllRoles: (): UserRole[] => {
+    return Object.keys(ROLE_HIERARCHY) as UserRole[];
+  },
+  
+  isHigherRole: (role1: UserRole, role2: UserRole): boolean => {
+    return ROLE_HIERARCHY[role1] > ROLE_HIERARCHY[role2];
+  }
+};

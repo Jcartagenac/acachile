@@ -7,6 +7,9 @@ import {
   LoginRequest,
   RegisterRequest,
   RegisterResponse,
+  UserRole,
+  Permission,
+  roleUtils,
 } from '@shared/index';
 import { logger } from '../utils/logger';
 
@@ -37,13 +40,32 @@ const mapApiUserToAppUser = (apiUser: AuthApiUser, overrides?: Partial<AppUser>)
   const firstName = (apiUser.nombre ?? '').trim();
   const lastName = (apiUser.apellido ?? '').trim();
 
+  // Map legacy roles to new role system
+  let mappedRole: UserRole;
+  switch (apiUser.role as string) {
+    case 'super_admin':
+    case 'admin':
+      mappedRole = 'admin';
+      break;
+    case 'editor':
+      mappedRole = 'director_editor';
+      break;
+    case 'organizer':
+      mappedRole = 'director';
+      break;
+    case 'user':
+    default:
+      mappedRole = 'usuario';
+      break;
+  }
+
   const base: AppUser = {
     id: apiUser.id,
     email: apiUser.email,
     firstName,
     lastName,
     name: [firstName, lastName].filter(Boolean).join(' ').trim() || apiUser.email,
-    roles: [apiUser.role],
+    roles: [mappedRole],
     avatar: null,
     phone: apiUser.telefono ?? null,
     rut: apiUser.rut ?? null,
@@ -74,11 +96,29 @@ const parseStoredUser = (raw: string | undefined): AppUser | null => {
 
     const firstName = (parsed.firstName ?? parsed.nombre ?? '').toString().trim();
     const lastName = (parsed.lastName ?? parsed.apellido ?? '').toString().trim();
+    // Map legacy roles to new role system
+    const legacyRole = parsed.role as string;
+    let mappedRole: UserRole;
+    switch (legacyRole) {
+      case 'super_admin':
+      case 'admin':
+        mappedRole = 'admin';
+        break;
+      case 'editor':
+        mappedRole = 'director_editor';
+        break;
+      case 'organizer':
+        mappedRole = 'director';
+        break;
+      case 'user':
+      default:
+        mappedRole = 'usuario';
+        break;
+    }
+
     const roles = Array.isArray(parsed.roles) && parsed.roles.length > 0
       ? parsed.roles
-      : parsed.role
-        ? [parsed.role]
-        : ['user'];
+      : [mappedRole];
 
     return {
       id: Number(parsed.id),
@@ -199,6 +239,17 @@ interface AuthContextType extends AuthState {
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  // Role and permission utilities
+  hasPermission: (permission: Permission) => boolean;
+  hasRole: (role: UserRole) => boolean;
+  canManage: (targetRole: UserRole) => boolean;
+  isAdmin: () => boolean;
+  isDirector: () => boolean;
+  isDirectorEditor: () => boolean;
+  isUsuario: () => boolean;
+  getUserRole: () => UserRole | null;
+  getRoleDisplayName: () => string;
+  getRoleColor: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -362,12 +413,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
+  // Role and permission utility functions
+  const hasPermission = (permission: Permission): boolean => {
+    if (!state.user || !state.isAuthenticated) return false;
+    const userRole = state.user.roles[0] as UserRole; // Taking first role
+    return roleUtils.hasPermission(userRole, permission);
+  };
+
+  const hasRole = (role: UserRole): boolean => {
+    if (!state.user || !state.isAuthenticated) return false;
+    return state.user.roles.includes(role);
+  };
+
+  const canManage = (targetRole: UserRole): boolean => {
+    if (!state.user || !state.isAuthenticated) return false;
+    const userRole = state.user.roles[0] as UserRole;
+    return roleUtils.canManage(userRole, targetRole);
+  };
+
+  const isAdmin = (): boolean => hasRole('admin');
+  const isDirector = (): boolean => hasRole('director') || hasRole('admin');
+  const isDirectorEditor = (): boolean => hasRole('director_editor') || hasRole('director') || hasRole('admin');
+  const isUsuario = (): boolean => hasRole('usuario');
+
+  const getUserRole = (): UserRole | null => {
+    if (!state.user || !state.isAuthenticated) return null;
+    return state.user.roles[0] as UserRole;
+  };
+
+  const getRoleDisplayName = (): string => {
+    const role = getUserRole();
+    return role ? roleUtils.getRoleDisplayName(role) : 'Sin rol';
+  };
+
+  const getRoleColor = (): string => {
+    const role = getUserRole();
+    return role ? roleUtils.getRoleColor(role) : 'gray';
+  };
+
   const contextValue: AuthContextType = {
     ...state,
     login,
     register,
     logout,
     clearError,
+    hasPermission,
+    hasRole,
+    canManage,
+    isAdmin,
+    isDirector,
+    isDirectorEditor,
+    isUsuario,
+    getUserRole,
+    getRoleDisplayName,
+    getRoleColor,
   };
 
   return (
