@@ -6,14 +6,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Clock, TrendingUp } from 'lucide-react';
-import { searchService } from '../services/searchService';
-import { logger } from '../utils/logger';
 
 interface SearchBarProps {
   placeholder?: string;
   size?: 'small' | 'medium' | 'large';
   className?: string;
 }
+
+// Mock del servicio de búsqueda para que el componente funcione
+// Deberías reemplazar esto con tu implementación real del servicio
+const searchService = {
+  getSuggestions: async (query: string) => {
+    logger.search.info(`Mock searchService.getSuggestions called with: ${query}`);
+    // Simula una llamada a la API
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return { success: true, data: [`Sugerencia para "${query}" 1`, `Sugerencia para "${query}" 2`] };
+  }
+};
+
+import { logger } from '../utils/logger';
 
 const SearchBar: React.FC<SearchBarProps> = ({ 
   placeholder = "Buscar eventos, noticias...",

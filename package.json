@@ -4,17 +4,13 @@
   "description": "ACA Chile - Asociación Chilena de Asadores - Monorepo",
   "private": true,
   "workspaces": [
-    "frontend",
-    "worker",
-    "shared"
+    "frontend"
   ],
   "scripts": {
     "dev": "npm run dev -w @acachile/frontend",
     "build": "npm run build -w @acachile/frontend",
     "lint": "npm run lint -w @acachile/frontend",
-    "preview": "npm run preview -w @acachile/frontend",
-    "deploy": "npm run deploy -w @acachile/frontend",
-    "deploy:auto": "npm run deploy:auto -w @acachile/frontend"
+    "deploy": "npm run deploy -w @acachile/frontend"
   },
   "devDependencies": {
     "@types/node": "^20.0.0"

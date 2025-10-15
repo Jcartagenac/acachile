@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { User, LoginRequest, RegisterRequest, AuthResponse } from '@shared/index';
+import { User, LoginRequest, RegisterRequest, AuthResponse } from '../types/shared';
 import { logger } from '../utils/logger';
 
 interface AuthState {
@@ -95,36 +95,14 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // API Base URL - usar variable de entorno o fallback de producción
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile-prod.pages.dev';
-
-  // Verificar token al cargar la aplicación
-  useEffect(() => {
-    const token = Cookies.get('auth_token');
-    const userStr = Cookies.get('auth_user');
-    
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        dispatch({ 
-          type: 'AUTH_SUCCESS', 
-          payload: { user, token } 
-        });
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        logout();
-      }
-    }
-  }, []);
-
   const login = async (credentials: LoginRequest) => {
     logger.auth.info('🔄 AuthContext: Iniciando login', { email: credentials.email });
     dispatch({ type: 'AUTH_START' });
     
     try {
-      logger.auth.debug('🌐 AuthContext: Enviando request a API', { url: `${API_BASE_URL}/api/auth/login` });
+      logger.auth.debug('🌐 AuthContext: Enviando request a API', { url: '/api/auth/login' });
       
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +154,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'AUTH_START' });
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -208,6 +186,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw error;
     }
   };
+
+  // Verificar token al cargar la aplicación
+  useEffect(() => {
+    const token = Cookies.get('auth_token');
+    const userStr = Cookies.get('auth_user');
+    
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        dispatch({ 
+          type: 'AUTH_SUCCESS', 
+          payload: { user, token } 
+        });
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        logout();
+      }
+    }
+  }, []);
+
 
   const logout = () => {
     // Limpiar cookies

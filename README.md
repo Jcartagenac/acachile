@@ -33,7 +33,7 @@
 
 #### **Infraestructura de Producción**
 - **Frontend**: Cloudflare Pages (https://acachile.pages.dev)
-- **API**: Cloudflare Workers (https://acachile-api-production.juecart.workers.dev)
+- **API**: Cloudflare Pages Functions (servida desde la misma URL en `/api`)
 - **Database**: D1 con esquema completo desplegado
 - **Email**: noreply@mail.juancartagena.cl (Resend)
 - **Account**: Cloudflare ID `172194a6569df504cbb8a638a94d3d2c`
@@ -129,16 +129,12 @@ acachile/
 │   ├── _headers                 # Headers HTTP para Cloudflare
 │   ├── _routes.json            # Configuración de rutas
 │   └── package.json            # Dependencias frontend
-│
-├── 📁 shared/                   # Utilidades compartidas
-├── 📁 docs/                    # Documentación técnica
-├── 📄 wrangler.toml            # Configuración Cloudflare
-├── 📄 SPRINT.txt               # Plan de sprints original
-├── 📄 SPRINT-4-COMPLETADO.md   # Documentación del Sprint 4
-└── 📄 package.json             # Configuración monorepo
+│   
+├── 📁 docs/                     # Documentación técnica
+├── 📄 SPRINT.txt                # Plan de sprints original
+├── 📄 SPRINT-4-COMPLETADO.md    # Documentación del Sprint 4
+└── 📄 package.json              # Configuración monorepo
 ```
-│   │   │   ├── auth/     # Componentes de autenticación
-│   │   │   └── SearchBar.tsx # Búsqueda global con sugerencias
 │   │   ├── contexts/     # Context API (AuthContext)
 │   │   ├── pages/        # Páginas React (15+ páginas)
 │   │   │   ├── NewsPage.tsx        # Lista noticias con filtros
@@ -151,13 +147,6 @@ acachile/
 │   │   │   ├── searchService.ts    # Búsqueda avanzada
 │   │   │   └── adminService.ts     # Panel administrativo
 │   │   └── types/        # TypeScript interfaces
-│
-├── 📁 shared/           # Utilidades compartidas entre frontend/backend
-├── 📁 docs/            # Documentación técnica del proyecto
-├── 📄 wrangler.toml    # Configuración Cloudflare (RESPALDO - no usar)
-├── 📄 SPRINT.txt       # Plan original de desarrollo por sprints
-├── � SPRINT-4-COMPLETADO.md  # Documentación detallada Sprint 4
-└── 📄 package.json     # Configuración del monorepo
 ```
 
 ---
