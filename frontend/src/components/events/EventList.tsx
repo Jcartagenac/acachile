@@ -71,22 +71,15 @@ export const EventList: React.FC = () => {
 
   if (error) {
     return (
-      <div 
-        className="rounded-2xl p-8 text-center"
-        style={{ 
-          backgroundColor: '#FEE2E2',
-          color: '#DC2626',
-          border: '1px solid #FECACA'
-        }}
-      >
-        <h3 className="text-lg font-semibold mb-2">Error al cargar eventos</h3>
-        <p className="mb-4">{error}</p>
+      <div className="bg-red-50/80 backdrop-blur-soft border border-red-200/50 rounded-2xl p-8 text-center shadow-soft-lg">
+        <h3 className="text-lg font-semibold mb-2 text-red-700">Error al cargar eventos</h3>
+        <p className="mb-4 text-red-600">{error}</p>
         <button
           onClick={() => {
             clearError();
             fetchEventos(1);
           }}
-          className="px-6 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors"
+          className="px-6 py-2 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105"
         >
           Reintentar
         </button>
@@ -97,12 +90,12 @@ export const EventList: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold" style={{ color: '#374151' }}>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
             Eventos ACA Chile
           </h1>
-          <p className="text-lg mt-2" style={{ color: '#6B7280' }}>
+          <p className="text-lg text-neutral-600">
             Descubre y participa en nuestros eventos de asadores
           </p>
         </div>
@@ -110,51 +103,31 @@ export const EventList: React.FC = () => {
         {isAuthenticated && (
           <Link
             to="/eventos/crear"
-            className="flex items-center space-x-2 px-6 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
-            style={{ 
-              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)'
-            }}
+            className="flex items-center space-x-2 px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105 group"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
             <span>Crear Evento</span>
           </Link>
         )}
       </div>
 
       {/* Search and Filters */}
-      <div 
-        className="rounded-3xl p-6"
-        style={{ 
-          backgroundColor: '#e8ecf4',
-          boxShadow: '15px 15px 30px #bec8d7, -15px -15px 30px #ffffff'
-        }}
-      >
+      <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl p-6 shadow-soft-lg">
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-6">
           <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <Search className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
+            <div className="flex items-center bg-white/70 backdrop-blur-medium border border-white/40 rounded-xl px-4 py-3 shadow-soft-xs hover:shadow-soft-sm transition-shadow duration-300">
+              <Search className="w-5 h-5 mr-3 text-neutral-500" />
               <input
                 type="text"
                 placeholder="Buscar eventos por nombre, ubicación..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent outline-none"
-                style={{ color: '#374151' }}
+                className="flex-1 bg-transparent outline-none text-neutral-700 placeholder-neutral-500"
               />
               <button
                 type="submit"
-                className="ml-3 px-4 py-2 rounded-lg text-white font-medium transition-all duration-300"
-                style={{ 
-                  background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-                }}
+                className="ml-3 px-4 py-2 rounded-lg text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105"
               >
                 Buscar
               </button>
@@ -169,12 +142,7 @@ export const EventList: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-2 rounded-xl border-none outline-none"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff',
-                color: '#374151'
-              }}
+              className="px-4 py-2 rounded-xl bg-white/50 backdrop-blur-medium border border-white/30 outline-none text-neutral-700 shadow-soft-xs hover:shadow-soft-sm transition-shadow duration-300"
             >
               <option value="">Todos los tipos</option>
               <option value="campeonato">Campeonatos</option>
@@ -188,12 +156,7 @@ export const EventList: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-xl border-none outline-none"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff',
-                color: '#374151'
-              }}
+              className="px-4 py-2 rounded-xl bg-white/50 backdrop-blur-medium border border-white/30 outline-none text-neutral-700 shadow-soft-xs hover:shadow-soft-sm transition-shadow duration-300"
             >
               <option value="">Todos los estados</option>
               <option value="published">Publicados</option>
@@ -206,12 +169,7 @@ export const EventList: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-4 py-2 rounded-xl border-none outline-none"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff',
-                color: '#374151'
-              }}
+              className="px-4 py-2 rounded-xl bg-white/50 backdrop-blur-medium border border-white/30 outline-none text-neutral-700 shadow-soft-xs hover:shadow-soft-sm transition-shadow duration-300"
             >
               <option value="date">Ordenar por fecha</option>
               <option value="title">Ordenar por título</option>
@@ -220,21 +178,14 @@ export const EventList: React.FC = () => {
           </div>
 
           {/* View Mode Toggle */}
-          <div 
-            className="flex rounded-xl overflow-hidden"
-            style={{ 
-              backgroundColor: '#e8ecf4',
-              boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff'
-            }}
-          >
+          <div className="flex bg-white/40 backdrop-blur-medium border border-white/30 rounded-xl overflow-hidden shadow-soft-xs">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-3 transition-all duration-300 ${
                 viewMode === 'grid' 
-                  ? 'bg-white shadow-neuro-outset' 
-                  : 'hover:bg-white/50'
+                  ? 'bg-white/80 shadow-soft-sm text-primary-600' 
+                  : 'hover:bg-white/60 text-neutral-600'
               }`}
-              style={{ color: '#374151' }}
             >
               <Grid className="w-5 h-5" />
             </button>
@@ -242,10 +193,9 @@ export const EventList: React.FC = () => {
               onClick={() => setViewMode('list')}
               className={`p-3 transition-all duration-300 ${
                 viewMode === 'list' 
-                  ? 'bg-white shadow-neuro-outset' 
-                  : 'hover:bg-white/50'
+                  ? 'bg-white/80 shadow-soft-sm text-primary-600' 
+                  : 'hover:bg-white/60 text-neutral-600'
               }`}
-              style={{ color: '#374151' }}
             >
               <List className="w-5 h-5" />
             </button>
@@ -253,7 +203,7 @@ export const EventList: React.FC = () => {
         </div>
 
         {/* Results Count */}
-        <div className="mt-4 text-sm" style={{ color: '#6B7280' }}>
+        <div className="mt-4 text-sm text-neutral-600">
           {pagination.total > 0 ? (
             <>Mostrando {eventos.length} de {pagination.total} eventos</>
           ) : (
@@ -265,14 +215,8 @@ export const EventList: React.FC = () => {
       {/* Loading State */}
       {isLoading && eventos.length === 0 && (
         <div className="flex justify-center py-12">
-          <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ 
-              backgroundColor: '#e8ecf4',
-              boxShadow: '8px 8px 16px #bec8d7, -8px -8px 16px #ffffff'
-            }}
-          >
-            <div className="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-16 h-16 rounded-full bg-white/60 backdrop-blur-soft border border-white/30 shadow-soft-lg flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         </div>
       )}
@@ -296,31 +240,21 @@ export const EventList: React.FC = () => {
 
       {/* Empty State */}
       {!isLoading && sortedEventos.length === 0 && (
-        <div 
-          className="text-center py-16 rounded-3xl"
-          style={{ 
-            backgroundColor: '#e8ecf4',
-            boxShadow: '15px 15px 30px #bec8d7, -15px -15px 30px #ffffff'
-          }}
-        >
+        <div className="text-center py-16 bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg">
           <div className="text-6xl mb-4">🎯</div>
-          <h3 className="text-xl font-semibold mb-2" style={{ color: '#374151' }}>
+          <h3 className="text-xl font-semibold mb-2 text-neutral-700">
             No se encontraron eventos
           </h3>
-          <p className="mb-6" style={{ color: '#6B7280' }}>
+          <p className="mb-6 text-neutral-600">
             Intenta cambiar los filtros o crear un nuevo evento
           </p>
           
           {isAuthenticated && (
             <Link
               to="/eventos/nuevo"
-              className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
-              style={{ 
-                background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)'
-              }}
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105 group"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
               <span>Crear Primer Evento</span>
             </Link>
           )}
@@ -333,11 +267,7 @@ export const EventList: React.FC = () => {
           <button
             onClick={handleLoadMore}
             disabled={isLoading}
-            className="px-8 py-4 rounded-xl font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50"
-            style={{ 
-              color: '#374151',
-              boxShadow: '10px 10px 20px #bec8d7, -10px -10px 20px #ffffff'
-            }}
+            className="px-8 py-4 rounded-xl font-medium bg-white/60 backdrop-blur-soft border border-white/30 text-neutral-700 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105 disabled:opacity-50"
           >
             {isLoading ? 'Cargando...' : 'Cargar más eventos'}
           </button>

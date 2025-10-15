@@ -280,24 +280,28 @@ const EventDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-pastel-purple-50 to-neutral-100 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-primary-200/20 to-pastel-blue-200/20 rounded-full blur-3xl animate-soft-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-pastel-pink-200/20 to-primary-200/20 rounded-full blur-3xl animate-soft-pulse delay-1000"></div>
+      
+      <div className="max-w-4xl mx-auto px-4 py-12 relative z-10">
         {/* Header con imagen */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg overflow-hidden mb-8">
           <div className="relative h-64 md:h-80">
             <img
               src={evento.image}
               alt={evento.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end">
               <div className="p-6 text-white">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{evento.title}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">{evento.title}</h1>
                 <div className="flex items-center space-x-4 text-sm">
-                  <span className="bg-red-600 px-3 py-1 rounded-full capitalize">
+                  <span className="bg-primary-600 px-3 py-1 rounded-full capitalize backdrop-blur-medium shadow-soft-sm">
                     {evento.type}
                   </span>
-                  <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                  <span className="bg-white/20 backdrop-blur-medium px-3 py-1 rounded-full shadow-soft-sm">
                     {formatPrice(evento.price)}
                   </span>
                 </div>
@@ -310,9 +314,9 @@ const EventDetailPage: React.FC = () => {
           {/* Información principal */}
           <div className="md:col-span-2 space-y-6">
             {/* Detalles básicos */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center">
-                <Info className="w-5 h-5 mr-2 text-red-600" />
+            <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-md p-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center text-neutral-700">
+                <Info className="w-5 h-5 mr-2 text-primary-600" />
                 Información del Evento
               </h2>
               

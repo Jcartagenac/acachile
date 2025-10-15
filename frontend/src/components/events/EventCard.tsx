@@ -60,28 +60,19 @@ export const EventCard: React.FC<EventCardProps> = ({
     switch (evento.status) {
       case 'draft':
         return (
-          <span className="px-2 py-1 text-xs rounded-lg" style={{ 
-            backgroundColor: '#FEF3C7', 
-            color: '#92400E' 
-          }}>
+          <span className="px-2 py-1 text-xs rounded-lg bg-yellow-50/90 backdrop-blur-medium border border-yellow-200/50 text-yellow-700 shadow-soft-xs">
             Borrador
           </span>
         );
       case 'cancelled':
         return (
-          <span className="px-2 py-1 text-xs rounded-lg" style={{ 
-            backgroundColor: '#FEE2E2', 
-            color: '#DC2626' 
-          }}>
+          <span className="px-2 py-1 text-xs rounded-lg bg-red-50/90 backdrop-blur-medium border border-red-200/50 text-red-700 shadow-soft-xs">
             Cancelado
           </span>
         );
       case 'completed':
         return (
-          <span className="px-2 py-1 text-xs rounded-lg" style={{ 
-            backgroundColor: '#D1FAE5', 
-            color: '#065F46' 
-          }}>
+          <span className="px-2 py-1 text-xs rounded-lg bg-green-50/90 backdrop-blur-medium border border-green-200/50 text-green-700 shadow-soft-xs">
             Completado
           </span>
         );
@@ -110,29 +101,24 @@ export const EventCard: React.FC<EventCardProps> = ({
     return (
       <Link
         to={`/eventos/${evento.id}`}
-        className="block p-4 rounded-2xl transition-all duration-300 hover:scale-105"
-        style={{ 
-          backgroundColor: '#e8ecf4',
-          boxShadow: '8px 8px 16px #bec8d7, -8px -8px 16px #ffffff'
-        }}
+        className="block p-4 bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105 group"
       >
         <div className="flex items-center space-x-4">
           <img
             src={evento.image}
             alt={evento.title}
-            className="w-16 h-16 object-cover rounded-xl"
-            style={{ boxShadow: 'inset 2px 2px 4px #bec8d7, inset -2px -2px 4px #ffffff' }}
+            className="w-16 h-16 object-cover rounded-xl shadow-soft-xs"
           />
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold truncate" style={{ color: '#374151' }}>
+            <h3 className="font-semibold truncate text-neutral-700 group-hover:text-primary-600 transition-colors">
               {evento.title}
             </h3>
-            <div className="flex items-center text-sm mt-1" style={{ color: '#6B7280' }}>
+            <div className="flex items-center text-sm mt-1 text-neutral-600">
               <Calendar className="w-4 h-4 mr-1" />
               {formatDate(evento.date)}
             </div>
           </div>
-          <ChevronRight className="w-5 h-5" style={{ color: '#9CA3AF' }} />
+          <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-500 transition-colors" />
         </div>
       </Link>
     );
@@ -140,33 +126,25 @@ export const EventCard: React.FC<EventCardProps> = ({
 
   if (variant === 'featured') {
     return (
-      <div 
-        className="rounded-3xl p-8 transition-all duration-300 hover:scale-105 relative overflow-hidden"
-        style={{ 
-          backgroundColor: '#e8ecf4',
-          boxShadow: '20px 20px 40px #bec8d7, -20px -20px 40px #ffffff'
-        }}
-      >
+      <div className="bg-white/70 backdrop-blur-soft border border-white/40 rounded-2xl p-8 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105 relative overflow-hidden group">
         {/* Featured Badge */}
-        <div className="absolute top-4 right-4 flex items-center space-x-1 px-3 py-1 rounded-full"
-             style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
+        <div className="absolute top-4 right-4 flex items-center space-x-1 px-3 py-1 rounded-full bg-gradient-to-r from-pastel-yellow-200 to-pastel-yellow-300 text-pastel-yellow-800 shadow-soft-xs">
           <Star className="w-4 h-4" />
           <span className="text-xs font-semibold">Destacado</span>
         </div>
-
         {/* Image */}
-        <div className="relative overflow-hidden rounded-2xl mb-6">
+        <div className="relative overflow-hidden rounded-xl mb-6 shadow-soft-sm">
           <img
             src={evento.image}
             alt={evento.title}
-            className="w-full h-48 object-cover"
+            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
           
           {/* Type Badge */}
           <div className="absolute top-4 left-4">
             <span 
-              className="px-3 py-1 rounded-full text-sm font-medium text-white"
+              className="px-3 py-1 rounded-full text-sm font-medium text-white backdrop-blur-medium shadow-soft-xs"
               style={{ backgroundColor: getEventTypeColor(evento.type) }}
             >
               {evento.type?.charAt(0)?.toUpperCase() + evento.type?.slice(1) || 'Evento'}
@@ -184,16 +162,16 @@ export const EventCard: React.FC<EventCardProps> = ({
         {/* Content */}
         <div className="space-y-4">
           <Link to={`/eventos/${evento.id}`}>
-            <h3 className="text-xl font-bold hover:underline" style={{ color: '#374151' }}>
+            <h3 className="text-xl font-bold hover:text-primary-600 transition-colors text-neutral-700">
               {evento.title}
             </h3>
           </Link>
 
-          <p className="text-sm leading-relaxed line-clamp-2" style={{ color: '#4B5563' }}>
+          <p className="text-sm leading-relaxed line-clamp-2 text-neutral-600">
             {evento.description}
           </p>
 
-          <div className="grid grid-cols-2 gap-4 text-sm" style={{ color: '#6B7280' }}>
+          <div className="grid grid-cols-2 gap-4 text-sm text-neutral-600">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4" />
               <span>{formatDate(evento.date)}</span>
@@ -226,34 +204,21 @@ export const EventCard: React.FC<EventCardProps> = ({
               {canRegister && (
                 <button
                   onClick={handleInscripcion}
-                  className="flex-1 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
-                  style={{ 
-                    background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                    boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)'
-                  }}
+                  className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
                 >
                   Inscribirse
                 </button>
               )}
 
               {isInscribed && (
-                <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium"
-                      style={{ 
-                        backgroundColor: '#D1FAE5', 
-                        color: '#065F46',
-                        boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff'
-                      }}>
+                <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium bg-green-50/80 backdrop-blur-medium border border-green-200/50 text-green-700 shadow-soft-xs">
                   Inscrito ✓
                 </span>
               )}
 
               <Link
                 to={`/eventos/${evento.id}`}
-                className="px-6 py-3 rounded-xl font-medium transition-all duration-300"
-                style={{ 
-                  color: '#374151',
-                  boxShadow: 'inset 5px 5px 10px #bec8d7, inset -5px -5px 10px #ffffff'
-                }}
+                className="px-6 py-3 rounded-xl font-medium bg-white/60 backdrop-blur-medium border border-white/30 text-neutral-700 shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105"
               >
                 Ver Detalles
               </Link>
@@ -266,25 +231,19 @@ export const EventCard: React.FC<EventCardProps> = ({
 
   // Default variant
   return (
-    <div 
-      className="rounded-3xl p-6 transition-all duration-300 hover:scale-105"
-      style={{ 
-        backgroundColor: '#e8ecf4',
-        boxShadow: '15px 15px 30px #bec8d7, -15px -15px 30px #ffffff'
-      }}
-    >
+    <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl p-6 shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105 group">
       {/* Image */}
-      <div className="relative overflow-hidden rounded-2xl mb-6">
+      <div className="relative overflow-hidden rounded-xl mb-6 shadow-soft-sm">
         <img
           src={evento.image}
           alt={evento.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         
         {/* Type Badge */}
         <div className="absolute top-4 left-4">
           <span 
-            className="px-3 py-1 rounded-full text-sm font-medium text-white flex items-center space-x-1"
+            className="px-3 py-1 rounded-full text-sm font-medium text-white flex items-center space-x-1 backdrop-blur-medium shadow-soft-xs"
             style={{ backgroundColor: getEventTypeColor(evento.type) }}
           >
             <Tag className="w-3 h-3" />
@@ -302,8 +261,7 @@ export const EventCard: React.FC<EventCardProps> = ({
         {/* Owner Badge */}
         {isOwner && (
           <div className="absolute bottom-4 right-4">
-            <span className="px-2 py-1 rounded-lg text-xs font-medium"
-                  style={{ backgroundColor: 'rgba(59, 130, 246, 0.9)', color: 'white' }}>
+            <span className="px-2 py-1 rounded-lg text-xs font-medium bg-blue-500/90 backdrop-blur-medium text-white shadow-soft-xs">
               Mi evento
             </span>
           </div>
@@ -313,17 +271,17 @@ export const EventCard: React.FC<EventCardProps> = ({
       {/* Content */}
       <div className="space-y-4">
         <Link to={`/eventos/${evento.id}`}>
-          <h3 className="text-xl font-bold hover:underline" style={{ color: '#374151' }}>
+          <h3 className="text-xl font-bold hover:text-primary-600 transition-colors text-neutral-700">
             {evento.title}
           </h3>
         </Link>
 
-        <p className="text-sm leading-relaxed line-clamp-3" style={{ color: '#4B5563' }}>
+        <p className="text-sm leading-relaxed line-clamp-3 text-neutral-600">
           {evento.description}
         </p>
 
         {/* Event Meta */}
-        <div className="space-y-2 text-sm" style={{ color: '#6B7280' }}>
+        <div className="space-y-2 text-sm text-neutral-600">
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4" />
             <span>{formatDate(evento.date)}</span>
@@ -351,7 +309,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             </div>
 
             {evento.price && evento.price > 0 && (
-              <span className="font-semibold" style={{ color: '#059669' }}>
+              <span className="font-semibold text-green-600">
                 ${evento.price.toLocaleString('es-CL')}
               </span>
             )}
@@ -366,34 +324,20 @@ export const EventCard: React.FC<EventCardProps> = ({
                 {canRegister && (
                   <button
                     onClick={handleInscripcion}
-                    className="flex-1 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
-                    style={{ 
-                      background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                      boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)'
-                    }}
+                    className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
                   >
                     Inscribirse
                   </button>
                 )}
 
                 {isInscribed && (
-                  <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium"
-                        style={{ 
-                          backgroundColor: '#D1FAE5', 
-                          color: '#065F46',
-                          boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff'
-                        }}>
+                  <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium bg-green-50/80 backdrop-blur-medium border border-green-200/50 text-green-700 shadow-soft-xs">
                     Inscrito ✓
                   </span>
                 )}
 
                 {isFull && !isInscribed && (
-                  <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium"
-                        style={{ 
-                          backgroundColor: '#FEE2E2', 
-                          color: '#DC2626',
-                          boxShadow: 'inset 4px 4px 8px #bec8d7, inset -4px -4px 8px #ffffff'
-                        }}>
+                  <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium bg-red-50/80 backdrop-blur-medium border border-red-200/50 text-red-700 shadow-soft-xs">
                     Completo
                   </span>
                 )}
@@ -403,11 +347,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                 onClick={() => {
                   // TODO: Abrir modal de login
                 }}
-                className="flex-1 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
-                style={{ 
-                  background: 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',
-                  boxShadow: '0 4px 15px rgba(107, 114, 128, 0.3)'
-                }}
+                className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-neutral-500 to-neutral-600 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
               >
                 Inicia sesión para inscribirte
               </button>
@@ -415,11 +355,7 @@ export const EventCard: React.FC<EventCardProps> = ({
 
             <Link
               to={`/eventos/${evento.id}`}
-              className="px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:scale-105"
-              style={{ 
-                color: '#374151',
-                boxShadow: 'inset 5px 5px 10px #bec8d7, inset -5px -5px 10px #ffffff'
-              }}
+              className="px-6 py-3 rounded-xl font-medium bg-white/60 backdrop-blur-medium border border-white/30 text-neutral-700 shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105"
             >
               Ver Más
             </Link>

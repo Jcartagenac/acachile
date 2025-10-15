@@ -73,31 +73,29 @@ export const MyEventsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e8ecf4' }}>
-        <div 
-          className="w-16 h-16 rounded-full flex items-center justify-center"
-          style={{ 
-            backgroundColor: '#e8ecf4',
-            boxShadow: '8px 8px 16px #bec8d7, -8px -8px 16px #ffffff'
-          }}
-        >
-          <div className="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-pastel-purple-50 to-neutral-100 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-white/60 backdrop-blur-soft border border-white/30 shadow-soft-lg flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#e8ecf4' }}>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-pastel-purple-50 to-neutral-100 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-primary-200/20 to-pastel-blue-200/20 rounded-full blur-3xl animate-soft-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-pastel-pink-200/20 to-primary-200/20 rounded-full blur-3xl animate-soft-pulse delay-1000"></div>
+      
       <Container>
-        <div className="py-8">
+        <div className="py-12 relative z-10">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold" style={{ color: '#374151' }}>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
                 Mis Eventos
               </h1>
-              <p className="text-lg mt-2" style={{ color: '#6B7280' }}>
+              <p className="text-lg text-neutral-600">
                 Gestiona los eventos que has creado
               </p>
             </div>
