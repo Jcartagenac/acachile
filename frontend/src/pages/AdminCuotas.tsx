@@ -62,23 +62,33 @@ export default function AdminCuotas() {
         sociosService.getCuotas({ año: añoSeleccionado })
       ]);
 
-      console.log('[AdminCuotas] Respuesta socios:', sociosResponse);
-      console.log('[AdminCuotas] Respuesta cuotas:', cuotasResponse);
+      console.log('[AdminCuotas] Respuesta socios completa:', JSON.stringify(sociosResponse, null, 2));
+      console.log('[AdminCuotas] Respuesta cuotas completa:', JSON.stringify(cuotasResponse, null, 2));
 
       if (sociosResponse.success && sociosResponse.data) {
-        const sociosConEstado = procesarEstadoSocios(
-          sociosResponse.data.socios,
-          cuotasResponse.data?.cuotas || []
-        );
+        // Verificar la estructura de la respuesta
+        const sociosList = sociosResponse.data.socios || [];
+        
+        if (!Array.isArray(sociosList)) {
+          console.error('[AdminCuotas] sociosList no es un array:', sociosList);
+          setError('Error: La respuesta del servidor no tiene el formato esperado');
+          return;
+        }
+
+        const cuotasList = cuotasResponse.data?.cuotas || [];
+        
+        const sociosConEstado = procesarEstadoSocios(sociosList, cuotasList);
         setSocios(sociosConEstado);
         console.log('[AdminCuotas] Socios procesados:', sociosConEstado.length);
       } else {
         setError(sociosResponse.error || 'Error al cargar socios');
+        console.error('[AdminCuotas] Error en respuesta de socios:', sociosResponse);
       }
 
       if (cuotasResponse.success && cuotasResponse.data) {
-        setCuotas(cuotasResponse.data.cuotas);
-        console.log('[AdminCuotas] Cuotas cargadas:', cuotasResponse.data.cuotas.length);
+        const cuotasList = cuotasResponse.data.cuotas || [];
+        setCuotas(cuotasList);
+        console.log('[AdminCuotas] Cuotas cargadas:', cuotasList.length);
       } else {
         console.warn('[AdminCuotas] Error al cargar cuotas:', cuotasResponse.error);
       }

@@ -83,18 +83,32 @@ class SociosService {
       if (params?.search) queryParams.append('search', params.search);
       if (params?.estado) queryParams.append('estado', params.estado);
 
+      console.log('[sociosService] Llamando a:', `${API_BASE_URL}/admin/socios?${queryParams}`);
+
       const response = await fetch(`${API_BASE_URL}/admin/socios?${queryParams}`, {
         headers: this.getAuthHeaders(),
       });
 
+      console.log('[sociosService] Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Error al obtener socios');
+        const errorText = await response.text();
+        console.error('[sociosService] Error response:', errorText);
+        throw new Error(`Error al obtener socios: ${response.status}`);
       }
 
-      const data = await response.json();
-      return { success: true, data };
+      const json = await response.json();
+      console.log('[sociosService] Response JSON:', json);
+      
+      // El API devuelve { success: true, data: { socios: [], pagination: {} } }
+      // Necesitamos devolver solo el data
+      if (json.success && json.data) {
+        return { success: true, data: json.data };
+      } else {
+        return { success: false, error: json.error || 'Error desconocido' };
+      }
     } catch (error) {
-      console.error('Error fetching socios:', error);
+      console.error('[sociosService] Error fetching socios:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
   }
@@ -176,18 +190,31 @@ class SociosService {
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.limit) queryParams.append('limit', params.limit.toString());
 
+      console.log('[sociosService] Llamando a cuotas:', `${API_BASE_URL}/admin/cuotas?${queryParams}`);
+
       const response = await fetch(`${API_BASE_URL}/admin/cuotas?${queryParams}`, {
         headers: this.getAuthHeaders(),
       });
 
+      console.log('[sociosService] Cuotas response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Error al obtener cuotas');
+        const errorText = await response.text();
+        console.error('[sociosService] Error response cuotas:', errorText);
+        throw new Error(`Error al obtener cuotas: ${response.status}`);
       }
 
-      const data = await response.json();
-      return { success: true, data: data.data };
+      const json = await response.json();
+      console.log('[sociosService] Cuotas response JSON:', json);
+      
+      // El API devuelve { success: true, data: { cuotas: [], pagination: {} } }
+      if (json.success && json.data) {
+        return { success: true, data: json.data };
+      } else {
+        return { success: false, error: json.error || 'Error desconocido' };
+      }
     } catch (error) {
-      console.error('Error fetching cuotas:', error);
+      console.error('[sociosService] Error fetching cuotas:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
   }
