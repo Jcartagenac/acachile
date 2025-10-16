@@ -280,10 +280,10 @@ export const ProfileModule: React.FC = () => {
                     style={{ 
                       width: '128px',
                       height: '128px',
-                      minWidth: '128px',
-                      minHeight: '128px',
                       objectFit: 'cover',
-                      objectPosition: 'center center',
+                      objectPosition: 'center top',
+                      borderRadius: '50%',
+                      aspectRatio: '1/1',
                       display: 'block'
                     }}
                     onError={(e) => {

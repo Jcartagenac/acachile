@@ -132,10 +132,10 @@ export const ProfilePage: React.FC = () => {
                     style={{ 
                       width: '64px',
                       height: '64px',
-                      minWidth: '64px',
-                      minHeight: '64px',
                       objectFit: 'cover',
-                      objectPosition: 'center center',
+                      objectPosition: 'center top',
+                      borderRadius: '50%',
+                      aspectRatio: '1/1',
                       display: 'block'
                     }}
                   />
