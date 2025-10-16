@@ -68,7 +68,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
           <Route path="/admin/socios" element={<ProfilePage defaultTab="admin" />} />
-          <Route path="/admin/socios/:id" element={<PerfilSocio />} />
+          <Route path="/admin/socios/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/admin/cuotas" element={<AdminLayout><AdminCuotas /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
           <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />
@@ -76,7 +76,7 @@ function App() {
           {/* Panel de Administración Nuevo */}
           <Route path="/panel-admin" element={<PanelAdminLayout><PanelAdminDashboard /></PanelAdminLayout>} />
           <Route path="/panel-admin/users" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
-          <Route path="/panel-admin/users/:id" element={<PerfilSocio />} />
+          <Route path="/panel-admin/users/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />

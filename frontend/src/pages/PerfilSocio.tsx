@@ -105,7 +105,7 @@ export default function PerfilSocio() {
             <h2 className="text-xl font-bold text-gray-900 mb-2">Error al cargar perfil</h2>
             <p className="text-gray-600 mb-6">{error || 'Socio no encontrado'}</p>
             <button
-              onClick={() => navigate('/panel-admin')}
+              onClick={() => navigate('/panel-admin/users')}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               Volver a Gestión de Socios
@@ -125,7 +125,7 @@ export default function PerfilSocio() {
         {/* Header con botón de regreso */}
         <div className="mb-6">
           <button
-            onClick={() => navigate('/panel-admin')}
+            onClick={() => navigate('/panel-admin/users')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

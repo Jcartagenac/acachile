@@ -240,9 +240,8 @@ export default function AdminSocios() {
                         </div>
                         <div className="ml-4">
                           <Link 
-                            to={`/admin/socios/${socio.id}`}
+                            to={`/panel-admin/users/${socio.id}`}
                             className="text-sm font-medium text-gray-900 hover:text-red-600 hover:underline cursor-pointer transition-colors block"
-                            onClick={() => console.log('Link clicked:', socio.id)}
                           >
                             {socio.nombreCompleto}
                           </Link>
