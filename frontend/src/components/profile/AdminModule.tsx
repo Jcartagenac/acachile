@@ -522,6 +522,7 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
     direccion: '',
     valorCuota: 6500,
     password: '',
+    rol: 'usuario' as 'admin' | 'director' | 'director_editor' | 'usuario',
   });
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -764,6 +765,27 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <p className="mt-1 text-sm text-gray-500">Mínimo 6 caracteres</p>
+            </div>
+
+            {/* Rol/Perfil */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Perfil/Rol <span className="text-red-500">*</span>
+              </label>
+              <select
+                required
+                value={formData.rol}
+                onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="usuario">Usuario/Socio</option>
+                <option value="director_editor">Director Editor</option>
+                <option value="director">Director</option>
+                <option value="admin">Administrador</option>
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                Define los permisos y accesos del usuario en el sistema
+              </p>
             </div>
 
             {/* Botones */}

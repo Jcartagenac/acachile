@@ -188,7 +188,8 @@ export async function onRequestPost(context) {
       fotoUrl, 
       valorCuota = 6500,
       estadoSocio = 'activo',
-      password // Password enviado desde el frontend
+      password, // Password enviado desde el frontend
+      rol = 'usuario' // Rol/perfil del usuario
     } = body;
 
     // Validaciones
@@ -196,6 +197,18 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Campos obligatorios: email, nombre, apellido, password'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Validar que el rol sea válido
+    const rolesValidos = ['admin', 'director', 'director_editor', 'usuario'];
+    if (!rolesValidos.includes(rol)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Rol inválido. Debe ser: admin, director, director_editor o usuario'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -238,7 +251,7 @@ export async function onRequestPost(context) {
         email, nombre, apellido, telefono, rut, ciudad, direccion, 
         foto_url, valor_cuota, estado_socio, fecha_ingreso,
         password_hash, role, activo, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', 1, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
     `).bind(
       email.toLowerCase(),
       nombre,
@@ -252,6 +265,7 @@ export async function onRequestPost(context) {
       estadoSocio,
       now,
       passwordHash,
+      rol, // Rol seleccionado en el formulario
       now
     ).run();
 
