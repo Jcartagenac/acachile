@@ -584,6 +584,21 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
             </div>
           </div>
 
+          {/* Advertencia si faltan cuotas */}
+          {cuotas.length < 12 && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800">
+                  Solo se han generado {cuotas.length} de 12 cuotas para este año
+                </p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Los meses sin cuota aparecen deshabilitados. Usa el botón "Generar Cuotas {año}" arriba para crear todas las cuotas del año.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Grid de meses */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {MESES.map((nombreMes, index) => {
@@ -596,9 +611,10 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
                   key={mes}
                   onClick={() => cuota && handleTogglePago(cuota)}
                   disabled={loading || !cuota}
+                  title={!cuota ? 'Cuota no generada - Usa el botón "Generar Cuotas"' : ''}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     !cuota
-                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
                       : cuota.pagado
                       ? 'border-green-500 bg-green-50 hover:bg-green-100'
                       : atrasado
