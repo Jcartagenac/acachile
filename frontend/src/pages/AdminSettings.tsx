@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { adminService, type SystemConfig } from '../services/adminService';
 import { authService } from '../services/authService';
+import { sociosService } from '../services/sociosService';
 
 export default function AdminSettings() {
   const [config, setConfig] = useState<SystemConfig | null>(null);
@@ -9,6 +10,11 @@ export default function AdminSettings() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('site');
+  
+  // Configuración de socios
+  const [sociosConfig, setSociosConfig] = useState<Record<string, any>>({});
+  const [loadingSocios, setLoadingSocios] = useState(false);
+  const [savingSocios, setSavingSocios] = useState(false);
 
   useEffect(() => {
     if (!authService.isAdmin()) {
@@ -18,7 +24,49 @@ export default function AdminSettings() {
     }
 
     loadConfig();
+    loadSociosConfig();
   }, []);
+
+  const loadSociosConfig = async () => {
+    try {
+      setLoadingSocios(true);
+      const result = await sociosService.getConfiguracion();
+      if (result.success && result.data) {
+        // Convertir el array de configuraciones a un objeto
+        const configObj: Record<string, any> = {};
+        Object.entries(result.data).forEach(([, config]: [string, any]) => {
+          configObj[config.clave] = config.valor;
+        });
+        setSociosConfig(configObj);
+      }
+    } catch (err) {
+      console.error('Error cargando configuración de socios:', err);
+    } finally {
+      setLoadingSocios(false);
+    }
+  };
+
+  const handleSaveSociosConfig = async (clave: string, valor: any) => {
+    try {
+      setSavingSocios(true);
+      setError(null);
+      setSuccess(null);
+      
+      const result = await sociosService.updateConfiguracion(clave, valor);
+      if (result.success) {
+        setSuccess('Configuración de socios guardada exitosamente');
+        await loadSociosConfig(); // Recargar para reflejar cambios
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(result.error || 'Error guardando configuración de socios');
+      }
+    } catch (err) {
+      console.error('Error guardando configuración de socios:', err);
+      setError('Error guardando la configuración de socios');
+    } finally {
+      setSavingSocios(false);
+    }
+  };
 
   const loadConfig = async () => {
     try {
@@ -69,6 +117,7 @@ export default function AdminSettings() {
 
   const tabs = [
     { id: 'site', name: 'Sitio', icon: '🌐' },
+    { id: 'socios', name: 'Socios', icon: '👥' },
     { id: 'features', name: 'Funciones', icon: '⚡' },
     { id: 'limits', name: 'Límites', icon: '📊' },
     { id: 'security', name: 'Seguridad', icon: '🔒' }
@@ -246,6 +295,65 @@ export default function AdminSettings() {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Tab de Socios */}
+            {activeTab === 'socios' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Configuración de Socios
+                </h3>
+
+                {loadingSocios ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Cargando configuración...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Valor de cuota por defecto ($)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={sociosConfig.cuota_default || 6500}
+                          onChange={(e) => setSociosConfig({ ...sociosConfig, cuota_default: parseInt(e.target.value) })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          onClick={() => handleSaveSociosConfig('cuota_default', sociosConfig.cuota_default || 6500)}
+                          disabled={savingSocios}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        >
+                          {savingSocios ? '💾' : '💾 Guardar'}
+                        </button>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-500">
+                        Este valor se usará como cuota por defecto al crear nuevos socios
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Información
+                      </label>
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <p className="text-sm text-blue-700">
+                          <strong>Valor actual:</strong> ${sociosConfig.cuota_default || 6500}
+                        </p>
+                        <p className="text-sm text-blue-600 mt-2">
+                          Este valor se aplica al crear nuevos socios y generar cuotas mensuales.
+                          Puede ser modificado individualmente para cada socio.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

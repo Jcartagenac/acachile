@@ -293,6 +293,46 @@ class SociosService {
       return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
   }
+
+  // Configuración global
+  async getConfiguracion(): Promise<{ success: boolean; data?: Record<string, any>; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/configuracion`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener configuración');
+      }
+
+      const data = await response.json();
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('Error fetching configuracion:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+  }
+
+  async updateConfiguracion(clave: string, valor: any): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/configuracion`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ clave, valor }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar configuración');
+      }
+
+      const data = await response.json();
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('Error updating configuracion:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+  }
 }
 
 export const sociosService = new SociosService();
