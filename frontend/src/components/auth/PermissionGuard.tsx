@@ -10,6 +10,74 @@ interface PermissionGuardProps {
   fallback?: React.ReactNode;
 }
 
+/**
+ * Verifica si el usuario solo tiene permiso especificado
+ */
+const checkPermissionOnly = (
+  permission: Permission | undefined,
+  hasPermission: (p: Permission) => boolean
+): boolean => {
+  return !permission || hasPermission(permission);
+};
+
+/**
+ * Verifica si el usuario solo tiene rol especificado
+ */
+const checkRoleOnly = (
+  role: UserRole | undefined,
+  hasRole: (r: UserRole) => boolean
+): boolean => {
+  return !role || hasRole(role);
+};
+
+/**
+ * Verifica permisos y roles cuando ambos están especificados
+ */
+const checkBothPermissionAndRole = (
+  permission: Permission,
+  role: UserRole,
+  requireAll: boolean,
+  hasPermission: (p: Permission) => boolean,
+  hasRole: (r: UserRole) => boolean
+): boolean => {
+  const hasPermissionCheck = hasPermission(permission);
+  const hasRoleCheck = hasRole(role);
+
+  if (requireAll) {
+    return hasPermissionCheck && hasRoleCheck;
+  } else {
+    return hasPermissionCheck || hasRoleCheck;
+  }
+};
+
+/**
+ * Determina si el usuario tiene acceso basado en permisos y roles
+ */
+const hasAccess = (
+  permission: Permission | undefined,
+  role: UserRole | undefined,
+  requireAll: boolean,
+  hasPermission: (p: Permission) => boolean,
+  hasRole: (r: UserRole) => boolean
+): boolean => {
+  // Si se pasan tanto permiso como rol
+  if (permission && role) {
+    return checkBothPermissionAndRole(permission, role, requireAll, hasPermission, hasRole);
+  }
+
+  // Solo verificar permiso
+  if (!checkPermissionOnly(permission, hasPermission)) {
+    return false;
+  }
+
+  // Solo verificar rol
+  if (!checkRoleOnly(role, hasRole)) {
+    return false;
+  }
+
+  return true;
+};
+
 export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   children,
   permission,
@@ -24,32 +92,9 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return <>{fallback}</>;
   }
 
-  // Si se especifica un permiso
-  if (permission && !hasPermission(permission)) {
+  // Verificar acceso
+  if (!hasAccess(permission, role, requireAll, hasPermission, hasRole)) {
     return <>{fallback}</>;
-  }
-
-  // Si se especifica un rol
-  if (role && !hasRole(role)) {
-    return <>{fallback}</>;
-  }
-
-  // Si se pasan tanto permiso como rol
-  if (permission && role) {
-    const hasPermissionCheck = hasPermission(permission);
-    const hasRoleCheck = hasRole(role);
-
-    if (requireAll) {
-      // Requiere ambos
-      if (!hasPermissionCheck || !hasRoleCheck) {
-        return <>{fallback}</>;
-      }
-    } else {
-      // Requiere al menos uno
-      if (!hasPermissionCheck && !hasRoleCheck) {
-        return <>{fallback}</>;
-      }
-    }
   }
 
   return <>{children}</>;

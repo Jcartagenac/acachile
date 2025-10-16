@@ -3,6 +3,68 @@
 // POST /api/admin/cuotas/generar - Generar cuotas para un mes/año
 // POST /api/admin/cuotas/marcar-pago - Marcar cuota como pagada
 
+// Construir query base de cuotas
+function buildBaseQuery() {
+  return `
+    SELECT 
+      c.id as cuota_id,
+      c.usuario_id,
+      c.año,
+      c.mes,
+      c.valor,
+      c.pagado,
+      c.fecha_pago,
+      c.metodo_pago,
+      c.comprobante_url,
+      c.notas,
+      c.created_at as cuota_created_at,
+      u.nombre,
+      u.apellido,
+      u.email,
+      u.telefono,
+      u.rut,
+      u.estado_socio,
+      CASE 
+        WHEN c.pagado = 1 THEN 'PAGADO'
+        WHEN DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28') THEN 'VENCIDO'
+        ELSE 'PENDIENTE'
+      END as estado_cuota
+    FROM cuotas c
+    INNER JOIN usuarios u ON c.usuario_id = u.id
+    WHERE u.activo = 1
+  `;
+}
+
+// Aplicar filtros a la query
+function applyFilters(query, params, filters) {
+  const { año, mes, usuarioId, estado } = filters;
+
+  if (año) {
+    query += ` AND c.año = ?`;
+    params.push(año);
+  }
+
+  if (mes) {
+    query += ` AND c.mes = ?`;
+    params.push(mes);
+  }
+
+  if (usuarioId) {
+    query += ` AND c.usuario_id = ?`;
+    params.push(usuarioId);
+  }
+
+  if (estado === 'pagado') {
+    query += ` AND c.pagado = 1`;
+  } else if (estado === 'pendiente') {
+    query += ` AND c.pagado = 0 AND DATE('now') <= DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
+  } else if (estado === 'vencido') {
+    query += ` AND c.pagado = 0 AND DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
+  }
+
+  return query;
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
@@ -10,74 +72,18 @@ export async function onRequestGet(context) {
     console.log('[ADMIN CUOTAS] Obteniendo cuotas');
 
     const url = new URL(request.url);
-    const año = parseInt(url.searchParams.get('año')) || new Date().getFullYear();
-    const mes = url.searchParams.get('mes') ? parseInt(url.searchParams.get('mes')) : null;
-    const usuarioId = url.searchParams.get('usuarioId') ? parseInt(url.searchParams.get('usuarioId')) : null;
-    const estado = url.searchParams.get('estado'); // 'pagado', 'pendiente', 'vencido'
-    const page = parseInt(url.searchParams.get('page')) || 1;
-    const limit = parseInt(url.searchParams.get('limit')) || 50;
+    const año = Number.parseInt(url.searchParams.get('año'), 10) || new Date().getFullYear();
+    const mes = url.searchParams.get('mes') ? Number.parseInt(url.searchParams.get('mes'), 10) : null;
+    const usuarioId = url.searchParams.get('usuarioId') ? Number.parseInt(url.searchParams.get('usuarioId'), 10) : null;
+    const estado = url.searchParams.get('estado');
+    const page = Number.parseInt(url.searchParams.get('page'), 10) || 1;
+    const limit = Number.parseInt(url.searchParams.get('limit'), 10) || 50;
 
-    let query = `
-      SELECT 
-        c.id as cuota_id,
-        c.usuario_id,
-        c.año,
-        c.mes,
-        c.valor,
-        c.pagado,
-        c.fecha_pago,
-        c.metodo_pago,
-        c.comprobante_url,
-        c.notas,
-        c.created_at as cuota_created_at,
-        u.nombre,
-        u.apellido,
-        u.email,
-        u.telefono,
-        u.rut,
-        u.estado_socio,
-        -- Calcular estado de la cuota
-        CASE 
-          WHEN c.pagado = 1 THEN 'PAGADO'
-          WHEN DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28') THEN 'VENCIDO'
-          ELSE 'PENDIENTE'
-        END as estado_cuota
-      FROM cuotas c
-      INNER JOIN usuarios u ON c.usuario_id = u.id
-      WHERE u.activo = 1
-    `;
-
+    // Construir query con filtros
     const params = [];
-
-    // Filtros
-    if (año) {
-      query += ` AND c.año = ?`;
-      params.push(año);
-    }
-
-    if (mes) {
-      query += ` AND c.mes = ?`;
-      params.push(mes);
-    }
-
-    if (usuarioId) {
-      query += ` AND c.usuario_id = ?`;
-      params.push(usuarioId);
-    }
-
-    // Filtro por estado de pago
-    if (estado === 'pagado') {
-      query += ` AND c.pagado = 1`;
-    } else if (estado === 'pendiente') {
-      query += ` AND c.pagado = 0 AND DATE('now') <= DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
-    } else if (estado === 'vencido') {
-      query += ` AND c.pagado = 0 AND DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
-    }
-
-    query += ` ORDER BY c.año DESC, c.mes DESC, u.apellido ASC`;
-
-    // Aplicar paginación
-    query += ` LIMIT ? OFFSET ?`;
+    let query = buildBaseQuery();
+    query = applyFilters(query, params, { año, mes, usuarioId, estado });
+    query += ` ORDER BY c.año DESC, c.mes DESC, u.apellido ASC LIMIT ? OFFSET ?`;
     params.push(limit, (page - 1) * limit);
 
     const { results } = await env.DB.prepare(query).bind(...params).all();

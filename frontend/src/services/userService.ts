@@ -102,78 +102,118 @@ class UserService {
     }
   }
 
+  /**
+   * Valida los datos del perfil
+   */
+  private validateProfileData(profileData: UpdateProfileRequest): { valid: boolean; error?: string } {
+    if (!profileData.firstName || !profileData.lastName) {
+      return { 
+        valid: false, 
+        error: 'Nombre y apellido son obligatorios' 
+      };
+    }
+
+    if (profileData.email && !this.isValidEmail(profileData.email)) {
+      return { 
+        valid: false, 
+        error: 'Email no es válido' 
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Construye el objeto de actualizaciones para AppUser
+   */
+  private buildUserUpdates(profileData: UpdateProfileRequest): Partial<AppUser> {
+    const userUpdates: Partial<AppUser> = {};
+    
+    if (profileData.firstName) userUpdates.firstName = profileData.firstName;
+    if (profileData.lastName) userUpdates.lastName = profileData.lastName;
+    if (profileData.email) userUpdates.email = profileData.email;
+    if (profileData.phone !== undefined) userUpdates.phone = profileData.phone;
+    if (profileData.direccion !== undefined) userUpdates.city = profileData.direccion;
+    if (profileData.avatar !== undefined) userUpdates.avatar = profileData.avatar;
+    if (profileData.region !== undefined) userUpdates.region = profileData.region;
+
+    return userUpdates;
+  }
+
+  /**
+   * Actualiza el nombre completo del usuario
+   */
+  private updateFullName(userUpdates: Partial<AppUser>, profileData: UpdateProfileRequest): void {
+    if (profileData.firstName || profileData.lastName) {
+      const firstName = profileData.firstName || this.authContext?.user?.firstName || '';
+      const lastName = profileData.lastName || this.authContext?.user?.lastName || '';
+      userUpdates.name = `${firstName} ${lastName}`.trim();
+    }
+  }
+
+  /**
+   * Actualiza el perfil usando AuthContext
+   */
+  private updateProfileWithAuthContext(profileData: UpdateProfileRequest): ApiResponse<UserProfile> {
+    if (!this.authContext?.user || !this.authContext.updateUser) {
+      return { success: false, error: 'No hay contexto de autenticación' };
+    }
+
+    const userUpdates = this.buildUserUpdates(profileData);
+    this.updateFullName(userUpdates, profileData);
+    
+    this.authContext.updateUser(userUpdates);
+
+    const updatedUser = { ...this.authContext.user, ...userUpdates };
+    const updatedProfile = this.mapAppUserToProfile(updatedUser);
+
+    return { 
+      success: true, 
+      data: updatedProfile, 
+      message: 'Perfil actualizado exitosamente' 
+    };
+  }
+
+  /**
+   * Crea un perfil mock como fallback
+   */
+  private createMockProfile(profileData: UpdateProfileRequest): UserProfile {
+    return {
+      id: '1',
+      firstName: profileData.firstName || 'Juan',
+      lastName: profileData.lastName || 'Pérez',
+      email: profileData.email || 'juan.perez@email.com',
+      phone: profileData.phone,
+      direccion: profileData.direccion,
+      avatar: profileData.avatar,
+      region: profileData.region || 'Región Metropolitana',
+      fechaIngreso: '2020-03-15',
+      acaMembership: {
+        yearsActive: 4,
+        membershipNumber: 'ACA-2020-001',
+        status: 'active'
+      }
+    };
+  }
+
   // Actualizar perfil de usuario
   async updateProfile(profileData: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Validation
-      if (!profileData.firstName || !profileData.lastName) {
-        return { 
-          success: false, 
-          error: 'Nombre y apellido son obligatorios' 
-        };
+      // Validar datos
+      const validation = this.validateProfileData(profileData);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
       }
 
-      if (profileData.email && !this.isValidEmail(profileData.email)) {
-        return { 
-          success: false, 
-          error: 'Email no es válido' 
-        };
+      // Usar AuthContext si está disponible
+      if (this.authContext?.user) {
+        return this.updateProfileWithAuthContext(profileData);
       }
 
-      // Use real AuthContext integration if available
-      if (this.authContext?.user && this.authContext.updateUser) {
-        // Update the AuthContext user with new data
-        const userUpdates: Partial<AppUser> = {};
-        
-        if (profileData.firstName) userUpdates.firstName = profileData.firstName;
-        if (profileData.lastName) userUpdates.lastName = profileData.lastName;
-        if (profileData.email) userUpdates.email = profileData.email;
-        if (profileData.phone !== undefined) userUpdates.phone = profileData.phone;
-        if (profileData.direccion !== undefined) userUpdates.city = profileData.direccion;
-        if (profileData.avatar !== undefined) userUpdates.avatar = profileData.avatar;
-        if (profileData.region !== undefined) userUpdates.region = profileData.region;
-
-        // Update name for display purposes
-        if (profileData.firstName || profileData.lastName) {
-          const firstName = profileData.firstName || this.authContext.user.firstName;
-          const lastName = profileData.lastName || this.authContext.user.lastName;
-          userUpdates.name = `${firstName} ${lastName}`.trim();
-        }
-
-        // Update AuthContext
-        this.authContext.updateUser(userUpdates);
-
-        // Return updated profile
-        const updatedUser = { ...this.authContext.user, ...userUpdates };
-        const updatedProfile = this.mapAppUserToProfile(updatedUser);
-
-        return { 
-          success: true, 
-          data: updatedProfile, 
-          message: 'Perfil actualizado exitosamente' 
-        };
-      }
-
-      // Fallback mock response if no auth context
-      const updatedProfile: UserProfile = {
-        id: '1',
-        firstName: profileData.firstName || 'Juan',
-        lastName: profileData.lastName || 'Pérez',
-        email: profileData.email || 'juan.perez@email.com',
-        phone: profileData.phone,
-        direccion: profileData.direccion,
-        avatar: profileData.avatar,
-        region: profileData.region || 'Región Metropolitana',
-        fechaIngreso: '2020-03-15',
-        acaMembership: {
-          yearsActive: 4,
-          membershipNumber: 'ACA-2020-001',
-          status: 'active'
-        }
-      };
-
+      // Fallback a respuesta mock
+      const updatedProfile = this.createMockProfile(profileData);
       return { 
         success: true, 
         data: updatedProfile, 

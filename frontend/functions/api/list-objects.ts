@@ -51,7 +51,7 @@ export async function onRequestGet(context: CloudflareContext) {
       data: {
         totalObjects: objects.objects.length,
         truncated: objects.truncated,
-        folders: Array.from(folders).sort(),
+        folders: Array.from(folders).sort((a, b) => a.localeCompare(b)),
         objects: allObjects.sort((a, b) => a.key.localeCompare(b.key))
       }
     }), {
