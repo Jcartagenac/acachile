@@ -20,7 +20,8 @@ import {
   NewsDetailPage,
   SearchResultsPage,
   AdminDashboard,
-  ProfilePage
+  ProfilePage,
+  PerfilSocio
 } from './pages';
 import AdminLayout from './components/layout/AdminLayout';
 import AdminUsers from './pages/AdminUsers';
@@ -62,6 +63,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
           <Route path="/admin/socios" element={<ProfilePage defaultTab="admin" />} />
+          <Route path="/admin/socios/:id" element={<PerfilSocio />} />
           <Route path="/admin/cuotas" element={<AdminLayout><AdminCuotas /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
           <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />

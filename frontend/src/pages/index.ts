@@ -24,3 +24,4 @@ export { default as AdminCuotas } from './AdminCuotas';
 export { default as AdminSettings } from './AdminSettings';
 export { default as AdminMonitoring } from './AdminMonitoring';
 export { ProfilePage } from './ProfilePage';
+export { default as PerfilSocio } from './PerfilSocio';

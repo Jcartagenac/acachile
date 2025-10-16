@@ -238,7 +238,10 @@ export default function AdminSocios() {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div 
+                            className="text-sm font-medium text-gray-900 hover:text-red-600 cursor-pointer transition-colors"
+                            onClick={() => window.location.href = `/admin/socios/${socio.id}`}
+                          >
                             {socio.nombreCompleto}
                           </div>
                           {socio.rut && (
