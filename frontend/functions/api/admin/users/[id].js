@@ -29,15 +29,20 @@ export async function onRequestGet(context) {
       });
     }
 
-    // Obtener datos del usuario con estadísticas
+        // Obtener datos del usuario con estadísticas
     const user = await env.DB.prepare(`
       SELECT 
-        id, email, name, role, status, email_verified_at, 
-        last_login, created_at, updated_at,
-        (SELECT COUNT(*) FROM eventos WHERE created_by = users.id) as eventos_creados,
-        (SELECT COUNT(*) FROM inscripciones WHERE user_id = users.id) as inscripciones_count
-      FROM users 
-      WHERE id = ? AND deleted_at IS NULL
+        u.id, u.email, u.nombre, u.apellido, u.role, u.activo as status,
+        u.last_login, u.created_at, u.updated_at,
+        COUNT(DISTINCT e.id) as events_created,
+        COUNT(DISTINCT i.id) as inscriptions,
+        COUNT(DISTINCT c.id) as comments_made
+      FROM usuarios u
+      LEFT JOIN eventos e ON u.id = e.created_by
+      LEFT JOIN inscripciones i ON u.id = i.user_id
+      LEFT JOIN comentarios c ON u.id = c.user_id
+      WHERE u.id = ? AND u.activo = 1
+      GROUP BY u.id
     `).bind(userId).first();
 
     if (!user) {
@@ -119,7 +124,7 @@ function validateRole(role) {
 
 // Helper: Validar estado de usuario
 function validateStatus(status) {
-  const validStatuses = ['active', 'inactive', 'suspended'];
+  const validStatuses = ['active', 'inactive'];
   return validStatuses.includes(status);
 }
 
@@ -131,8 +136,15 @@ function buildUpdateFields(body) {
   const errors = [];
 
   if (name !== undefined) {
-    updates.push('name = ?');
-    params.push(name);
+    // Dividir name en nombre y apellido
+    const nameParts = (name || '').trim().split(' ');
+    const nombre = nameParts[0] || '';
+    const apellido = nameParts.slice(1).join(' ') || '';
+    
+    updates.push('nombre = ?');
+    params.push(nombre);
+    updates.push('apellido = ?');
+    params.push(apellido);
   }
 
   if (role !== undefined) {
@@ -146,16 +158,11 @@ function buildUpdateFields(body) {
 
   if (status !== undefined) {
     if (!validateStatus(status)) {
-      errors.push('Estado inválido. Debe ser: active, inactive o suspended');
+      errors.push('Estado inválido. Debe ser: active o inactive');
     } else {
-      updates.push('status = ?');
-      params.push(status);
+      updates.push('activo = ?');
+      params.push(status === 'active' ? 1 : 0);
     }
-  }
-
-  if (email_verified !== undefined) {
-    updates.push('email_verified_at = ?');
-    params.push(email_verified ? new Date().toISOString() : null);
   }
 
   return { updates, params, errors };
@@ -166,10 +173,12 @@ function formatUserResponse(user) {
   return {
     id: user.id,
     email: user.email,
-    name: user.name,
+    nombre: user.nombre,
+    apellido: user.apellido,
+    name: `${user.nombre} ${user.apellido}`.trim(),
     role: user.role,
-    status: user.status,
-    email_verified: !!user.email_verified_at,
+    status: user.status ? 'active' : 'inactive',
+    email_verified: true,
     last_login: user.last_login,
     created_at: user.created_at,
     updated_at: user.updated_at
@@ -197,7 +206,7 @@ export async function onRequestPut(context) {
 
     // Verificar que el usuario existe
     const existingUser = await env.DB.prepare(
-      'SELECT id FROM users WHERE id = ? AND deleted_at IS NULL'
+      'SELECT id FROM usuarios WHERE id = ? AND activo = 1'
     ).bind(userId).first();
 
     if (!existingUser) {
@@ -238,7 +247,7 @@ export async function onRequestPut(context) {
     updateParams.push(new Date().toISOString());
     updateParams.push(userId);
 
-    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+    const query = `UPDATE usuarios SET ${updates.join(', ')} WHERE id = ?`;
     
     const result = await env.DB.prepare(query).bind(...updateParams).run();
 
@@ -248,9 +257,9 @@ export async function onRequestPut(context) {
 
     // Obtener usuario actualizado
     const updatedUser = await env.DB.prepare(`
-      SELECT id, email, name, role, status, email_verified_at, 
+      SELECT id, email, nombre, apellido, role, activo as status,
              last_login, created_at, updated_at
-      FROM users WHERE id = ?
+      FROM usuarios WHERE id = ?
     `).bind(userId).first();
 
     console.log(`[ADMIN USER] Usuario ${userId} actualizado exitosamente`);
@@ -304,7 +313,7 @@ export async function onRequestDelete(context) {
 
     // Verificar que el usuario existe y no está ya eliminado
     const existingUser = await env.DB.prepare(
-      'SELECT id, name, email FROM users WHERE id = ? AND deleted_at IS NULL'
+      'SELECT id, nombre, apellido, email FROM usuarios WHERE id = ? AND activo = 1'
     ).bind(userId).first();
 
     if (!existingUser) {
@@ -317,11 +326,11 @@ export async function onRequestDelete(context) {
       });
     }
 
-    // Soft delete del usuario
+    // Soft delete del usuario (marcar como inactivo)
     const now = new Date().toISOString();
     const result = await env.DB.prepare(
-      'UPDATE users SET deleted_at = ?, updated_at = ? WHERE id = ?'
-    ).bind(now, now, userId).run();
+      'UPDATE usuarios SET activo = 0, updated_at = ? WHERE id = ?'
+    ).bind(now, userId).run();
 
     if (!result.success) {
       throw new Error('Error eliminando usuario de la base de datos');

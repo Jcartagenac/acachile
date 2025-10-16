@@ -26,20 +26,20 @@ export async function onRequestGet(context) {
 
     let query = `
       SELECT 
-        id, email, name, role, status, email_verified_at, 
+        id, email, nombre, apellido, role, activo as status, 
         last_login, created_at, updated_at,
-        (SELECT COUNT(*) FROM eventos WHERE created_by = users.id) as eventos_creados,
-        (SELECT COUNT(*) FROM inscripciones WHERE user_id = users.id) as inscripciones_count
-      FROM users 
-      WHERE deleted_at IS NULL
+        (SELECT COUNT(*) FROM eventos WHERE created_by = usuarios.id) as eventos_creados,
+        (SELECT COUNT(*) FROM inscripciones WHERE user_id = usuarios.id) as inscripciones_count
+      FROM usuarios 
+      WHERE activo = 1
     `;
 
     const params = [];
     
     // Filtros
     if (search) {
-      query += ` AND (name LIKE ? OR email LIKE ?)`;
-      params.push(`%${search}%`, `%${search}%`);
+      query += ` AND (nombre LIKE ? OR apellido LIKE ? OR email LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     
     if (role) {
@@ -67,10 +67,12 @@ export async function onRequestGet(context) {
     const users = results.map(user => ({
       id: user.id,
       email: user.email,
-      name: user.name,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      name: `${user.nombre} ${user.apellido}`.trim(), // Para compatibilidad con frontend
       role: user.role,
-      status: user.status,
-      email_verified: !!user.email_verified_at,
+      status: user.status ? 'active' : 'inactive',
+      email_verified: true, // La tabla usuarios no tiene este campo
       last_login: user.last_login,
       created_at: user.created_at,
       updated_at: user.updated_at,
@@ -128,10 +130,15 @@ export async function onRequestPost(context) {
     // }
 
     const body = await request.json();
-    const { email, name, password, role = 'user', status = 'active', send_welcome_email = false } = body;
+    const { email, name, password, role = 'user', send_welcome_email = false } = body;
+
+    // Dividir name en nombre y apellido
+    const nameParts = (name || '').trim().split(' ');
+    const nombre = nameParts[0] || '';
+    const apellido = nameParts.slice(1).join(' ') || '';
 
     // Validaciones
-    if (!email || !name || !password) {
+    if (!email || !nombre || !password) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Email, nombre y contraseña son requeridos'
@@ -151,19 +158,9 @@ export async function onRequestPost(context) {
       });
     }
 
-    if (!['active', 'inactive', 'suspended'].includes(status)) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Estado inválido. Debe ser: active, inactive o suspended'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
     // Verificar si el email ya existe
     const existingUser = await env.DB.prepare(
-      'SELECT id FROM users WHERE email = ? AND deleted_at IS NULL'
+      'SELECT id FROM usuarios WHERE email = ? AND activo = 1'
     ).bind(email).first();
 
     if (existingUser) {
@@ -179,14 +176,13 @@ export async function onRequestPost(context) {
     // Hash de la contraseña (simulado, en producción usar bcrypt)
     const hashedPassword = btoa(password); // TEMPORAL - usar bcrypt en producción
 
-    const userId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     // Crear usuario
     const result = await env.DB.prepare(`
-      INSERT INTO users (id, email, name, password, role, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(userId, email, name, hashedPassword, role, status, now, now).run();
+      INSERT INTO usuarios (email, nombre, apellido, password, role, activo, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+    `).bind(email, nombre, apellido, hashedPassword, role, now, now).run();
 
     if (!result.success) {
       throw new Error('Error creando usuario en la base de datos');
@@ -194,9 +190,9 @@ export async function onRequestPost(context) {
 
     // Obtener usuario creado (sin contraseña)
     const newUser = await env.DB.prepare(`
-      SELECT id, email, name, role, status, created_at, updated_at
-      FROM users WHERE id = ?
-    `).bind(userId).first();
+      SELECT id, email, nombre, apellido, role, activo as status, created_at, updated_at
+      FROM usuarios WHERE email = ?
+    `).bind(email).first();
 
     // TODO: Enviar email de bienvenida si se solicita
     if (send_welcome_email) {
@@ -204,11 +200,14 @@ export async function onRequestPost(context) {
       // await sendWelcomeEmail(email, name, password, env);
     }
 
-    console.log('[ADMIN USERS] Usuario creado exitosamente:', userId);
+    console.log('[ADMIN USERS] Usuario creado exitosamente:', newUser.id);
 
     return new Response(JSON.stringify({
       success: true,
-      data: newUser,
+      data: {
+        ...newUser,
+        name: `${newUser.nombre} ${newUser.apellido}`.trim()
+      },
       message: 'Usuario creado exitosamente'
     }), {
       headers: { 'Content-Type': 'application/json' }
