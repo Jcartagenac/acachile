@@ -27,41 +27,53 @@ export default function PerfilSocio() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('[PerfilSocio] Component mounted, id:', id);
     if (id) {
       loadSocioData(parseInt(id));
+    } else {
+      console.error('[PerfilSocio] No ID provided');
+      setError('No se especificó ID de socio');
+      setLoading(false);
     }
   }, [id]);
 
   const loadSocioData = async (socioId: number) => {
     try {
+      console.log('[PerfilSocio] Loading socio data for ID:', socioId);
       setLoading(true);
       setError(null);
 
       // Cargar datos del socio
       const socioResponse = await sociosService.getSocio(socioId);
+      console.log('[PerfilSocio] Socio response:', socioResponse);
       
       if (!socioResponse.success || !socioResponse.data) {
         throw new Error(socioResponse.error || 'No se pudo cargar el socio');
       }
 
       setSocio(socioResponse.data);
+      console.log('[PerfilSocio] Socio data loaded:', socioResponse.data);
 
       // Cargar cuotas del último año
       const añoActual = new Date().getFullYear();
+      console.log('[PerfilSocio] Loading cuotas for year:', añoActual);
       const cuotasResponse = await sociosService.getCuotas({ 
         año: añoActual,
         socioId: socioId
       });
+      console.log('[PerfilSocio] Cuotas response:', cuotasResponse);
 
       if (cuotasResponse.success && cuotasResponse.data) {
         setCuotas(cuotasResponse.data.cuotas || []);
+        console.log('[PerfilSocio] Cuotas loaded:', cuotasResponse.data.cuotas?.length || 0);
       }
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMsg);
-      console.error('[PerfilSocio] Error:', err);
+      console.error('[PerfilSocio] Error loading data:', err);
     } finally {
+      console.log('[PerfilSocio] Loading complete, setting loading to false');
       setLoading(false);
     }
   };
@@ -85,7 +97,10 @@ export default function PerfilSocio() {
     return cuotas.find(c => c.mes === mes);
   };
 
+  console.log('[PerfilSocio] Render - loading:', loading, 'error:', error, 'socio:', socio);
+
   if (loading) {
+    console.log('[PerfilSocio] Rendering loading state');
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -97,6 +112,7 @@ export default function PerfilSocio() {
   }
 
   if (error || !socio) {
+    console.log('[PerfilSocio] Rendering error state');
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
@@ -116,6 +132,7 @@ export default function PerfilSocio() {
     );
   }
 
+  console.log('[PerfilSocio] Rendering main content');
   const cuotasVencidas = cuotas.filter(c => esCuotaVencida(c) && !c.pagado);
   const cuotasPagadas = cuotas.filter(c => c.pagado);
 
