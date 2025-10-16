@@ -342,7 +342,8 @@ export async function onRequestDelete(context) {
       success: true,
       data: {
         id: userId,
-        name: existingUser.name,
+        nombre: existingUser.nombre,
+        apellido: existingUser.apellido,
         email: existingUser.email,
         deleted_at: now
       },
