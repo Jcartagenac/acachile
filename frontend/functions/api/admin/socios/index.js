@@ -175,6 +175,8 @@ export async function onRequestPost(context) {
     // }
 
     const body = await request.json();
+    console.log('[ADMIN SOCIOS] Datos recibidos:', JSON.stringify(body, null, 2));
+    
     const { 
       email, 
       nombre, 
@@ -186,14 +188,24 @@ export async function onRequestPost(context) {
       fotoUrl, 
       valorCuota = 6500,
       estadoSocio = 'activo',
-      password = 'ACA2025!' // Password temporal por defecto
+      password // Password enviado desde el frontend
     } = body;
 
     // Validaciones
-    if (!email || !nombre || !apellido || !telefono || !rut) {
+    if (!email || !nombre || !apellido || !password) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Campos obligatorios: email, nombre, apellido, telefono, rut'
+        error: 'Campos obligatorios: email, nombre, apellido, password'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (password.length < 6) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'La contraseña debe tener al menos 6 caracteres'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -231,8 +243,8 @@ export async function onRequestPost(context) {
       email.toLowerCase(),
       nombre,
       apellido,
-      telefono,
-      rut,
+      telefono || null,
+      rut || null,
       ciudad || null,
       direccion || null,
       fotoUrl || null,
@@ -242,6 +254,8 @@ export async function onRequestPost(context) {
       passwordHash,
       now
     ).run();
+
+    console.log('[ADMIN SOCIOS] Resultado de INSERT:', JSON.stringify(result));
 
     if (!result.success) {
       throw new Error('Error creando socio en la base de datos');
@@ -264,22 +278,20 @@ export async function onRequestPost(context) {
       success: true,
       message: 'Socio creado exitosamente',
       data: {
-        socio: {
-          id: newSocio.id,
-          email: newSocio.email,
-          nombre: newSocio.nombre,
-          apellido: newSocio.apellido,
-          nombreCompleto: `${newSocio.nombre} ${newSocio.apellido}`,
-          telefono: newSocio.telefono,
-          rut: newSocio.rut,
-          ciudad: newSocio.ciudad,
-          direccion: newSocio.direccion,
-          fotoUrl: newSocio.foto_url,
-          valorCuota: newSocio.valor_cuota,
-          fechaIngreso: newSocio.fecha_ingreso,
-          estadoSocio: newSocio.estado_socio,
-          createdAt: newSocio.created_at
-        }
+        id: newSocio.id,
+        email: newSocio.email,
+        nombre: newSocio.nombre,
+        apellido: newSocio.apellido,
+        nombreCompleto: `${newSocio.nombre} ${newSocio.apellido}`,
+        telefono: newSocio.telefono,
+        rut: newSocio.rut,
+        ciudad: newSocio.ciudad,
+        direccion: newSocio.direccion,
+        fotoUrl: newSocio.foto_url,
+        valorCuota: newSocio.valor_cuota,
+        fechaIngreso: newSocio.fecha_ingreso,
+        estadoSocio: newSocio.estado_socio,
+        createdAt: newSocio.created_at
       }
     }), {
       status: 201,
