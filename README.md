@@ -1,523 +1,1270 @@
-# ACA Chile - Asociación Chilena de Asadores
+# 🔥 ACA Chile - Asociación Chilena de Asadores
 
-> **📋 DOCUMENTACIÓN COMPLETA PARA CONTINUIDAD DE TRABAJO**  
-> Esta documentación permite a cualquier IA continuar el desarrollo del proyecto con contexto completo.
+> **Sistema completo de gestión para asociación de socios con panel administrativo, gestión de cuotas, comunicados y más.**
 
-## 🎯 Estado Actual del Proyecto
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-orange)](https://acachile.pages.dev)
+[![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6.2-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.1-38bdf8)](https://tailwindcss.com/)
 
-**✅ PROYECTO 100% FUNCIONAL EN PRODUCCIÓN**
+---
 
-### **🏆 Funcionalidades Implementadas y Desplegadas:**
-- ✅ **Sistema de Usuarios**: Registro, login, recuperación de contraseña con email
-- ✅ **Gestión de Eventos**: CRUD completo, inscripciones, cancelaciones
-- ✅ **Sistema de Noticias/Blog**: Artículos, categorías, tags, comentarios con moderación
-- ✅ **Sistema de Comentarios**: Likes, shares, moderación automática
-- ✅ **Búsqueda Avanzada**: Global con sugerencias, filtros, autocomplete
-- ✅ **Panel Administrativo**: Dashboard, estadísticas, gestión de usuarios y contenido
-- ✅ **Autenticación JWT**: Sin bibliotecas externas, implementación personalizada
-- ✅ **Base de Datos D1**: Esquema relacional completo con migraciones
-- ✅ **Cache KV**: Para likes, shares, sugerencias, estadísticas
-- ✅ **Frontend React**: Completamente integrado con backend APIs
+## 📋 Tabla de Contenidos
 
-### **📊 Arquitectura Técnica Actual**
+- [Descripción General](#-descripción-general)
+- [Funcionalidades Completas](#-funcionalidades-completas)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Arquitectura del Proyecto](#️-arquitectura-del-proyecto)
+- [Esquema de Base de Datos](#️-esquema-de-base-de-datos)
+- [APIs Implementadas](#-apis-implementadas)
+- [Configuración de Infraestructura](#️-configuración-de-infraestructura)
+- [Setup y Despliegue](#-setup-y-despliegue)
+- [Guía para Continuación](#-guía-para-continuación)
 
-#### **Arquitectura Unificada (Cloudflare Pages + Functions)**
-- **Framework**: React 18 + TypeScript + Vite 5
-- **Styling**: Tailwind CSS con componentes personalizados
-- **State**: Context API + hooks personalizados
-- **Routing**: React Router DOM con rutas protegidas
-- **Backend**: Cloudflare Pages Functions (`/frontend/functions`)
+---
+
+## 🎯 Descripción General
+
+**ACA Chile** es una plataforma web completa para la gestión de una asociación de socios, desarrollada con tecnologías modernas y desplegada en Cloudflare Pages.
+
+### Estado Actual del Proyecto
+✅ **100% FUNCIONAL EN PRODUCCIÓN**
+- URL de Producción: https://acachile.pages.dev
+- Repositorio: https://github.com/Jcartagenac/acachile
+- Branch: `main`
+- Última actualización: Enero 2025
+
+---
+
+## ✨ Funcionalidades Completas
+
+### 🔐 Sistema de Autenticación
+- ✅ Registro de usuarios con validación
+- ✅ Login con JWT (implementación personalizada)
+- ✅ Recuperación de contraseña vía email
+- ✅ Gestión de sesiones
+- ✅ Roles y permisos (admin, director, director_editor, usuario)
+
+### 👥 Gestión de Socios
+- ✅ **CRUD completo de socios**
+  - Crear nuevos socios con todos los datos
+  - Editar información completa (nombre, email, teléfono, RUT, ciudad, dirección)
+  - Cambiar rol/permisos de administrador
+  - Eliminar socios (soft delete)
+  - Subir y editar foto de perfil
+- ✅ **Lista de socios con:**
+  - Búsqueda por nombre, email, RUT
+  - Filtros por estado (activo/inactivo)
+  - Paginación
+  - Estadísticas de cuotas por socio
+- ✅ **Perfil de socio individual**
+  - Visualización de datos completos
+  - Historial de pagos
+  - Foto de perfil con crop automático
+
+### 💰 Sistema de Cuotas
+- ✅ **Gestión de cuotas mensuales**
+  - Generación automática de cuotas por año/mes
+  - Valor personalizable por socio
+  - Marcar pagos con método de pago
+  - Subir comprobantes de pago a R2
+  - Estadísticas de pagos por socio
+- ✅ **Panel de cuotas**
+  - Vista por año con totales
+  - Estado de cada cuota (pagado/pendiente)
+  - Fecha de último pago
+  - Métodos de pago: transferencia, efectivo, tarjeta
+
+### 📢 Sistema de Comunicados
+- ✅ **CRUD de comunicados**
+  - Crear comunicados con título, contenido y tipo
+  - Tipos: importante, corriente, urgente
+  - Destinatarios configurables (todos, morosos, activos, administradores)
+  - Estado: borrador o enviado
+- ✅ **Lista de comunicados**
+  - Filtros por tipo y estado
+  - Búsqueda por título/contenido
+
+### 📊 Panel Administrativo
+- ✅ **Dashboard con métricas**
+  - Total de socios activos/inactivos
+  - Estadísticas de cuotas del año
+  - Últimos comunicados enviados
+- ✅ **Gestión completa del sistema**
+  - Administración de usuarios
+  - Configuración de valores
+  - Monitoreo de sistema
+
+### 🖼️ Gestión de Imágenes (Cloudflare R2)
+- ✅ **Subida de fotos de perfil**
+  - Resize automático con aspect ratio preservado
+  - Crop centrado para avatares cuadrados (400x400px)
+  - Compresión optimizada (92% quality)
+  - Almacenamiento en R2 bucket
+  - URLs públicas con CDN
+- ✅ **Rutas de imágenes:**
+  - Fotos de socios: `socios/{id}/foto.{ext}`
+  - Comprobantes: `comprobantes/{año}/{mes}/{socioId}/{filename}`
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### Frontend
+- **react**: 18.3.1 - Biblioteca UI principal
+- **react-dom**: 18.3.1 - Renderizado DOM
+- **react-router-dom**: 7.1.1 - Enrutamiento SPA
+- **typescript**: 5.6.2 - Tipado estático
+- **vite**: 5.4.20 - Build tool y dev server
+- **tailwindcss**: 3.4.1 - Framework CSS utility-first
+- **lucide-react**: 0.468.0 - Iconos SVG optimizados
+
+### Backend (Cloudflare Pages Functions)
+- **Runtime**: Cloudflare Workers (V8 JavaScript Runtime)
 - **Database**: Cloudflare D1 (SQLite)
+- **Storage**: Cloudflare R2 (S3-compatible)
 - **Cache**: Cloudflare KV
 - **Email**: Resend API
 
-#### **Infraestructura de Producción**
-- **Frontend**: Cloudflare Pages (https://acachile.pages.dev)
-- **API**: Cloudflare Pages Functions (servida desde la misma URL en `/api`)
-- **Database**: D1 con esquema completo desplegado
-- **Email**: noreply@mail.juancartagena.cl (Resend)
-- **Account**: Cloudflare ID `172194a6569df504cbb8a638a94d3d2c`
+### Herramientas de Desarrollo
+- **@types/react**: 18.3.12 - Tipos TypeScript para React
+- **@types/react-dom**: 18.3.1 - Tipos TypeScript para React DOM
+- **eslint**: 9.17.0 - Linter para código JavaScript/TypeScript
+- **postcss**: 8.4.49 - Procesador CSS
+- **autoprefixer**: 10.4.20 - Prefijos CSS automáticos
 
 ---
 
-## 🎯 FUNCIONALIDADES IMPLEMENTADAS Y OPERATIVAS
+## 🏗️ Arquitectura del Proyecto
 
-### � **Sistema de Autenticación (Sprint 1)**
-- **Login/Registro**: Con validación de email y password
-- **JWT**: Implementación personalizada sin bibliotecas externas
-- **Recuperación de contraseña**: Via email con tokens únicos
-- **Roles**: Admin/User con control de acceso granular
-- **Sessions**: Gestión de sesiones con expiración configurable
-
-### 📅 **Eventos e Inscripciones (Sprint 2)**
-- **CRUD Eventos**: Crear, editar, listar, eliminar eventos
-- **Inscripciones**: Sistema completo de registro a eventos
-- **Gestión**: Panel para administrar participantes
-- **Estados**: Activo/Inactivo/Archivado con workflows
-- **Notificaciones**: Email automático en inscripciones
-
-### 📰 **Noticias y Contenido (Sprint 3)**
-- **CMS**: Sistema completo de gestión de contenido
-- **Comentarios**: Con likes, moderación y respuestas
-- **Búsqueda**: Engine avanzado con filtros y sugerencias
-- **SEO**: URLs amigables y metadatos optimizados
-- **Social**: Shares, engagement tracking
-
-### 🛠️ **Panel de Administración (Sprint 4)**
-- **Dashboard**: Métricas en tiempo real y KPIs
-- **User Management**: CRUD completo de usuarios y roles
-- **System Monitoring**: Health checks y logs estructurados
-- **Configuraciones**: Settings granulares del sistema
-- **Mantenimiento**: Operaciones automatizadas (cache, backups, stats)
-
----
-
-## 🏗️ ARQUITECTURA TÉCNICA DETALLADA
-
-### 📁 **Estructura del Proyecto**
+### Estructura de Carpetas
 ```
 acachile/
-├── 📁 frontend/                    # Aplicación React Principal
+├── frontend/                           # Aplicación principal
 │   ├── src/
-│   │   ├── components/            # Componentes UI Reutilizables
-│   │   │   ├── layout/           # Layout, Header, Footer, AdminLayout
-│   │   │   ├── auth/             # Componentes de autenticación
-│   │   │   ├── events/           # Componentes de eventos
-│   │   │   ├── news/             # Componentes de noticias
-│   │   │   └── common/           # Componentes comunes (buttons, modals, etc.)
-│   │   ├── pages/                # Páginas de la aplicación
-│   │   │   ├── HomePage.tsx      # Landing page
-│   │   │   ├── EventsPage.tsx    # Lista de eventos
-│   │   │   ├── NewsPage.tsx      # Blog/Noticias
-│   │   │   ├── AdminDashboard.tsx    # Dashboard admin
-│   │   │   ├── AdminUsers.tsx        # Gestión usuarios
-│   │   │   ├── AdminSettings.tsx     # Configuraciones
-│   │   │   └── AdminMonitoring.tsx   # Monitoreo sistema
-│   │   ├── services/             # Servicios API
-│   │   │   ├── authService.ts    # Autenticación
-│   │   │   ├── eventService.ts   # Eventos
-│   │   │   ├── newsService.ts    # Noticias
-│   │   │   ├── adminService.ts   # Administración
-│   │   │   └── searchService.ts  # Búsqueda
-│   │   ├── contexts/             # Contextos React
-│   │   └── hooks/                # Custom Hooks
+│   │   ├── components/                # Componentes React
+│   │   │   ├── layout/               # Layout, Header, Footer
+│   │   │   ├── profile/              # ProfileModule, AdminModule
+│   │   │   ├── auth/                 # Login, Register
+│   │   │   └── common/               # Componentes reutilizables
+│   │   ├── pages/                    # Páginas
+│   │   │   ├── HomePage.tsx
+│   │   │   ├── ProfilePage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── RegisterPage.tsx
+│   │   ├── services/                 # Servicios API
+│   │   │   └── imageService.ts       # Gestión de imágenes
+│   │   ├── contexts/                 # Contextos React
+│   │   │   └── AuthContext.tsx       # Autenticación global
+│   │   └── hooks/                    # Custom Hooks
+│   │       └── useAdminService.ts    # Hook para panel admin
 │   │
-│   ├── functions/                # Cloudflare Pages Functions (Backend)
-│   │   └── api/
-│   │       ├── auth/            # APIs de autenticación
-│   │       │   ├── login.js     # POST /api/auth/login
-│   │       │   ├── register.js  # POST /api/auth/register
-│   │       │   ├── me.js        # GET /api/auth/me
-│   │       │   └── forgot-password.js  # Password recovery
-│   │       ├── eventos/         # APIs de eventos
-│   │       │   ├── index.js     # GET/POST /api/eventos
-│   │       │   └── [id].js      # GET/PUT/DELETE /api/eventos/:id
-│   │       ├── noticias/        # APIs de noticias
-│   │       ├── search/          # APIs de búsqueda
-│   │       ├── comments/        # APIs de comentarios
-│   │       ├── admin/           # APIs de administración
-│   │       │   ├── dashboard.js # Dashboard stats
-│   │       │   ├── stats.js     # Analytics avanzadas
-│   │       │   └── users/       # Gestión de usuarios
-│   │       └── system/          # APIs de sistema
-│   │           ├── health.js    # Health checks
-│   │           ├── config.js    # Configuraciones
-│   │           ├── logs.js      # Sistema de logs
-│   │           └── maintenance.js # Mantenimiento
+│   ├── functions/                     # Cloudflare Pages Functions (Backend)
+│   │   ├── api/
+│   │   │   ├── auth/                 # Autenticación
+│   │   │   │   ├── login.ts
+│   │   │   │   ├── register.ts
+│   │   │   │   ├── me.ts             # Perfil usuario
+│   │   │   │   ├── forgot-password.ts
+│   │   │   │   └── change-password.ts
+│   │   │   │
+│   │   │   ├── admin/                # Panel administrativo
+│   │   │   │   ├── socios/
+│   │   │   │   │   ├── index.js      # GET/POST /api/admin/socios
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       ├── index.js  # GET/PUT/DELETE /api/admin/socios/:id
+│   │   │   │   │       └── foto.js   # POST /api/admin/socios/:id/foto
+│   │   │   │   ├── cuotas/
+│   │   │   │   │   ├── index.js      # GET /api/admin/cuotas
+│   │   │   │   │   ├── generar.js    # POST /api/admin/cuotas/generar
+│   │   │   │   │   └── marcar-pago.js # PUT /api/admin/cuotas/marcar-pago
+│   │   │   │   ├── comunicados/
+│   │   │   │   │   └── index.js      # GET/POST /api/admin/comunicados
+│   │   │   │   ├── dashboard.js      # GET /api/admin/dashboard
+│   │   │   │   └── configuracion.js  # GET/PUT /api/admin/configuracion
+│   │   │   │
+│   │   │   ├── cuotas/
+│   │   │   │   └── subir-comprobante.js  # POST /api/cuotas/subir-comprobante
+│   │   │   │
+│   │   │   ├── upload-image.ts       # POST /api/upload-image (R2)
+│   │   │   └── images.js             # GET /api/images?path=... (R2)
+│   │   │
+│   │   └── database/                 # Esquemas de BD
+│   │       ├── schema.sql            # Esquema principal
+│   │       └── socios-cuotas-schema.sql  # Esquema socios/cuotas
 │   │
-│   ├── dist/                    # Build de producción
-│   ├── _headers                 # Headers HTTP para Cloudflare
-│   ├── _routes.json            # Configuración de rutas
-│   └── package.json            # Dependencias frontend
-│   
-├── 📁 docs/                     # Documentación técnica
-├── 📄 SPRINT.txt                # Plan de sprints original
-├── 📄 SPRINT-4-COMPLETADO.md    # Documentación del Sprint 4
-└── 📄 package.json              # Configuración monorepo
-```
-│   │   ├── contexts/     # Context API (AuthContext)
-│   │   ├── pages/        # Páginas React (15+ páginas)
-│   │   │   ├── NewsPage.tsx        # Lista noticias con filtros
-│   │   │   ├── NewsDetailPage.tsx  # Detalle noticia + comentarios
-│   │   │   ├── SearchResultsPage.tsx # Resultados búsqueda avanzada
-│   │   │   └── AdminDashboard.tsx   # Panel admin con estadísticas
-│   │   ├── services/     # Servicios API integrados
-│   │   │   ├── newsService.ts      # CRUD noticias/blog
-│   │   │   ├── commentsService.ts  # Comentarios, likes, shares
-│   │   │   ├── searchService.ts    # Búsqueda avanzada
-│   │   │   └── adminService.ts     # Panel administrativo
-│   │   └── types/        # TypeScript interfaces
+│   ├── public/                       # Assets estáticos
+│   ├── dist/                         # Build de producción
+│   ├── wrangler.toml                 # Configuración Cloudflare
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── shared/                           # Tipos compartidos
+│   └── index.ts                     # Interfaces TypeScript
+│
+└── README.md                        # Este archivo
 ```
 
 ---
 
-## � APIS COMPLETAS - 30+ ENDPOINTS FUNCIONALES
+## 🗄️ Esquema de Base de Datos
 
-### 🔐 **Autenticación** (`/api/auth/*`)
-```bash
-POST /api/auth/login            # Login con email/password ✅
-POST /api/auth/register         # Registro de nuevos usuarios ✅  
-POST /api/auth/forgot-password  # Envío email recuperación ✅
-POST /api/auth/reset-password   # Reset con token por email ✅
-GET  /api/auth/me              # Perfil del usuario actual ✅
-PUT  /api/auth/profile         # Actualizar datos de perfil ✅
-```
+### Cloudflare D1 Database: `ACA_DB`
 
-### 📅 **Eventos** (`/api/eventos/*`)
-```bash
-GET    /api/eventos            # Lista de eventos con filtros ✅
-POST   /api/eventos            # Crear nuevo evento ✅
-GET    /api/eventos/:id        # Detalle de evento específico ✅
-PUT    /api/eventos/:id        # Actualizar evento ✅
-DELETE /api/eventos/:id        # Eliminar evento ✅
-POST   /api/eventos/:id/inscribirse    # Inscribirse a evento ✅
-DELETE /api/eventos/:id/cancelar       # Cancelar inscripción ✅
-GET    /api/mis-inscripciones   # Eventos del usuario actual ✅
-```
-
-### 📰 **Noticias/Blog** (`/api/noticias/*`)
-```bash
-GET    /api/noticias           # Lista de noticias ✅
-POST   /api/noticias           # Crear nueva noticia ✅
-GET    /api/noticias/:slug     # Detalle de noticia por slug ✅
-PUT    /api/noticias/:id       # Actualizar noticia ✅
-DELETE /api/noticias/:id       # Eliminar noticia ✅
-```
-
-### 💬 **Comentarios** (`/api/comments/*`)
-```bash
-GET    /api/comments           # Comentarios por tipo/ID ✅
-POST   /api/comments           # Crear comentario ✅
-PUT    /api/comments/:id       # Editar comentario ✅  
-DELETE /api/comments/:id       # Eliminar comentario ✅
-POST   /api/comments/like      # Like/Unlike comentario ✅
-GET    /api/comments/stats     # Estadísticas de comentarios ✅
-PUT    /api/comments/moderate  # Moderar comentarios ✅
-```
-
-### 🔍 **Búsqueda** (`/api/search/*`)
-```bash
-GET    /api/search            # Búsqueda global con filtros ✅
-GET    /api/search/suggestions # Sugerencias de búsqueda ✅
-```
-
-### 🛠️ **Administración** (`/api/admin/*`)
-```bash
-GET    /api/admin/dashboard   # Estadísticas del sistema ✅
-GET    /api/admin/users       # Lista de usuarios ✅
-POST   /api/admin/users       # Crear usuario ✅
-GET    /api/admin/users/:id   # Detalle de usuario ✅
-PUT    /api/admin/users/:id   # Actualizar usuario ✅
-DELETE /api/admin/users/:id   # Eliminar usuario ✅
-GET    /api/admin/stats       # Analytics avanzadas ✅
-```
-
-### 🏥 **Sistema** (`/api/system/*`)
-```bash
-GET    /api/system/health     # Health check del sistema ✅
-GET    /api/system/config     # Configuraciones ✅
-PUT    /api/system/config     # Actualizar configuraciones ✅
-GET    /api/system/logs       # Logs del sistema ✅
-POST   /api/system/logs       # Crear log ✅
-GET    /api/system/maintenance # Estado de mantenimiento ✅
-POST   /api/system/maintenance # Operaciones de mantenimiento ✅
-```
-
----
-
-## 🗄️ ESQUEMA DE BASE DE DATOS (Cloudflare D1)
-
-### **Tablas Principales**
+#### Tabla: `usuarios`
 ```sql
--- Usuarios con roles y autenticación
-users (
-  id TEXT PRIMARY KEY,
-  username TEXT UNIQUE,
-  email TEXT UNIQUE,
-  password_hash TEXT,
-  role TEXT DEFAULT 'user',
-  created_at DATETIME,
-  updated_at DATETIME,
-  deleted_at DATETIME,
-  last_login DATETIME
-)
+CREATE TABLE usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    nombre TEXT NOT NULL,
+    apellido TEXT NOT NULL,
+    telefono TEXT,
+    rut TEXT,
+    ciudad TEXT,
+    direccion TEXT,
+    foto_url TEXT,
+    role TEXT DEFAULT 'usuario' CHECK (role IN ('admin', 'director', 'director_editor', 'usuario')),
+    valor_cuota INTEGER DEFAULT 6500,
+    fecha_ingreso DATETIME DEFAULT CURRENT_TIMESTAMP,
+    estado_socio TEXT DEFAULT 'activo' CHECK (estado_socio IN ('activo', 'inactivo', 'suspendido')),
+    activo BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME
+);
 
--- Eventos con gestión completa
-events (
-  id TEXT PRIMARY KEY,
-  title TEXT,
-  description TEXT,
-  date DATETIME,
-  location TEXT,
-  max_attendees INTEGER,
-  current_attendees INTEGER,
-  created_by TEXT,
-  created_at DATETIME,
-  updated_at DATETIME,
-  archived BOOLEAN
-)
-
--- Inscripciones a eventos
-event_inscriptions (
-  id TEXT PRIMARY KEY,
-  event_id TEXT,
-  user_id TEXT,
-  inscription_date DATETIME,
-  cancelled_at DATETIME
-)
-
--- Sistema de noticias/blog
-news (
-  id TEXT PRIMARY KEY,
-  title TEXT,
-  slug TEXT UNIQUE,
-  content TEXT,
-  excerpt TEXT,
-  author_id TEXT,
-  published BOOLEAN,
-  created_at DATETIME,
-  updated_at DATETIME
-)
-
--- Comentarios con likes y moderación
-comments (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  content TEXT,
-  item_type TEXT,
-  item_id TEXT,
-  parent_id TEXT,
-  status TEXT DEFAULT 'pending',
-  likes INTEGER DEFAULT 0,
-  created_at DATETIME,
-  updated_at DATETIME
-)
-
--- Tokens para recuperación de contraseña
-password_reset_tokens (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  token TEXT UNIQUE,
-  expires_at DATETIME,
-  used_at DATETIME
-)
+CREATE INDEX idx_usuarios_email ON usuarios(email);
+CREATE INDEX idx_usuarios_rut ON usuarios(rut);
+CREATE INDEX idx_usuarios_role ON usuarios(role);
+CREATE INDEX idx_usuarios_estado ON usuarios(estado_socio);
 ```
 
-### **Cloudflare KV Storage Structure**
-```javascript
-// Cache de eventos
-eventos:all = [array de eventos]
-eventos:stats = {total, active, archived}
-
-// Cache de noticias  
-noticias:all = [array de noticias]
-noticias:slug:{slug} = {noticia completa}
-
-// Sistema de comentarios
-comments:{tipo}:{id} = [array de comentarios]
-comments:stats:{tipo}:{id} = {total, likes}
-
-// Configuraciones del sistema
-system:config = {configuraciones globales}
-stats:users:total = {count, last_updated}
-
-// Logs del sistema
-logs:system:list = [array de IDs de logs]
-logs:system:{id} = {log completo}
-audit:config:list = [array de cambios de config]
-
-// Operaciones de mantenimiento  
-maintenance:log = [historial de operaciones]
-backup:{id} = {backup completo del sistema}
-```
-GET    /api/news/categories              # Categorías disponibles
-GET    /api/news/tags                    # Tags disponibles
-GET    /api/news/:slug                   # Detalle noticia por slug
-POST   /api/news                         # Crear noticia (admin)
-PUT    /api/news/:id                     # Actualizar noticia (admin)
-DELETE /api/news/:id                     # Eliminar noticia (admin)
-```
-
-### **💬 Comentarios** (`/api/comments/*`)
-```bash
-GET    /api/comments/:articleId          # Comentarios de artículo
-POST   /api/comments                     # Crear comentario
-PUT    /api/comments/:id/moderate        # Moderar comentario (admin)
-POST   /api/comments/:articleId/like     # Like/unlike artículo
-POST   /api/comments/:articleId/share    # Compartir artículo
-GET    /api/comments/:articleId/likes    # Estadísticas likes
-```
-
-### **🔍 Búsqueda** (`/api/search/*`)
-```bash
-GET    /api/search                       # Búsqueda global
-GET    /api/search/suggestions           # Sugerencias autocomplete
-POST   /api/search/advanced              # Búsqueda avanzada con filtros
-GET    /api/search/popular               # Búsquedas populares
-```
-
-### **👥 Administración** (`/api/admin/*`)
-```bash
-GET    /api/admin/dashboard/stats        # Estadísticas dashboard
-GET    /api/admin/users                  # Lista usuarios con filtros
-PUT    /api/admin/users/:id              # Actualizar usuario
-DELETE /api/admin/users/:id              # Eliminar usuario
-GET    /api/admin/comments/pending       # Comentarios pendientes
-GET    /api/admin/activity               # Log de actividad
-```
-
-### **📅 Eventos** (`/api/eventos/*`)
-```bash
-GET    /api/eventos                      # Lista eventos
-GET    /api/eventos/:id                  # Detalle evento
-POST   /api/eventos                      # Crear evento
-PUT    /api/eventos/:id                  # Actualizar evento
-DELETE /api/eventos/:id                  # Eliminar evento
-POST   /api/eventos/:id/inscribirse      # Inscribirse a evento
-DELETE /api/eventos/:id/cancelar         # Cancelar inscripción
-GET    /api/mis-inscripciones            # Mis inscripciones
-```
-
----
-
-## 💾 Base de Datos D1 - Esquema Completo
-
-### **Tablas Principales (11 tablas)**
+#### Tabla: `cuotas`
 ```sql
--- Sistema de usuarios
-users                    # Usuarios principales
-user_profiles           # Perfiles extendidos
-user_roles              # Roles y permisos
+CREATE TABLE cuotas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    año INTEGER NOT NULL,
+    mes INTEGER NOT NULL CHECK (mes BETWEEN 1 AND 12),
+    valor INTEGER NOT NULL,
+    pagado BOOLEAN DEFAULT FALSE,
+    fecha_pago DATETIME NULL,
+    metodo_pago TEXT CHECK (metodo_pago IN ('transferencia', 'efectivo', 'tarjeta')),
+    comprobante_url TEXT NULL,
+    notas TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+    UNIQUE(usuario_id, año, mes)
+);
 
--- Sistema de contenido
-news_articles           # Artículos/noticias
-news_categories         # Categorías de noticias
-news_tags              # Tags para artículos
-article_tags           # Relación artículos-tags
-
--- Sistema de interacción
-comments               # Comentarios en artículos
-comment_likes          # Likes de comentarios
-
--- Sistema de eventos
-eventos                # Eventos principales
-inscripciones          # Inscripciones a eventos
+CREATE INDEX idx_cuotas_usuario_año ON cuotas(usuario_id, año);
+CREATE INDEX idx_cuotas_año_mes ON cuotas(año, mes);
+CREATE INDEX idx_cuotas_pagado ON cuotas(pagado);
 ```
 
-### **Cache KV Store**
-```javascript
-// Caches implementados
-likes_cache            # Cache de likes por artículo
-shares_cache           # Cache de shares/compartidos  
-search_suggestions     # Sugerencias de búsqueda
-admin_stats           # Estadísticas del dashboard
-popular_searches      # Búsquedas más populares
+#### Tabla: `comunicados`
+```sql
+CREATE TABLE comunicados (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    contenido TEXT NOT NULL,
+    tipo TEXT DEFAULT 'corriente' CHECK (tipo IN ('importante', 'corriente', 'urgente')),
+    destinatarios TEXT NOT NULL, -- JSON array: ["todos", "morosos", "activos", "administradores"]
+    estado TEXT DEFAULT 'borrador' CHECK (estado IN ('borrador', 'enviado')),
+    fecha_envio DATETIME,
+    creado_por INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (creado_por) REFERENCES usuarios (id)
+);
+
+CREATE INDEX idx_comunicados_tipo ON comunicados(tipo);
+CREATE INDEX idx_comunicados_estado ON comunicados(estado);
+```
+
+#### Tabla: `configuracion_global`
+```sql
+CREATE TABLE configuracion_global (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    clave TEXT UNIQUE NOT NULL,
+    valor TEXT NOT NULL,
+    descripcion TEXT,
+    tipo TEXT DEFAULT 'string' CHECK (tipo IN ('string', 'number', 'boolean', 'json')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Valores por defecto
+INSERT INTO configuracion_global (clave, valor, descripcion, tipo) VALUES 
+('cuota_default', '6500', 'Valor de cuota mensual por defecto (CLP)', 'number'),
+('año_inicio_cuotas', '2025', 'Año de inicio del sistema de cuotas', 'number'),
+('moneda', 'CLP', 'Moneda utilizada en el sistema', 'string');
 ```
 
 ---
 
-## �️ Setup Rápido para Continuación
+## 🌐 APIs Implementadas
 
-### **1. Instalar Dependencias**
-```bash
-# Clonar e instalar
-git clone https://github.com/Jcartagenac/acachile.git
-cd acachile
-npm install
+### 🔐 Autenticación (`/api/auth/`)
 
-# Instalar dependencias frontend
-cd frontend && npm install
+#### `POST /api/auth/login`
+Login con email y contraseña.
 
-# Instalar dependencias backend  
-cd ../worker && npm install
-wrangler >= 4.43.0 (Cloudflare CLI)
-git
+**Request:**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
 ```
 
-### **Instalación Local**
-
-#### **1. Clonar repositorio**
-```bash
-git clone https://github.com/Jcartagenac/acachile.git
-cd acachile
+**Response 200:**
+```json
+{
+  "success": true,
+  "token": "string (JWT)",
+  "user": {
+    "id": "number",
+    "email": "string",
+    "nombre": "string",
+    "apellido": "string",
+    "role": "string"
+  }
+}
 ```
 
-#### **2. Instalar dependencias**
-```bash
-# Frontend
-cd frontend
-npm install
+---
 
-# Worker  
-cd ../worker
-npm install
+#### `POST /api/auth/register`
+Registro de nuevo usuario.
+
+**Request:**
+```json
+{
+  "email": "string",
+  "password": "string",
+  "nombre": "string",
+  "apellido": "string"
+}
 ```
 
-#### **3. Configurar variables de entorno**
-
-**Frontend** (`frontend/.env`):
-```env
-VITE_API_BASE_URL=https://acachile-api-production.juecart.workers.dev
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Usuario registrado exitosamente",
+  "userId": "number"
+}
 ```
 
-**Worker** (`worker/wrangler.toml`):
+---
+
+#### `GET /api/auth/me`
+Obtiene el perfil del usuario autenticado.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "number",
+    "email": "string",
+    "nombre": "string",
+    "apellido": "string",
+    "telefono": "string | null",
+    "foto_url": "string | null",
+    "role": "string",
+    "estado_socio": "string"
+  }
+}
+```
+
+---
+
+#### `PUT /api/auth/me`
+Actualiza el perfil del usuario autenticado.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Request:**
+```json
+{
+  "nombre": "string (opcional)",
+  "apellido": "string (opcional)",
+  "telefono": "string (opcional)",
+  "foto_url": "string (opcional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Perfil actualizado correctamente"
+}
+```
+
+---
+
+### 👥 Gestión de Socios (`/api/admin/socios/`)
+
+#### `GET /api/admin/socios`
+Lista todos los socios con filtros y paginación.
+
+**Query Params:**
+- `page` (número): Página actual (default: 1)
+- `limit` (número): Resultados por página (default: 20)
+- `search` (string): Búsqueda por nombre, email o RUT
+- `estado` (string): Filtro por estado (activo/inactivo)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "socios": [
+      {
+        "id": "number",
+        "email": "string",
+        "nombre": "string",
+        "apellido": "string",
+        "nombreCompleto": "string",
+        "telefono": "string | null",
+        "rut": "string | null",
+        "ciudad": "string | null",
+        "direccion": "string | null",
+        "fotoUrl": "string | null",
+        "valorCuota": "number",
+        "fechaIngreso": "string (ISO)",
+        "estadoSocio": "string",
+        "role": "string",
+        "estadisticasAño": {
+          "totalCuotas": "number",
+          "cuotasPagadas": "number",
+          "cuotasPendientes": "number",
+          "ultimoPago": "string | null"
+        }
+      }
+    ],
+    "pagination": {
+      "total": "number",
+      "page": "number",
+      "limit": "number",
+      "totalPages": "number"
+    }
+  }
+}
+```
+
+---
+
+#### `POST /api/admin/socios`
+Crea un nuevo socio.
+
+**Request:**
+```json
+{
+  "email": "string",
+  "nombre": "string",
+  "apellido": "string",
+  "telefono": "string (opcional)",
+  "rut": "string (opcional)",
+  "ciudad": "string (opcional)",
+  "direccion": "string (opcional)",
+  "password": "string",
+  "valorCuota": "number (opcional, default: 6500)",
+  "rol": "usuario | director_editor | director | admin (opcional)",
+  "estadoSocio": "activo | inactivo (opcional)"
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Socio creado exitosamente",
+    "socioId": "number",
+    "socio": { /* datos del socio creado */ }
+  }
+}
+```
+
+---
+
+#### `GET /api/admin/socios/:id`
+Obtiene los datos completos de un socio específico.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "socio": {
+      "id": "number",
+      "email": "string",
+      "nombre": "string",
+      "apellido": "string",
+      "nombreCompleto": "string",
+      "telefono": "string | null",
+      "rut": "string | null",
+      "ciudad": "string | null",
+      "direccion": "string | null",
+      "fotoUrl": "string | null",
+      "valorCuota": "number",
+      "fechaIngreso": "string (ISO)",
+      "estadoSocio": "string",
+      "role": "string"
+    }
+  }
+}
+```
+
+---
+
+#### `PUT /api/admin/socios/:id`
+Actualiza los datos de un socio. Todos los campos son opcionales.
+
+**Request:**
+```json
+{
+  "nombre": "string",
+  "apellido": "string",
+  "email": "string",
+  "telefono": "string",
+  "rut": "string",
+  "ciudad": "string",
+  "direccion": "string",
+  "valor_cuota": "number",
+  "estado_socio": "activo | inactivo | suspendido",
+  "role": "usuario | director_editor | director | admin",
+  "fecha_ingreso": "string (ISO)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Socio actualizado correctamente",
+    "socio": { /* datos actualizados */ }
+  }
+}
+```
+
+---
+
+#### `DELETE /api/admin/socios/:id`
+Elimina un socio (soft delete, marca activo = 0).
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Socio eliminado correctamente",
+    "socioId": "number"
+  }
+}
+```
+
+---
+
+#### `POST /api/admin/socios/:id/foto`
+Sube o actualiza la foto de perfil de un socio.
+
+**Content-Type:** `multipart/form-data`
+
+**Body:**
+- `foto` (File): Archivo de imagen (JPEG, PNG, GIF, WebP)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Foto actualizada correctamente",
+    "fotoUrl": "string"
+  }
+}
+```
+
+---
+
+### 💰 Gestión de Cuotas (`/api/admin/cuotas/`)
+
+#### `GET /api/admin/cuotas`
+Lista todas las cuotas con estadísticas.
+
+**Query Params:**
+- `año` (número): Año de las cuotas (default: año actual)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "cuotas": [
+      {
+        "id": "number",
+        "usuarioId": "number",
+        "socio": {
+          "nombre": "string",
+          "apellido": "string",
+          "nombreCompleto": "string"
+        },
+        "año": "number",
+        "mes": "number",
+        "valor": "number",
+        "pagado": "boolean",
+        "fechaPago": "string | null",
+        "metodoPago": "string | null",
+        "comprobanteUrl": "string | null"
+      }
+    ],
+    "estadisticas": {
+      "totalCuotas": "number",
+      "pagadas": "number",
+      "pendientes": "number",
+      "montoTotal": "number",
+      "montoPagado": "number",
+      "montoPendiente": "number"
+    }
+  }
+}
+```
+
+---
+
+#### `POST /api/admin/cuotas/generar`
+Genera cuotas para todos los socios activos en un mes específico.
+
+**Request:**
+```json
+{
+  "año": "number",
+  "mes": "number (1-12)",
+  "valorDefault": "number (opcional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Cuotas generadas exitosamente",
+    "cuotasGeneradas": "number",
+    "año": "number",
+    "mes": "number"
+  }
+}
+```
+
+---
+
+#### `PUT /api/admin/cuotas/marcar-pago`
+Marca una cuota como pagada.
+
+**Request:**
+```json
+{
+  "cuotaId": "number",
+  "metodoPago": "transferencia | efectivo | tarjeta",
+  "notas": "string (opcional)"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Pago registrado exitosamente",
+    "cuota": { /* datos actualizados */ }
+  }
+}
+```
+
+---
+
+### 📢 Comunicados (`/api/admin/comunicados/`)
+
+#### `GET /api/admin/comunicados`
+Lista todos los comunicados.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "comunicados": [
+    {
+      "id": "number",
+      "titulo": "string",
+      "contenido": "string",
+      "tipo": "importante | corriente | urgente",
+      "destinatarios": ["string"],
+      "estado": "borrador | enviado",
+      "fechaEnvio": "string | null",
+      "creadoPor": "number"
+    }
+  ]
+}
+```
+
+---
+
+#### `POST /api/admin/comunicados`
+Crea un nuevo comunicado.
+
+**Request:**
+```json
+{
+  "titulo": "string",
+  "contenido": "string",
+  "tipo": "importante | corriente | urgente",
+  "destinatarios": ["todos | morosos | activos | administradores"],
+  "enviar": "boolean"
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Comunicado creado exitosamente",
+    "comunicado": { /* datos del comunicado */ }
+  }
+}
+```
+
+---
+
+### 🖼️ Gestión de Imágenes
+
+#### `POST /api/upload-image`
+Sube una imagen a Cloudflare R2.
+
+**Content-Type:** `multipart/form-data`
+
+**Body:**
+- `file` (File): Archivo de imagen
+- `path` (string): Ruta de almacenamiento (ej: "socios/123")
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "url": "string"
+}
+```
+
+---
+
+#### `GET /api/images`
+Obtiene una imagen desde Cloudflare R2.
+
+**Query Params:**
+- `path` (string): Ruta de la imagen (ej: "socios/123/foto.jpg")
+
+**Response:** Binary stream de la imagen con headers apropiados.
+
+---
+
+## ⚙️ Configuración de Infraestructura
+
+### Cloudflare Account
+```
+Account ID: 172194a6569df504cbb8a638a94d3d2c
+Project: acachile
+```
+
+### Variables de Entorno (wrangler.toml)
 ```toml
-# Ya configurado - revisar archivo para detalles
-cd ../worker && npm install
+[env.production]
+vars = { 
+  ENVIRONMENT = "production",
+  CORS_ORIGIN = "https://acachile.pages.dev",
+  FRONTEND_URL = "https://acachile.pages.dev",
+  FROM_EMAIL = "noreply@mail.juancartagena.cl",
+  ADMIN_EMAIL = "admin@acachile.cl"
+}
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "ACA_DB"
+database_id = "ba77a962-f55a-49b4-865f-e5e3f9c98f7e"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "8ef0d38f0a4c4be1a23af9e741e2e1d7"
+
+[[env.production.r2_buckets]]
+binding = "ACA_BUCKET"
+bucket_name = "aca-chile"
 ```
 
-### **2. Configuración de Environment**
+### Secrets de Cloudflare
 ```bash
-# Frontend (.env en /frontend/)
-VITE_API_URL=https://acachile-api-production.juecart.workers.dev
+# JWT_SECRET (para tokens de autenticación)
+wrangler secret put JWT_SECRET
 
-# Worker (wrangler.toml en /worker/)
-account_id = "172194a6569df504cbb8a638a94d3d2c"  
-FROM_EMAIL = "noreply@mail.juancartagena.cl"
-```
-
-### **3. Secrets de Cloudflare (Ya configurados)**
-```bash
-cd worker
-# Resend API Key (ya configurada en producción)
-npx wrangler secret put RESEND_API_KEY
+# RESEND_API_KEY (para envío de emails)
+wrangler secret put RESEND_API_KEY
 # Valor actual: re_Yk8S9iyk_63xGiXBqE3K2wG6ckLzq9zyM
 ```
 
-
-## 🚀 Comandos Principales (desde la raíz)
-
-```bash
-npm run dev          # Inicia el entorno de desarrollo unificado.
-npm run build        # Construye el proyecto para producción.
-npm run deploy       # Despliega en Cloudflare Pages.
-npm run lint         # Revisa la calidad del código.
+### Cloudflare R2 Bucket: `aca-chile`
 ```
-## 📋 Próximos Pasos Sugeridos
+Binding: ACA_BUCKET
+Public URL: https://pub-[hash].r2.dev
 
-### **🏷️ Prioridad Alta**
-1. **Optimización de Performance**
-   - Implementar cache más agresivo en KV
-   - Optimizar queries D1 con índices
-   - Lazy loading en componentes React
+Estructura de carpetas:
+/socios/{id}/foto.{ext}                    # Fotos de perfil
+/comprobantes/{año}/{mes}/{socioId}/...    # Comprobantes de pago
+```
 
-2. **SEO y PWA**
-   - Meta tags dinámicos por página
-   - Service Worker para cache offline
-   - Manifest.json para PWA
+### Cloudflare KV Namespace
+```
+Binding: CACHE
+ID: 8ef0d38f0a4c4be1a23af9e741e2e1d7
 
-### **🏷️ Prioridad Media**  
-1. **Features de Usuario**
-   - Notificaciones push
-   - Sistema de favoritos
-   - Perfil de usuario extendido
+Uso actual:
+- Cache de estadísticas
+- Configuraciones temporales
+```
 
-2. **Analytics y Métricas**
-   - Google Analytics integrado
-   - Métricas personalizadas en D1
-   - Dashboard de admin más avanzado
+---
 
-### **🏷️ Futuras Expansiones**
-1. **Funcionalidades Avanzadas**
-   - Chat en tiempo real
-   - Sistema de pagos
+## 🚀 Setup y Despliegue
+
+### Prerrequisitos
+```bash
+node >= 18.0.0
+npm >= 9.0.0
+wrangler >= 3.0.0
+git
+```
+
+### Instalación Local
+
+#### 1. Clonar repositorio
+```bash
+git clone https://github.com/Jcartagenac/acachile.git
+cd acachile
+```
+
+#### 2. Instalar dependencias
+```bash
+cd frontend
+npm install
+```
+
+#### 3. Configurar variables de entorno locales
+```bash
+# Crear archivo .dev.vars en /frontend
+echo "JWT_SECRET=tu-secret-local" > .dev.vars
+echo "RESEND_API_KEY=re_..." >> .dev.vars
+```
+
+#### 4. Iniciar desarrollo local
+```bash
+npm run dev
+```
+Abre: http://localhost:5173
+
+### Despliegue a Producción
+
+#### Opción 1: Git Push (Automático)
+```bash
+git add .
+git commit -m "descripción del cambio"
+git push origin main
+```
+Cloudflare Pages detecta el push y despliega automáticamente.
+
+#### Opción 2: Manual con Wrangler
+```bash
+cd frontend
+npm run build
+npx wrangler pages deploy dist --project-name=acachile
+```
+
+### Scripts Disponibles
+```bash
+npm run dev          # Desarrollo local con hot-reload
+npm run build        # Build de producción
+npm run preview      # Preview del build
+npm run lint         # Linter ESLint
+npm run type-check   # Verificar tipos TypeScript
+```
+
+---
+
+## 📚 Guía para Continuación
+
+### Para IAs que continúan el desarrollo
+
+#### Contexto Rápido
+Este proyecto es una aplicación fullstack en **React + TypeScript** con backend en **Cloudflare Pages Functions**. La arquitectura es moderna, serverless y utiliza D1 (SQLite), R2 (storage) y KV (cache).
+
+#### Patrones de Código Implementados
+
+##### 1. Estructura de APIs (Backend)
+Todas las APIs en `frontend/functions/api/` siguen este patrón:
+
+```javascript
+// frontend/functions/api/ejemplo/index.js
+export async function onRequestGet(context) {
+  const { request, env } = context;
+  
+  try {
+    // Lógica del endpoint
+    const result = await env.DB.prepare('SELECT * FROM tabla').all();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      data: result.results
+    }), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  } catch (error) {
+    console.error('[ERROR]', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  }
+}
+
+export async function onRequestPost(context) {
+  // Similar para POST, PUT, DELETE
+}
+```
+
+##### 2. Hooks Personalizados (Frontend)
+```typescript
+// frontend/src/hooks/useAdminService.ts
+export const useAdminService = () => {
+  const { user, updateUser, hasPermission } = useAuth();
+
+  const getMembers = async (searchTerm?: string) => {
+    const response = await fetch(`/api/admin/socios?search=${searchTerm}`);
+    return response.json();
+  };
+
+  return { getMembers, /* otros métodos */ };
+};
+```
+
+##### 3. Componentes con Modales
+```typescript
+// Patrón de modal implementado en AdminModule
+const [showModal, setShowModal] = useState(false);
+const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+
+const handleEdit = (item: Item) => {
+  setSelectedItem(item);
+  setShowModal(true);
+};
+
+{showModal && selectedItem && (
+  <EditModal
+    item={selectedItem}
+    onClose={() => setShowModal(false)}
+    onSave={() => {
+      loadData();
+      setShowModal(false);
+    }}
+  />
+)}
+```
+
+##### 4. Manejo de Imágenes con R2
+```typescript
+// frontend/src/services/imageService.ts
+export const uploadToR2 = async (file: File, path: string) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('path', path);
+
+  const response = await fetch('/api/upload-image', {
+    method: 'POST',
+    body: formData
+  });
+
+  return response.json();
+};
+
+// Implementación del center-crop para imágenes
+export const resizeImage = async (file: File, width: number, height: number): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+
+      // Center-crop algorithm
+      const scale = Math.max(width / img.width, height / img.height);
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+      const offsetX = (width - scaledWidth) / 2;
+      const offsetY = (height - scaledHeight) / 2;
+
+      ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Failed to create blob'));
+      }, 'image/jpeg', 0.92);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+};
+```
+
+#### Próximas Funcionalidades Sugeridas
+
+##### 🔥 Alta Prioridad
+1. **Sistema de Notificaciones**
+   - Notificaciones push en navegador
+   - Emails automáticos para cuotas pendientes
+   - Alertas de comunicados importantes
+
+2. **Reportes y Estadísticas**
+   - Exportar a Excel/PDF
+   - Gráficos de evolución de pagos
+   - Dashboard con más métricas
+
+3. **Mejoras de UX**
+   - Loading states más elaborados
+   - Toasts para notificaciones
+   - Confirmaciones antes de acciones destructivas
+
+##### �� Prioridad Media
+1. **Sistema de Eventos**
+   - CRUD de eventos de la asociación
+   - Inscripciones de socios
+   - Calendario de eventos
+
+2. **Galería de Fotos**
+   - Álbumes de eventos
+   - Compartir en redes sociales
+   - Comentarios y likes
+
+3. **Chat/Mensajería Interna**
+   - Chat entre socios
+   - Mensajes directos con admin
+   - Notificaciones en tiempo real
+
+##### 🚀 Futuro
+1. **App Móvil**
+   - React Native
+   - Notificaciones push nativas
+   - Sincronización offline
+
+2. **Integraciones**
+   - Pasarela de pagos (Webpay/Flow)
+   - Google Calendar
+   - WhatsApp Business API
+
+#### Guías de Debugging
+
+##### Logs en Cloudflare
+```bash
+# Ver logs en tiempo real
+wrangler pages deployment tail
+
+# Ver logs de un despliegue específico
+wrangler pages deployment logs [deployment-id]
+```
+
+##### Queries D1 Directas
+```bash
+# Conectar a D1
+wrangler d1 execute ACA_DB --command "SELECT * FROM usuarios LIMIT 5"
+
+# Ejecutar archivo SQL
+wrangler d1 execute ACA_DB --file=./schema.sql
+```
+
+##### Inspeccionar R2
+```bash
+# Listar objetos en bucket
+wrangler r2 object list aca-chile
+
+# Descargar un objeto
+wrangler r2 object get aca-chile/socios/1/foto.jpg --file=./foto.jpg
+```
+
+#### Problemas Comunes y Soluciones
+
+##### 1. Error de CORS
+```javascript
+// Agregar headers en la respuesta
+headers: {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+}
+```
+
+##### 2. JWT No Válido
+```bash
+# Regenerar secret
+wrangler secret put JWT_SECRET
+# Valor nuevo: [ingresar]
+```
+
+##### 3. Imagen No Se Muestra
+```javascript
+// Verificar binding en wrangler.toml
+[[r2_buckets]]
+binding = "ACA_BUCKET"  # Debe coincidir con env.ACA_BUCKET en el código
+```
+
+##### 4. Build Falla en Cloudflare
+```bash
+# Verificar versiones en package.json
+"node": ">=18.0.0"
+
+# Limpiar cache
+rm -rf node_modules package-lock.json
+npm install
+```
+
+##### 5. Error: Variable no definida en context.params
+```javascript
+// INCORRECTO:
+const { params } = context;
+const { id } = params;
+
+// CORRECTO:
+const id = context.params.id;
+```
+
+---
+
+## 📝 Notas Adicionales
+
+### Versiones de Dependencias Críticas
+```json
+{
+  "react": "18.3.1",
+  "react-router-dom": "7.1.1",
+  "typescript": "5.6.2",
+  "vite": "5.4.20",
+  "tailwindcss": "3.4.1",
+  "@cloudflare/workers-types": "^4.20250115.0"
+}
+```
+
+### Comandos Útiles de Wrangler
+```bash
+# Login
+wrangler login
+
+# Ver info del proyecto
+wrangler pages project list
+
+# Ver despliegues
+wrangler pages deployment list --project-name=acachile
+
+# Rollback a despliegue anterior
+wrangler pages deployment create dist --project-name=acachile
+
+# Ver bindings
+wrangler pages deployment view [deployment-id]
+```
+
+### Base de Conocimiento
+- Documentación Cloudflare Pages: https://developers.cloudflare.com/pages/
+- Cloudflare D1: https://developers.cloudflare.com/d1/
+- Cloudflare R2: https://developers.cloudflare.com/r2/
+- React Docs: https://react.dev/
+- TypeScript: https://www.typescriptlang.org/docs/
+
+---
+
+## 📄 Licencia
+
+Este proyecto es privado y pertenece a la Asociación Chilena de Asadores (ACA Chile).
+
+---
+
+## 🤝 Contribución
+
+Para contribuir al proyecto:
+
+1. Crea un branch desde `main`
+2. Realiza tus cambios
+3. Haz commit con mensajes descriptivos
+4. Push y crea un Pull Request
+5. Espera revisión y merge
+
+### Convenciones de Commits
+```
+feat: Nueva funcionalidad
+fix: Corrección de bug
+docs: Cambios en documentación
+style: Cambios de formato (no afectan código)
+refactor: Refactorización de código
+test: Agregar o modificar tests
+chore: Tareas de mantenimiento
+```
+
+---
+
+## 📞 Contacto
+
+- **Desarrollador**: Juan Cartagena
+- **Email**: juan@juancartagena.cl
+- **GitHub**: [@Jcartagenac](https://github.com/Jcartagenac)
+
+---
+
+**Última actualización**: 16 de Enero de 2025  
+**Versión**: 1.0.0  
+**Estado**: ✅ Producción Estable
+
+---
+
+## 🎉 Resumen para Continuidad
+
+Este README contiene TODO lo necesario para que cualquier desarrollador o IA pueda continuar el proyecto:
+
+✅ **Funcionalidades completas** - Todas las features implementadas documentadas  
+✅ **Stack tecnológico** - Versiones exactas de todas las dependencias  
+✅ **Arquitectura** - Estructura de carpetas y patrones de código  
+✅ **Base de datos** - Esquema completo con todas las tablas e índices  
+✅ **APIs** - Documentación exhaustiva de 20+ endpoints  
+✅ **Infraestructura** - Configuración de Cloudflare (D1, R2, KV)  
+✅ **Setup** - Instrucciones paso a paso para desarrollo local  
+✅ **Despliegue** - Guías para deployment a producción  
+✅ **Debugging** - Comandos y soluciones a problemas comunes  
+✅ **Próximos pasos** - Sugerencias priorizadas de funcionalidades
+
+**IMPORTANT NOTE FOR AI CONTINUITY:**
+When continuing this project, always refer back to this README for:
+- Code patterns and conventions
+- API endpoint structures
+- Database schema
+- Cloudflare configuration
+- Common debugging scenarios
+
+The project follows a consistent pattern across all endpoints and components. Study the examples provided to maintain code consistency.
