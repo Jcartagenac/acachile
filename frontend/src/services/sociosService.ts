@@ -172,6 +172,26 @@ class SociosService {
     }
   }
 
+  async deleteSocio(socioId: number): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/socios/${socioId}`, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Error al eliminar socio');
+      }
+
+      const data = await response.json();
+      return { success: data.success !== false };
+    } catch (error) {
+      console.error('Error deleting socio:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+  }
+
   // Gestión de cuotas
   async getCuotas(params?: {
     año?: number;

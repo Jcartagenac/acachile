@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container } from '../components/layout/Container';
 import { useAuth } from '../contexts/AuthContext';
-import { usePermissions } from '../components/auth/PermissionGuard';
 import { useLocation } from 'react-router-dom';
 import { 
-  Shield, 
   ChevronRight,
   UserCircle,
   Wallet,
@@ -14,9 +12,8 @@ import { ProfileModule } from '../components/profile/ProfileModule';
 import { AccountModule } from '../components/profile/AccountModule';
 import { CuotasModule } from '../components/profile/CuotasModule';
 import { SettingsModule } from '../components/profile/SettingsModule';
-import { AdminModule } from '../components/profile/AdminModule';
 
-type ActiveModule = 'profile' | 'account' | 'settings' | 'admin';
+type ActiveModule = 'profile' | 'account' | 'settings';
 
 interface ProfilePageProps {
   defaultTab?: ActiveModule;
@@ -25,7 +22,6 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
   const location = useLocation();
   const { user, getRoleDisplayName } = useAuth();
-  const { isAdmin, isDirector, isDirectorEditor } = usePermissions();
 
   // Determine active module based on route
   const getActiveModuleFromRoute = (): ActiveModule => {
@@ -35,7 +31,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
     const path = location.pathname;
     if (path === '/mi-cuenta') return 'account';
     if (path === '/configuracion') return 'settings';
-    if (path === '/panel-admin' || path === '/admin/socios') return 'admin';
     return 'profile';
   };
 
@@ -59,8 +54,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
       </div>
     );
   }
-
-  const showAdminPanel = isAdmin || isDirector || isDirectorEditor;
 
   const menuItems = [
     {
@@ -86,16 +79,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
     }
   ];
 
-  if (showAdminPanel) {
-    menuItems.push({
-      id: 'admin' as ActiveModule,
-      title: 'Panel de Administración',
-      description: 'Gestión de socios, eventos y comunicados',
-      icon: Shield,
-      color: 'red'
-    });
-  }
-
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'profile':
@@ -109,8 +92,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
         );
       case 'settings':
         return <SettingsModule />;
-      case 'admin':
-        return showAdminPanel ? <AdminModule /> : null;
       default:
         return <ProfileModule />;
     }
