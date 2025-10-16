@@ -63,6 +63,81 @@ export async function onRequestGet(context) {
   }
 }
 
+// Helper: Validar campos requeridos del comentario
+function validateRequiredFields(body) {
+  const { article_id, type, content, author_name, author_email } = body;
+  if (!article_id || !type || !content || !author_name || !author_email) {
+    return 'article_id, type, content, author_name y author_email son requeridos';
+  }
+  return null;
+}
+
+// Helper: Validar contenido del comentario
+function validateCommentContent(content) {
+  if (content.length < 5) {
+    return 'El comentario debe tener al menos 5 caracteres';
+  }
+  if (content.length > 1000) {
+    return 'El comentario no puede exceder 1000 caracteres';
+  }
+  return null;
+}
+
+// Helper: Validar email
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return 'Email inválido';
+  }
+  return null;
+}
+
+// Helper: Crear objeto de comentario
+function createCommentObject(body, commentId) {
+  const { article_id, type, content, author_name, author_email, parent_id } = body;
+  
+  return {
+    id: commentId,
+    article_id,
+    type,
+    content: content.trim(),
+    author_name: author_name.trim(),
+    author_email: author_email.toLowerCase().trim(),
+    parent_id: parent_id || null,
+    created_at: new Date().toISOString(),
+    status: 'pending',
+    likes: 0,
+    replies: []
+  };
+}
+
+// Helper: Agregar comentario a la lista
+function addCommentToList(existingComments, newComment, parent_id) {
+  if (parent_id) {
+    const parentIndex = existingComments.findIndex(c => c.id === parent_id);
+    if (parentIndex === -1) {
+      return { success: false, error: 'Comentario padre no encontrado' };
+    }
+    if (!existingComments[parentIndex].replies) {
+      existingComments[parentIndex].replies = [];
+    }
+    existingComments[parentIndex].replies.push(newComment);
+  } else {
+    existingComments.push(newComment);
+  }
+  return { success: true };
+}
+
+// Helper: Actualizar estadísticas de comentarios
+async function updateCommentStats(env, type, article_id) {
+  const statsKey = `comments:stats:${type}:${article_id}`;
+  const currentStats = await env.ACA_KV.get(statsKey);
+  const stats = currentStats ? JSON.parse(currentStats) : { total: 0, pending: 0, approved: 0 };
+  stats.total += 1;
+  stats.pending += 1;
+  await env.ACA_KV.put(statsKey, JSON.stringify(stats));
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -70,45 +145,36 @@ export async function onRequestPost(context) {
     console.log('[COMMENTS] Processing POST request');
 
     const body = await request.json();
-    const { article_id, type, content, author_name, author_email, parent_id } = body;
+    const { article_id, type, parent_id } = body;
 
     // Validaciones
-    if (!article_id || !type || !content || !author_name || !author_email) {
+    const requiredError = validateRequiredFields(body);
+    if (requiredError) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'article_id, type, content, author_name y author_email son requeridos'
+        error: requiredError
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    if (content.length < 5) {
+    const contentError = validateCommentContent(body.content);
+    if (contentError) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'El comentario debe tener al menos 5 caracteres'
+        error: contentError
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    if (content.length > 1000) {
+    const emailError = validateEmail(body.author_email);
+    if (emailError) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'El comentario no puede exceder 1000 caracteres'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Validar email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(author_email)) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Email inválido'
+        error: emailError
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -119,61 +185,29 @@ export async function onRequestPost(context) {
     
     // Obtener comentarios existentes
     const existingCommentsData = await env.ACA_KV.get(commentsKey);
-    let existingComments = [];
-    if (existingCommentsData) {
-      existingComments = JSON.parse(existingCommentsData);
-    }
+    const existingComments = existingCommentsData ? JSON.parse(existingCommentsData) : [];
 
-    // Generar ID único para el comentario
+    // Generar ID único y crear comentario
     const commentId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const newComment = createCommentObject(body, commentId);
 
-    // Crear el nuevo comentario
-    const newComment = {
-      id: commentId,
-      article_id,
-      type,
-      content: content.trim(),
-      author_name: author_name.trim(),
-      author_email: author_email.toLowerCase().trim(),
-      parent_id: parent_id || null,
-      created_at: new Date().toISOString(),
-      status: 'pending', // pending, approved, rejected
-      likes: 0,
-      replies: []
-    };
-
-    // Si es una respuesta, agregar al comentario padre
-    if (parent_id) {
-      const parentIndex = existingComments.findIndex(c => c.id === parent_id);
-      if (parentIndex !== -1) {
-        if (!existingComments[parentIndex].replies) {
-          existingComments[parentIndex].replies = [];
-        }
-        existingComments[parentIndex].replies.push(newComment);
-      } else {
-        return new Response(JSON.stringify({
-          success: false,
-          error: 'Comentario padre no encontrado'
-        }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    } else {
-      // Agregar como comentario principal
-      existingComments.push(newComment);
+    // Agregar comentario a la lista
+    const addResult = addCommentToList(existingComments, newComment, parent_id);
+    if (!addResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: addResult.error
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     // Guardar comentarios actualizados
     await env.ACA_KV.put(commentsKey, JSON.stringify(existingComments));
 
-    // Actualizar contador global de comentarios
-    const statsKey = `comments:stats:${type}:${article_id}`;
-    const currentStats = await env.ACA_KV.get(statsKey);
-    const stats = currentStats ? JSON.parse(currentStats) : { total: 0, pending: 0, approved: 0 };
-    stats.total += 1;
-    stats.pending += 1;
-    await env.ACA_KV.put(statsKey, JSON.stringify(stats));
+    // Actualizar estadísticas
+    await updateCommentStats(env, type, article_id);
 
     console.log(`[COMMENTS] Comentario creado: ${commentId} para ${type}:${article_id}`);
 

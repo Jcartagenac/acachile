@@ -1,13 +1,58 @@
 -- Esquema para sistema de socios y cuotas
 -- ACA Chile - Sistema de gestión de socios
 
+-- =============================================================================
+-- TABLAS DE REFERENCIA PARA VALORES PERMITIDOS (evita duplicación de strings)
+-- =============================================================================
+
+-- Tabla de referencia para métodos de pago
+CREATE TABLE IF NOT EXISTS ref_metodos_pago (
+    codigo TEXT PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
+);
+
+INSERT OR IGNORE INTO ref_metodos_pago (codigo, nombre) VALUES 
+('transferencia', 'Transferencia Bancaria'),
+('efectivo', 'Efectivo'),
+('tarjeta', 'Tarjeta de Crédito/Débito');
+
+-- Tabla de referencia para estados de socio
+CREATE TABLE IF NOT EXISTS ref_estados_socio (
+    codigo TEXT PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    descripcion TEXT
+);
+
+INSERT OR IGNORE INTO ref_estados_socio (codigo, nombre, descripcion) VALUES 
+('activo', 'Activo', 'Socio con membresía activa'),
+('inactivo', 'Inactivo', 'Socio temporalmente inactivo'),
+('suspendido', 'Suspendido', 'Socio suspendido por incumplimiento');
+
+-- Tabla de referencia para estados de pago
+CREATE TABLE IF NOT EXISTS ref_estados_pago (
+    codigo TEXT PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    descripcion TEXT
+);
+
+INSERT OR IGNORE INTO ref_estados_pago (codigo, nombre, descripcion) VALUES 
+('pendiente', 'Pendiente', 'Pago pendiente de procesamiento'),
+('confirmado', 'Confirmado', 'Pago confirmado y procesado'),
+('rechazado', 'Rechazado', 'Pago rechazado o inválido');
+
+-- =============================================================================
+-- ESQUEMA PRINCIPAL
+-- =============================================================================
+
 -- Extender tabla usuarios para incluir campos de socios
 -- (La tabla usuarios ya existe, solo agregamos campos)
 ALTER TABLE usuarios ADD COLUMN direccion TEXT;
 ALTER TABLE usuarios ADD COLUMN foto_url TEXT;
 ALTER TABLE usuarios ADD COLUMN valor_cuota INTEGER DEFAULT 6500; -- Valor individual por socio
 ALTER TABLE usuarios ADD COLUMN fecha_ingreso DATETIME DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE usuarios ADD COLUMN estado_socio TEXT DEFAULT 'activo' CHECK (estado_socio IN ('activo', 'inactivo', 'suspendido'));
+ALTER TABLE usuarios ADD COLUMN estado_socio TEXT DEFAULT 'activo' 
+    REFERENCES ref_estados_socio(codigo);
 
 -- Tabla de configuración global del sistema
 CREATE TABLE IF NOT EXISTS configuracion_global (
@@ -15,7 +60,7 @@ CREATE TABLE IF NOT EXISTS configuracion_global (
     clave TEXT UNIQUE NOT NULL,
     valor TEXT NOT NULL,
     descripcion TEXT,
-    tipo TEXT DEFAULT 'string' CHECK (tipo IN ('string', 'number', 'boolean', 'json')),
+    tipo TEXT DEFAULT 'string',  -- Tipos: string, number, boolean, json
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -36,7 +81,7 @@ CREATE TABLE IF NOT EXISTS cuotas (
     valor INTEGER NOT NULL, -- Valor de la cuota en ese momento
     pagado BOOLEAN DEFAULT FALSE,
     fecha_pago DATETIME NULL,
-    metodo_pago TEXT CHECK (metodo_pago IN ('transferencia', 'efectivo', 'tarjeta')),
+    metodo_pago TEXT REFERENCES ref_metodos_pago(codigo),
     comprobante_url TEXT NULL, -- URL del comprobante en R2
     notas TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -59,9 +104,9 @@ CREATE TABLE IF NOT EXISTS pagos (
     cuota_id INTEGER NOT NULL,
     usuario_id INTEGER NOT NULL,
     monto INTEGER NOT NULL,
-    metodo_pago TEXT NOT NULL CHECK (metodo_pago IN ('transferencia', 'efectivo', 'tarjeta')),
+    metodo_pago TEXT NOT NULL REFERENCES ref_metodos_pago(codigo),
     comprobante_url TEXT,
-    estado TEXT DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'confirmado', 'rechazado')),
+    estado TEXT DEFAULT 'pendiente' REFERENCES ref_estados_pago(codigo),
     fecha_pago DATETIME NOT NULL,
     procesado_por INTEGER NULL, -- ID del admin que procesó
     notas_admin TEXT,

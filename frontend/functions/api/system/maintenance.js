@@ -232,6 +232,55 @@ async function rebuildSystemStats(env, params) {
   }
 }
 
+// Helper: Determinar si un log debe ser eliminado
+function shouldDeleteLog(log, cutoffDate) {
+  const logDate = new Date(log.timestamp);
+  return logDate < cutoffDate;
+}
+
+// Helper: Procesar un log individual
+async function processLogEntry(env, logType, logId, cutoffDate, results) {
+  try {
+    const logData = await env.ACA_KV.get(`logs:${logType}:${logId}`);
+    if (!logData) return null;
+
+    const log = JSON.parse(logData);
+    
+    if (shouldDeleteLog(log, cutoffDate)) {
+      await env.ACA_KV.delete(`logs:${logType}:${logId}`);
+      results.deleted_logs++;
+      return null; // Indica que fue eliminado
+    }
+    
+    return logId; // Indica que debe permanecer
+  } catch (error) {
+    console.error(`Error procesando log ${logId}:`, error);
+    results.errors.push(`Error procesando log ${logId}: ${error.message}`);
+    return logId; // Mantener el ID en caso de error
+  }
+}
+
+// Helper: Limpiar logs de un tipo específico
+async function cleanupLogType(env, logType, cutoffDate, results) {
+  const listKey = `logs:${logType}:list`;
+  const logsList = await env.ACA_KV.get(listKey);
+  
+  if (!logsList) return;
+
+  const logIds = JSON.parse(logsList);
+  const remainingIds = [];
+
+  for (const logId of logIds) {
+    const remainingId = await processLogEntry(env, logType, logId, cutoffDate, results);
+    if (remainingId) {
+      remainingIds.push(remainingId);
+    }
+  }
+
+  await env.ACA_KV.put(listKey, JSON.stringify(remainingIds));
+  results.cleaned_types.push(logType);
+}
+
 // Limpiar logs antiguos del sistema
 async function cleanupSystemLogs(env, params) {
   const results = {
@@ -248,36 +297,7 @@ async function cleanupSystemLogs(env, params) {
     const logTypes = ['system', 'errors', 'security'];
 
     for (const logType of logTypes) {
-      const listKey = `logs:${logType}:list`;
-      const logsList = await env.ACA_KV.get(listKey);
-      
-      if (!logsList) continue;
-
-      const logIds = JSON.parse(logsList);
-      const remainingIds = [];
-
-      for (const logId of logIds) {
-        try {
-          const logData = await env.ACA_KV.get(`logs:${logType}:${logId}`);
-          if (logData) {
-            const log = JSON.parse(logData);
-            const logDate = new Date(log.timestamp);
-
-            if (logDate < cutoffDate) {
-              await env.ACA_KV.delete(`logs:${logType}:${logId}`);
-              results.deleted_logs++;
-            } else {
-              remainingIds.push(logId);
-            }
-          }
-        } catch (error) {
-          console.error(`Error procesando log ${logId}:`, error);
-          results.errors.push(`Error procesando log ${logId}: ${error.message}`);
-        }
-      }
-
-      await env.ACA_KV.put(listKey, JSON.stringify(remainingIds));
-      results.cleaned_types.push(logType);
+      await cleanupLogType(env, logType, cutoffDate, results);
     }
 
     results.message = `${results.deleted_logs} logs eliminados (más antiguos que ${daysToKeep} días)`;

@@ -173,31 +173,42 @@ export function useImagePersistence(): ImagePersistence {
     }
   };
 
+  // Helper: Verificar si una key de cache ha expirado
+  const isCacheKeyExpired = (key: string, now: Date): boolean => {
+    const cached = localStorage.getItem(key);
+    if (!cached) return false;
+
+    try {
+      const cachedImage: CachedImage = JSON.parse(cached);
+      const expiresAt = new Date(cachedImage.expiresAt);
+      return now > expiresAt;
+    } catch (e) {
+      // Si no se puede parsear, considerar expirado
+      return true;
+    }
+  };
+
+  // Helper: Recolectar keys expiradas del localStorage
+  const collectExpiredKeys = (now: Date): string[] => {
+    const keysToRemove: string[] = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CACHE_KEY_PREFIX)) {
+        if (isCacheKeyExpired(key, now)) {
+          keysToRemove.push(key);
+        }
+      }
+    }
+
+    return keysToRemove;
+  };
+
   // Limpiar cache expirado
   const clearExpiredCache = () => {
     try {
-      const keysToRemove: string[] = [];
       const now = new Date();
-
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith(CACHE_KEY_PREFIX)) {
-          const cached = localStorage.getItem(key);
-          if (cached) {
-            try {
-              const cachedImage: CachedImage = JSON.parse(cached);
-              const expiresAt = new Date(cachedImage.expiresAt);
-              
-              if (now > expiresAt) {
-                keysToRemove.push(key);
-              }
-            } catch (e) {
-              // Si no se puede parsear, eliminar
-              keysToRemove.push(key);
-            }
-          }
-        }
-      }
+      const keysToRemove = collectExpiredKeys(now);
 
       keysToRemove.forEach(key => localStorage.removeItem(key));
       

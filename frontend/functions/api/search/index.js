@@ -1,13 +1,84 @@
 // Endpoint de búsqueda global
 // GET /api/search?q={query}&type={eventos|noticias|all}&limit={number}
 
+// Helper: Buscar en eventos
+async function searchEventos(env, searchTerm, limit) {
+  try {
+    const eventosData = await env.ACA_KV.get('eventos:all');
+    if (!eventosData) return [];
+
+    const eventos = JSON.parse(eventosData);
+    const eventosFiltered = eventos.filter(evento => 
+      evento.title?.toLowerCase().includes(searchTerm) ||
+      evento.description?.toLowerCase().includes(searchTerm) ||
+      evento.location?.toLowerCase().includes(searchTerm) ||
+      evento.type?.toLowerCase().includes(searchTerm) ||
+      evento.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
+    ).slice(0, limit);
+
+    return eventosFiltered.map(evento => ({
+      type: 'evento',
+      id: evento.id,
+      title: evento.title,
+      description: evento.description?.substring(0, 150) + '...',
+      date: evento.date,
+      location: evento.location,
+      slug: `/eventos/${evento.id}`,
+      image: evento.image,
+      relevance: calculateRelevance(evento, searchTerm)
+    }));
+  } catch (error) {
+    console.error('[SEARCH] Error buscando eventos:', error);
+    return [];
+  }
+}
+
+// Helper: Buscar en noticias
+async function searchNoticias(env, searchTerm, limit) {
+  try {
+    const noticiasData = await env.ACA_KV.get('noticias:all');
+    if (!noticiasData) return [];
+
+    const noticias = JSON.parse(noticiasData);
+    const noticiasFiltered = noticias.filter(noticia => 
+      noticia.title?.toLowerCase().includes(searchTerm) ||
+      noticia.excerpt?.toLowerCase().includes(searchTerm) ||
+      noticia.content?.toLowerCase().includes(searchTerm) ||
+      noticia.category?.toLowerCase().includes(searchTerm) ||
+      noticia.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
+    ).slice(0, limit);
+
+    return noticiasFiltered.map(noticia => ({
+      type: 'noticia',
+      id: noticia.id,
+      title: noticia.title,
+      excerpt: noticia.excerpt,
+      publishedAt: noticia.publishedAt,
+      category: noticia.category,
+      slug: `/noticias/${noticia.slug}`,
+      image: noticia.image,
+      relevance: calculateRelevance(noticia, searchTerm)
+    }));
+  } catch (error) {
+    console.error('[SEARCH] Error buscando noticias:', error);
+    return [];
+  }
+}
+
+// Helper: Combinar y ordenar resultados
+function combineResults(eventos, noticias, limit) {
+  return [...eventos, ...noticias]
+    .sort((a, b) => b.relevance - a.relevance)
+    .slice(0, limit);
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
   try {
     const url = new URL(request.url);
     const query = url.searchParams.get('q');
-    const type = url.searchParams.get('type') || 'all'; // eventos, noticias, all
+    const type = url.searchParams.get('type') || 'all';
     const limit = parseInt(url.searchParams.get('limit')) || 10;
 
     console.log(`[SEARCH] Query: "${query}", Type: ${type}, Limit: ${limit}`);
@@ -30,75 +101,19 @@ export async function onRequestGet(context) {
       noticias: []
     };
 
-    // Buscar en eventos si se requiere
+    // Buscar según tipo
     if (type === 'eventos' || type === 'all') {
-      try {
-        const eventosData = await env.ACA_KV.get('eventos:all');
-        if (eventosData) {
-          const eventos = JSON.parse(eventosData);
-          const eventosFiltered = eventos.filter(evento => 
-            evento.title?.toLowerCase().includes(searchTerm) ||
-            evento.description?.toLowerCase().includes(searchTerm) ||
-            evento.location?.toLowerCase().includes(searchTerm) ||
-            evento.type?.toLowerCase().includes(searchTerm) ||
-            evento.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
-          ).slice(0, limit);
-
-          results.eventos = eventosFiltered.map(evento => ({
-            type: 'evento',
-            id: evento.id,
-            title: evento.title,
-            description: evento.description?.substring(0, 150) + '...',
-            date: evento.date,
-            location: evento.location,
-            slug: `/eventos/${evento.id}`,
-            image: evento.image,
-            relevance: calculateRelevance(evento, searchTerm)
-          }));
-        }
-      } catch (error) {
-        console.error('[SEARCH] Error buscando eventos:', error);
-      }
+      results.eventos = await searchEventos(env, searchTerm, limit);
     }
 
-    // Buscar en noticias si se requiere
     if (type === 'noticias' || type === 'all') {
-      try {
-        const noticiasData = await env.ACA_KV.get('noticias:all');
-        if (noticiasData) {
-          const noticias = JSON.parse(noticiasData);
-          const noticiasFiltered = noticias.filter(noticia => 
-            noticia.title?.toLowerCase().includes(searchTerm) ||
-            noticia.excerpt?.toLowerCase().includes(searchTerm) ||
-            noticia.content?.toLowerCase().includes(searchTerm) ||
-            noticia.category?.toLowerCase().includes(searchTerm) ||
-            noticia.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
-          ).slice(0, limit);
-
-          results.noticias = noticiasFiltered.map(noticia => ({
-            type: 'noticia',
-            id: noticia.id,
-            title: noticia.title,
-            excerpt: noticia.excerpt,
-            publishedAt: noticia.publishedAt,
-            category: noticia.category,
-            slug: `/noticias/${noticia.slug}`,
-            image: noticia.image,
-            relevance: calculateRelevance(noticia, searchTerm)
-          }));
-        }
-      } catch (error) {
-        console.error('[SEARCH] Error buscando noticias:', error);
-      }
+      results.noticias = await searchNoticias(env, searchTerm, limit);
     }
 
-    // Combinar resultados y ordenar por relevancia si es búsqueda general
-    let allResults = [];
-    if (type === 'all') {
-      allResults = [...results.eventos, ...results.noticias]
-        .sort((a, b) => b.relevance - a.relevance)
-        .slice(0, limit);
-    }
+    // Combinar resultados si es búsqueda general
+    const allResults = type === 'all' 
+      ? combineResults(results.eventos, results.noticias, limit)
+      : [];
 
     results.total = results.eventos.length + results.noticias.length;
 

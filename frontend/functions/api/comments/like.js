@@ -42,48 +42,48 @@ export async function onRequestPost(context) {
     }
 
     const comments = JSON.parse(commentsData);
-    let commentFound = false;
-    let likeAdded = false;
-    let newLikeCount = 0;
+    // Helper: Procesar toggle de like en un comentario
+    function processLikeToggle(comment, identifier) {
+      if (!comment.liked_by) {
+        comment.liked_by = [];
+      }
 
-    // Función para actualizar likes del comentario
-    function updateCommentLikes(commentsList) {
-      for (let i = 0; i < commentsList.length; i++) {
-        if (commentsList[i].id === comment_id) {
-          if (!commentsList[i].liked_by) {
-            commentsList[i].liked_by = [];
-          }
-
-          const existingLikeIndex = commentsList[i].liked_by.indexOf(identifier);
-          
-          if (existingLikeIndex > -1) {
-            // Quitar like
-            commentsList[i].liked_by.splice(existingLikeIndex, 1);
-            commentsList[i].likes = Math.max(0, commentsList[i].likes - 1);
-            likeAdded = false;
-          } else {
-            // Agregar like
-            commentsList[i].liked_by.push(identifier);
-            commentsList[i].likes = (commentsList[i].likes || 0) + 1;
-            likeAdded = true;
-          }
-
-          newLikeCount = commentsList[i].likes;
-          commentFound = true;
-          return;
-        }
-
-        // Buscar en respuestas
-        if (commentsList[i].replies && commentsList[i].replies.length > 0) {
-          updateCommentLikes(commentsList[i].replies);
-          if (commentFound) return;
-        }
+      const existingLikeIndex = comment.liked_by.indexOf(identifier);
+      
+      if (existingLikeIndex > -1) {
+        // Quitar like
+        comment.liked_by.splice(existingLikeIndex, 1);
+        comment.likes = Math.max(0, comment.likes - 1);
+        return { likeAdded: false, newLikeCount: comment.likes };
+      } else {
+        // Agregar like
+        comment.liked_by.push(identifier);
+        comment.likes = (comment.likes || 0) + 1;
+        return { likeAdded: true, newLikeCount: comment.likes };
       }
     }
 
-    updateCommentLikes(comments);
+    // Helper: Buscar y actualizar comentario recursivamente
+    function findAndUpdateComment(commentsList, comment_id, identifier) {
+      for (const comment of commentsList) {
+        if (comment.id === comment_id) {
+          return { found: true, result: processLikeToggle(comment, identifier) };
+        }
 
-    if (!commentFound) {
+        // Buscar en respuestas
+        if (comment.replies && comment.replies.length > 0) {
+          const nested = findAndUpdateComment(comment.replies, comment_id, identifier);
+          if (nested.found) {
+            return nested;
+          }
+        }
+      }
+      return { found: false };
+    }
+
+    const updateResult = findAndUpdateComment(comments, comment_id, identifier);
+
+    if (!updateResult.found) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Comentario no encontrado'
@@ -92,6 +92,8 @@ export async function onRequestPost(context) {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    const { likeAdded, newLikeCount } = updateResult.result;
 
     // Actualizar comentarios en KV
     await env.ACA_KV.put(commentsKey, JSON.stringify(comments));

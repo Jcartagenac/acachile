@@ -15,6 +15,69 @@ async function hashPassword(password: string): Promise<string> {
     .join('');
 }
 
+// Helper: Validar que todos los campos requeridos estén presentes
+function validateRequiredPasswordFields(currentPassword: string, newPassword: string, confirmPassword: string): string | null {
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    console.log('[AUTH/CHANGE-PASSWORD] Missing required fields');
+    return 'Contraseña actual, nueva contraseña y confirmación son requeridos';
+  }
+  return null;
+}
+
+// Helper: Validar que las nuevas contraseñas coincidan
+function validatePasswordsMatch(newPassword: string, confirmPassword: string): string | null {
+  if (newPassword !== confirmPassword) {
+    console.log('[AUTH/CHANGE-PASSWORD] New passwords do not match');
+    return 'Las nuevas contraseñas no coinciden';
+  }
+  return null;
+}
+
+// Helper: Validar longitud de nueva contraseña
+function validatePasswordLength(newPassword: string): string | null {
+  if (newPassword.length < 6) {
+    console.log('[AUTH/CHANGE-PASSWORD] New password too short');
+    return 'La nueva contraseña debe tener al menos 6 caracteres';
+  }
+  return null;
+}
+
+// Helper: Validar que la nueva contraseña sea diferente
+function validatePasswordDifferent(currentPassword: string, newPassword: string): string | null {
+  if (currentPassword === newPassword) {
+    console.log('[AUTH/CHANGE-PASSWORD] Same password provided');
+    return 'La nueva contraseña debe ser diferente a la actual';
+  }
+  return null;
+}
+
+// Helper: Validar todas las contraseñas
+function validatePasswords(currentPassword: string, newPassword: string, confirmPassword: string): string | null {
+  return validateRequiredPasswordFields(currentPassword, newPassword, confirmPassword)
+    || validatePasswordsMatch(newPassword, confirmPassword)
+    || validatePasswordLength(newPassword)
+    || validatePasswordDifferent(currentPassword, newPassword);
+}
+
+// Helper: Actualizar contraseña en la base de datos
+async function updatePasswordInDB(env: Env, userId: number, newPasswordHash: string): Promise<boolean> {
+  const updateResult = await env.DB.prepare(`
+    UPDATE usuarios SET password_hash = ?, updated_at = datetime('now') WHERE id = ?
+  `).bind(newPasswordHash, userId).run();
+
+  if (!updateResult.success) {
+    console.error('[AUTH/CHANGE-PASSWORD] Failed to update password for user:', userId);
+    return false;
+  }
+
+  // Limpiar tokens de reset de contraseña existentes (por seguridad)
+  await env.DB.prepare(`
+    DELETE FROM password_resets WHERE user_id = ?
+  `).bind(userId).run();
+
+  return true;
+}
+
 // Handler principal de change password
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -39,25 +102,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     };
     const { currentPassword, newPassword, confirmPassword } = body;
 
-    // Validaciones
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      console.log('[AUTH/CHANGE-PASSWORD] Missing required fields');
-      return errorResponse('Contraseña actual, nueva contraseña y confirmación son requeridos');
-    }
-
-    if (newPassword !== confirmPassword) {
-      console.log('[AUTH/CHANGE-PASSWORD] New passwords do not match');
-      return errorResponse('Las nuevas contraseñas no coinciden');
-    }
-
-    if (newPassword.length < 6) {
-      console.log('[AUTH/CHANGE-PASSWORD] New password too short');
-      return errorResponse('La nueva contraseña debe tener al menos 6 caracteres');
-    }
-
-    if (currentPassword === newPassword) {
-      console.log('[AUTH/CHANGE-PASSWORD] Same password provided');
-      return errorResponse('La nueva contraseña debe ser diferente a la actual');
+    // Validar contraseñas
+    const validationError = validatePasswords(currentPassword, newPassword, confirmPassword);
+    if (validationError) {
+      return errorResponse(validationError);
     }
 
     const userId = authUser.userId;
@@ -80,23 +128,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return errorResponse('Contraseña actual incorrecta', 400);
     }
 
-    // Hash de la nueva contraseña
+    // Hash de la nueva contraseña y actualizar
     const newPasswordHash = await hashPassword(newPassword);
+    const updateSuccess = await updatePasswordInDB(env, userId, newPasswordHash);
 
-    // Actualizar contraseña
-    const updateResult = await env.DB.prepare(`
-      UPDATE usuarios SET password_hash = ?, updated_at = datetime('now') WHERE id = ?
-    `).bind(newPasswordHash, userId).run();
-
-    if (!updateResult.success) {
-      console.error('[AUTH/CHANGE-PASSWORD] Failed to update password for user:', userId);
+    if (!updateSuccess) {
       return errorResponse('Error actualizando contraseña', 500);
     }
-
-    // Limpiar tokens de reset de contraseña existentes (por seguridad)
-    await env.DB.prepare(`
-      DELETE FROM password_resets WHERE user_id = ?
-    `).bind(userId).run();
 
     console.log('[AUTH/CHANGE-PASSWORD] Password changed successfully for user:', userId);
 

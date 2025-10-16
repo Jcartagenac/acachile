@@ -111,21 +111,77 @@ export async function onRequestGet(context) {
   }
 }
 
+// Helper: Validar rol de usuario
+function validateRole(role) {
+  const validRoles = ['user', 'admin', 'editor'];
+  return validRoles.includes(role);
+}
+
+// Helper: Validar estado de usuario
+function validateStatus(status) {
+  const validStatuses = ['active', 'inactive', 'suspended'];
+  return validStatuses.includes(status);
+}
+
+// Helper: Construir actualizaciones dinámicas
+function buildUpdateFields(body) {
+  const { name, role, status, email_verified } = body;
+  const updates = [];
+  const params = [];
+  const errors = [];
+
+  if (name !== undefined) {
+    updates.push('name = ?');
+    params.push(name);
+  }
+
+  if (role !== undefined) {
+    if (!validateRole(role)) {
+      errors.push('Rol inválido. Debe ser: user, admin o editor');
+    } else {
+      updates.push('role = ?');
+      params.push(role);
+    }
+  }
+
+  if (status !== undefined) {
+    if (!validateStatus(status)) {
+      errors.push('Estado inválido. Debe ser: active, inactive o suspended');
+    } else {
+      updates.push('status = ?');
+      params.push(status);
+    }
+  }
+
+  if (email_verified !== undefined) {
+    updates.push('email_verified_at = ?');
+    params.push(email_verified ? new Date().toISOString() : null);
+  }
+
+  return { updates, params, errors };
+}
+
+// Helper: Formatear usuario para respuesta
+function formatUserResponse(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    status: user.status,
+    email_verified: !!user.email_verified_at,
+    last_login: user.last_login,
+    created_at: user.created_at,
+    updated_at: user.updated_at
+  };
+}
+
 export async function onRequestPut(context) {
   const { request, env, params } = context;
 
   try {
     const userId = params.id;
     console.log(`[ADMIN USER] Actualizando usuario: ${userId}`);
-
-    // TODO: Validar que el usuario es administrador
-    // const adminUser = requireAuth(request, env);
-    // if (adminUser.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
 
     if (!userId) {
       return new Response(JSON.stringify({
@@ -138,7 +194,6 @@ export async function onRequestPut(context) {
     }
 
     const body = await request.json();
-    const { name, role, status, email_verified } = body;
 
     // Verificar que el usuario existe
     const existingUser = await env.DB.prepare(
@@ -156,45 +211,16 @@ export async function onRequestPut(context) {
     }
 
     // Construir query de actualización dinámicamente
-    const updates = [];
-    const params = [];
+    const { updates, params: updateParams, errors } = buildUpdateFields(body);
 
-    if (name !== undefined) {
-      updates.push('name = ?');
-      params.push(name);
-    }
-
-    if (role !== undefined) {
-      if (!['user', 'admin', 'editor'].includes(role)) {
-        return new Response(JSON.stringify({
-          success: false,
-          error: 'Rol inválido. Debe ser: user, admin o editor'
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      updates.push('role = ?');
-      params.push(role);
-    }
-
-    if (status !== undefined) {
-      if (!['active', 'inactive', 'suspended'].includes(status)) {
-        return new Response(JSON.stringify({
-          success: false,
-          error: 'Estado inválido. Debe ser: active, inactive o suspended'
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      updates.push('status = ?');
-      params.push(status);
-    }
-
-    if (email_verified !== undefined) {
-      updates.push('email_verified_at = ?');
-      params.push(email_verified ? new Date().toISOString() : null);
+    if (errors.length > 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: errors.join(', ')
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     if (updates.length === 0) {
@@ -209,12 +235,12 @@ export async function onRequestPut(context) {
 
     // Agregar updated_at y userId al final
     updates.push('updated_at = ?');
-    params.push(new Date().toISOString());
-    params.push(userId);
+    updateParams.push(new Date().toISOString());
+    updateParams.push(userId);
 
     const query = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
     
-    const result = await env.DB.prepare(query).bind(...params).run();
+    const result = await env.DB.prepare(query).bind(...updateParams).run();
 
     if (!result.success) {
       throw new Error('Error actualizando usuario en la base de datos');
@@ -231,17 +257,7 @@ export async function onRequestPut(context) {
 
     return new Response(JSON.stringify({
       success: true,
-      data: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        name: updatedUser.name,
-        role: updatedUser.role,
-        status: updatedUser.status,
-        email_verified: !!updatedUser.email_verified_at,
-        last_login: updatedUser.last_login,
-        created_at: updatedUser.created_at,
-        updated_at: updatedUser.updated_at
-      },
+      data: formatUserResponse(updatedUser),
       message: 'Usuario actualizado exitosamente'
     }), {
       headers: { 'Content-Type': 'application/json' }
