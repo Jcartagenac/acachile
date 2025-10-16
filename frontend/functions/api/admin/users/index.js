@@ -2,6 +2,17 @@
 // GET /api/admin/users - Listar usuarios
 // POST /api/admin/users - Crear usuario (admin)
 
+// Función para hashear contraseñas (SHA-256 + salt)
+async function hashPassword(password) {
+  const salt = 'salt_aca_chile_2024';
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
@@ -173,14 +184,14 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Hash de la contraseña (simulado, en producción usar bcrypt)
-    const hashedPassword = btoa(password); // TEMPORAL - usar bcrypt en producción
+    // Hash de la contraseña con SHA-256 + salt
+    const hashedPassword = await hashPassword(password);
 
     const now = new Date().toISOString();
 
     // Crear usuario
     const result = await env.DB.prepare(`
-      INSERT INTO usuarios (email, nombre, apellido, password, role, activo, created_at, updated_at)
+      INSERT INTO usuarios (email, nombre, apellido, password_hash, role, activo, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, 1, ?, ?)
     `).bind(email, nombre, apellido, hashedPassword, role, now, now).run();
 
