@@ -60,7 +60,7 @@ export async function onRequestPost(context) {
 
     try {
       await env.DB.prepare(`
-        ALTER TABLE usuarios ADD COLUMN fecha_ingreso DATETIME DEFAULT CURRENT_TIMESTAMP
+        ALTER TABLE usuarios ADD COLUMN fecha_ingreso DATETIME
       `).run();
       results.push('✅ Campo fecha_ingreso agregado a usuarios');
     } catch (e) {
