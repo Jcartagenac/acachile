@@ -1,6 +1,128 @@
 // Endpoint de monitoreo y health check avanzado
 // GET /api/system/health - Health check completo del sistema
 
+/**
+ * Verifica la salud de la base de datos D1
+ */
+async function checkDatabaseHealth(env) {
+  try {
+    const dbCheck = await env.DB.prepare('SELECT 1 as test').first();
+    return {
+      status: dbCheck ? 'healthy' : 'unhealthy',
+      message: dbCheck ? 'Conexión a D1 exitosa' : 'Error conectando a D1',
+      connection: !!dbCheck
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      message: 'Error de conexión a D1',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Verifica la salud del KV Storage
+ */
+async function checkKVHealth(env) {
+  try {
+    const kvTestKey = 'health:check:' + Date.now();
+    await env.ACA_KV.put(kvTestKey, 'test', { expirationTtl: 60 });
+    const kvTest = await env.ACA_KV.get(kvTestKey);
+    await env.ACA_KV.delete(kvTestKey);
+    
+    const isHealthy = kvTest === 'test';
+    return {
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      message: isHealthy ? 'KV Storage funcionando' : 'Error en KV Storage',
+      read_write: isHealthy
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      message: 'Error de conexión a KV',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Verifica la salud de un endpoint específico
+ */
+async function checkEndpointHealth(request, endpoint) {
+  try {
+    const testUrl = new URL(request.url);
+    testUrl.pathname = endpoint.path;
+    
+    const response = await fetch(testUrl.toString(), {
+      method: 'GET',
+      headers: { 'User-Agent': 'Health-Check/1.0' }
+    });
+    
+    return {
+      status: response.status < 500 ? 'healthy' : 'unhealthy',
+      message: `Endpoint ${endpoint.path}: ${response.status}`,
+      response_time: Date.now(),
+      status_code: response.status
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      message: `Error testing ${endpoint.path}`,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Realiza todos los checks detallados del sistema
+ */
+async function performDetailedChecks(env, request) {
+  const checks = {};
+  
+  // Check de base de datos D1
+  checks.database = await checkDatabaseHealth(env);
+  
+  // Check de KV Storage
+  checks.kv_storage = await checkKVHealth(env);
+  
+  // Check de endpoints críticos
+  const criticalEndpoints = [
+    { path: '/api/auth/me', name: 'auth_endpoint' },
+    { path: '/api/eventos', name: 'events_endpoint' },
+    { path: '/api/noticias', name: 'news_endpoint' }
+  ];
+
+  for (const endpoint of criticalEndpoints) {
+    checks[endpoint.name] = await checkEndpointHealth(request, endpoint);
+  }
+  
+  return checks;
+}
+
+/**
+ * Determina el estado general del sistema
+ */
+function determineOverallStatus(checks) {
+  const unhealthyChecks = Object.values(checks).filter(c => c.status === 'unhealthy');
+  
+  if (unhealthyChecks.length === 0) {
+    return 'healthy';
+  }
+  
+  return unhealthyChecks.length > 2 ? 'unhealthy' : 'degraded';
+}
+
+/**
+ * Obtiene el código HTTP apropiado según el estado
+ */
+function getStatusCode(status) {
+  if (status === 'healthy' || status === 'degraded') {
+    return 200;
+  }
+  return 503;
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
@@ -22,78 +144,11 @@ export async function onRequestGet(context) {
     healthCheck.checks.api = { status: 'healthy', message: 'API funcionando correctamente' };
 
     if (detailed) {
-      // Check de base de datos D1
-      try {
-        const dbCheck = await env.DB.prepare('SELECT 1 as test').first();
-        healthCheck.checks.database = {
-          status: dbCheck ? 'healthy' : 'unhealthy',
-          message: dbCheck ? 'Conexión a D1 exitosa' : 'Error conectando a D1',
-          connection: !!dbCheck
-        };
-      } catch (error) {
-        healthCheck.checks.database = {
-          status: 'unhealthy',
-          message: 'Error de conexión a D1',
-          error: error.message
-        };
-        healthCheck.status = 'degraded';
-      }
-
-      // Check de KV Storage
-      try {
-        const kvTestKey = 'health:check:' + Date.now();
-        await env.ACA_KV.put(kvTestKey, 'test', { expirationTtl: 60 });
-        const kvTest = await env.ACA_KV.get(kvTestKey);
-        await env.ACA_KV.delete(kvTestKey);
-        
-        healthCheck.checks.kv_storage = {
-          status: kvTest === 'test' ? 'healthy' : 'unhealthy',
-          message: kvTest === 'test' ? 'KV Storage funcionando' : 'Error en KV Storage',
-          read_write: kvTest === 'test'
-        };
-      } catch (error) {
-        healthCheck.checks.kv_storage = {
-          status: 'unhealthy',
-          message: 'Error de conexión a KV',
-          error: error.message
-        };
-        healthCheck.status = 'degraded';
-      }
-
-      // Check de endpoints críticos
-      const criticalEndpoints = [
-        { path: '/api/auth/me', name: 'auth_endpoint' },
-        { path: '/api/eventos', name: 'events_endpoint' },
-        { path: '/api/noticias', name: 'news_endpoint' }
-      ];
-
-      for (const endpoint of criticalEndpoints) {
-        try {
-          const testUrl = new URL(request.url);
-          testUrl.pathname = endpoint.path;
-          
-          const response = await fetch(testUrl.toString(), {
-            method: 'GET',
-            headers: { 'User-Agent': 'Health-Check/1.0' }
-          });
-          
-          healthCheck.checks[endpoint.name] = {
-            status: response.status < 500 ? 'healthy' : 'unhealthy',
-            message: `Endpoint ${endpoint.path}: ${response.status}`,
-            response_time: Date.now(), // Simplificado
-            status_code: response.status
-          };
-        } catch (error) {
-          healthCheck.checks[endpoint.name] = {
-            status: 'unhealthy',
-            message: `Error testing ${endpoint.path}`,
-            error: error.message
-          };
-          healthCheck.status = 'degraded';
-        }
-      }
-
-      // Estadísticas del sistema
+      // Realizar checks detallados
+      const detailedChecks = await performDetailedChecks(env, request);
+      healthCheck.checks = { ...healthCheck.checks, ...detailedChecks };
+      
+      // Agregar estadísticas del sistema
       try {
         healthCheck.stats = await getSystemStats(env);
       } catch (error) {
@@ -102,13 +157,8 @@ export async function onRequestGet(context) {
     }
 
     // Determinar estado general
-    const unhealthyChecks = Object.values(healthCheck.checks).filter(c => c.status === 'unhealthy');
-    if (unhealthyChecks.length > 0) {
-      healthCheck.status = unhealthyChecks.length > 2 ? 'unhealthy' : 'degraded';
-    }
-
-    const statusCode = healthCheck.status === 'healthy' ? 200 : 
-                      healthCheck.status === 'degraded' ? 200 : 503;
+    healthCheck.status = determineOverallStatus(healthCheck.checks);
+    const statusCode = getStatusCode(healthCheck.status);
 
     console.log(`[SYSTEM HEALTH] Health check completado: ${healthCheck.status}`);
 

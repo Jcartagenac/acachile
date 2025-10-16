@@ -155,6 +155,80 @@ async function getSystemLogs(env, options = {}) {
   }
 }
 
+/**
+ * Verifica si un log cumple con los filtros de nivel y fecha
+ */
+function matchesFilters(log, level, startDate, endDate) {
+  // Filtrar por nivel
+  if (level && log.level !== level) {
+    return false;
+  }
+  
+  // Filtrar por fecha
+  const logDate = new Date(log.timestamp);
+  if (startDate && logDate < new Date(startDate)) {
+    return false;
+  }
+  if (endDate && logDate > new Date(endDate)) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Obtiene un log específico desde KV
+ */
+async function fetchLogById(env, type, logId) {
+  try {
+    const logData = await env.ACA_KV.get(`logs:${type}:${logId}`);
+    if (logData) {
+      return JSON.parse(logData);
+    }
+  } catch (error) {
+    console.error(`[LOGS] Error procesando log ${logId}:`, error);
+  }
+  return null;
+}
+
+/**
+ * Obtiene logs con filtros aplicados
+ */
+async function getFilteredLogs(env, type, logIds, options) {
+  const { level, startDate, endDate, limit, page } = options;
+  const detailedLogs = [];
+  
+  for (const logId of logIds) {
+    const log = await fetchLogById(env, type, logId);
+    if (log && matchesFilters(log, level, startDate, endDate)) {
+      detailedLogs.push(log);
+    }
+  }
+  
+  return detailedLogs
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice((page - 1) * limit, page * limit);
+}
+
+/**
+ * Obtiene logs sin filtros, solo paginados
+ */
+async function getPaginatedLogs(env, type, logIds, limit, page) {
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedIds = logIds.slice(startIndex, endIndex);
+  
+  const logs = [];
+  for (const logId of paginatedIds) {
+    const log = await fetchLogById(env, type, logId);
+    if (log) {
+      logs.push(log);
+    }
+  }
+  
+  return logs;
+}
+
 // Obtener logs por tipo específico
 async function getLogsByType(env, type, options = {}) {
   try {
@@ -164,56 +238,13 @@ async function getLogsByType(env, type, options = {}) {
     const logIds = JSON.parse(logsList);
     const { limit, page, level, startDate, endDate } = options;
     
-    let filteredIds = logIds;
-    
-    // Filtrar por fecha si se proporciona
+    // Si hay filtros, obtener logs filtrados
     if (startDate || endDate || level) {
-      const detailedLogs = [];
-      
-      for (const logId of logIds) {
-        try {
-          const logData = await env.ACA_KV.get(`logs:${type}:${logId}`);
-          if (logData) {
-            const log = JSON.parse(logData);
-            
-            // Filtrar por nivel
-            if (level && log.level !== level) continue;
-            
-            // Filtrar por fecha
-            const logDate = new Date(log.timestamp);
-            if (startDate && logDate < new Date(startDate)) continue;
-            if (endDate && logDate > new Date(endDate)) continue;
-            
-            detailedLogs.push(log);
-          }
-        } catch (error) {
-          console.error(`[LOGS] Error procesando log ${logId}:`, error);
-        }
-      }
-      
-      return detailedLogs
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice((page - 1) * limit, page * limit);
+      return await getFilteredLogs(env, type, logIds, options);
     }
     
     // Sin filtros, usar paginación simple
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedIds = filteredIds.slice(startIndex, endIndex);
-    
-    const logs = [];
-    for (const logId of paginatedIds) {
-      try {
-        const logData = await env.ACA_KV.get(`logs:${type}:${logId}`);
-        if (logData) {
-          logs.push(JSON.parse(logData));
-        }
-      } catch (error) {
-        console.error(`[LOGS] Error obteniendo log ${logId}:`, error);
-      }
-    }
-    
-    return logs;
+    return await getPaginatedLogs(env, type, logIds, limit, page);
     
   } catch (error) {
     console.error(`[LOGS BY TYPE] Error obteniendo logs ${type}:`, error);

@@ -84,6 +84,99 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 };
 
+/**
+ * Valida los campos del perfil
+ */
+function validateProfileFields(body: {
+  nombre?: string;
+  apellido?: string;
+  telefono?: string;
+  rut?: string;
+  ciudad?: string;
+}): { valid: boolean; error?: string } {
+  const { nombre, apellido } = body;
+  
+  if (nombre !== undefined && (!nombre || nombre.trim().length < 2)) {
+    return { valid: false, error: 'El nombre debe tener al menos 2 caracteres' };
+  }
+
+  if (apellido !== undefined && (!apellido || apellido.trim().length < 2)) {
+    return { valid: false, error: 'El apellido debe tener al menos 2 caracteres' };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Construye los campos y valores para el UPDATE
+ */
+function buildUpdateFields(body: {
+  nombre?: string;
+  apellido?: string;
+  telefono?: string;
+  rut?: string;
+  ciudad?: string;
+}): { fields: string[]; values: any[] } {
+  const updateFields: string[] = [];
+  const updateValues: any[] = [];
+  const { nombre, apellido, telefono, rut, ciudad } = body;
+
+  if (nombre !== undefined) {
+    updateFields.push('nombre = ?');
+    updateValues.push(nombre.trim());
+  }
+
+  if (apellido !== undefined) {
+    updateFields.push('apellido = ?');
+    updateValues.push(apellido.trim());
+  }
+
+  if (telefono !== undefined) {
+    updateFields.push('telefono = ?');
+    updateValues.push(telefono || null);
+  }
+
+  if (rut !== undefined) {
+    updateFields.push('rut = ?');
+    updateValues.push(rut || null);
+  }
+
+  if (ciudad !== undefined) {
+    updateFields.push('ciudad = ?');
+    updateValues.push(ciudad || null);
+  }
+
+  return { fields: updateFields, values: updateValues };
+}
+
+/**
+ * Ejecuta la actualización del perfil en la base de datos
+ */
+async function executeProfileUpdate(
+  env: Env,
+  userId: number,
+  updateFields: string[],
+  updateValues: any[]
+): Promise<{ success: boolean; error?: string }> {
+  if (updateFields.length === 0) {
+    return { success: false, error: 'No hay campos para actualizar' };
+  }
+
+  updateFields.push('updated_at = datetime(\'now\')');
+  updateValues.push(userId);
+
+  const updateResult = await env.DB.prepare(`
+    UPDATE usuarios SET ${updateFields.join(', ')} WHERE id = ?
+  `).bind(...updateValues).run();
+
+  if (!updateResult.success) {
+    console.error('[AUTH/ME] Failed to update user:', userId);
+    return { success: false, error: 'Error actualizando perfil' };
+  }
+
+  return { success: true };
+}
+
 // Handler PUT para actualizar perfil
 export const onRequestPut: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -109,64 +202,22 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       ciudad?: string;
     };
 
-    const { nombre, apellido, telefono, rut, ciudad } = body;
     const userId = authUser.userId;
-
     console.log('[AUTH/ME] Updating profile for user:', userId);
 
-    // Validaciones
-    if (nombre !== undefined && (!nombre || nombre.trim().length < 2)) {
-      return errorResponse('El nombre debe tener al menos 2 caracteres');
+    // Validar campos
+    const validation = validateProfileFields(body);
+    if (!validation.valid) {
+      return errorResponse(validation.error || 'Error de validación');
     }
 
-    if (apellido !== undefined && (!apellido || apellido.trim().length < 2)) {
-      return errorResponse('El apellido debe tener al menos 2 caracteres');
-    }
+    // Construir campos de actualización
+    const { fields: updateFields, values: updateValues } = buildUpdateFields(body);
 
-    // Preparar campos a actualizar
-    const updateFields: string[] = [];
-    const updateValues: any[] = [];
-
-    if (nombre !== undefined) {
-      updateFields.push('nombre = ?');
-      updateValues.push(nombre.trim());
-    }
-
-    if (apellido !== undefined) {
-      updateFields.push('apellido = ?');
-      updateValues.push(apellido.trim());
-    }
-
-    if (telefono !== undefined) {
-      updateFields.push('telefono = ?');
-      updateValues.push(telefono || null);
-    }
-
-    if (rut !== undefined) {
-      updateFields.push('rut = ?');
-      updateValues.push(rut || null);
-    }
-
-    if (ciudad !== undefined) {
-      updateFields.push('ciudad = ?');
-      updateValues.push(ciudad || null);
-    }
-
-    if (updateFields.length === 0) {
-      return errorResponse('No hay campos para actualizar');
-    }
-
-    updateFields.push('updated_at = datetime(\'now\')');
-    updateValues.push(userId);
-
-    // Actualizar usuario
-    const updateResult = await env.DB.prepare(`
-      UPDATE usuarios SET ${updateFields.join(', ')} WHERE id = ?
-    `).bind(...updateValues).run();
-
+    // Ejecutar actualización
+    const updateResult = await executeProfileUpdate(env, userId, updateFields, updateValues);
     if (!updateResult.success) {
-      console.error('[AUTH/ME] Failed to update user:', userId);
-      return errorResponse('Error actualizando perfil', 500);
+      return errorResponse(updateResult.error || 'Error actualizando perfil', 500);
     }
 
     // Obtener datos actualizados
