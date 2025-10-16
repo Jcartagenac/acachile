@@ -246,12 +246,17 @@ class SociosService {
     notas?: string;
   }): Promise<{ success: boolean; data?: Cuota; error?: string }> {
     try {
-      console.log('[sociosService] Marcando cuota como pagada:', cuotaId, datos);
+      // Filtrar valores undefined para evitar errores en D1
+      const payload: any = { cuotaId, metodoPago: datos.metodoPago };
+      if (datos.comprobanteUrl) payload.comprobanteUrl = datos.comprobanteUrl;
+      if (datos.notas) payload.notas = datos.notas;
+      
+      console.log('[sociosService] Marcando cuota como pagada:', cuotaId, payload);
       
       const response = await fetch(`${API_BASE_URL}/admin/cuotas/marcar-pago`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({ cuotaId, ...datos }),
+        body: JSON.stringify(payload),
       });
 
       console.log('[sociosService] Respuesta status:', response.status);
