@@ -88,7 +88,12 @@ export default function AdminSocios() {
           </div>
           
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              console.log('[AdminSocios] Botón Agregar Socio clickeado');
+              console.log('[AdminSocios] showCreateModal antes:', showCreateModal);
+              setShowCreateModal(true);
+              console.log('[AdminSocios] setShowCreateModal(true) ejecutado');
+            }}
             className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             <UserPlus className="h-5 w-5 mr-2" />
@@ -259,13 +264,16 @@ export default function AdminSocios() {
 
       {/* Modal Crear Socio */}
       {showCreateModal && (
-        <CreateSocioModal
-          onClose={() => setShowCreateModal(false)}
-          onSocioCreated={() => {
-            setShowCreateModal(false);
-            loadSocios();
-          }}
-        />
+        <>
+          {console.log('[AdminSocios] Renderizando CreateSocioModal')}
+          <CreateSocioModal
+            onClose={() => setShowCreateModal(false)}
+            onSocioCreated={() => {
+              setShowCreateModal(false);
+              loadSocios();
+            }}
+          />
+        </>
       )}
 
       {/* Modal Detalle Socio */}
@@ -284,6 +292,8 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
   onClose: () => void;
   onSocioCreated: () => void;
 }) {
+  console.log('[CreateSocioModal] Componente montado');
+  
   const [formData, setFormData] = useState<CreateSocioData>({
     nombre: '',
     apellido: '',

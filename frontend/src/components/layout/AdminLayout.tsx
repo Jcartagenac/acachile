@@ -43,12 +43,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   ];
 
   // Verificar si el usuario es admin
-  if (!user || !user.roles?.includes('admin')) {
+  console.log('[AdminLayout] Usuario:', user);
+  console.log('[AdminLayout] Es admin?:', user?.role === 'admin');
+  
+  if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Acceso Denegado</h1>
           <p className="text-gray-600 mb-4">No tienes permisos para acceder al panel de administración.</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Usuario: {user?.email || 'No autenticado'} | Rol: {user?.role || 'N/A'}
+          </p>
           <Link to="/" className="text-red-600 hover:text-red-800">
             Volver al inicio
           </Link>
