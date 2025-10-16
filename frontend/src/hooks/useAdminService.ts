@@ -9,6 +9,7 @@ export interface Member {
   name: string;
   email: string;
   phone: string;
+  photoUrl?: string;
   memberSince: string;
   status: 'active' | 'inactive';
   lastPayment: string;
@@ -103,6 +104,7 @@ class AdminService {
         name: socio.nombreCompleto || `${socio.nombre} ${socio.apellido}`,
         email: socio.email,
         phone: socio.telefono || 'N/A',
+        photoUrl: socio.fotoUrl,
         memberSince: socio.fechaIngreso || socio.createdAt,
         status: socio.estadoSocio === 'activo' ? 'active' : 'inactive',
         lastPayment: socio.estadisticasAño?.ultimoPago || 'N/A',

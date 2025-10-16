@@ -260,13 +260,21 @@ export const AdminModule: React.FC = () => {
               {members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-4 bg-white/40 backdrop-blur-soft border border-white/20 rounded-xl">
                   <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      member.status === 'active' 
-                        ? 'bg-green-100 text-green-600' 
-                        : 'bg-red-100 text-red-600'
-                    }`}>
-                      <Users className="w-6 h-6" />
-                    </div>
+                    {member.photoUrl ? (
+                      <img
+                        src={member.photoUrl}
+                        alt={member.name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                    ) : (
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        member.status === 'active' 
+                          ? 'bg-green-100 text-green-600' 
+                          : 'bg-red-100 text-red-600'
+                      }`}>
+                        <Users className="w-6 h-6" />
+                      </div>
+                    )}
                     <div>
                       <p className="font-medium text-neutral-700">{member.name}</p>
                       <p className="text-sm text-neutral-500">{member.email}</p>
