@@ -464,6 +464,45 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   const [cuotaToDelete, setCuotaToDelete] = useState<Cuota | null>(null);
   const [fechaPago, setFechaPago] = useState<string>(new Date().toISOString().substring(0, 10));
 
+  // Función para verificar si una cuota está vencida (después del día 5)
+  const esCuotaVencida = (cuota: Cuota): boolean => {
+    if (cuota.pagado) return false;
+    
+    const fechaVencimiento = new Date(cuota.año, cuota.mes - 1, 5);
+    const hoy = new Date();
+    
+    return hoy > fechaVencimiento;
+  };
+
+  // Función para generar cuotas futuras automáticamente (hasta 12 meses adelante)
+  const generarCuotasFuturas = async () => {
+    try {
+      const hoy = new Date();
+      const cuotasExistentes = new Set(cuotas.map(c => `${c.año}-${c.mes}`));
+      
+      // Generar hasta 12 meses adelante
+      for (let i = 0; i < 12; i++) {
+        const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+        const año = fecha.getFullYear();
+        const mes = fecha.getMonth() + 1;
+        const clave = `${año}-${mes}`;
+        
+        // Si no existe la cuota, crearla
+        if (!cuotasExistentes.has(clave)) {
+          console.log(`[Auto-generar] Creando cuota para ${mes}/${año}`);
+          await sociosService.crearCuotaIndividual(
+            socio.id,
+            año,
+            mes,
+            socio.valorCuota
+          );
+        }
+      }
+    } catch (err) {
+      console.error('[Auto-generar] Error generando cuotas futuras:', err);
+    }
+  };
+
   // Cargar cuotas cuando cambia el año
   useEffect(() => {
     const loadCuotasAño = async () => {
@@ -476,6 +515,22 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         
         if (response.success && response.data) {
           setCuotas(response.data.cuotas || []);
+          
+          // Auto-generar cuotas futuras si estamos en el año actual
+          const añoActual = new Date().getFullYear();
+          if (añoSeleccionado === añoActual) {
+            await generarCuotasFuturas();
+            
+            // Recargar después de generar
+            const reloadResponse = await sociosService.getCuotas({ 
+              año: añoSeleccionado, 
+              socioId: socio.id 
+            });
+            
+            if (reloadResponse.success && reloadResponse.data) {
+              setCuotas(reloadResponse.data.cuotas || []);
+            }
+          }
         }
       } catch (err) {
         console.error('Error cargando cuotas:', err);
@@ -801,28 +856,25 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
               </p>
             </div>
             <div className="bg-red-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600">Meses Pendientes</p>
+              <p className="text-sm text-gray-600">Meses Vencidos</p>
               <p className="text-xl font-bold text-red-700">
-                {cuotas.filter(c => !c.pagado).length}
+                {cuotas.filter(c => esCuotaVencida(c)).length}
               </p>
             </div>
           </div>
 
-          {/* Advertencia si faltan cuotas */}
-          {cuotas.length < 12 && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-blue-800">
-                  Solo se han generado {cuotas.length} de 12 cuotas para este año
-                </p>
-                <p className="text-xs text-blue-700 mt-1">
-                  Los meses sin cuota están en azul. Puedes hacer clic en ellos para marcarlos como pagados (se crearán automáticamente).
-                  También puedes usar el botón "Generar Cuotas {añoSeleccionado}" para crear todas las cuotas pendientes de una vez.
-                </p>
-              </div>
+          {/* Información sobre cuotas automáticas */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-800">
+                Las cuotas se generan automáticamente hasta 12 meses adelante
+              </p>
+              <p className="text-xs text-blue-700 mt-1">
+                Las cuotas vencen el día 5 de cada mes. Los meses vencidos aparecen en rojo.
+              </p>
             </div>
-          )}
+          </div>
 
           {/* Grid de meses */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

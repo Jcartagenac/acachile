@@ -26,7 +26,7 @@ function buildBaseQuery() {
       u.estado_socio,
       CASE 
         WHEN c.pagado = 1 THEN 'PAGADO'
-        WHEN DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28') THEN 'VENCIDO'
+        WHEN DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-05') THEN 'VENCIDO'
         ELSE 'PENDIENTE'
       END as estado_cuota
     FROM cuotas c
@@ -57,9 +57,9 @@ function applyFilters(query, params, filters) {
   if (estado === 'pagado') {
     query += ` AND c.pagado = 1`;
   } else if (estado === 'pendiente') {
-    query += ` AND c.pagado = 0 AND DATE('now') <= DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
+    query += ` AND c.pagado = 0 AND DATE('now') <= DATE(c.año || '-' || printf('%02d', c.mes) || '-05')`;
   } else if (estado === 'vencido') {
-    query += ` AND c.pagado = 0 AND DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
+    query += ` AND c.pagado = 0 AND DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-05')`;
   }
 
   return query;
@@ -120,9 +120,9 @@ export async function onRequestGet(context) {
     if (estado === 'pagado') {
       countQuery += ` AND c.pagado = 1`;
     } else if (estado === 'pendiente') {
-      countQuery += ` AND c.pagado = 0 AND DATE('now') <= DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
+      countQuery += ` AND c.pagado = 0 AND DATE('now') <= DATE(c.año || '-' || printf('%02d', c.mes) || '-05')`;
     } else if (estado === 'vencido') {
-      countQuery += ` AND c.pagado = 0 AND DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-28')`;
+      countQuery += ` AND c.pagado = 0 AND DATE('now') > DATE(c.año || '-' || printf('%02d', c.mes) || '-05')`;
     }
 
     const totalResult = await env.DB.prepare(countQuery).bind(...countParams).first();
