@@ -282,7 +282,7 @@ export const ProfileModule: React.FC = () => {
                       height: '128px',
                       minWidth: '128px',
                       minHeight: '128px',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
                       objectPosition: 'center center',
                       display: 'block'
                     }}

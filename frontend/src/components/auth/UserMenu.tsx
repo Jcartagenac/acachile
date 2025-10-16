@@ -49,7 +49,7 @@ export const UserMenu: React.FC = () => {
                 height: '32px',
                 minWidth: '32px',
                 minHeight: '32px',
-                objectFit: 'contain',
+                objectFit: 'cover',
                 objectPosition: 'center center',
                 display: 'block'
               }}

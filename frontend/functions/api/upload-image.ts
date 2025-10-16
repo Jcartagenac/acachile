@@ -58,7 +58,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 // Configuración de compresión por tipo de carpeta
 const COMPRESSION_CONFIG = {
-  avatars: { maxWidth: 400, maxHeight: 400, quality: 0.8 },
+  avatars: { maxWidth: 800, maxHeight: 1200, quality: 0.8 }, // Permitir imágenes más altas para fotos verticales
   home: { maxWidth: 1200, maxHeight: 800, quality: 0.85 },
   eventos: { maxWidth: 800, maxHeight: 600, quality: 0.8 },
   noticias: { maxWidth: 600, maxHeight: 400, quality: 0.8 },

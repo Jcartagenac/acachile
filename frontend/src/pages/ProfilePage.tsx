@@ -134,7 +134,7 @@ export const ProfilePage: React.FC = () => {
                       height: '64px',
                       minWidth: '64px',
                       minHeight: '64px',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
                       objectPosition: 'center center',
                       display: 'block'
                     }}
