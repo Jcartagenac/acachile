@@ -404,7 +404,7 @@ export default function AdminCuotas() {
                         </p>
                       </div>
 
-                      {/* Badge de estado con meses pagados último año */}
+                      {/* Badge de estado con información relevante */}
                       <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 ${
                         socio.mesesAtrasados === 0
                           ? 'bg-green-100 text-green-800'
@@ -415,17 +415,17 @@ export default function AdminCuotas() {
                         {socio.mesesAtrasados === 0 ? (
                           <span className="flex items-center gap-1">
                             <CheckCircle className="h-3 w-3" />
-                            {socio.mesesPagadosUltimoAño} meses
+                            {socio.mesesPagadosUltimoAño} {socio.mesesPagadosUltimoAño === 1 ? 'mes' : 'meses'}
                           </span>
                         ) : socio.mesesAtrasados <= 2 ? (
                           <span className="flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
-                            {socio.mesesPagadosUltimoAño} meses
+                            {socio.mesesAtrasados} {socio.mesesAtrasados === 1 ? 'mes' : 'meses'}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
-                            {socio.mesesPagadosUltimoAño} meses
+                            {socio.mesesAtrasados} {socio.mesesAtrasados === 1 ? 'mes' : 'meses'}
                           </span>
                         )}
                       </div>
