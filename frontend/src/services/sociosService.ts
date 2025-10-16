@@ -246,20 +246,33 @@ class SociosService {
     notas?: string;
   }): Promise<{ success: boolean; data?: Cuota; error?: string }> {
     try {
+      console.log('[sociosService] Marcando cuota como pagada:', cuotaId, datos);
+      
       const response = await fetch(`${API_BASE_URL}/admin/cuotas/marcar-pago`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({ cuotaId, ...datos }),
       });
 
+      console.log('[sociosService] Respuesta status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Error al marcar cuota como pagada');
+        const errorText = await response.text();
+        console.error('[sociosService] Error response:', errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.error || 'Error al marcar cuota como pagada');
+        } catch {
+          throw new Error(`Error ${response.status}: ${errorText || 'Error al marcar cuota como pagada'}`);
+        }
       }
 
       const data = await response.json();
+      console.log('[sociosService] Cuota marcada exitosamente:', data);
       return { success: true, data: data.data };
     } catch (error) {
-      console.error('Error marking cuota as paid:', error);
+      console.error('[sociosService] Error marking cuota as paid:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
   }

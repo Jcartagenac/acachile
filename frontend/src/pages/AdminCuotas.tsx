@@ -582,6 +582,16 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         console.log('[SocioDetailModal] Respuesta marcar pagado:', response);
 
         if (response.success) {
+          // Recargar cuotas para mostrar el cambio
+          const cuotasResponse = await sociosService.getCuotas({ 
+            año: añoSeleccionado, 
+            socioId: socio.id 
+          });
+          
+          if (cuotasResponse.success && cuotasResponse.data) {
+            setCuotas(cuotasResponse.data.cuotas || []);
+          }
+          
           onUpdate();
         } else {
           setError(response.error || 'Error al marcar como pagado');
@@ -607,10 +617,27 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         console.log('[SocioDetailModal] Respuesta desmarcar:', response.status);
 
         if (response.ok) {
+          // Recargar cuotas para mostrar el cambio
+          const cuotasResponse = await sociosService.getCuotas({ 
+            año: añoSeleccionado, 
+            socioId: socio.id 
+          });
+          
+          if (cuotasResponse.success && cuotasResponse.data) {
+            setCuotas(cuotasResponse.data.cuotas || []);
+          }
+          
           onUpdate();
         } else {
-          const errorData = await response.json();
-          setError(errorData.error || 'Error al desmarcar pago');
+          const errorText = await response.text();
+          console.error('[SocioDetailModal] Error al desmarcar:', errorText);
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            setError(errorData.error || 'Error al desmarcar pago');
+          } catch {
+            setError(`Error al desmarcar pago: ${errorText}`);
+          }
         }
       }
     } catch (err) {
