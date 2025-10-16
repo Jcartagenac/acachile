@@ -123,8 +123,9 @@ class SociosService {
         throw new Error('Error al obtener socio');
       }
 
-      const data = await response.json();
-      return { success: true, data: data.data };
+      const result = await response.json();
+      // El endpoint devuelve { success: true, data: { socio: {...} } }
+      return { success: true, data: result.data?.socio || result.data };
     } catch (error) {
       console.error('Error fetching socio:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
