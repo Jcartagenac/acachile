@@ -221,10 +221,14 @@ class SociosService {
 
   async generarCuotas(año: number, mes: number, sobreescribir: boolean = false, valorDefault?: number): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
+      // Filtrar valores undefined para evitar errores en D1
+      const payload: any = { año, mes, sobreescribir };
+      if (valorDefault !== undefined) payload.valorDefault = valorDefault;
+      
       const response = await fetch(`${API_BASE_URL}/admin/cuotas/generar`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({ año, mes, sobreescribir, valorDefault }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

@@ -458,6 +458,8 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [cuotaToToggle, setCuotaToToggle] = useState<Cuota | null>(null);
+  const [showCreateCuotaModal, setShowCreateCuotaModal] = useState(false);
+  const [mesToCreate, setMesToCreate] = useState<number | null>(null);
 
   // Cargar cuotas cuando cambia el año
   useEffect(() => {
@@ -485,81 +487,90 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   const handleTogglePago = async (mes: number) => {
     const cuota = getCuotaMes(mes);
     
-    // Si existe la cuota, mostrar modal de confirmación
+    // Si existe la cuota, mostrar modal de confirmación para marcar/desmarcar
     if (cuota) {
       setCuotaToToggle(cuota);
       setShowConfirmModal(true);
     } else {
-      // Si no existe la cuota, crearla automáticamente y marcarla como pagada
-      try {
-        setLoading(true);
-        setError(null);
+      // Si no existe la cuota, mostrar modal de confirmación para crearla
+      setMesToCreate(mes);
+      setShowCreateCuotaModal(true);
+    }
+  };
+
+  const confirmCreateCuota = async () => {
+    if (mesToCreate === null) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setShowCreateCuotaModal(false);
+      
+      console.log('[SocioDetailModal] Generando cuota para mes:', mesToCreate, 'año:', añoSeleccionado);
+      
+      // Paso 1: Generar la cuota para ese mes específico
+      const generarResponse = await sociosService.generarCuotas(
+        añoSeleccionado, 
+        mesToCreate, 
+        false, // no sobreescribir
+        socio.valorCuota
+      );
+      
+      console.log('[SocioDetailModal] Respuesta generar:', generarResponse);
+      
+      if (!generarResponse.success) {
+        setError(generarResponse.error || 'Error al generar cuota');
+        return;
+      }
+      
+      // Paso 2: Recargar cuotas para obtener la cuota recién creada
+      const cuotasResponse = await sociosService.getCuotas({ 
+        año: añoSeleccionado, 
+        socioId: socio.id 
+      });
+      
+      if (!cuotasResponse.success || !cuotasResponse.data) {
+        setError('Error al recargar cuotas');
+        return;
+      }
+      
+      setCuotas(cuotasResponse.data.cuotas || []);
+      
+      // Paso 3: Buscar la cuota recién creada y marcarla como pagada
+      const nuevaCuota = cuotasResponse.data.cuotas?.find((c: Cuota) => c.mes === mesToCreate);
+      
+      if (nuevaCuota) {
+        console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuota.id);
         
-        console.log('[SocioDetailModal] Generando cuota para mes:', mes, 'año:', añoSeleccionado);
-        
-        // Paso 1: Generar la cuota para ese mes específico
-        const generarResponse = await sociosService.generarCuotas(
-          añoSeleccionado, 
-          mes, 
-          false, // no sobreescribir
-          socio.valorCuota
-        );
-        
-        console.log('[SocioDetailModal] Respuesta generar:', generarResponse);
-        
-        if (!generarResponse.success) {
-          setError(generarResponse.error || 'Error al generar cuota');
-          return;
-        }
-        
-        // Paso 2: Recargar cuotas para obtener la cuota recién creada
-        const cuotasResponse = await sociosService.getCuotas({ 
-          año: añoSeleccionado, 
-          socioId: socio.id 
+        const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuota.id, {
+          metodoPago: 'transferencia'
         });
         
-        if (!cuotasResponse.success || !cuotasResponse.data) {
-          setError('Error al recargar cuotas');
-          return;
-        }
-        
-        setCuotas(cuotasResponse.data.cuotas || []);
-        
-        // Paso 3: Buscar la cuota recién creada y marcarla como pagada
-        const nuevaCuota = cuotasResponse.data.cuotas?.find((c: Cuota) => c.mes === mes);
-        
-        if (nuevaCuota) {
-          console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuota.id);
-          
-          const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuota.id, {
-            metodoPago: 'transferencia'
+        if (marcarResponse.success) {
+          // Recargar una última vez para mostrar el estado actualizado
+          const finalResponse = await sociosService.getCuotas({ 
+            año: añoSeleccionado, 
+            socioId: socio.id 
           });
           
-          if (marcarResponse.success) {
-            // Recargar una última vez para mostrar el estado actualizado
-            const finalResponse = await sociosService.getCuotas({ 
-              año: añoSeleccionado, 
-              socioId: socio.id 
-            });
-            
-            if (finalResponse.success && finalResponse.data) {
-              setCuotas(finalResponse.data.cuotas || []);
-            }
-            
-            onUpdate();
-          } else {
-            setError(marcarResponse.error || 'Error al marcar como pagado');
+          if (finalResponse.success && finalResponse.data) {
+            setCuotas(finalResponse.data.cuotas || []);
           }
+          
+          onUpdate();
         } else {
-          setError('No se encontró la cuota recién creada');
+          setError(marcarResponse.error || 'Error al marcar como pagado');
         }
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
-        setError(`Error al crear cuota: ${errorMsg}`);
-        console.error('[SocioDetailModal] Error:', err);
-      } finally {
-        setLoading(false);
+      } else {
+        setError('No se encontró la cuota recién creada');
       }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      setError(`Error al crear cuota: ${errorMsg}`);
+      console.error('[SocioDetailModal] Error:', err);
+    } finally {
+      setLoading(false);
+      setMesToCreate(null);
     }
   };
 
@@ -902,6 +913,64 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
                 ) : (
                   <>
                     {cuotaToToggle.pagado ? 'Desmarcar' : 'Marcar como Pagado'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para crear cuota */}
+      {showCreateCuotaModal && mesToCreate !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Crear y Marcar Cuota como Pagada
+                </h3>
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              Vas a crear la cuota de <strong>{MESES[mesToCreate - 1]} {añoSeleccionado}</strong> y marcarla como pagada.
+            </p>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+              <p className="text-xs text-yellow-800">
+                ⚠️ <strong>Importante:</strong> Una vez creada, la cuota quedará registrada en el sistema.
+                {new Date().getFullYear() === añoSeleccionado && mesToCreate < (new Date().getMonth() + 1) && (
+                  <span className="block mt-1">Este mes ya pasó, por lo que la cuota aparecerá como atrasada si no la marcas como pagada ahora.</span>
+                )}
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowCreateCuotaModal(false);
+                  setMesToCreate(null);
+                }}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmCreateCuota}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    Crear y Marcar como Pagada
                   </>
                 )}
               </button>
