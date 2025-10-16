@@ -202,3 +202,150 @@ export async function onRequestGet(context) {
     });
   }
 }
+
+// POST - Crear cuota individual para un socio específico
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  try {
+    console.log('[ADMIN CUOTAS] Creando cuota individual');
+
+    const body = await request.json();
+    const { usuarioId, año, mes, valor } = body;
+
+    // Validar parámetros requeridos
+    if (!usuarioId || !año || !mes) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'usuarioId, año y mes son obligatorios'
+      }), {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
+    if (mes < 1 || mes > 12) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'El mes debe estar entre 1 y 12'
+      }), {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
+    // Verificar que el usuario existe y está activo
+    const usuario = await env.DB.prepare(`
+      SELECT id, nombre, apellido, valor_cuota, activo 
+      FROM usuarios 
+      WHERE id = ?
+    `).bind(usuarioId).first();
+
+    if (!usuario) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Usuario no encontrado'
+      }), {
+        status: 404,
+        headers: corsHeaders
+      });
+    }
+
+    if (!usuario.activo) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'El usuario no está activo'
+      }), {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
+    // Verificar si ya existe una cuota para este usuario/año/mes
+    const existingCuota = await env.DB.prepare(`
+      SELECT id FROM cuotas 
+      WHERE usuario_id = ? AND año = ? AND mes = ?
+    `).bind(usuarioId, año, mes).first();
+
+    if (existingCuota) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Ya existe una cuota para este usuario en este período',
+        data: { cuotaId: existingCuota.id }
+      }), {
+        status: 409,
+        headers: corsHeaders
+      });
+    }
+
+    // Usar el valor proporcionado o el valor de cuota del usuario
+    const valorCuota = valor || usuario.valor_cuota || 6500;
+
+    // Crear la cuota
+    const result = await env.DB.prepare(`
+      INSERT INTO cuotas (usuario_id, año, mes, valor, pagado, created_at)
+      VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP)
+    `).bind(usuarioId, año, mes, valorCuota).run();
+
+    if (!result.success) {
+      throw new Error('Error creando cuota en la base de datos');
+    }
+
+    // Obtener el ID de la cuota recién creada
+    const nuevaCuota = await env.DB.prepare(`
+      SELECT id, usuario_id, año, mes, valor, pagado
+      FROM cuotas
+      WHERE usuario_id = ? AND año = ? AND mes = ?
+    `).bind(usuarioId, año, mes).first();
+
+    console.log(`[ADMIN CUOTAS] Cuota individual creada:`, nuevaCuota);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Cuota creada exitosamente',
+      data: {
+        cuota: {
+          id: nuevaCuota.id,
+          usuarioId: nuevaCuota.usuario_id,
+          año: nuevaCuota.año,
+          mes: nuevaCuota.mes,
+          valor: nuevaCuota.valor,
+          pagado: Boolean(nuevaCuota.pagado)
+        }
+      }
+    }), {
+      status: 201,
+      headers: corsHeaders
+    });
+
+  } catch (error) {
+    console.error('[ADMIN CUOTAS] Error creando cuota individual:', error);
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: `Error creando cuota: ${error.message}`
+    }), {
+      status: 500,
+      headers: corsHeaders
+    });
+  }
+}
+
+// OPTIONS - CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}

@@ -509,71 +509,62 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       setError(null);
       setShowCreateCuotaModal(false);
       
-      console.log('[SocioDetailModal] Generando cuota para mes:', mesToCreate, 'año:', añoSeleccionado);
+      console.log('[SocioDetailModal] Creando cuota individual para mes:', mesToCreate, 'año:', añoSeleccionado, 'socio:', socio.id);
       
-      // Paso 1: Generar la cuota para ese mes específico
-      const generarResponse = await sociosService.generarCuotas(
+      // Crear la cuota para este socio específico
+      const crearResponse = await sociosService.crearCuotaIndividual(
+        socio.id,
         añoSeleccionado, 
-        mesToCreate, 
-        false, // no sobreescribir
+        mesToCreate,
         socio.valorCuota
       );
       
-      console.log('[SocioDetailModal] Respuesta generar:', generarResponse);
+      console.log('[SocioDetailModal] Respuesta crear cuota:', crearResponse);
       
-      if (!generarResponse.success) {
-        setError(generarResponse.error || 'Error al generar cuota');
+      if (!crearResponse.success) {
+        setError(crearResponse.error || 'Error al crear cuota');
         return;
       }
       
-      // Paso 2: Recargar cuotas para obtener la cuota recién creada
-      const cuotasResponse = await sociosService.getCuotas({ 
+      // Obtener el ID de la cuota recién creada
+      const nuevaCuotaId = crearResponse.data?.cuota?.id;
+      
+      if (!nuevaCuotaId) {
+        setError('No se pudo obtener el ID de la cuota creada');
+        return;
+      }
+      
+      console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuotaId);
+      
+      const fechaPagoISO = new Date(fechaPago).toISOString();
+      
+      const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuotaId, {
+        metodoPago: 'transferencia',
+        fechaPago: fechaPagoISO
+      });
+      
+      console.log('[SocioDetailModal] Respuesta marcar pagado:', marcarResponse);
+      
+      if (!marcarResponse.success) {
+        setError(marcarResponse.error || 'Error al marcar como pagado');
+        return;
+      }
+      
+      // Recargar cuotas para mostrar el estado actualizado
+      const finalResponse = await sociosService.getCuotas({ 
         año: añoSeleccionado, 
         socioId: socio.id 
       });
       
-      if (!cuotasResponse.success || !cuotasResponse.data) {
-        setError('Error al recargar cuotas');
-        return;
+      if (finalResponse.success && finalResponse.data) {
+        setCuotas(finalResponse.data.cuotas || []);
       }
       
-      setCuotas(cuotasResponse.data.cuotas || []);
-      
-      // Paso 3: Buscar la cuota recién creada y marcarla como pagada
-      const nuevaCuota = cuotasResponse.data.cuotas?.find((c: Cuota) => c.mes === mesToCreate);
-      
-      if (nuevaCuota) {
-        console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuota.id);
-        
-        const fechaPagoISO = new Date(fechaPago).toISOString();
-        
-        const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuota.id, {
-          metodoPago: 'transferencia',
-          fechaPago: fechaPagoISO
-        });
-        
-        if (marcarResponse.success) {
-          // Recargar una última vez para mostrar el estado actualizado
-          const finalResponse = await sociosService.getCuotas({ 
-            año: añoSeleccionado, 
-            socioId: socio.id 
-          });
-          
-          if (finalResponse.success && finalResponse.data) {
-            setCuotas(finalResponse.data.cuotas || []);
-          }
-          
-          onUpdate();
-        } else {
-          setError(marcarResponse.error || 'Error al marcar como pagado');
-        }
-      } else {
-        setError('No se encontró la cuota recién creada');
-      }
+      onUpdate();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(`Error al crear cuota: ${errorMsg}`);
-      console.error('[SocioDetailModal] Error:', err);
+      console.error('[SocioDetailModal] Error excepción:', err);
     } finally {
       setLoading(false);
       setMesToCreate(null);

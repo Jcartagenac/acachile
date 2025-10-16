@@ -219,6 +219,37 @@ class SociosService {
     }
   }
 
+  async crearCuotaIndividual(usuarioId: number, año: number, mes: number, valor?: number): Promise<{ success: boolean; data?: { cuota: Cuota }; error?: string }> {
+    try {
+      console.log('[sociosService] Creando cuota individual:', { usuarioId, año, mes, valor });
+      
+      // Filtrar valores undefined para evitar errores en D1
+      const payload: any = { usuarioId, año, mes };
+      if (valor !== undefined) payload.valor = valor;
+      
+      const response = await fetch(`${API_BASE_URL}/admin/cuotas`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      console.log('[sociosService] Respuesta crear cuota status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[sociosService] Error response crear cuota:', errorData);
+        throw new Error(errorData.error || 'Error al crear cuota');
+      }
+
+      const data = await response.json();
+      console.log('[sociosService] Cuota creada exitosamente:', data);
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('[sociosService] Error creando cuota individual:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+  }
+
   async generarCuotas(año: number, mes: number, sobreescribir: boolean = false, valorDefault?: number): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       // Filtrar valores undefined para evitar errores en D1
