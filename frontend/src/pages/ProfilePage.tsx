@@ -114,17 +114,45 @@ export const ProfilePage: React.FC = () => {
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center space-x-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg flex items-center justify-center">
+              <div 
+                className="rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg overflow-hidden"
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  minWidth: '64px',
+                  minHeight: '64px',
+                  maxWidth: '64px',
+                  maxHeight: '64px'
+                }}
+              >
                 {user.avatar ? (
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="w-full h-full rounded-full object-cover"
+                    style={{ 
+                      width: '64px',
+                      height: '64px',
+                      minWidth: '64px',
+                      minHeight: '64px',
+                      objectFit: 'contain',
+                      objectPosition: 'center center',
+                      display: 'block'
+                    }}
                   />
                 ) : (
-                  <span className="text-white font-bold text-xl">
-                    {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
+                  <div 
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span className="text-white font-bold text-xl">
+                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
                 )}
               </div>
               <div>

@@ -201,7 +201,7 @@ class ImageService {
   async uploadAvatar(file: File): Promise<ApiResponse<ImageUploadResult>> {
     const options: ImageUploadOptions = {
       folder: 'avatars',
-      maxSize: 2 * 1024 * 1024, // 2MB para avatares
+      maxSize: 5 * 1024 * 1024, // 5MB para avatares
       allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
       resize: {
         width: 200,
@@ -241,8 +241,8 @@ class ImageService {
   // Subir imagen para eventos
   async uploadEventImage(file: File): Promise<ApiResponse<ImageUploadResult>> {
     const options: ImageUploadOptions = {
-      folder: 'events',
-      maxSize: 8 * 1024 * 1024, // 8MB para eventos
+      folder: 'eventos',
+      maxSize: 5 * 1024 * 1024, // 5MB para eventos
       allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
       resize: {
         width: 800,

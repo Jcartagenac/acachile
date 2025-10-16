@@ -29,17 +29,45 @@ export const UserMenu: React.FC = () => {
         className="flex items-center space-x-3 px-4 py-2 bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-sm hover:shadow-soft-md transition-all duration-300 hover:scale-105 group"
       >
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-xs flex items-center justify-center">
+        <div 
+          className="rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-xs overflow-hidden"
+          style={{
+            width: '32px',
+            height: '32px',
+            minWidth: '32px',
+            minHeight: '32px',
+            maxWidth: '32px',
+            maxHeight: '32px'
+          }}
+        >
           {user.avatar ? (
             <img
               src={user.avatar}
               alt={user.name}
-              className="w-full h-full rounded-full object-cover"
+              style={{
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                minHeight: '32px',
+                objectFit: 'contain',
+                objectPosition: 'center center',
+                display: 'block'
+              }}
             />
           ) : (
-            <span className="text-white font-bold text-sm">
-              {user.name?.charAt(0)?.toUpperCase() || 'U'}
-            </span>
+            <div 
+              style={{
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <span className="text-white font-bold text-sm">
+                {user.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
+            </div>
           )}
         </div>
 

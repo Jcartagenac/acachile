@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const ProfileModule: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const userService = useUserService();
   const imageService = useImageService();
   const { updateAvatar, avatarUrl: persistedAvatarUrl } = useAvatarPersistence();
@@ -168,9 +168,13 @@ export const ProfileModule: React.FC = () => {
           setProfile({ ...profile, avatar: avatarUrl });
         }
         
+        // 🔄 Actualizar avatar en AuthContext para que se refleje en toda la app
+        updateUser({ avatar: avatarUrl });
+        console.log('🔄 Avatar actualizado en AuthContext:', { avatarUrl });
+        
         setMessage({ 
           type: 'success', 
-          text: 'Avatar subido y guardado exitosamente en R2' 
+          text: 'Avatar actualizado en toda la aplicación' 
         });
         
         console.log('✅ Avatar persistido en R2 y cache:', { avatarUrl, filename });
@@ -258,12 +262,30 @@ export const ProfileModule: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-start space-y-6 sm:space-y-0 sm:space-x-8 mb-8">
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg flex items-center justify-center overflow-hidden">
+              <div 
+                className="rounded-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg overflow-hidden"
+                style={{
+                  width: '128px',
+                  height: '128px',
+                  minWidth: '128px',
+                  minHeight: '128px',
+                  maxWidth: '128px',
+                  maxHeight: '128px'
+                }}
+              >
                 {displayAvatarUrl ? (
                   <img
                     src={displayAvatarUrl}
                     alt="Foto de perfil"
-                    className="w-full h-full object-cover"
+                    style={{ 
+                      width: '128px',
+                      height: '128px',
+                      minWidth: '128px',
+                      minHeight: '128px',
+                      objectFit: 'contain',
+                      objectPosition: 'center center',
+                      display: 'block'
+                    }}
                     onError={(e) => {
                       // Fallback si la imagen no carga
                       console.warn('⚠️ Error cargando avatar:', displayAvatarUrl);
@@ -272,9 +294,19 @@ export const ProfileModule: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <span className="text-white font-bold text-4xl">
-                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
+                  <div 
+                    style={{
+                      width: '128px',
+                      height: '128px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span className="text-white font-bold text-4xl">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
                 )}
               </div>
               {isEditing && (

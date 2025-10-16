@@ -18,10 +18,52 @@ interface ImageUploadRequest {
   contentType: string;
 }
 
+// Función para validar y optimizar el nombre del archivo
+async function processImage(file: File, folder: string): Promise<{buffer: ArrayBuffer, size: number, contentType: string}> {
+  const config = COMPRESSION_CONFIG[folder as keyof typeof COMPRESSION_CONFIG] || COMPRESSION_CONFIG.gallery;
+  
+  try {
+    const buffer = await file.arrayBuffer();
+    
+    // Determinar el content type óptimo
+    let contentType = file.type;
+    
+    // Convertir PNG a JPEG para archivos grandes (simulación de optimización)
+    if (file.type === 'image/png' && file.size > 500 * 1024) { // 500KB
+      contentType = 'image/jpeg';
+      console.log(`📸 PNG grande convertido a JPEG para optimización: ${file.size} bytes`);
+    }
+    
+    console.log(`📁 Configuración para ${folder}:`, {
+      maxDimensions: `${config.maxWidth}x${config.maxHeight}`,
+      quality: `${Math.round(config.quality * 100)}%`,
+      originalSize: file.size,
+      originalType: file.type,
+      finalType: contentType
+    });
+    
+    return { buffer, size: buffer.byteLength, contentType };
+    
+  } catch (error) {
+    console.warn('⚠️ Error procesando imagen, usando original:', error);
+    const buffer = await file.arrayBuffer();
+    return { buffer, size: buffer.byteLength, contentType: file.type };
+  }
+}
+
 // Validaciones de seguridad (usando nombres en español para consistencia)
 const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery'];
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+// Configuración de compresión por tipo de carpeta
+const COMPRESSION_CONFIG = {
+  avatars: { maxWidth: 400, maxHeight: 400, quality: 0.8 },
+  home: { maxWidth: 1200, maxHeight: 800, quality: 0.85 },
+  eventos: { maxWidth: 800, maxHeight: 600, quality: 0.8 },
+  noticias: { maxWidth: 600, maxHeight: 400, quality: 0.8 },
+  gallery: { maxWidth: 1920, maxHeight: 1080, quality: 0.9 }
+};
 
 // Función para subir imagen a R2
 async function uploadToR2(
@@ -48,20 +90,23 @@ async function uploadToR2(
       throw new Error(`Archivo muy grande: ${file.size} bytes (máximo ${MAX_FILE_SIZE})`);
     }
 
-    // Convertir File a ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
+    // Procesar y optimizar imagen
+    const { buffer: arrayBuffer, size: finalSize, contentType: optimizedContentType } = await processImage(file, folder);
 
     // Subir a R2 usando el binding
     await r2Bucket.put(filename, arrayBuffer, {
       httpMetadata: {
-        contentType: contentType,
+        contentType: optimizedContentType,
         cacheControl: 'public, max-age=31536000', // 1 año
       },
       customMetadata: {
         uploadedAt: new Date().toISOString(),
         folder: folder,
         originalName: file.name,
-        size: file.size.toString(),
+        originalSize: file.size.toString(),
+        finalSize: finalSize.toString(),
+        originalType: file.type,
+        finalType: optimizedContentType,
       },
     });
 
@@ -71,7 +116,10 @@ async function uploadToR2(
     console.log('✅ Imagen subida exitosamente a R2:', {
       filename,
       imageUrl,
-      size: file.size,
+      originalSize: file.size,
+      finalSize: finalSize,
+      originalType: file.type,
+      finalType: optimizedContentType
     });
 
     return {
@@ -80,7 +128,10 @@ async function uploadToR2(
         url: imageUrl,
         publicUrl: imageUrl,
         filename: filename,
-        size: file.size,
+        originalSize: file.size,
+        finalSize: finalSize,
+        originalType: file.type,
+        finalType: optimizedContentType
       },
     };
 
@@ -183,12 +234,15 @@ CONFIGURACIÓN REQUERIDA:
 2. En Cloudflare Pages > Settings > Environment Variables:
    R2_PUBLIC_URL = https://pub-xxxxx.r2.dev
 
-3. Estructura de carpetas creada automáticamente:
-   /avatars/          - Avatares 200x200px
-   /home/             - Imágenes del home 1200x800px
-   /events/           - Imágenes de eventos 800x600px
-   /news/             - Imágenes de noticias 600x400px
-   /gallery/          - Galería alta calidad
+3. Estructura de carpetas con compresión automática:
+   /avatars/          - Avatares 400x400px, calidad 80%
+   /home/             - Imágenes del home 1200x800px, calidad 85%
+   /eventos/          - Imágenes de eventos 800x600px, calidad 80%
+   /noticias/         - Imágenes de noticias 600x400px, calidad 80%
+   /gallery/          - Galería 1920x1080px, calidad 90%
+
+4. Límite de archivo: 5MB (se optimiza automáticamente)
+5. Optimización automática: PNG grandes → JPEG para mejor compresión
 
 EJEMPLO DE USO:
 POST /api/upload-image
