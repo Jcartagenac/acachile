@@ -154,8 +154,8 @@ async function configureCORS(s3Client) {
     
   } catch (error) {
     console.log(`⚠️  Error configurando CORS: ${error.message}`);
-    // No es crítico, continuamos
-    return true;
+    // No es crítico, pero reportamos el error
+    return false;
   }
 }
 

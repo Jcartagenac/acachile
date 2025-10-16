@@ -38,7 +38,7 @@ export async function onRequestGet(context) {
     const url = new URL(request.url);
     const estado = url.searchParams.get('estado'); // 'borrador' o 'enviado'
     const tipo = url.searchParams.get('tipo'); // 'importante', 'corriente', 'urgente'
-    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const limit = Number.parseInt(url.searchParams.get('limit') || '50', 10);
 
     // Construir query dinámicamente
     let query = `
@@ -151,9 +151,9 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Validar destinatarios permitidos
-    const destinatariosPermitidos = ['todos', 'morosos', 'activos', 'administradores'];
-    const destinatariosInvalidos = destinatarios.filter(d => !destinatariosPermitidos.includes(d));
+    // Validar destinatarios permitidos (usando Set para mejor performance)
+    const destinatariosPermitidos = new Set(['todos', 'morosos', 'activos', 'administradores']);
+    const destinatariosInvalidos = destinatarios.filter(d => !destinatariosPermitidos.has(d));
     if (destinatariosInvalidos.length > 0) {
       return new Response(JSON.stringify({ 
         error: `Destinatarios inválidos: ${destinatariosInvalidos.join(', ')}` 

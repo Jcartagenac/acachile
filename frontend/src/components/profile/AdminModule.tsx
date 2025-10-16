@@ -143,8 +143,8 @@ export const AdminModule: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      // TODO: Llamar a la API real para crear socio
-      console.log('[AdminModule] Creando socio:', socioData);
+      // El socio ya fue creado exitosamente a través de la API en el modal
+      console.log('[AdminModule] Socio creado:', socioData);
       
       // Recargar lista de socios
       await loadAdminData();
@@ -518,8 +518,8 @@ export const AdminModule: React.FC = () => {
 
 // Modal para crear socio - Componente separado
 function CreateSocioModal({ onClose, onSocioCreated }: {
-  onClose: () => void;
-  onSocioCreated: (data: any) => void;
+  readonly onClose: () => void;
+  readonly onSocioCreated: (data: any) => void;
 }) {
   const [formData, setFormData] = useState({
     nombre: '',
@@ -627,7 +627,7 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Foto */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="foto-socio" className="block text-sm font-medium text-gray-700 mb-2">
                 Foto del Socio <span className="text-red-500">*</span>
               </label>
               <div className="flex items-center space-x-4">
@@ -644,9 +644,10 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                     </div>
                   )}
                 </div>
-                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <label htmlFor="foto-socio-input" className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="text-sm text-gray-700">Seleccionar foto</span>
                   <input
+                    id="foto-socio-input"
                     type="file"
                     accept="image/*"
                     onChange={handleFotoChange}
@@ -659,10 +660,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
             {/* Nombre y Apellido */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="socio-nombre" className="block text-sm font-medium text-gray-700 mb-2">
                   Nombre <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="socio-nombre"
                   type="text"
                   required
                   value={formData.nombre}
@@ -672,10 +674,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="socio-apellido" className="block text-sm font-medium text-gray-700 mb-2">
                   Apellido <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="socio-apellido"
                   type="text"
                   required
                   value={formData.apellido}
@@ -688,10 +691,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
             {/* Email y Teléfono */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="socio-email" className="block text-sm font-medium text-gray-700 mb-2">
                   Correo Electrónico <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="socio-email"
                   type="email"
                   required
                   value={formData.email}
@@ -701,10 +705,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="socio-telefono" className="block text-sm font-medium text-gray-700 mb-2">
                   Teléfono <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="socio-telefono"
                   type="tel"
                   required
                   value={formData.telefono}
@@ -717,10 +722,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
             {/* RUT */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="socio-rut" className="block text-sm font-medium text-gray-700 mb-2">
                 RUT <span className="text-red-500">*</span>
               </label>
               <input
+                id="socio-rut"
                 type="text"
                 required
                 value={formData.rut}
@@ -732,10 +738,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
             {/* Dirección */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="socio-direccion" className="block text-sm font-medium text-gray-700 mb-2">
                 Dirección <span className="text-red-500">*</span>
               </label>
               <textarea
+                id="socio-direccion"
                 required
                 value={formData.direccion}
                 onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
@@ -746,14 +753,15 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
             {/* Valor Cuota */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="socio-valor-cuota" className="block text-sm font-medium text-gray-700 mb-2">
                 Valor Cuota Mensual (CLP) <span className="text-red-500">*</span>
               </label>
               <input
+                id="socio-valor-cuota"
                 type="number"
                 required
                 value={formData.valorCuota}
-                onChange={(e) => setFormData({ ...formData, valorCuota: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, valorCuota: Number.parseInt(e.target.value, 10) })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <p className="mt-1 text-sm text-gray-500">Valor por defecto: $6.500 CLP</p>
@@ -761,10 +769,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="socio-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Contraseña <span className="text-red-500">*</span>
               </label>
               <input
+                id="socio-password"
                 type="password"
                 required
                 value={formData.password}
@@ -777,10 +786,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
             {/* Rol/Perfil */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="socio-rol" className="block text-sm font-medium text-gray-700 mb-2">
                 Perfil/Rol <span className="text-red-500">*</span>
               </label>
               <select
+                id="socio-rol"
                 required
                 value={formData.rol}
                 onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
@@ -833,8 +843,8 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
 // Modal para crear comunicado - Componente separado
 function CreateCommunicationModal({ onClose, onCommunicationCreated }: {
-  onClose: () => void;
-  onCommunicationCreated: (data: any) => void;
+  readonly onClose: () => void;
+  readonly onCommunicationCreated: (data: any) => void;
 }) {
   const [formData, setFormData] = useState({
     titulo: '',
@@ -942,10 +952,11 @@ function CreateCommunicationModal({ onClose, onCommunicationCreated }: {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Título */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="comunicado-titulo" className="block text-sm font-medium text-gray-700 mb-2">
                 Título <span className="text-red-500">*</span>
               </label>
               <input
+                id="comunicado-titulo"
                 type="text"
                 required
                 value={formData.titulo}
@@ -957,7 +968,7 @@ function CreateCommunicationModal({ onClose, onCommunicationCreated }: {
 
             {/* Tipo */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="comunicado-tipo" className="block text-sm font-medium text-gray-700 mb-2">
                 Tipo de Comunicado <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -1010,10 +1021,11 @@ function CreateCommunicationModal({ onClose, onCommunicationCreated }: {
 
             {/* Contenido */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="comunicado-contenido" className="block text-sm font-medium text-gray-700 mb-2">
                 Contenido <span className="text-red-500">*</span>
               </label>
               <textarea
+                id="comunicado-contenido"
                 required
                 value={formData.contenido}
                 onChange={(e) => setFormData({ ...formData, contenido: e.target.value })}
@@ -1025,7 +1037,7 @@ function CreateCommunicationModal({ onClose, onCommunicationCreated }: {
 
             {/* Destinatarios */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="comunicado-destinatarios" className="block text-sm font-medium text-gray-700 mb-2">
                 Destinatarios <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
