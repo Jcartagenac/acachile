@@ -27,10 +27,24 @@ export default function AdminSocios() {
   const [estadoFilter, setEstadoFilter] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('Componente inicializado');
+
+  console.log('[AdminSocios] Componente renderizado');
+  console.log('[AdminSocios] showCreateModal =', showCreateModal);
+
+  // Test inmediato
+  useEffect(() => {
+    console.log('[AdminSocios] useEffect ejecutado - componente montado');
+    setDebugInfo('Componente montado - useEffect ejecutado');
+  }, []);
 
   useEffect(() => {
     loadSocios();
   }, [searchTerm, estadoFilter]);
+
+  useEffect(() => {
+    console.log('[AdminSocios] showCreateModal cambió a:', showCreateModal);
+  }, [showCreateModal]);
 
   const loadSocios = async () => {
     try {
@@ -80,6 +94,14 @@ export default function AdminSocios() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* DEBUG INFO */}
+        <div className="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 rounded">
+          <p className="font-bold text-yellow-900">🔍 DEBUG MODE ACTIVO</p>
+          <p className="text-sm text-yellow-800">showCreateModal: {String(showCreateModal)}</p>
+          <p className="text-sm text-yellow-800">debugInfo: {debugInfo}</p>
+          <p className="text-sm text-yellow-800">Timestamp: {new Date().toLocaleTimeString()}</p>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -87,18 +109,35 @@ export default function AdminSocios() {
             <p className="text-gray-600">Administra los socios de ACA Chile</p>
           </div>
           
-          <button
-            onClick={() => {
-              console.log('[AdminSocios] Botón Agregar Socio clickeado');
-              console.log('[AdminSocios] showCreateModal antes:', showCreateModal);
-              setShowCreateModal(true);
-              console.log('[AdminSocios] setShowCreateModal(true) ejecutado');
-            }}
-            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <UserPlus className="h-5 w-5 mr-2" />
-            Agregar Socio
-          </button>
+          <div className="flex flex-col gap-2">
+            {/* Botón de prueba simple */}
+            <button
+              onClick={() => alert('TEST: Este botón funciona!')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              🧪 TEST - Click aquí
+            </button>
+            
+            {/* Botón original */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[AdminSocios] ============ CLICK EN BOTÓN ============');
+                console.log('[AdminSocios] Event:', e);
+                console.log('[AdminSocios] showCreateModal ANTES:', showCreateModal);
+                alert('¡Botón clickeado! Abriendo modal...');
+                setShowCreateModal(true);
+                console.log('[AdminSocios] setShowCreateModal(true) llamado');
+                console.log('[AdminSocios] showCreateModal DESPUÉS (puede no cambiar inmediatamente)');
+              }}
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <UserPlus className="h-5 w-5 mr-2" />
+              Agregar Socio
+            </button>
+          </div>
         </div>
 
         {/* Error Display */}

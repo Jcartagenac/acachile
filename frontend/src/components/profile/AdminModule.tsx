@@ -27,6 +27,7 @@ export const AdminModule: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   
   // Data states
   const [members, setMembers] = useState<Member[]>([]);
@@ -130,8 +131,10 @@ export const AdminModule: React.FC = () => {
   ];
 
   const handleAddMember = () => {
-    // Implementar modal para agregar socio
-    console.log('Agregar socio');
+    console.log('[AdminModule] handleAddMember llamado');
+    alert('¡Botón Agregar Socio clickeado! Abriendo modal...');
+    setShowAddMemberModal(true);
+    console.log('[AdminModule] setShowAddMemberModal(true) ejecutado');
   };
 
   const handleRemoveMember = (memberId: number) => {
@@ -452,6 +455,79 @@ export const AdminModule: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal Agregar Socio */}
+      {showAddMemberModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Agregar Nuevo Socio</h2>
+                <button 
+                  onClick={() => setShowAddMemberModal(false)} 
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="text-2xl">×</span>
+                </button>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded mb-6">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-blue-400 mr-2" />
+                  <p className="text-blue-700">
+                    <strong>¡Modal funcionando!</strong> Este es un modal temporal de prueba.
+                  </p>
+                </div>
+              </div>
+
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre Completo
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ej: Juan Pérez"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ej: juan@example.com"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddMemberModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert('Formulario enviado (demo)');
+                      setShowAddMemberModal(false);
+                    }}
+                  >
+                    Guardar Socio
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
