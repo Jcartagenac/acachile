@@ -29,6 +29,9 @@ const MESES = [
 interface SocioConEstado extends Socio {
   mesesPagados: number;
   mesesAtrasados: number;
+  cuotasVencidas: number;
+  cuotasPagadasVencidas: number;
+  mesesPagadosUltimoAño: number;
   ultimoPago?: string;
   estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos';
 }
@@ -103,12 +106,32 @@ export default function AdminCuotas() {
   };
 
   const procesarEstadoSocios = (sociosList: Socio[], cuotasList: Cuota[]): SocioConEstado[] => {
+    const hoy = new Date();
+    const añoActualCalendario = hoy.getFullYear();
+    const inicioUltimoAño = new Date(añoActualCalendario - 1, 0, 1);
+    
     return sociosList.map(socio => {
       const cuotasSocio = cuotasList.filter(c => c.usuarioId === socio.id);
-      const mesesPagados = cuotasSocio.filter(c => c.pagado).length;
       
-      const mesesEsperados = añoSeleccionado < añoActual ? 12 : mesActual;
-      const mesesAtrasados = Math.max(0, mesesEsperados - mesesPagados);
+      // Calcular cuotas vencidas (pasado el día 5 del mes)
+      const cuotasVencidas = cuotasSocio.filter(c => {
+        const fechaVencimiento = new Date(c.año, c.mes - 1, 5);
+        return hoy > fechaVencimiento;
+      });
+      
+      const cuotasPagadasVencidas = cuotasVencidas.filter(c => c.pagado).length;
+      const totalCuotasVencidas = cuotasVencidas.length;
+      const cuotasVencidasSinPagar = totalCuotasVencidas - cuotasPagadasVencidas;
+      
+      // Meses pagados en el último año calendario (últimos 12 meses)
+      const mesesPagadosUltimoAño = cuotasSocio.filter(c => {
+        if (!c.pagado || !c.fechaPago) return false;
+        const fechaPago = new Date(c.fechaPago);
+        return fechaPago >= inicioUltimoAño;
+      }).length;
+      
+      // Calcular total de meses pagados
+      const mesesPagados = cuotasSocio.filter(c => c.pagado).length;
       
       const cuotasPagadas = cuotasSocio.filter(c => c.pagado && c.fechaPago);
       let ultimoPago: string | undefined = undefined;
@@ -120,15 +143,19 @@ export default function AdminCuotas() {
         ultimoPago = sorted[0]?.fechaPago || undefined;
       }
 
+      // Determinar estado basado en cuotas vencidas sin pagar
       let estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos' = 'sin-pagos';
-      if (mesesPagados > 0) {
-        estadoPago = mesesAtrasados === 0 ? 'al-dia' : 'atrasado';
+      if (mesesPagados > 0 || cuotasVencidasSinPagar === 0) {
+        estadoPago = cuotasVencidasSinPagar === 0 ? 'al-dia' : 'atrasado';
       }
 
       return {
         ...socio,
         mesesPagados,
-        mesesAtrasados,
+        mesesAtrasados: cuotasVencidasSinPagar,
+        cuotasVencidas: totalCuotasVencidas,
+        cuotasPagadasVencidas,
+        mesesPagadosUltimoAño,
         ultimoPago,
         estadoPago
       };
@@ -363,10 +390,10 @@ export default function AdminCuotas() {
 
                     {/* Estado de pagos */}
                     <div className="flex items-center gap-6">
-                      {/* Meses pagados */}
+                      {/* Cuotas pagadas/vencidas */}
                       <div className="text-right hidden sm:block">
                         <p className="text-sm font-medium text-gray-900">
-                          {socio.mesesPagados}/12 meses
+                          {socio.cuotasPagadasVencidas}/{socio.cuotasVencidas}
                         </p>
                         <p className="text-xs text-gray-500">
                           {socio.ultimoPago ? (
@@ -377,27 +404,30 @@ export default function AdminCuotas() {
                         </p>
                       </div>
 
-                      {/* Badge de estado */}
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        socio.estadoPago === 'al-dia'
+                      {/* Badge de estado con meses pagados último año */}
+                      <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 ${
+                        socio.mesesAtrasados === 0
                           ? 'bg-green-100 text-green-800'
-                          : socio.estadoPago === 'atrasado'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
+                          : socio.mesesAtrasados <= 2
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
                       }`}>
-                        {socio.estadoPago === 'al-dia' && (
+                        {socio.mesesAtrasados === 0 ? (
                           <span className="flex items-center gap-1">
                             <CheckCircle className="h-3 w-3" />
-                            Al día
+                            {socio.mesesPagadosUltimoAño} meses
                           </span>
-                        )}
-                        {socio.estadoPago === 'atrasado' && (
+                        ) : socio.mesesAtrasados <= 2 ? (
                           <span className="flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
-                            {socio.mesesAtrasados} {socio.mesesAtrasados === 1 ? 'mes' : 'meses'}
+                            {socio.mesesPagadosUltimoAño} meses
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {socio.mesesPagadosUltimoAño} meses
                           </span>
                         )}
-                        {socio.estadoPago === 'sin-pagos' && 'Sin pagos'}
                       </div>
 
                       <ChevronRight className="h-5 w-5 text-gray-400" />
