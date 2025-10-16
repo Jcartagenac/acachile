@@ -265,16 +265,27 @@ export const AdminModule: React.FC = () => {
                         src={member.photoUrl}
                         alt={member.name}
                         className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                        onError={(e) => {
+                          // Si la imagen falla al cargar, ocultar el elemento img
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          // Mostrar el placeholder
+                          if (target.nextElementSibling) {
+                            (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                          }
+                        }}
                       />
-                    ) : (
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    ) : null}
+                    <div 
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
                         member.status === 'active' 
                           ? 'bg-green-100 text-green-600' 
                           : 'bg-red-100 text-red-600'
-                      }`}>
-                        <Users className="w-6 h-6" />
-                      </div>
-                    )}
+                      }`}
+                      style={{ display: member.photoUrl ? 'none' : 'flex' }}
+                    >
+                      <Users className="w-6 h-6" />
+                    </div>
                     <div>
                       <p className="font-medium text-neutral-700">{member.name}</p>
                       <p className="text-sm text-neutral-500">{member.email}</p>
