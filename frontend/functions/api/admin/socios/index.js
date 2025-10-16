@@ -236,60 +236,99 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Verificar que el email no esté en uso
+    // Verificar si el email ya existe (activo o inactivo)
     const existingUser = await env.DB.prepare(`
-      SELECT id FROM usuarios WHERE email = ? AND activo = 1
+      SELECT id, activo FROM usuarios WHERE email = ?
     `).bind(email.toLowerCase()).first();
-
-    if (existingUser) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Ya existe un socio con este email'
-      }), {
-        status: 409,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
 
     // Hash de la contraseña con SHA-256 + salt
     const passwordHash = await hashPassword(password);
-
     const now = new Date().toISOString();
 
-    // Crear socio
-    const result = await env.DB.prepare(`
-      INSERT INTO usuarios (
-        email, nombre, apellido, telefono, rut, ciudad, direccion, 
-        foto_url, valor_cuota, estado_socio, fecha_ingreso,
-        password_hash, role, activo, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-    `).bind(
-      email.toLowerCase(),
-      nombre,
-      apellido,
-      telefono || null,
-      rut || null,
-      ciudad || null,
-      direccion || null,
-      fotoUrl || null,
-      valorCuota,
-      estadoSocio,
-      now,
-      passwordHash,
-      rol, // Rol seleccionado en el formulario
-      now
-    ).run();
+    let socioId;
+    let newSocio;
 
-    console.log('[ADMIN SOCIOS] Resultado de INSERT:', JSON.stringify(result));
+    if (existingUser) {
+      if (existingUser.activo === 1) {
+        // Usuario activo ya existe
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Ya existe un socio activo con este email'
+        }), {
+          status: 409,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } else {
+        // Usuario existe pero está inactivo - REACTIVAR
+        console.log('[ADMIN SOCIOS] Reactivando socio eliminado:', email);
+        
+        const updateResult = await env.DB.prepare(`
+          UPDATE usuarios 
+          SET nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, direccion = ?,
+              foto_url = ?, valor_cuota = ?, estado_socio = ?, fecha_ingreso = ?,
+              password_hash = ?, role = ?, activo = 1, updated_at = ?
+          WHERE id = ?
+        `).bind(
+          nombre,
+          apellido,
+          telefono || null,
+          rut || null,
+          ciudad || null,
+          direccion || null,
+          fotoUrl || null,
+          valorCuota,
+          estadoSocio,
+          now,
+          passwordHash,
+          rol,
+          now,
+          existingUser.id
+        ).run();
 
-    if (!result.success) {
-      throw new Error('Error creando socio en la base de datos');
+        console.log('[ADMIN SOCIOS] Resultado de UPDATE:', JSON.stringify(updateResult));
+
+        if (!updateResult.success) {
+          throw new Error('Error reactivando socio en la base de datos');
+        }
+
+        socioId = existingUser.id;
+      }
+    } else {
+      // Usuario no existe - CREAR NUEVO
+      const result = await env.DB.prepare(`
+        INSERT INTO usuarios (
+          email, nombre, apellido, telefono, rut, ciudad, direccion, 
+          foto_url, valor_cuota, estado_socio, fecha_ingreso,
+          password_hash, role, activo, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+      `).bind(
+        email.toLowerCase(),
+        nombre,
+        apellido,
+        telefono || null,
+        rut || null,
+        ciudad || null,
+        direccion || null,
+        fotoUrl || null,
+        valorCuota,
+        estadoSocio,
+        now,
+        passwordHash,
+        rol,
+        now
+      ).run();
+
+      console.log('[ADMIN SOCIOS] Resultado de INSERT:', JSON.stringify(result));
+
+      if (!result.success) {
+        throw new Error('Error creando socio en la base de datos');
+      }
+
+      socioId = result.meta.last_row_id;
     }
 
-    const socioId = result.meta.last_row_id;
-
-    // Obtener socio creado
-    const newSocio = await env.DB.prepare(`
+    // Obtener socio creado o reactivado
+    newSocio = await env.DB.prepare(`
       SELECT 
         id, email, nombre, apellido, telefono, rut, ciudad, direccion,
         foto_url, valor_cuota, fecha_ingreso, estado_socio, created_at

@@ -169,41 +169,64 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Verificar si el email ya existe
+    // Verificar si el email ya existe (activo o inactivo)
     const existingUser = await env.DB.prepare(
-      'SELECT id FROM usuarios WHERE email = ? AND activo = 1'
+      'SELECT id, activo FROM usuarios WHERE email = ?'
     ).bind(email).first();
-
-    if (existingUser) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Ya existe un usuario con este email'
-      }), {
-        status: 409,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
 
     // Hash de la contraseña con SHA-256 + salt
     const hashedPassword = await hashPassword(password);
-
     const now = new Date().toISOString();
 
-    // Crear usuario
-    const result = await env.DB.prepare(`
-      INSERT INTO usuarios (email, nombre, apellido, password_hash, role, activo, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, 1, ?, ?)
-    `).bind(email, nombre, apellido, hashedPassword, role, now, now).run();
+    let newUser;
 
-    if (!result.success) {
-      throw new Error('Error creando usuario en la base de datos');
+    if (existingUser) {
+      if (existingUser.activo === 1) {
+        // Usuario activo ya existe
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Ya existe un usuario activo con este email'
+        }), {
+          status: 409,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } else {
+        // Usuario existe pero está inactivo - REACTIVAR
+        console.log('[ADMIN USERS] Reactivando usuario eliminado:', email);
+        
+        const updateResult = await env.DB.prepare(`
+          UPDATE usuarios 
+          SET nombre = ?, apellido = ?, password_hash = ?, role = ?, activo = 1, updated_at = ?
+          WHERE id = ?
+        `).bind(nombre, apellido, hashedPassword, role, now, existingUser.id).run();
+
+        if (!updateResult.success) {
+          throw new Error('Error reactivando usuario en la base de datos');
+        }
+
+        // Obtener usuario reactivado
+        newUser = await env.DB.prepare(`
+          SELECT id, email, nombre, apellido, role, activo as status, created_at, updated_at
+          FROM usuarios WHERE id = ?
+        `).bind(existingUser.id).first();
+      }
+    } else {
+      // Usuario no existe - CREAR NUEVO
+      const result = await env.DB.prepare(`
+        INSERT INTO usuarios (email, nombre, apellido, password_hash, role, activo, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+      `).bind(email, nombre, apellido, hashedPassword, role, now, now).run();
+
+      if (!result.success) {
+        throw new Error('Error creando usuario en la base de datos');
+      }
+
+      // Obtener usuario creado
+      newUser = await env.DB.prepare(`
+        SELECT id, email, nombre, apellido, role, activo as status, created_at, updated_at
+        FROM usuarios WHERE email = ?
+      `).bind(email).first();
     }
-
-    // Obtener usuario creado (sin contraseña)
-    const newUser = await env.DB.prepare(`
-      SELECT id, email, nombre, apellido, role, activo as status, created_at, updated_at
-      FROM usuarios WHERE email = ?
-    `).bind(email).first();
 
     // TODO: Enviar email de bienvenida si se solicita
     if (send_welcome_email) {
