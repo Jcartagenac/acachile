@@ -234,6 +234,103 @@ class AdminService {
       return { success: false, error: 'Error enviando comunicación' };
     }
   }
+
+  // Actualizar un socio
+  async updateMember(memberId: number, data: Partial<Member>): Promise<ApiResponse<Member>> {
+    try {
+      if (!this.hasAdminPermissions()) {
+        return { success: false, error: 'No tienes permisos para actualizar socios' };
+      }
+
+      // Transformar datos del formato Member al formato de la API
+      const apiData: Record<string, any> = {};
+      
+      if (data.name) {
+        const [nombre, ...apellidoParts] = data.name.split(' ');
+        apiData.nombre = nombre;
+        apiData.apellido = apellidoParts.join(' ');
+      }
+      if (data.email !== undefined) apiData.email = data.email;
+      if (data.phone !== undefined) apiData.telefono = data.phone;
+      if (data.status !== undefined) apiData.estado_socio = data.status;
+
+      const response = await fetch(`/api/admin/socios/${memberId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify(apiData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar socio');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success || !result.data?.socio) {
+        throw new Error(result.error || 'Error al actualizar socio');
+      }
+
+      // Transformar respuesta al formato Member
+      const updatedMember: Member = {
+        id: result.data.socio.id,
+        name: result.data.socio.nombreCompleto,
+        email: result.data.socio.email,
+        phone: result.data.socio.telefono || 'N/A',
+        photoUrl: result.data.socio.fotoUrl,
+        memberSince: result.data.socio.fechaIngreso,
+        status: result.data.socio.estadoSocio === 'activo' ? 'active' : 'inactive',
+        lastPayment: result.data.socio.ultimoPago || 'N/A',
+        role: result.data.socio.role || 'usuario',
+      };
+
+      return { 
+        success: true, 
+        data: updatedMember,
+        message: 'Socio actualizado exitosamente' 
+      };
+    } catch (error) {
+      console.error('Error updating member:', error);
+      return { success: false, error: 'Error actualizando socio' };
+    }
+  }
+
+  // Eliminar (desactivar) un socio
+  async deleteMember(memberId: number): Promise<ApiResponse<void>> {
+    try {
+      if (!this.hasAdminPermissions()) {
+        return { success: false, error: 'No tienes permisos para eliminar socios' };
+      }
+
+      const response = await fetch(`/api/admin/socios/${memberId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar socio');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Error al eliminar socio');
+      }
+
+      return { 
+        success: true, 
+        message: result.data?.message || 'Socio eliminado exitosamente' 
+      };
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      return { success: false, error: 'Error eliminando socio' };
+    }
+  }
 }
 
 const adminServiceInstance = new AdminService();

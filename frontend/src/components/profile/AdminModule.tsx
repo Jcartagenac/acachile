@@ -31,6 +31,8 @@ export const AdminModule: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showAddCommunicationModal, setShowAddCommunicationModal] = useState(false);
+  const [showEditMemberModal, setShowEditMemberModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   
   // Data states
   const [members, setMembers] = useState<Member[]>([]);
@@ -157,9 +159,35 @@ export const AdminModule: React.FC = () => {
     }
   };
 
-  const handleRemoveMember = (memberId: number) => {
-    // Implementar confirmación y eliminación
-    console.log('Eliminar socio:', memberId);
+  const handleEditMember = (member: Member) => {
+    setSelectedMember(member);
+    setShowEditMemberModal(true);
+  };
+
+  const handleRemoveMember = async (memberId: number) => {
+    if (!window.confirm('¿Está seguro que desea eliminar este socio? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await adminService.deleteMember(memberId);
+      
+      if (response.success) {
+        // Recargar la lista de socios
+        await loadAdminData();
+        alert(response.message || 'Socio eliminado exitosamente');
+      } else {
+        setError(response.error || 'Error al eliminar socio');
+      }
+    } catch (err) {
+      console.error('Error eliminando socio:', err);
+      setError('Error al eliminar socio');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMarkPayment = (memberId: number, month: string) => {
@@ -302,12 +330,17 @@ export const AdminModule: React.FC = () => {
                     }`}>
                       {member.status === 'active' ? 'Activo' : 'Inactivo'}
                     </span>
-                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    <button 
+                      onClick={() => handleEditMember(member)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Editar socio"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => handleRemoveMember(member.id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Eliminar socio"
                     >
                       <UserMinus className="w-4 h-4" />
                     </button>
@@ -521,6 +554,18 @@ export const AdminModule: React.FC = () => {
         <CreateCommunicationModal
           onClose={() => setShowAddCommunicationModal(false)}
           onCommunicationCreated={handleCreateCommunication}
+        />
+      )}
+
+      {/* Modal Editar Socio */}
+      {showEditMemberModal && selectedMember && (
+        <EditMemberModal
+          member={selectedMember}
+          onClose={() => {
+            setShowEditMemberModal(false);
+            setSelectedMember(null);
+          }}
+          onMemberUpdated={loadAdminData}
         />
       )}
     </div>
@@ -841,6 +886,175 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                   <>
                     <UserPlus className="h-5 w-5 mr-2" />
                     Crear Socio
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal para editar socio - Componente separado
+function EditMemberModal({ member, onClose, onMemberUpdated }: {
+  readonly member: Member;
+  readonly onClose: () => void;
+  readonly onMemberUpdated: () => void;
+}) {
+  const adminService = useAdminService();
+  const [formData, setFormData] = useState({
+    name: member.name,
+    email: member.email,
+    phone: member.phone,
+    status: member.status
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await adminService.updateMember(member.id, formData);
+      
+      if (response.success) {
+        alert('Socio actualizado exitosamente');
+        onMemberUpdated();
+        onClose();
+      } else {
+        setError(response.error || 'Error al actualizar socio');
+      }
+    } catch (err: any) {
+      console.error('Error updating member:', err);
+      setError('Error al actualizar el socio');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Edit className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">Editar Socio</h3>
+                <p className="text-sm text-gray-500">Actualizar información del socio</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Nombre Completo */}
+            <div>
+              <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre Completo <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="edit-name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-2">
+                Correo Electrónico <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="edit-email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Teléfono */}
+            <div>
+              <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Teléfono
+              </label>
+              <input
+                id="edit-phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+56912345678"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Estado */}
+            <div>
+              <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 mb-2">
+                Estado <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="edit-status"
+                required
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
+
+            {/* Botones */}
+            <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Actualizando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    Actualizar Socio
                   </>
                 )}
               </button>
