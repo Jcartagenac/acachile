@@ -196,7 +196,7 @@ export default function AdminCuotas() {
               onChange={(e) => setAñoSeleccionado(Number(e.target.value))}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              {Array.from({ length: 5 }, (_, i) => añoActual - 2 + i).map(año => (
+              {Array.from({ length: 16 }, (_, i) => añoActual - 10 + i).map(año => (
                 <option key={año} value={año}>{año}</option>
               ))}
             </select>
@@ -454,17 +454,32 @@ interface SocioDetailModalProps {
 function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }: SocioDetailModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [cuotaToToggle, setCuotaToToggle] = useState<Cuota | null>(null);
 
   const handleTogglePago = async (cuota: Cuota) => {
+    // Mostrar modal de confirmación
+    setCuotaToToggle(cuota);
+    setShowConfirmModal(true);
+  };
+
+  const confirmTogglePago = async () => {
+    if (!cuotaToToggle) return;
+
     try {
       setLoading(true);
       setError(null);
+      setShowConfirmModal(false);
 
-      if (!cuota.pagado) {
+      console.log('[SocioDetailModal] Marcando cuota:', cuotaToToggle);
+
+      if (!cuotaToToggle.pagado) {
         // Marcar como pagado
-        const response = await sociosService.marcarCuotaPagada(cuota.id, {
+        const response = await sociosService.marcarCuotaPagada(cuotaToToggle.id, {
           metodoPago: 'transferencia'
         });
+
+        console.log('[SocioDetailModal] Respuesta marcar pagado:', response);
 
         if (response.success) {
           onUpdate();
@@ -473,11 +488,14 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
         }
       } else {
         // Desmarcar pago - llamar al API directamente
-        const response = await fetch(`/api/admin/cuotas/${cuota.id}`, {
+        console.log('[SocioDetailModal] Desmarcando pago...');
+        
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/cuotas/${cuotaToToggle.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': token ? `Bearer ${token}` : '',
           },
           body: JSON.stringify({
             pagado: false,
@@ -486,17 +504,22 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
           }),
         });
 
+        console.log('[SocioDetailModal] Respuesta desmarcar:', response.status);
+
         if (response.ok) {
           onUpdate();
         } else {
-          setError('Error al desmarcar pago');
+          const errorData = await response.json();
+          setError(errorData.error || 'Error al desmarcar pago');
         }
       }
     } catch (err) {
-      setError('Error al actualizar el pago');
-      console.error(err);
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      setError(`Error al actualizar el pago: ${errorMsg}`);
+      console.error('[SocioDetailModal] Error:', err);
     } finally {
       setLoading(false);
+      setCuotaToToggle(null);
     }
   };
 
@@ -631,6 +654,58 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación */}
+      {showConfirmModal && cuotaToToggle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              {cuotaToToggle.pagado ? 'Desmarcar Pago' : 'Marcar como Pagado'}
+            </h3>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              {cuotaToToggle.pagado ? (
+                <>¿Estás seguro de desmarcar como pagado el mes de <strong>{MESES[cuotaToToggle.mes - 1]}</strong>?</>
+              ) : (
+                <>¿Deseas marcar como pagado el mes de <strong>{MESES[cuotaToToggle.mes - 1]}</strong>?</>
+              )}
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setCuotaToToggle(null);
+                }}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmTogglePago}
+                disabled={loading}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2 ${
+                  cuotaToToggle.pagado 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    {cuotaToToggle.pagado ? 'Desmarcar' : 'Marcar como Pagado'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
