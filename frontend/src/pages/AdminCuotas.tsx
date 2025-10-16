@@ -55,10 +55,15 @@ export default function AdminCuotas() {
       setLoading(true);
       setError(null);
 
+      console.log('[AdminCuotas] Cargando datos...');
+
       const [sociosResponse, cuotasResponse] = await Promise.all([
         sociosService.getSocios({ estado: 'activo' }),
         sociosService.getCuotas({ año: añoSeleccionado })
       ]);
+
+      console.log('[AdminCuotas] Respuesta socios:', sociosResponse);
+      console.log('[AdminCuotas] Respuesta cuotas:', cuotasResponse);
 
       if (sociosResponse.success && sociosResponse.data) {
         const sociosConEstado = procesarEstadoSocios(
@@ -66,15 +71,22 @@ export default function AdminCuotas() {
           cuotasResponse.data?.cuotas || []
         );
         setSocios(sociosConEstado);
+        console.log('[AdminCuotas] Socios procesados:', sociosConEstado.length);
+      } else {
+        setError(sociosResponse.error || 'Error al cargar socios');
       }
 
       if (cuotasResponse.success && cuotasResponse.data) {
         setCuotas(cuotasResponse.data.cuotas);
+        console.log('[AdminCuotas] Cuotas cargadas:', cuotasResponse.data.cuotas.length);
+      } else {
+        console.warn('[AdminCuotas] Error al cargar cuotas:', cuotasResponse.error);
       }
 
     } catch (err) {
-      setError('Error al cargar datos');
-      console.error(err);
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      setError(`Error al cargar datos: ${errorMsg}`);
+      console.error('[AdminCuotas] Error:', err);
     } finally {
       setLoading(false);
     }
@@ -217,7 +229,7 @@ export default function AdminCuotas() {
                 <p className="text-sm text-gray-600">Al Día</p>
                 <p className="text-2xl font-bold text-green-700">{stats.sociosAlDia}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {((stats.sociosAlDia / stats.totalSocios) * 100).toFixed(0)}%
+                  {stats.totalSocios > 0 ? ((stats.sociosAlDia / stats.totalSocios) * 100).toFixed(0) : 0}%
                 </p>
               </div>
               <CheckCircle className="h-10 w-10 text-green-500" />
@@ -230,7 +242,7 @@ export default function AdminCuotas() {
                 <p className="text-sm text-gray-600">Atrasados</p>
                 <p className="text-2xl font-bold text-red-700">{stats.sociosAtrasados}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {((stats.sociosAtrasados / stats.totalSocios) * 100).toFixed(0)}%
+                  {stats.totalSocios > 0 ? ((stats.sociosAtrasados / stats.totalSocios) * 100).toFixed(0) : 0}%
                 </p>
               </div>
               <AlertTriangle className="h-10 w-10 text-red-500" />
@@ -295,7 +307,17 @@ export default function AdminCuotas() {
             {sociosFiltrados.length === 0 ? (
               <div className="p-12 text-center text-gray-500">
                 <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>No se encontraron socios</p>
+                {socios.length === 0 ? (
+                  <>
+                    <p className="font-medium mb-2">No hay socios registrados</p>
+                    <p className="text-sm">Agrega socios desde la sección "Gestión de Socios"</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-medium mb-2">No se encontraron socios</p>
+                    <p className="text-sm">Intenta con otros términos de búsqueda o filtros</p>
+                  </>
+                )}
               </div>
             ) : (
               sociosFiltrados.map((socio) => (
