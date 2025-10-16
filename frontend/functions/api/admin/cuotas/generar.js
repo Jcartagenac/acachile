@@ -94,24 +94,32 @@ export async function onRequestPost(context) {
       try {
         const valorSocio = socio.valor_cuota || valorCuota;
 
-        if (sobreescribir) {
-          // Actualizar cuota existente
-          const updateResult = await env.DB.prepare(`
-            INSERT OR REPLACE INTO cuotas (usuario_id, año, mes, valor, pagado, created_at, updated_at)
-            VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-          `).bind(socio.id, año, mes, valorSocio).run();
+        // Verificar si ya existe la cuota
+        const existing = await env.DB.prepare(`
+          SELECT id FROM cuotas WHERE usuario_id = ? AND año = ? AND mes = ?
+        `).bind(socio.id, año, mes).first();
 
-          if (updateResult.success) {
-            actualizadas++;
+        if (existing) {
+          if (sobreescribir) {
+            // Actualizar cuota existente
+            const updateResult = await env.DB.prepare(`
+              UPDATE cuotas SET valor = ?, updated_at = CURRENT_TIMESTAMP 
+              WHERE usuario_id = ? AND año = ? AND mes = ?
+            `).bind(valorSocio, socio.id, año, mes).run();
+
+            if (updateResult.success) {
+              actualizadas++;
+            }
           }
+          // Si existe y no sobreescribir, no hacer nada
         } else {
-          // Insertar solo si no existe
+          // Insertar nueva cuota
           const insertResult = await env.DB.prepare(`
-            INSERT OR IGNORE INTO cuotas (usuario_id, año, mes, valor, pagado, created_at, updated_at)
-            VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO cuotas (usuario_id, año, mes, valor, pagado)
+            VALUES (?, ?, ?, ?, 0)
           `).bind(socio.id, año, mes, valorSocio).run();
 
-          if (insertResult.success && insertResult.changes > 0) {
+          if (insertResult.success) {
             generadas++;
           }
         }
@@ -131,8 +139,8 @@ export async function onRequestPost(context) {
       `).bind(valorCuota, generadas + actualizadas, año, mes).run();
     } else {
       await env.DB.prepare(`
-        INSERT OR REPLACE INTO generacion_cuotas (año, mes, valor_default, generadas, generado_por)
-        VALUES (?, ?, ?, ?, 1)
+        INSERT INTO generacion_cuotas (año, mes, valor_default, generadas, generado_por)
+        VALUES (?, ?, ?, ?, ?)
       `).bind(año, mes, valorCuota, generadas, 1).run(); // TODO: usar ID real del admin
     }
 
