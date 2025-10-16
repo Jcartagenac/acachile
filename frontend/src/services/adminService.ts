@@ -40,7 +40,7 @@ export interface RecentActivity {
   type: 'user_registration' | 'event_created' | 'news_published' | 'comment_added' | 'login';
   user: {
     id: string;
-    username: string;
+    name: string;
     email: string;
   };
   description: string;
@@ -49,7 +49,7 @@ export interface RecentActivity {
 
 export interface User {
   id: string;
-  username: string;
+  name: string;
   email: string;
   role: 'admin' | 'user';
   created_at: string;
@@ -178,21 +178,21 @@ class AdminService {
         {
           id: '1',
           type: 'user_registration',
-          user: { id: '123', username: 'juan_perez', email: 'juan@email.com' },
+          user: { id: '123', name: 'Juan Pérez', email: 'juan@email.com' },
           description: 'Nuevo usuario registrado',
           timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 min ago
         },
         {
           id: '2',
           type: 'event_created',
-          user: { id: '456', username: 'maria_admin', email: 'maria@aca.cl' },
+          user: { id: '456', name: 'María Admin', email: 'maria@aca.cl' },
           description: 'Creó el evento "Asado de Octubre"',
           timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString() // 2 hours ago
         },
         {
           id: '3',
           type: 'news_published',
-          user: { id: '789', username: 'carlos_editor', email: 'carlos@aca.cl' },
+          user: { id: '789', name: 'Carlos Editor', email: 'carlos@aca.cl' },
           description: 'Publicó noticia sobre técnicas de parrilla',
           timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString() // 4 hours ago
         }
@@ -295,7 +295,7 @@ class AdminService {
   }
 
   async createUser(userData: {
-    username: string;
+    name: string;
     email: string;
     password: string;
     role: 'admin' | 'user';

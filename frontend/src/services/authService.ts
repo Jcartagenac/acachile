@@ -1,7 +1,7 @@
 // Servicio de autenticación
 export interface User {
   id: string;
-  username: string;
+  name: string;
   email: string;
   role: 'admin' | 'user';
 }

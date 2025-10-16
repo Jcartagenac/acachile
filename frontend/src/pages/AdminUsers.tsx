@@ -210,14 +210,14 @@ export default function AdminUsers() {
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <span className="text-blue-600 font-medium text-sm">
-                              {user.username.charAt(0).toUpperCase()}
+                              {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
                           <div className="flex items-center">
                             <div className="text-sm font-medium text-gray-900">
-                              {user.username}
+                              {user.name}
                             </div>
                             <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
                               {user.role}
@@ -365,7 +365,7 @@ function CreateUserModal({ onClose, onUserCreated }: {
   onUserCreated: () => void;
 }) {
   const [formData, setFormData] = useState({
-    username: '',
+    name: '',
     email: '',
     password: '',
     role: 'user' as 'admin' | 'user'
@@ -376,7 +376,7 @@ function CreateUserModal({ onClose, onUserCreated }: {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username || !formData.email || !formData.password) {
+    if (!formData.name || !formData.email || !formData.password) {
       setError('Todos los campos son requeridos');
       return;
     }
@@ -411,12 +411,12 @@ function CreateUserModal({ onClose, onUserCreated }: {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Nombre de usuario
+                Nombre completo
               </label>
               <input
                 type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -492,7 +492,7 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
   onUserUpdated: () => void;
 }) {
   const [formData, setFormData] = useState({
-    username: user.username,
+    name: user.name,
     email: user.email,
     role: user.role
   });
@@ -532,12 +532,12 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Nombre de usuario
+                Nombre completo
               </label>
               <input
                 type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
