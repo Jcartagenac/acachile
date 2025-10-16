@@ -904,14 +904,64 @@ function EditMemberModal({ member, onClose, onMemberUpdated }: {
   readonly onMemberUpdated: () => void;
 }) {
   const adminService = useAdminService();
+  
+  // Separar nombre y apellido del nombre completo
+  const [nombre, ...apellidoParts] = member.name.split(' ');
+  const apellido = apellidoParts.join(' ');
+  
   const [formData, setFormData] = useState({
-    name: member.name,
+    nombre: nombre,
+    apellido: apellido,
     email: member.email,
-    phone: member.phone,
-    status: member.status
+    telefono: member.phone !== 'N/A' ? member.phone : '',
+    rut: '',
+    ciudad: '',
+    direccion: '',
+    valor_cuota: 6500,
+    estado_socio: member.status === 'active' ? 'activo' : 'inactivo',
+    role: member.role || 'usuario',
+    fecha_ingreso: member.memberSince || new Date().toISOString().split('T')[0]
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cargar datos completos del socio al abrir el modal
+  useEffect(() => {
+    const fetchMemberDetails = async () => {
+      try {
+        const response = await fetch(`/api/admin/socios/${member.id}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data?.socio) {
+            const socio = result.data.socio;
+            setFormData({
+              nombre: socio.nombre || '',
+              apellido: socio.apellido || '',
+              email: socio.email || '',
+              telefono: socio.telefono || '',
+              rut: socio.rut || '',
+              ciudad: socio.ciudad || '',
+              direccion: socio.direccion || '',
+              valor_cuota: socio.valorCuota || 6500,
+              estado_socio: socio.estadoSocio || 'activo',
+              role: socio.role || 'usuario',
+              fecha_ingreso: socio.fechaIngreso?.split('T')[0] || new Date().toISOString().split('T')[0]
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error cargando detalles del socio:', err);
+      }
+    };
+    
+    fetchMemberDetails();
+  }, [member.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -969,66 +1019,182 @@ function EditMemberModal({ member, onClose, onMemberUpdated }: {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nombre Completo */}
+            {/* Nombre y Apellido */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-nombre" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-nombre"
+                  type="text"
+                  required
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-apellido" className="block text-sm font-medium text-gray-700 mb-2">
+                  Apellido <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-apellido"
+                  type="text"
+                  required
+                  value={formData.apellido}
+                  onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Email y Teléfono */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Correo Electrónico <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-telefono" className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono
+                </label>
+                <input
+                  id="edit-telefono"
+                  type="tel"
+                  value={formData.telefono}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  placeholder="+56912345678"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* RUT y Ciudad */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-rut" className="block text-sm font-medium text-gray-700 mb-2">
+                  RUT
+                </label>
+                <input
+                  id="edit-rut"
+                  type="text"
+                  value={formData.rut}
+                  onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                  placeholder="12.345.678-9"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-ciudad" className="block text-sm font-medium text-gray-700 mb-2">
+                  Ciudad
+                </label>
+                <input
+                  id="edit-ciudad"
+                  type="text"
+                  value={formData.ciudad}
+                  onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                  placeholder="Santiago"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Dirección */}
             <div>
-              <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre Completo <span className="text-red-500">*</span>
+              <label htmlFor="edit-direccion" className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección
               </label>
-              <input
-                id="edit-name"
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              <textarea
+                id="edit-direccion"
+                value={formData.direccion}
+                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                rows={2}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-            {/* Email */}
-            <div>
-              <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-2">
-                Correo Electrónico <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="edit-email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* Valor Cuota y Fecha Ingreso */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-valor-cuota" className="block text-sm font-medium text-gray-700 mb-2">
+                  Valor Cuota Mensual (CLP) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-valor-cuota"
+                  type="number"
+                  required
+                  value={formData.valor_cuota}
+                  onChange={(e) => setFormData({ ...formData, valor_cuota: Number.parseInt(e.target.value, 10) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-fecha-ingreso" className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha de Ingreso
+                </label>
+                <input
+                  id="edit-fecha-ingreso"
+                  type="date"
+                  value={formData.fecha_ingreso}
+                  onChange={(e) => setFormData({ ...formData, fecha_ingreso: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
-            {/* Teléfono */}
-            <div>
-              <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Teléfono
-              </label>
-              <input
-                id="edit-phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+56912345678"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            {/* Estado y Rol */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-estado" className="block text-sm font-medium text-gray-700 mb-2">
+                  Estado <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="edit-estado"
+                  required
+                  value={formData.estado_socio}
+                  onChange={(e) => setFormData({ ...formData, estado_socio: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                  <option value="suspendido">Suspendido</option>
+                </select>
+              </div>
 
-            {/* Estado */}
-            <div>
-              <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 mb-2">
-                Estado <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="edit-status"
-                required
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
-              </select>
+              <div>
+                <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-2">
+                  Rol/Permisos <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="edit-role"
+                  required
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="usuario">Usuario/Socio</option>
+                  <option value="director_editor">Director Editor</option>
+                  <option value="director">Director</option>
+                  <option value="admin">Administrador</option>
+                </select>
+                <p className="mt-1 text-sm text-gray-500">
+                  Define los permisos y accesos del usuario en el sistema
+                </p>
+              </div>
             </div>
 
             {/* Botones */}

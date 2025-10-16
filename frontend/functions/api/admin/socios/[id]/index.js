@@ -36,6 +36,7 @@ export async function onRequestGet(context) {
         valor_cuota,
         fecha_ingreso,
         estado_socio,
+        role,
         created_at,
         last_login
       FROM usuarios
@@ -68,6 +69,7 @@ export async function onRequestGet(context) {
           valorCuota: socio.valor_cuota,
           fechaIngreso: socio.fecha_ingreso,
           estadoSocio: socio.estado_socio,
+          role: socio.role,
           createdAt: socio.created_at,
           lastLogin: socio.last_login,
         }
@@ -126,7 +128,9 @@ export async function onRequestPut(context) {
       'ciudad',
       'direccion',
       'valor_cuota',
-      'estado_socio'
+      'estado_socio',
+      'role',
+      'fecha_ingreso'
     ];
 
     // Construir query de actualización
@@ -176,6 +180,7 @@ export async function onRequestPut(context) {
         valor_cuota,
         fecha_ingreso,
         estado_socio,
+        role,
         updated_at
       FROM usuarios
       WHERE id = ?
@@ -201,6 +206,7 @@ export async function onRequestPut(context) {
           valorCuota: updatedSocio.valor_cuota,
           fechaIngreso: updatedSocio.fecha_ingreso,
           estadoSocio: updatedSocio.estado_socio,
+          role: updatedSocio.role,
           updatedAt: updatedSocio.updated_at,
         }
       }

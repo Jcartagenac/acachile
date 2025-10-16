@@ -236,23 +236,11 @@ class AdminService {
   }
 
   // Actualizar un socio
-  async updateMember(memberId: number, data: Partial<Member>): Promise<ApiResponse<Member>> {
+  async updateMember(memberId: number, data: Record<string, any>): Promise<ApiResponse<Member>> {
     try {
       if (!this.hasAdminPermissions()) {
         return { success: false, error: 'No tienes permisos para actualizar socios' };
       }
-
-      // Transformar datos del formato Member al formato de la API
-      const apiData: Record<string, any> = {};
-      
-      if (data.name) {
-        const [nombre, ...apellidoParts] = data.name.split(' ');
-        apiData.nombre = nombre;
-        apiData.apellido = apellidoParts.join(' ');
-      }
-      if (data.email !== undefined) apiData.email = data.email;
-      if (data.phone !== undefined) apiData.telefono = data.phone;
-      if (data.status !== undefined) apiData.estado_socio = data.status;
 
       const response = await fetch(`/api/admin/socios/${memberId}`, {
         method: 'PUT',
@@ -260,7 +248,7 @@ class AdminService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: JSON.stringify(apiData),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
