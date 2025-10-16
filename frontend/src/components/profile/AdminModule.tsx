@@ -30,6 +30,7 @@ export const AdminModule: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showAddCommunicationModal, setShowAddCommunicationModal] = useState(false);
   
   // Data states
   const [members, setMembers] = useState<Member[]>([]);
@@ -167,8 +168,21 @@ export const AdminModule: React.FC = () => {
   };
 
   const handleSendCommunication = () => {
-    // Implementar envío de comunicado
-    console.log('Enviar comunicado');
+    setShowAddCommunicationModal(true);
+  };
+
+  const handleCreateCommunication = async (data: any) => {
+    setIsLoading(true);
+    try {
+      // Aquí se llamará a la API para crear el comunicado
+      await loadAdminData(); // Recargar datos
+      setShowAddCommunicationModal(false);
+    } catch (error) {
+      console.error('Error creating communication:', error);
+      setError('Error al crear comunicado');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -482,6 +496,14 @@ export const AdminModule: React.FC = () => {
           onSocioCreated={handleCreateSocio}
         />
       )}
+
+      {/* Modal Nuevo Comunicado */}
+      {showAddCommunicationModal && (
+        <CreateCommunicationModal
+          onClose={() => setShowAddCommunicationModal(false)}
+          onCommunicationCreated={handleCreateCommunication}
+        />
+      )}
     </div>
   );
 };
@@ -768,6 +790,271 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                   <>
                     <UserPlus className="h-5 w-5 mr-2" />
                     Crear Socio
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal para crear comunicado - Componente separado
+function CreateCommunicationModal({ onClose, onCommunicationCreated }: {
+  onClose: () => void;
+  onCommunicationCreated: (data: any) => void;
+}) {
+  const [formData, setFormData] = useState({
+    titulo: '',
+    contenido: '',
+    tipo: 'corriente' as 'importante' | 'corriente' | 'urgente',
+    destinatarios: [] as string[],
+    enviar: false
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const destinatariosOpciones = [
+    { value: 'todos', label: 'Todos los socios' },
+    { value: 'morosos', label: 'Socios con cuotas pendientes' },
+    { value: 'activos', label: 'Socios con cuotas al día' },
+    { value: 'administradores', label: 'Solo administradores' }
+  ];
+
+  const handleDestinatarioToggle = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      destinatarios: prev.destinatarios.includes(value)
+        ? prev.destinatarios.filter(d => d !== value)
+        : [...prev.destinatarios, value]
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validaciones
+    if (!formData.titulo.trim()) {
+      setError('El título es requerido');
+      return;
+    }
+
+    if (!formData.contenido.trim()) {
+      setError('El contenido es requerido');
+      return;
+    }
+
+    if (formData.destinatarios.length === 0) {
+      setError('Selecciona al menos un destinatario');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/comunicados', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear comunicado');
+      }
+
+      const data = await response.json();
+      onCommunicationCreated(data.comunicado);
+    } catch (err: any) {
+      console.error('Error creating communication:', err);
+      setError(err.message || 'Error al crear comunicado');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-4 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Send className="h-6 w-6" />
+              <h2 className="text-xl font-bold">Nuevo Comunicado</h2>
+            </div>
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="hover:bg-white/20 rounded-full p-1 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Título */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Título <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.titulo}
+                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                placeholder="Ej: Reunión General Noviembre"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Tipo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Comunicado <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, tipo: 'corriente' })}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    formData.tipo === 'corriente'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <Settings className="w-6 h-6 mx-auto mb-1 text-blue-600" />
+                    <p className="text-sm font-medium">Corriente</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, tipo: 'importante' })}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    formData.tipo === 'importante'
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-200 hover:border-red-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <AlertCircle className="w-6 h-6 mx-auto mb-1 text-red-600" />
+                    <p className="text-sm font-medium">Importante</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, tipo: 'urgente' })}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    formData.tipo === 'urgente'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 hover:border-orange-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <Send className="w-6 h-6 mx-auto mb-1 text-orange-600" />
+                    <p className="text-sm font-medium">Urgente</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contenido <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                required
+                value={formData.contenido}
+                onChange={(e) => setFormData({ ...formData, contenido: e.target.value })}
+                placeholder="Escribe el contenido del comunicado..."
+                rows={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {/* Destinatarios */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Destinatarios <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-2">
+                {destinatariosOpciones.map((opcion) => (
+                  <label
+                    key={opcion.value}
+                    className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.destinatarios.includes(opcion.value)}
+                      onChange={() => handleDestinatarioToggle(opcion.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-3 text-sm text-gray-700">{opcion.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Checkbox para enviar inmediatamente */}
+            <div className="pt-4 border-t">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enviar}
+                  onChange={(e) => setFormData({ ...formData, enviar: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-3 text-sm text-gray-700">
+                  Enviar inmediatamente (si no se marca, se guardará como borrador)
+                </span>
+              </label>
+            </div>
+
+            {/* Botones */}
+            <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    {formData.enviar ? 'Enviando...' : 'Guardando...'}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-5 w-5 mr-2" />
+                    {formData.enviar ? 'Enviar Comunicado' : 'Guardar Borrador'}
                   </>
                 )}
               </button>

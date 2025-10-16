@@ -123,28 +123,33 @@ class AdminService {
         return { success: false, error: 'No tienes permisos para ver las comunicaciones' };
       }
 
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const communications: Communication[] = [
-        {
-          id: 1,
-          title: 'Reunión General Noviembre',
-          content: 'Se convoca a todos los miembros a la reunión general del mes de noviembre...',
-          type: 'importante',
-          recipients: ['todos'],
-          sentAt: '2024-10-01',
-          status: 'sent'
-        },
-        {
-          id: 2,
-          title: 'Recordatorio Cuotas Octubre',
-          content: 'Recordamos que las cuotas de octubre vencen el 15 del mes...',
-          type: 'corriente',
-          recipients: ['morosos'],
-          sentAt: '2024-10-10',
-          status: 'sent'
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/comunicados', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ];
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success || !data.comunicados) {
+        throw new Error('Respuesta inválida del servidor');
+      }
+
+      // Transformar datos de la API al formato esperado por AdminModule
+      const communications: Communication[] = data.comunicados.map((c: any) => ({
+        id: c.id,
+        title: c.titulo,
+        content: c.contenido,
+        type: c.tipo as 'importante' | 'corriente' | 'urgente',
+        recipients: c.destinatarios,
+        sentAt: c.fecha_envio || undefined,
+        status: c.estado === 'enviado' ? 'sent' : 'draft'
+      }));
 
       return { success: true, data: communications };
     } catch (error) {
@@ -160,14 +165,37 @@ class AdminService {
         return { success: false, error: 'No tienes permisos para ver los pagos' };
       }
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      // Llamar a la API real de cuotas
+      const currentYear = new Date().getFullYear();
+      const response = await fetch(`/api/admin/cuotas?año=${currentYear}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
 
-      const payments: PaymentRecord[] = [
-        { id: 1, memberId: 1, memberName: 'Juan Pérez', amount: 25000, month: 10, year: 2024, paid: true, paidDate: '2024-10-01', paymentMethod: 'transferencia' },
-        { id: 2, memberId: 2, memberName: 'María González', amount: 25000, month: 10, year: 2024, paid: true, paidDate: '2024-10-02', paymentMethod: 'efectivo' },
-        { id: 3, memberId: 3, memberName: 'Carlos Rodríguez', amount: 25000, month: 10, year: 2024, paid: false },
-        { id: 4, memberId: 4, memberName: 'Ana Martínez', amount: 25000, month: 10, year: 2024, paid: true, paidDate: '2024-10-05', paymentMethod: 'tarjeta' },
-      ];
+      if (!response.ok) {
+        throw new Error('Error al obtener cuotas');
+      }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.data) {
+        throw new Error(data.error || 'Error al obtener cuotas');
+      }
+
+      // Transformar los datos de la API al formato esperado
+      const payments: PaymentRecord[] = data.data.cuotas.map((cuota: any) => ({
+        id: cuota.id,
+        memberId: cuota.usuarioId,
+        memberName: cuota.socio?.nombreCompleto || `${cuota.socio?.nombre} ${cuota.socio?.apellido}`,
+        amount: cuota.valor,
+        month: cuota.mes,
+        year: cuota.año,
+        paid: cuota.pagado,
+        paidDate: cuota.fechaPago,
+        paymentMethod: cuota.metodoPago,
+      }));
 
       return { success: true, data: payments };
     } catch (error) {
