@@ -74,7 +74,12 @@ export async function onRequestGet(context) {
     const url = new URL(request.url);
     const año = Number.parseInt(url.searchParams.get('año'), 10) || new Date().getFullYear();
     const mes = url.searchParams.get('mes') ? Number.parseInt(url.searchParams.get('mes'), 10) : null;
-    const usuarioId = url.searchParams.get('usuarioId') ? Number.parseInt(url.searchParams.get('usuarioId'), 10) : null;
+    // Aceptar tanto usuarioId como socioId para compatibilidad
+    const usuarioId = url.searchParams.get('usuarioId') 
+      ? Number.parseInt(url.searchParams.get('usuarioId'), 10) 
+      : url.searchParams.get('socioId') 
+        ? Number.parseInt(url.searchParams.get('socioId'), 10) 
+        : null;
     const estado = url.searchParams.get('estado');
     const page = Number.parseInt(url.searchParams.get('page'), 10) || 1;
     const limit = Number.parseInt(url.searchParams.get('limit'), 10) || 50;

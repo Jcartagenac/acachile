@@ -17,6 +17,14 @@ export async function onRequestOptions() {
 // PUT - Desmarcar pago
 export async function onRequestPut(context) {
   const { request, env, params } = context;
+  
+  // Headers CORS comunes
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
 
   try {
     const cuotaId = params.id;
@@ -36,7 +44,7 @@ export async function onRequestPut(context) {
         error: 'Cuota no encontrada'
       }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       });
     }
 
@@ -68,7 +76,7 @@ export async function onRequestPut(context) {
       data: { cuotaId, pagado }
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: corsHeaders
     });
 
   } catch (error) {
@@ -79,7 +87,7 @@ export async function onRequestPut(context) {
       error: `Error actualizando cuota: ${error.message}`
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: corsHeaders
     });
   }
 }
@@ -87,6 +95,14 @@ export async function onRequestPut(context) {
 // DELETE - Eliminar cuota
 export async function onRequestDelete(context) {
   const { env, params } = context;
+  
+  // Headers CORS comunes
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
 
   try {
     const cuotaId = params.id;
@@ -103,7 +119,7 @@ export async function onRequestDelete(context) {
         error: 'Cuota no encontrada'
       }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       });
     }
 
@@ -114,7 +130,7 @@ export async function onRequestDelete(context) {
         error: 'No se puede eliminar una cuota pagada. Primero desmárquela como pagada.'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       });
     }
 
@@ -135,7 +151,7 @@ export async function onRequestDelete(context) {
       data: { cuotaId }
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: corsHeaders
     });
 
   } catch (error) {
@@ -146,7 +162,7 @@ export async function onRequestDelete(context) {
       error: `Error eliminando cuota: ${error.message}`
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: corsHeaders
     });
   }
 }
