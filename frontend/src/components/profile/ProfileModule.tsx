@@ -135,8 +135,35 @@ export const ProfileModule: React.FC = () => {
     setMessage(null);
   };
 
-  // Calcular años en ACA desde el perfil
-  const yearsInACA = profile?.acaMembership?.yearsActive || 0;
+  // Calcular años y meses en ACA desde la fecha de ingreso
+  const calculateTimeInACA = () => {
+    if (!profile?.fechaIngreso) return '0 meses';
+    
+    const fechaIngreso = new Date(profile.fechaIngreso);
+    const hoy = new Date();
+    
+    let años = hoy.getFullYear() - fechaIngreso.getFullYear();
+    let meses = hoy.getMonth() - fechaIngreso.getMonth();
+    
+    // Ajustar si los meses son negativos
+    if (meses < 0) {
+      años--;
+      meses += 12;
+    }
+    
+    // Construir el string de respuesta
+    if (años === 0 && meses === 0) {
+      return 'Menos de 1 mes';
+    } else if (años === 0) {
+      return `${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+    } else if (meses === 0) {
+      return `${años} ${años === 1 ? 'año' : 'años'}`;
+    } else {
+      return `${años} ${años === 1 ? 'año' : 'años'} y ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+    }
+  };
+  
+  const timeInACA = calculateTimeInACA();
   const fechaIngreso = profile?.fechaIngreso ? new Date(profile.fechaIngreso) : new Date();
   
   // Determinar la URL del avatar a mostrar (priorizar avatar persistido)
@@ -334,7 +361,7 @@ export const ProfileModule: React.FC = () => {
               <p className="text-sm text-neutral-500">Miembro desde {fechaIngreso.getFullYear()}</p>
               <div className="mt-2 px-3 py-1 bg-gradient-to-r from-green-100 to-green-50 border border-green-200 rounded-full">
                 <span className="text-sm font-medium text-green-700">
-                  {yearsInACA} años en ACA
+                  {timeInACA} en ACA
                 </span>
               </div>
             </div>
