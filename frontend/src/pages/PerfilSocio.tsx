@@ -87,7 +87,7 @@ export default function PerfilSocio() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando perfil...</p>
@@ -98,7 +98,7 @@ export default function PerfilSocio() {
 
   if (error || !socio) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="p-6 flex items-center justify-center min-h-96">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
@@ -120,8 +120,8 @@ export default function PerfilSocio() {
   const cuotasPagadas = cuotas.filter(c => c.pagado);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header con botón de regreso */}
         <div className="mb-6">
           <button
