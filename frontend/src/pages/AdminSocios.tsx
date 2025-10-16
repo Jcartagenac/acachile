@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { sociosService, Socio, CreateSocioData } from '../services/sociosService';
 import { 
   Users,
@@ -238,12 +239,12 @@ export default function AdminSocios() {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div 
+                          <Link 
+                            to={`/admin/socios/${socio.id}`}
                             className="text-sm font-medium text-gray-900 hover:text-red-600 cursor-pointer transition-colors"
-                            onClick={() => window.location.href = `/admin/socios/${socio.id}`}
                           >
                             {socio.nombreCompleto}
-                          </div>
+                          </Link>
                           {socio.rut && (
                             <div className="text-sm text-gray-500">
                               RUT: {socio.rut}
