@@ -490,47 +490,68 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       setCuotaToToggle(cuota);
       setShowConfirmModal(true);
     } else {
-      // Si no existe la cuota, crearla automáticamente como pagada
+      // Si no existe la cuota, crearla automáticamente y marcarla como pagada
       try {
         setLoading(true);
         setError(null);
         
-        console.log('[SocioDetailModal] Creando cuota nueva para mes:', mes);
+        console.log('[SocioDetailModal] Generando cuota para mes:', mes, 'año:', añoSeleccionado);
         
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/admin/cuotas', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
-          },
-          body: JSON.stringify({
-            usuarioId: socio.id,
-            año: añoSeleccionado,
-            mes: mes,
-            valor: socio.valorCuota,
-            pagado: true,
-            metodoPago: 'transferencia'
-          }),
+        // Paso 1: Generar la cuota para ese mes específico
+        const generarResponse = await sociosService.generarCuotas(
+          añoSeleccionado, 
+          mes, 
+          false, // no sobreescribir
+          socio.valorCuota
+        );
+        
+        console.log('[SocioDetailModal] Respuesta generar:', generarResponse);
+        
+        if (!generarResponse.success) {
+          setError(generarResponse.error || 'Error al generar cuota');
+          return;
+        }
+        
+        // Paso 2: Recargar cuotas para obtener la cuota recién creada
+        const cuotasResponse = await sociosService.getCuotas({ 
+          año: añoSeleccionado, 
+          socioId: socio.id 
         });
         
-        console.log('[SocioDetailModal] Respuesta crear cuota:', response.status);
+        if (!cuotasResponse.success || !cuotasResponse.data) {
+          setError('Error al recargar cuotas');
+          return;
+        }
         
-        if (response.ok) {
-          // Recargar cuotas
-          const cuotasResponse = await sociosService.getCuotas({ 
-            año: añoSeleccionado, 
-            socioId: socio.id 
+        setCuotas(cuotasResponse.data.cuotas || []);
+        
+        // Paso 3: Buscar la cuota recién creada y marcarla como pagada
+        const nuevaCuota = cuotasResponse.data.cuotas?.find((c: Cuota) => c.mes === mes);
+        
+        if (nuevaCuota) {
+          console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuota.id);
+          
+          const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuota.id, {
+            metodoPago: 'transferencia'
           });
           
-          if (cuotasResponse.success && cuotasResponse.data) {
-            setCuotas(cuotasResponse.data.cuotas || []);
+          if (marcarResponse.success) {
+            // Recargar una última vez para mostrar el estado actualizado
+            const finalResponse = await sociosService.getCuotas({ 
+              año: añoSeleccionado, 
+              socioId: socio.id 
+            });
+            
+            if (finalResponse.success && finalResponse.data) {
+              setCuotas(finalResponse.data.cuotas || []);
+            }
+            
+            onUpdate();
+          } else {
+            setError(marcarResponse.error || 'Error al marcar como pagado');
           }
-          
-          onUpdate();
         } else {
-          const errorData = await response.json();
-          setError(errorData.error || 'Error al crear cuota');
+          setError('No se encontró la cuota recién creada');
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
