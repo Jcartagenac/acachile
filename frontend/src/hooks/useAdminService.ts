@@ -74,23 +74,42 @@ class AdminService {
         return { success: false, error: 'No tienes permisos para ver los miembros' };
       }
 
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // Llamar a la API real de socios
+      const queryParams = new URLSearchParams();
+      if (searchTerm) {
+        queryParams.append('search', searchTerm);
+      }
 
-      const allMembers: Member[] = [
-        { id: 1, name: 'Juan Pérez', email: 'juan@email.com', phone: '+56912345678', memberSince: '2023-01-15', status: 'active', lastPayment: '2024-10-01', role: 'usuario' },
-        { id: 2, name: 'María González', email: 'maria@email.com', phone: '+56987654321', memberSince: '2022-06-10', status: 'active', lastPayment: '2024-09-15', role: 'director' },
-        { id: 3, name: 'Carlos Rodríguez', email: 'carlos@email.com', phone: '+56956789012', memberSince: '2024-03-20', status: 'inactive', lastPayment: '2024-07-01', role: 'usuario' },
-        { id: 4, name: 'Ana Martínez', email: 'ana@email.com', phone: '+56923456789', memberSince: '2021-11-05', status: 'active', lastPayment: '2024-10-05', role: 'usuario' },
-      ];
+      const response = await fetch(`/api/admin/socios?${queryParams}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
 
-      const filteredMembers = searchTerm 
-        ? allMembers.filter(member => 
-            member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            member.email.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        : allMembers;
+      if (!response.ok) {
+        throw new Error('Error al obtener socios');
+      }
 
-      return { success: true, data: filteredMembers };
+      const data = await response.json();
+      
+      if (!data.success || !data.data) {
+        throw new Error(data.error || 'Error al obtener socios');
+      }
+
+      // Transformar los datos de la API al formato esperado por AdminModule
+      const members: Member[] = data.data.socios.map((socio: any) => ({
+        id: socio.id,
+        name: socio.nombreCompleto || `${socio.nombre} ${socio.apellido}`,
+        email: socio.email,
+        phone: socio.telefono || 'N/A',
+        memberSince: socio.fechaIngreso || socio.createdAt,
+        status: socio.estadoSocio === 'activo' ? 'active' : 'inactive',
+        lastPayment: socio.estadisticasAño?.ultimoPago || 'N/A',
+        role: socio.role || 'usuario',
+      }));
+
+      return { success: true, data: members };
     } catch (error) {
       console.error('Error getting members:', error);
       return { success: false, error: 'Error obteniendo lista de miembros' };
