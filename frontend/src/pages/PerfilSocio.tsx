@@ -194,7 +194,7 @@ export default function PerfilSocio() {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Cuota Mensual</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  ${socio.valorCuota.toLocaleString('es-CL')}
+                  ${socio.valorCuota ? socio.valorCuota.toLocaleString('es-CL') : '0'}
                 </p>
               </div>
               <div>
