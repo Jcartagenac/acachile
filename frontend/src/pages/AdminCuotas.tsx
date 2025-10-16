@@ -451,11 +451,36 @@ interface SocioDetailModalProps {
   onUpdate: () => void;
 }
 
-function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }: SocioDetailModalProps) {
+function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mesActual, onClose, onUpdate }: SocioDetailModalProps) {
+  const [añoSeleccionado, setAñoSeleccionado] = useState(añoInicial);
+  const [cuotas, setCuotas] = useState<Cuota[]>(initialCuotas);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [cuotaToToggle, setCuotaToToggle] = useState<Cuota | null>(null);
+
+  // Cargar cuotas cuando cambia el año
+  useEffect(() => {
+    const loadCuotasAño = async () => {
+      try {
+        setLoading(true);
+        const response = await sociosService.getCuotas({ 
+          año: añoSeleccionado, 
+          socioId: socio.id 
+        });
+        
+        if (response.success && response.data) {
+          setCuotas(response.data.cuotas || []);
+        }
+      } catch (err) {
+        console.error('Error cargando cuotas:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCuotasAño();
+  }, [añoSeleccionado, socio.id]);
 
   const handleTogglePago = async (cuota: Cuota) => {
     // Mostrar modal de confirmación
@@ -524,7 +549,7 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
   };
 
   const getCuotaMes = (mes: number) => cuotas.find(c => c.mes === mes);
-  const esAtrasado = (mes: number) => año === new Date().getFullYear() && mes < mesActual;
+  const esAtrasado = (mes: number) => añoSeleccionado === new Date().getFullYear() && mes < mesActual;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -551,12 +576,25 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
                 <p className="text-sm text-gray-500">{socio.email}</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Selector de año */}
+              <select
+                value={añoSeleccionado}
+                onChange={(e) => setAñoSeleccionado(Number(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              >
+                {Array.from({ length: 16 }, (_, i) => new Date().getFullYear() - 10 + i).map(año => (
+                  <option key={año} value={año}>{año}</option>
+                ))}
+              </select>
+              
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -573,13 +611,13 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
             <div className="bg-green-50 rounded-lg p-4">
               <p className="text-sm text-gray-600">Meses Pagados</p>
               <p className="text-xl font-bold text-green-700">
-                {socio.mesesPagados} / 12
+                {cuotas.filter(c => c.pagado).length} / 12
               </p>
             </div>
             <div className="bg-red-50 rounded-lg p-4">
               <p className="text-sm text-gray-600">Meses Pendientes</p>
               <p className="text-xl font-bold text-red-700">
-                {12 - socio.mesesPagados}
+                {12 - cuotas.filter(c => c.pagado).length}
               </p>
             </div>
           </div>
@@ -593,7 +631,7 @@ function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }:
                   Solo se han generado {cuotas.length} de 12 cuotas para este año
                 </p>
                 <p className="text-xs text-yellow-700 mt-1">
-                  Los meses sin cuota aparecen deshabilitados. Usa el botón "Generar Cuotas {año}" arriba para crear todas las cuotas del año.
+                  Los meses sin cuota aparecen deshabilitados. Usa el botón "Generar Cuotas {añoSeleccionado}" arriba para crear todas las cuotas del año.
                 </p>
               </div>
             </div>
