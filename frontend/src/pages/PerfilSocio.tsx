@@ -9,7 +9,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  User
+  User,
+  MapPin
 } from 'lucide-react';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
 
@@ -53,6 +54,8 @@ export default function PerfilSocio() {
 
       setSocio(socioResponse.data);
       console.log('[PerfilSocio] Socio data loaded:', socioResponse.data);
+      console.log('[PerfilSocio] RUT value:', socioResponse.data.rut);
+      console.log('[PerfilSocio] RUT type:', typeof socioResponse.data.rut);
 
       // Cargar cuotas del último año
       const añoActual = new Date().getFullYear();
@@ -136,6 +139,18 @@ export default function PerfilSocio() {
   const cuotasVencidas = cuotas.filter(c => esCuotaVencida(c) && !c.pagado);
   const cuotasPagadas = cuotas.filter(c => c.pagado);
 
+  // Determinar color del banner según cuotas vencidas
+  const getBannerColor = () => {
+    const numVencidas = cuotasVencidas.length;
+    if (numVencidas === 0) {
+      return 'from-green-600 to-green-700'; // Verde: Al día
+    } else if (numVencidas <= 2) {
+      return 'from-yellow-500 to-yellow-600'; // Amarillo: 1-2 cuotas atrasadas
+    } else {
+      return 'from-red-600 to-red-700'; // Rojo: 3 o más cuotas atrasadas
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
@@ -153,7 +168,7 @@ export default function PerfilSocio() {
         {/* Tarjeta principal del perfil */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           {/* Header con foto y datos básicos */}
-          <div className="bg-gradient-to-r from-red-600 to-red-700 px-8 py-12">
+          <div className={`bg-gradient-to-r ${getBannerColor()} px-8 py-12`}>
             <div className="flex items-center gap-6">
               {socio.fotoUrl ? (
                 <img
@@ -168,16 +183,22 @@ export default function PerfilSocio() {
               )}
               <div className="flex-1 text-white">
                 <h1 className="text-3xl font-bold mb-2">{socio.nombreCompleto}</h1>
-                <div className="flex items-center gap-4 text-red-100">
-                  <span className="flex items-center gap-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    {socio.email}
-                  </span>
+                    <span>{socio.email}</span>
+                  </div>
                   {socio.telefono && (
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      {socio.telefono}
-                    </span>
+                      <span>{socio.telefono}</span>
+                    </div>
+                  )}
+                  {socio.direccion && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{socio.direccion}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -189,7 +210,9 @@ export default function PerfilSocio() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-gray-500 mb-1">RUT</p>
-                <p className="text-lg font-semibold text-gray-900">{socio.rut || 'No registrado'}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {socio.rut && socio.rut.trim() !== '' ? socio.rut : 'No registrado'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 mb-1">Cuota Mensual</p>
