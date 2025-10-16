@@ -313,11 +313,12 @@ export default function AdminSettings() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="cuota-default-input" className="block text-sm font-medium text-gray-700 mb-2">
                         Valor de cuota por defecto ($)
                       </label>
                       <div className="flex gap-2">
                         <input
+                          id="cuota-default-input"
                           type="number"
                           min="0"
                           step="100"
@@ -339,9 +340,9 @@ export default function AdminSettings() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="block text-sm font-medium text-gray-700 mb-2">
                         Información
-                      </label>
+                      </div>
                       <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <p className="text-sm text-blue-700">
                           <strong>Valor actual:</strong> ${sociosConfig.cuota_default || 6500}

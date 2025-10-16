@@ -252,8 +252,9 @@ export default function AdminCuotas() {
                         </td>
                         {MESES.map((_, index) => {
                           const cuota = getCuotaBySocioAndMes(socio.id, index + 1);
+                          const mes = index + 1;
                           return (
-                            <td key={index} className="px-4 py-4 text-center">
+                            <td key={`${socio.id}-mes-${mes}`} className="px-4 py-4 text-center">
                               {cuota ? (
                                 <button
                                   onClick={() => {
@@ -400,19 +401,23 @@ function GenerarCuotasModal({ añoSeleccionado, onClose, onGenerated }: {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="mes-select" className="block text-sm font-medium text-gray-700 mb-2">
                   Mes
                 </label>
                 <select
+                  id="mes-select"
                   value={mes}
                   onChange={(e) => setMes(parseInt(e.target.value))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
-                  {MESES.map((mesNombre, index) => (
-                    <option key={index} value={index + 1}>
-                      {mesNombre} {añoSeleccionado}
-                    </option>
-                  ))}
+                  {MESES.map((mesNombre, index) => {
+                    const mesValue = index + 1;
+                    return (
+                      <option key={`mes-${mesValue}`} value={mesValue}>
+                        {mesNombre} {añoSeleccionado}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -576,17 +581,17 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
               // Mostrar información del pago
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="block text-sm font-medium text-gray-700 mb-2">
                     Método de Pago
-                  </label>
+                  </div>
                   <p className="text-gray-900 capitalize">{cuota.metodoPago || 'No especificado'}</p>
                 </div>
 
                 {cuota.fechaPago && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="block text-sm font-medium text-gray-700 mb-2">
                       Fecha de Pago
-                    </label>
+                    </div>
                     <p className="text-gray-900">
                       {new Date(cuota.fechaPago).toLocaleDateString('es-CL', {
                         year: 'numeric',
@@ -599,9 +604,9 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
 
                 {cuota.comprobanteUrl && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="block text-sm font-medium text-gray-700 mb-2">
                       Comprobante
-                    </label>
+                    </div>
                     <a
                       href={cuota.comprobanteUrl}
                       target="_blank"
@@ -616,9 +621,9 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
 
                 {cuota.notas && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="block text-sm font-medium text-gray-700 mb-2">
                       Notas
-                    </label>
+                    </div>
                     <p className="text-gray-900">{cuota.notas}</p>
                   </div>
                 )}
@@ -627,10 +632,11 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
               // Formulario para marcar como pagado
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="metodo-pago-select" className="block text-sm font-medium text-gray-700 mb-2">
                     Método de Pago <span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="metodo-pago-select"
                     value={metodoPago}
                     onChange={(e) => setMetodoPago(e.target.value as any)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -642,10 +648,10 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="block text-sm font-medium text-gray-700 mb-2">
                     Comprobante de Pago
-                  </label>
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                  </div>
+                  <label htmlFor="comprobante-input" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
                     {comprobante ? (
                       <div className="flex flex-col items-center">
                         <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
@@ -669,6 +675,7 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
                       </div>
                     )}
                     <input
+                      id="comprobante-input"
                       type="file"
                       accept="image/*"
                       onChange={(e) => setComprobante(e.target.files?.[0] || null)}
@@ -678,10 +685,11 @@ function MarcarPagoModal({ cuota, onClose, onMarked }: {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="notas-textarea" className="block text-sm font-medium text-gray-700 mb-2">
                     Notas (Opcional)
                   </label>
                   <textarea
+                    id="notas-textarea"
                     value={notas}
                     onChange={(e) => setNotas(e.target.value)}
                     rows={3}

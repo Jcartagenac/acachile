@@ -409,9 +409,9 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Foto */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="block text-sm font-medium text-gray-700 mb-2">
                 Foto del Socio
-              </label>
+              </div>
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
                   {fotoPreview ? (
@@ -426,9 +426,10 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                     </div>
                   )}
                 </div>
-                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <label htmlFor="foto-input" className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="text-sm text-gray-700">Seleccionar foto</span>
                   <input
+                    id="foto-input"
                     type="file"
                     accept="image/*"
                     onChange={handleFotoChange}
@@ -441,10 +442,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
             {/* Nombre y Apellido */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="nombre-input" className="block text-sm font-medium text-gray-700 mb-2">
                   Nombre <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="nombre-input"
                   type="text"
                   required
                   value={formData.nombre}
@@ -454,10 +456,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="apellido-input" className="block text-sm font-medium text-gray-700 mb-2">
                   Apellido <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="apellido-input"
                   type="text"
                   required
                   value={formData.apellido}
@@ -470,10 +473,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
             {/* Email y Teléfono */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 mb-2">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="email-input"
                   type="email"
                   required
                   value={formData.email}
@@ -483,10 +487,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="telefono-input" className="block text-sm font-medium text-gray-700 mb-2">
                   Teléfono <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="telefono-input"
                   type="tel"
                   required
                   value={formData.telefono}

@@ -178,17 +178,22 @@ export const CuotasModule: React.FC = () => {
             const cuota = getCuotaByMes(index + 1);
             const mesActual = new Date().getMonth();
             const esProximo = index === mesActual && añoSeleccionado === añoActual;
+            
+            // Helper: Determinar estilos de borde según estado de cuota
+            const getBorderStyles = () => {
+              if (cuota?.pagado) {
+                return 'bg-green-50 border-green-300 hover:border-green-400';
+              }
+              if (cuota) {
+                return 'bg-red-50 border-red-300 hover:border-red-400';
+              }
+              return 'bg-gray-50 border-gray-200';
+            };
 
             return (
               <div
                 key={mes}
-                className={`relative border-2 rounded-xl p-4 transition-all ${
-                  cuota?.pagado
-                    ? 'bg-green-50 border-green-300 hover:border-green-400'
-                    : cuota
-                    ? 'bg-red-50 border-red-300 hover:border-red-400'
-                    : 'bg-gray-50 border-gray-200'
-                } ${esProximo ? 'ring-2 ring-primary-400' : ''}`}
+                className={`relative border-2 rounded-xl p-4 transition-all ${getBorderStyles()} ${esProximo ? 'ring-2 ring-primary-400' : ''}`}
               >
                 {esProximo && (
                   <div className="absolute -top-2 -right-2 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -202,15 +207,16 @@ export const CuotasModule: React.FC = () => {
                     <p className="text-sm text-neutral-600">{añoSeleccionado}</p>
                   </div>
                   <div>
-                    {cuota ? (
-                      cuota.pagado ? (
-                        <CheckCircle className="h-6 w-6 text-green-600" />
-                      ) : (
-                        <XCircle className="h-6 w-6 text-red-600" />
-                      )
-                    ) : (
-                      <Clock className="h-6 w-6 text-gray-400" />
-                    )}
+                    {(() => {
+                      // Helper: Renderizar icono según estado de cuota
+                      if (!cuota) {
+                        return <Clock className="h-6 w-6 text-gray-400" />;
+                      }
+                      if (cuota.pagado) {
+                        return <CheckCircle className="h-6 w-6 text-green-600" />;
+                      }
+                      return <XCircle className="h-6 w-6 text-red-600" />;
+                    })()}
                   </div>
                 </div>
 
@@ -371,9 +377,9 @@ function PagarCuotaModal({ cuota, onClose, onPagado }: {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                <div className="block text-sm font-medium text-neutral-700 mb-2">
                   Comprobante
-                </label>
+                </div>
                 <div className="border-2 border-neutral-200 rounded-xl overflow-hidden">
                   <img
                     src={cuota.comprobanteUrl}
@@ -468,7 +474,7 @@ function PagarCuotaModal({ cuota, onClose, onPagado }: {
 
               {/* Upload de comprobante */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="comprobante-upload" className="block text-sm font-medium text-neutral-700 mb-2">
                   Comprobante de Pago <span className="text-red-500">*</span>
                 </label>
                 
@@ -491,13 +497,14 @@ function PagarCuotaModal({ cuota, onClose, onPagado }: {
                     </button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-neutral-300 rounded-xl cursor-pointer hover:bg-neutral-50 transition-colors">
+                  <label htmlFor="comprobante-upload" className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-neutral-300 rounded-xl cursor-pointer hover:bg-neutral-50 transition-colors">
                     <div className="flex flex-col items-center">
                       <Upload className="h-12 w-12 text-neutral-400 mb-3" />
                       <p className="text-sm text-neutral-600 font-medium">Subir Comprobante</p>
                       <p className="text-xs text-neutral-500 mt-1">PNG, JPG hasta 5MB</p>
                     </div>
                     <input
+                      id="comprobante-upload"
                       type="file"
                       accept="image/*"
                       onChange={handleComprobanteChange}
