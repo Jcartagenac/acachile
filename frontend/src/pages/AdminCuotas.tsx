@@ -1,24 +1,24 @@
 /**
  * Página de gestión de cuotas anuales
- * ACA Chile Frontend
+ * ACA Chile Frontend - Versión Compacta y Escalable
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
 import { 
   Calendar,
   CheckCircle,
-  XCircle,
   Clock,
-  DollarSign,
-  Download,
-  Upload,
   RefreshCw,
   AlertCircle,
   Loader2,
   X,
-  Eye,
-  Check
+  Search,
+  User,
+  ChevronRight,
+  TrendingUp,
+  AlertTriangle,
+  FileDown
 } from 'lucide-react';
 
 const MESES = [
@@ -26,16 +26,25 @@ const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+interface SocioConEstado extends Socio {
+  mesesPagados: number;
+  mesesAtrasados: number;
+  ultimoPago?: string;
+  estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos';
+}
+
 export default function AdminCuotas() {
   const [añoActual] = useState(new Date().getFullYear());
+  const [mesActual] = useState(new Date().getMonth() + 1);
   const [añoSeleccionado, setAñoSeleccionado] = useState(añoActual);
-  const [socios, setSocios] = useState<Socio[]>([]);
+  const [socios, setSocios] = useState<SocioConEstado[]>([]);
   const [cuotas, setCuotas] = useState<Cuota[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showGenerarModal, setShowGenerarModal] = useState(false);
-  const [showMarcarPagoModal, setShowMarcarPagoModal] = useState(false);
-  const [selectedCuota, setSelectedCuota] = useState<Cuota | null>(null);
+  const [selectedSocio, setSelectedSocio] = useState<SocioConEstado | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'al-dia' | 'atrasado'>('todos');
 
   useEffect(() => {
     loadData();
@@ -46,14 +55,17 @@ export default function AdminCuotas() {
       setLoading(true);
       setError(null);
 
-      // Cargar socios y cuotas en paralelo
       const [sociosResponse, cuotasResponse] = await Promise.all([
         sociosService.getSocios({ estado: 'activo' }),
         sociosService.getCuotas({ año: añoSeleccionado })
       ]);
 
       if (sociosResponse.success && sociosResponse.data) {
-        setSocios(sociosResponse.data.socios);
+        const sociosConEstado = procesarEstadoSocios(
+          sociosResponse.data.socios,
+          cuotasResponse.data?.cuotas || []
+        );
+        setSocios(sociosConEstado);
       }
 
       if (cuotasResponse.success && cuotasResponse.data) {
@@ -68,21 +80,69 @@ export default function AdminCuotas() {
     }
   };
 
-  const getCuotaBySocioAndMes = (socioId: number, mes: number): Cuota | undefined => {
-    return cuotas.find(c => c.usuarioId === socioId && c.mes === mes);
+  const procesarEstadoSocios = (sociosList: Socio[], cuotasList: Cuota[]): SocioConEstado[] => {
+    return sociosList.map(socio => {
+      const cuotasSocio = cuotasList.filter(c => c.usuarioId === socio.id);
+      const mesesPagados = cuotasSocio.filter(c => c.pagado).length;
+      
+      const mesesEsperados = añoSeleccionado < añoActual ? 12 : mesActual;
+      const mesesAtrasados = Math.max(0, mesesEsperados - mesesPagados);
+      
+      const cuotasPagadas = cuotasSocio.filter(c => c.pagado && c.fechaPago);
+      let ultimoPago: string | undefined = undefined;
+      
+      if (cuotasPagadas.length > 0) {
+        const sorted = cuotasPagadas.sort((a, b) => 
+          new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime()
+        );
+        ultimoPago = sorted[0]?.fechaPago || undefined;
+      }
+
+      let estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos' = 'sin-pagos';
+      if (mesesPagados > 0) {
+        estadoPago = mesesAtrasados === 0 ? 'al-dia' : 'atrasado';
+      }
+
+      return {
+        ...socio,
+        mesesPagados,
+        mesesAtrasados,
+        ultimoPago,
+        estadoPago
+      };
+    });
   };
 
-  const getEstadisticasCuotas = () => {
-    const totalCuotas = cuotas.length;
-    const pagadas = cuotas.filter(c => c.pagado).length;
-    const pendientes = totalCuotas - pagadas;
+  const sociosFiltrados = socios.filter(socio => {
+    const matchSearch = socio.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       socio.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       socio.rut?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchEstado = filtroEstado === 'todos' || socio.estadoPago === filtroEstado;
+    
+    return matchSearch && matchEstado;
+  });
+
+  const getEstadisticas = () => {
+    const totalSocios = socios.length;
+    const sociosAlDia = socios.filter(s => s.estadoPago === 'al-dia').length;
+    const sociosAtrasados = socios.filter(s => s.estadoPago === 'atrasado').length;
+    const sociosSinPagos = socios.filter(s => s.estadoPago === 'sin-pagos').length;
+    
     const totalRecaudado = cuotas.filter(c => c.pagado).reduce((sum, c) => sum + c.valor, 0);
     const totalPendiente = cuotas.filter(c => !c.pagado).reduce((sum, c) => sum + c.valor, 0);
 
-    return { totalCuotas, pagadas, pendientes, totalRecaudado, totalPendiente };
+    return { 
+      totalSocios, 
+      sociosAlDia, 
+      sociosAtrasados, 
+      sociosSinPagos,
+      totalRecaudado,
+      totalPendiente
+    };
   };
 
-  const stats = getEstadisticasCuotas();
+  const stats = getEstadisticas();
 
   if (loading) {
     return (
@@ -99,375 +159,443 @@ export default function AdminCuotas() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestión de Cuotas</h1>
-            <p className="text-gray-600">Administra las cuotas mensuales de los socios</p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Cuotas</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Administra los pagos de cuotas mensuales de los socios
+          </p>
+        </div>
+
+        {/* Controles superiores */}
+        <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center gap-4">
             <select
               value={añoSeleccionado}
-              onChange={(e) => setAñoSeleccionado(parseInt(e.target.value))}
+              onChange={(e) => setAñoSeleccionado(Number(e.target.value))}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              {[añoActual - 1, añoActual, añoActual + 1].map(año => (
+              {Array.from({ length: 5 }, (_, i) => añoActual - 2 + i).map(año => (
                 <option key={año} value={año}>{año}</option>
               ))}
             </select>
 
             <button
-              onClick={() => setShowGenerarModal(true)}
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              onClick={loadData}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Recargar datos"
             >
-              <RefreshCw className="h-5 w-5 mr-2" />
-              Generar Cuotas
+              <RefreshCw className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowGenerarModal(true)}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Generar Cuotas {añoSeleccionado}
             </button>
           </div>
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
-              <p className="text-red-700">{error}</p>
-              <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Cuotas</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalCuotas}</p>
+                <p className="text-sm text-gray-600">Total Socios</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalSocios}</p>
               </div>
-              <Calendar className="h-8 w-8 text-gray-400" />
+              <User className="h-10 w-10 text-gray-400" />
             </div>
           </div>
 
-          <div className="bg-green-50 rounded-lg shadow-sm p-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600">Pagadas</p>
-                <p className="text-2xl font-bold text-green-700">{stats.pagadas}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-red-50 rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-red-600">Pendientes</p>
-                <p className="text-2xl font-bold text-red-700">{stats.pendientes}</p>
-              </div>
-              <XCircle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600">Recaudado</p>
-                <p className="text-lg font-bold text-blue-700">
-                  ${stats.totalRecaudado.toLocaleString('es-CL')}
+                <p className="text-sm text-gray-600">Al Día</p>
+                <p className="text-2xl font-bold text-green-700">{stats.sociosAlDia}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {((stats.sociosAlDia / stats.totalSocios) * 100).toFixed(0)}%
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-blue-500" />
+              <CheckCircle className="h-10 w-10 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-orange-50 rounded-lg shadow-sm p-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-600">Por Cobrar</p>
-                <p className="text-lg font-bold text-orange-700">
-                  ${stats.totalPendiente.toLocaleString('es-CL')}
+                <p className="text-sm text-gray-600">Atrasados</p>
+                <p className="text-2xl font-bold text-red-700">{stats.sociosAtrasados}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {((stats.sociosAtrasados / stats.totalSocios) * 100).toFixed(0)}%
                 </p>
               </div>
-              <Clock className="h-8 w-8 text-orange-500" />
+              <AlertTriangle className="h-10 w-10 text-red-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Recaudado</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ${(stats.totalRecaudado / 1000).toFixed(0)}K
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Pendiente: ${(stats.totalPendiente / 1000).toFixed(0)}K
+                </p>
+              </div>
+              <TrendingUp className="h-10 w-10 text-green-500" />
             </div>
           </div>
         </div>
 
-        {/* Tabla de cuotas */}
+        {/* Filtros y búsqueda */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email o RUT..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <select
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value as 'todos' | 'al-dia' | 'atrasado')}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="al-dia">Al día</option>
+              <option value="atrasado">Atrasados</option>
+            </select>
+
+            <button
+              onClick={() => {/* TODO: Exportar a Excel */}}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Exportar
+            </button>
+          </div>
+        </div>
+
+        {/* Lista compacta de socios */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
-                    Socio
-                  </th>
-                  {MESES.map((mes, index) => (
-                    <th key={mes} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {mes.substring(0, 3)}
-                    </th>
-                  ))}
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {socios.length === 0 ? (
-                  <tr>
-                    <td colSpan={14} className="px-6 py-12 text-center text-gray-500">
-                      No hay socios activos
-                    </td>
-                  </tr>
-                ) : (
-                  socios.map((socio) => {
-                    const cuotasSocio = cuotas.filter(c => c.usuarioId === socio.id);
-                    const pagadasSocio = cuotasSocio.filter(c => c.pagado).length;
-                    const totalSocio = cuotasSocio.filter(c => c.pagado).reduce((sum, c) => sum + c.valor, 0);
+          <div className="divide-y divide-gray-200">
+            {sociosFiltrados.length === 0 ? (
+              <div className="p-12 text-center text-gray-500">
+                <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p>No se encontraron socios</p>
+              </div>
+            ) : (
+              sociosFiltrados.map((socio) => (
+                <div
+                  key={socio.id}
+                  className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedSocio(socio)}
+                >
+                  <div className="flex items-center justify-between">
+                    {/* Info del socio */}
+                    <div className="flex items-center gap-4 flex-1">
+                      {socio.fotoUrl ? (
+                        <img
+                          src={socio.fotoUrl}
+                          alt={socio.nombreCompleto}
+                          className="h-12 w-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                          <span className="text-red-600 font-semibold">
+                            {socio.nombre.charAt(0)}{socio.apellido.charAt(0)}
+                          </span>
+                        </div>
+                      )}
 
-                    return (
-                      <tr key={socio.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">
-                          <div className="flex items-center">
-                            {socio.fotoUrl ? (
-                              <img
-                                src={socio.fotoUrl}
-                                alt={socio.nombreCompleto}
-                                className="h-8 w-8 rounded-full object-cover mr-3"
-                              />
-                            ) : (
-                              <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
-                                <span className="text-red-600 text-xs font-semibold">
-                                  {socio.nombre.charAt(0)}{socio.apellido.charAt(0)}
-                                </span>
-                              </div>
-                            )}
-                            <div className="text-sm font-medium text-gray-900">
-                              {socio.nombreCompleto}
-                            </div>
-                          </div>
-                        </td>
-                        {MESES.map((_, index) => {
-                          const cuota = getCuotaBySocioAndMes(socio.id, index + 1);
-                          const mes = index + 1;
-                          return (
-                            <td key={`${socio.id}-mes-${mes}`} className="px-4 py-4 text-center">
-                              {cuota ? (
-                                <button
-                                  onClick={() => {
-                                    setSelectedCuota(cuota);
-                                    setShowMarcarPagoModal(true);
-                                  }}
-                                  className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
-                                    cuota.pagado
-                                      ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                                      : 'bg-red-100 text-red-600 hover:bg-red-200'
-                                  }`}
-                                  title={cuota.pagado ? 'Pagado' : 'Pendiente'}
-                                >
-                                  {cuota.pagado ? (
-                                    <CheckCircle className="h-5 w-5" />
-                                  ) : (
-                                    <XCircle className="h-5 w-5" />
-                                  )}
-                                </button>
-                              ) : (
-                                <span className="text-gray-300">-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="text-sm font-medium text-gray-900">
-                            {pagadasSocio}/12
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            ${totalSocio.toLocaleString('es-CL')}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-gray-900">
+                          {socio.nombreCompleto}
+                        </h3>
+                        <p className="text-xs text-gray-500">{socio.email}</p>
+                      </div>
+                    </div>
+
+                    {/* Estado de pagos */}
+                    <div className="flex items-center gap-6">
+                      {/* Meses pagados */}
+                      <div className="text-right hidden sm:block">
+                        <p className="text-sm font-medium text-gray-900">
+                          {socio.mesesPagados}/12 meses
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {socio.ultimoPago ? (
+                            `Último: ${new Date(socio.ultimoPago).toLocaleDateString('es-CL', { month: 'short', year: 'numeric' })}`
+                          ) : (
+                            'Sin pagos'
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Badge de estado */}
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        socio.estadoPago === 'al-dia'
+                          ? 'bg-green-100 text-green-800'
+                          : socio.estadoPago === 'atrasado'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {socio.estadoPago === 'al-dia' && (
+                          <span className="flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Al día
+                          </span>
+                        )}
+                        {socio.estadoPago === 'atrasado' && (
+                          <span className="flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {socio.mesesAtrasados} {socio.mesesAtrasados === 1 ? 'mes' : 'meses'}
+                          </span>
+                        )}
+                        {socio.estadoPago === 'sin-pagos' && 'Sin pagos'}
+                      </div>
+
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
       </div>
 
-      {/* Modal Generar Cuotas */}
+      {/* Modal de detalle de socio */}
+      {selectedSocio && (
+        <SocioDetailModal
+          socio={selectedSocio}
+          cuotas={cuotas.filter(c => c.usuarioId === selectedSocio.id)}
+          año={añoSeleccionado}
+          mesActual={mesActual}
+          onClose={() => setSelectedSocio(null)}
+          onUpdate={loadData}
+        />
+      )}
+
+      {/* Modal de generar cuotas */}
       {showGenerarModal && (
         <GenerarCuotasModal
-          añoSeleccionado={añoSeleccionado}
+          año={añoSeleccionado}
           onClose={() => setShowGenerarModal(false)}
-          onGenerated={() => {
-            setShowGenerarModal(false);
-            loadData();
-          }}
-        />
-      )}
-
-      {/* Modal Marcar Pago */}
-      {showMarcarPagoModal && selectedCuota && (
-        <MarcarPagoModal
-          cuota={selectedCuota}
-          onClose={() => {
-            setShowMarcarPagoModal(false);
-            setSelectedCuota(null);
-          }}
-          onMarked={() => {
-            setShowMarcarPagoModal(false);
-            setSelectedCuota(null);
-            loadData();
-          }}
+          onGenerate={loadData}
         />
       )}
     </div>
   );
 }
 
-// Modal para generar cuotas masivamente
-function GenerarCuotasModal({ añoSeleccionado, onClose, onGenerated }: {
-  añoSeleccionado: number;
+// Modal de detalle de socio con gestión de pagos
+interface SocioDetailModalProps {
+  socio: SocioConEstado;
+  cuotas: Cuota[];
+  año: number;
+  mesActual: number;
   onClose: () => void;
-  onGenerated: () => void;
-}) {
-  const [mes, setMes] = useState(new Date().getMonth() + 1);
-  const [sobreescribir, setSobreescribir] = useState(false);
+  onUpdate: () => void;
+}
+
+function SocioDetailModal({ socio, cuotas, año, mesActual, onClose, onUpdate }: SocioDetailModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resultado, setResultado] = useState<any>(null);
 
-  const handleGenerar = async () => {
-    setLoading(true);
-    setError(null);
-    setResultado(null);
-
+  const handleTogglePago = async (cuota: Cuota) => {
     try {
-      const response = await sociosService.generarCuotas(añoSeleccionado, mes, sobreescribir);
+      setLoading(true);
+      setError(null);
 
-      if (!response.success) {
-        throw new Error(response.error || 'Error al generar cuotas');
+      if (!cuota.pagado) {
+        // Marcar como pagado
+        const response = await sociosService.marcarCuotaPagada(cuota.id, {
+          metodoPago: 'transferencia'
+        });
+
+        if (response.success) {
+          onUpdate();
+        } else {
+          setError(response.error || 'Error al marcar como pagado');
+        }
+      } else {
+        // Desmarcar pago - llamar al API directamente
+        const response = await fetch(`/api/admin/cuotas/${cuota.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            pagado: false,
+            fechaPago: null,
+            metodoPago: null
+          }),
+        });
+
+        if (response.ok) {
+          onUpdate();
+        } else {
+          setError('Error al desmarcar pago');
+        }
       }
-
-      setResultado(response.data);
-      setTimeout(() => {
-        onGenerated();
-      }, 2000);
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError('Error al actualizar el pago');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const getCuotaMes = (mes: number) => cuotas.find(c => c.mes === mes);
+  const esAtrasado = (mes: number) => año === new Date().getFullYear() && mes < mesActual;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Generar Cuotas</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {socio.fotoUrl ? (
+                <img
+                  src={socio.fotoUrl}
+                  alt={socio.nombreCompleto}
+                  className="h-16 w-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-red-600 text-xl font-semibold">
+                    {socio.nombre.charAt(0)}{socio.apellido.charAt(0)}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{socio.nombreCompleto}</h2>
+                <p className="text-sm text-gray-500">{socio.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <X className="h-6 w-6" />
             </button>
           </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          {/* Resumen */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600">Cuota Mensual</p>
+              <p className="text-xl font-bold text-gray-900">
+                ${socio.valorCuota.toLocaleString('es-CL')}
+              </p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600">Meses Pagados</p>
+              <p className="text-xl font-bold text-green-700">
+                {socio.mesesPagados} / 12
+              </p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600">Meses Pendientes</p>
+              <p className="text-xl font-bold text-red-700">
+                {12 - socio.mesesPagados}
+              </p>
+            </div>
+          </div>
+
+          {/* Grid de meses */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {MESES.map((nombreMes, index) => {
+              const mes = index + 1;
+              const cuota = getCuotaMes(mes);
+              const atrasado = esAtrasado(mes) && (!cuota || !cuota.pagado);
+
+              return (
+                <button
+                  key={mes}
+                  onClick={() => cuota && handleTogglePago(cuota)}
+                  disabled={loading || !cuota}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    !cuota
+                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                      : cuota.pagado
+                      ? 'border-green-500 bg-green-50 hover:bg-green-100'
+                      : atrasado
+                      ? 'border-red-500 bg-red-50 hover:bg-red-100'
+                      : 'border-gray-300 bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-900">
+                      {nombreMes}
+                    </span>
+                    {cuota && (
+                      cuota.pagado ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : atrasado ? (
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-gray-400" />
+                      )
+                    )}
+                  </div>
+                  {cuota && (
+                    <div className="text-xs">
+                      {cuota.pagado ? (
+                        <span className="text-green-700">
+                          {cuota.fechaPago ? new Date(cuota.fechaPago).toLocaleDateString('es-CL') : 'Pagado'}
+                        </span>
+                      ) : (
+                        <span className={atrasado ? 'text-red-700 font-medium' : 'text-gray-500'}>
+                          {atrasado ? 'Atrasado' : 'Pendiente'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
           {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
-                <p className="text-red-700 text-sm">{error}</p>
-              </div>
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
-          {resultado ? (
-            <div className="mb-4 bg-green-50 border-l-4 border-green-400 p-4 rounded">
-              <div className="flex items-center mb-2">
-                <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
-                <p className="text-green-700 font-medium">¡Cuotas generadas exitosamente!</p>
-              </div>
-              <div className="text-sm text-green-600 space-y-1">
-                <p>Total socios: {resultado.totalSocios}</p>
-                <p>Cuotas generadas: {resultado.generadas}</p>
-                <p>Mes: {MESES[mes - 1]} {añoSeleccionado}</p>
-                <p>Valor cuota: ${resultado.valorCuota?.toLocaleString('es-CL')}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="mes-select" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mes
-                </label>
-                <select
-                  id="mes-select"
-                  value={mes}
-                  onChange={(e) => setMes(parseInt(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                >
-                  {MESES.map((mesNombre, index) => {
-                    const mesValue = index + 1;
-                    return (
-                      <option key={`mes-${mesValue}`} value={mesValue}>
-                        {mesNombre} {añoSeleccionado}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="sobreescribir"
-                  checked={sobreescribir}
-                  onChange={(e) => setSobreescribir(e.target.checked)}
-                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                />
-                <label htmlFor="sobreescribir" className="ml-2 block text-sm text-gray-700">
-                  Sobreescribir cuotas existentes
-                </label>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-700">
-                  Se generará una cuota de $6.500 (valor por defecto) para cada socio activo en {MESES[mes - 1]} {añoSeleccionado}.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-end space-x-4 pt-6 border-t mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              {resultado ? 'Cerrar' : 'Cancelar'}
-            </button>
-            {!resultado && (
-              <button
-                onClick={handleGenerar}
-                disabled={loading}
-                className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-5 w-5 mr-2" />
-                    Generar
-                  </>
-                )}
-              </button>
-            )}
+          {/* Instrucciones */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Tip:</strong> Haz clic en un mes para marcar como pagado/no pagado.
+              Los meses anteriores al actual se marcan automáticamente como atrasados si no están pagados.
+            </p>
           </div>
         </div>
       </div>
@@ -475,258 +603,90 @@ function GenerarCuotasModal({ añoSeleccionado, onClose, onGenerated }: {
   );
 }
 
-// Modal para marcar cuota como pagada
-function MarcarPagoModal({ cuota, onClose, onMarked }: {
-  cuota: Cuota;
+// Modal para generar cuotas
+interface GenerarCuotasModalProps {
+  año: number;
   onClose: () => void;
-  onMarked: () => void;
-}) {
-  const [metodoPago, setMetodoPago] = useState<'transferencia' | 'efectivo' | 'tarjeta'>('transferencia');
-  const [notas, setNotas] = useState('');
-  const [comprobante, setComprobante] = useState<File | null>(null);
+  onGenerate: () => void;
+}
+
+function GenerarCuotasModal({ año, onClose, onGenerate }: GenerarCuotasModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleMarcarPagado = async () => {
-    if (cuota.pagado) {
-      // Si ya está pagada, solo cerrar
-      onClose();
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
+  const handleGenerate = async () => {
     try {
-      let comprobanteUrl: string | undefined;
+      setLoading(true);
+      setError(null);
 
-      // Si hay comprobante, subirlo primero
-      if (comprobante) {
-        const uploadResponse = await sociosService.subirComprobante(comprobante, cuota.id);
-        if (!uploadResponse.success) {
-          throw new Error('Error al subir comprobante');
-        }
-        comprobanteUrl = uploadResponse.data?.url;
+      // Generar cuotas para todos los meses del año
+      const promises = [];
+      for (let mes = 1; mes <= 12; mes++) {
+        promises.push(sociosService.generarCuotas(año, mes, false));
       }
 
-      // Marcar cuota como pagada
-      const response = await sociosService.marcarCuotaPagada(cuota.id, {
-        metodoPago,
-        comprobanteUrl,
-        notas: notas || undefined
-      });
+      const results = await Promise.all(promises);
+      const hasError = results.some(r => !r.success);
 
-      if (!response.success) {
-        throw new Error(response.error || 'Error al marcar cuota como pagada');
+      if (hasError) {
+        setError('Error al generar algunas cuotas');
+      } else {
+        onGenerate();
+        onClose();
       }
-
-      onMarked();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError('Error al generar cuotas');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              {cuota.pagado ? 'Detalle de Pago' : 'Marcar Cuota como Pagada'}
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X className="h-6 w-6" />
-            </button>
-          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">
+            Generar Cuotas {año}
+          </h3>
+
+          <p className="text-sm text-gray-600 mb-6">
+            Se generarán 12 cuotas mensuales para todos los socios activos. 
+            Si ya existen cuotas para algunos meses, no se duplicarán.
+          </p>
 
           {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
-                <p className="text-red-700 text-sm">{error}</p>
-              </div>
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
-          <div className="space-y-4">
-            {/* Información de la cuota */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Socio</p>
-                  <p className="font-medium">{cuota.socio?.nombreCompleto}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Período</p>
-                  <p className="font-medium">{MESES[cuota.mes - 1]} {cuota.año}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Valor</p>
-                  <p className="font-medium text-lg">${cuota.valor.toLocaleString('es-CL')}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Estado</p>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    cuota.pagado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {cuota.pagado ? 'Pagado' : 'Pendiente'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {cuota.pagado ? (
-              // Mostrar información del pago
-              <>
-                <div>
-                  <div className="block text-sm font-medium text-gray-700 mb-2">
-                    Método de Pago
-                  </div>
-                  <p className="text-gray-900 capitalize">{cuota.metodoPago || 'No especificado'}</p>
-                </div>
-
-                {cuota.fechaPago && (
-                  <div>
-                    <div className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha de Pago
-                    </div>
-                    <p className="text-gray-900">
-                      {new Date(cuota.fechaPago).toLocaleDateString('es-CL', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                )}
-
-                {cuota.comprobanteUrl && (
-                  <div>
-                    <div className="block text-sm font-medium text-gray-700 mb-2">
-                      Comprobante
-                    </div>
-                    <a
-                      href={cuota.comprobanteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-red-600 hover:text-red-700"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver comprobante
-                    </a>
-                  </div>
-                )}
-
-                {cuota.notas && (
-                  <div>
-                    <div className="block text-sm font-medium text-gray-700 mb-2">
-                      Notas
-                    </div>
-                    <p className="text-gray-900">{cuota.notas}</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              // Formulario para marcar como pagado
-              <>
-                <div>
-                  <label htmlFor="metodo-pago-select" className="block text-sm font-medium text-gray-700 mb-2">
-                    Método de Pago <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="metodo-pago-select"
-                    value={metodoPago}
-                    onChange={(e) => setMetodoPago(e.target.value as any)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  >
-                    <option value="transferencia">Transferencia</option>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="tarjeta">Tarjeta</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div className="block text-sm font-medium text-gray-700 mb-2">
-                    Comprobante de Pago
-                  </div>
-                  <label htmlFor="comprobante-input" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                    {comprobante ? (
-                      <div className="flex flex-col items-center">
-                        <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
-                        <p className="text-sm text-gray-600">{comprobante.name}</p>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setComprobante(null);
-                          }}
-                          className="mt-2 text-xs text-red-600 hover:text-red-700"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center">
-                        <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-600">Subir imagen del comprobante</p>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG hasta 5MB</p>
-                      </div>
-                    )}
-                    <input
-                      id="comprobante-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setComprobante(e.target.files?.[0] || null)}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                <div>
-                  <label htmlFor="notas-textarea" className="block text-sm font-medium text-gray-700 mb-2">
-                    Notas (Opcional)
-                  </label>
-                  <textarea
-                    id="notas-textarea"
-                    value={notas}
-                    onChange={(e) => setNotas(e.target.value)}
-                    rows={3}
-                    placeholder="Agregar comentarios sobre el pago..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center justify-end space-x-4 pt-6 border-t mt-6">
+          <div className="flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
             >
-              {cuota.pagado ? 'Cerrar' : 'Cancelar'}
+              Cancelar
             </button>
-            {!cuota.pagado && (
-              <button
-                onClick={handleMarcarPagado}
-                disabled={loading}
-                className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-5 w-5 mr-2" />
-                    Marcar como Pagado
-                  </>
-                )}
-              </button>
-            )}
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <Calendar className="h-4 w-4" />
+                  Generar Cuotas
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
