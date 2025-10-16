@@ -130,6 +130,65 @@ async function forceBindingsSync() {
   }
 }
 
+/**
+ * Ejecuta health check del deployment
+ */
+async function testHealthEndpoint(url) {
+  console.log('🩺 Probando health check...');
+  const healthCmd = `curl -s "${url}/api/health"`;
+  const healthResult = execSync(healthCmd, { encoding: 'utf8', stdio: 'pipe' });
+  const healthData = JSON.parse(healthResult);
+  
+  console.log('📊 Health Check:');
+  console.log(`   • Success: ${healthData.success ? '✅' : '❌'}`);
+  console.log(`   • Database: ${healthData.data?.database ? '✅' : '❌'}`);
+  console.log(`   • KV: ${healthData.data?.kv ? '✅' : '❌'}`);
+  console.log(`   • Environment: ${healthData.data?.environment || 'unknown'}`);
+  
+  return healthData;
+}
+
+/**
+ * Muestra el status de bindings
+ */
+function displayBindingsInfo(bindingsData) {
+  console.log('🔗 Bindings Status:');
+  console.log(`   • DB: ${bindingsData.bindings?.DB ? '✅' : '❌'}`);
+  console.log(`   • ACA_KV: ${bindingsData.bindings?.ACA_KV ? '✅' : '❌'}`);
+  console.log(`   • JWT_SECRET: ${bindingsData.bindings?.JWT_SECRET ? '✅' : '❌'}`);
+  console.log(`   • RESEND_API_KEY: ${bindingsData.bindings?.RESEND_API_KEY ? '✅' : '❌'}`);
+}
+
+/**
+ * Muestra tests de conectividad
+ */
+function displayConnectivityInfo(tests) {
+  if (!tests) return;
+  
+  console.log('🧪 Connectivity Tests:');
+  console.log(`   • DB Connected: ${tests.database?.connected ? '✅' : '❌'}`);
+  console.log(`   • KV Connected: ${tests.kv?.connected ? '✅' : '❌'}`);
+  
+  if (tests.database?.tables) {
+    console.log(`   • Tables Found: ${tests.database.tables.length}`);
+  }
+}
+
+/**
+ * Prueba endpoint de bindings
+ */
+async function testBindingsEndpoint(url) {
+  console.log('\n🔧 Probando bindings endpoint...');
+  const bindingsCmd = `curl -s "${url}/api/bindings"`;
+  const bindingsResult = execSync(bindingsCmd, { encoding: 'utf8', stdio: 'pipe' });
+  const bindingsData = JSON.parse(bindingsResult);
+  
+  displayBindingsInfo(bindingsData);
+  displayConnectivityInfo(bindingsData.tests);
+  
+  return bindingsData.bindings?.DB && bindingsData.bindings?.ACA_KV;
+}
+
 async function verifyAndTestBindings(url) {
   console.log('\n🔍 Verificando bindings en deployment...');
   
@@ -139,41 +198,11 @@ async function verifyAndTestBindings(url) {
   
   try {
     // Test health endpoint
-    console.log('🩺 Probando health check...');
-    const healthCmd = `curl -s "${url}/api/health"`;
-    const healthResult = execSync(healthCmd, { encoding: 'utf8', stdio: 'pipe' });
-    const healthData = JSON.parse(healthResult);
-    
-    console.log('📊 Health Check:');
-    console.log(`   • Success: ${healthData.success ? '✅' : '❌'}`);
-    console.log(`   • Database: ${healthData.data?.database ? '✅' : '❌'}`);
-    console.log(`   • KV: ${healthData.data?.kv ? '✅' : '❌'}`);
-    console.log(`   • Environment: ${healthData.data?.environment || 'unknown'}`);
+    const healthData = await testHealthEndpoint(url);
     
     // Test bindings endpoint si está disponible
     try {
-      console.log('\n🔧 Probando bindings endpoint...');
-      const bindingsCmd = `curl -s "${url}/api/bindings"`;
-      const bindingsResult = execSync(bindingsCmd, { encoding: 'utf8', stdio: 'pipe' });
-      const bindingsData = JSON.parse(bindingsResult);
-      
-      console.log('🔗 Bindings Status:');
-      console.log(`   • DB: ${bindingsData.bindings?.DB ? '✅' : '❌'}`);
-      console.log(`   • ACA_KV: ${bindingsData.bindings?.ACA_KV ? '✅' : '❌'}`);
-      console.log(`   • JWT_SECRET: ${bindingsData.bindings?.JWT_SECRET ? '✅' : '❌'}`);
-      console.log(`   • RESEND_API_KEY: ${bindingsData.bindings?.RESEND_API_KEY ? '✅' : '❌'}`);
-      
-      if (bindingsData.tests) {
-        console.log('🧪 Connectivity Tests:');
-        console.log(`   • DB Connected: ${bindingsData.tests.database?.connected ? '✅' : '❌'}`);
-        console.log(`   • KV Connected: ${bindingsData.tests.kv?.connected ? '✅' : '❌'}`);
-        
-        if (bindingsData.tests.database?.tables) {
-          console.log(`   • Tables Found: ${bindingsData.tests.database.tables.length}`);
-        }
-      }
-      
-      return bindingsData.bindings?.DB && bindingsData.bindings?.ACA_KV;
+      return await testBindingsEndpoint(url);
     } catch (bindingsError) {
       console.log('⚠️  Bindings endpoint no disponible, usando health check');
       return healthData.data?.database && healthData.data?.kv;

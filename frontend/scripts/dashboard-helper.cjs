@@ -103,6 +103,47 @@ async function createBindingsInstructions() {
   return true;
 }
 
+/**
+ * Muestra el estado de los bindings
+ */
+function displayBindingsStatus(data) {
+  console.log('✅ API respondiendo correctamente');
+  console.log('\n📊 Estado de bindings:');
+  console.log(`   • D1 Database (${CONFIG.bindings.d1.name}): ${data.bindings?.DB ? '✅' : '❌'}`);
+  console.log(`   • KV Namespace (${CONFIG.bindings.kv.name}): ${data.bindings?.ACA_KV ? '✅' : '❌'}`);
+  console.log(`   • Environment: ${data.bindings?.ENVIRONMENT || 'not set'}`);
+}
+
+/**
+ * Muestra los tests de conectividad
+ */
+function displayConnectivityTests(tests) {
+  if (!tests) return;
+  
+  console.log('\n🧪 Tests de conectividad:');
+  console.log(`   • Database connected: ${tests.database?.connected ? '✅' : '❌'}`);
+  console.log(`   • KV connected: ${tests.kv?.connected ? '✅' : '❌'}`);
+  
+  if (tests.database?.tables) {
+    console.log(`   • Tables found: ${tests.database.tables.length}`);
+  }
+}
+
+/**
+ * Procesa la respuesta de bindings
+ */
+function processBindingsResponse(output) {
+  try {
+    const data = JSON.parse(output);
+    displayBindingsStatus(data);
+    displayConnectivityTests(data.tests);
+    return true;
+  } catch (error) {
+    console.log('❌ Error parseando respuesta:', error.message);
+    return false;
+  }
+}
+
 async function verifyCurrentBindings() {
   console.log('\n🔍 VERIFICANDO BINDINGS ACTUALES');
   console.log('═══════════════════════════════════');
@@ -111,33 +152,11 @@ async function verifyCurrentBindings() {
   const result = runCommand(curlCommand);
   
   if (result.success) {
-    try {
-      const data = JSON.parse(result.output);
-      console.log('✅ API respondiendo correctamente');
-      console.log('\n📊 Estado de bindings:');
-      console.log(`   • D1 Database (${CONFIG.bindings.d1.name}): ${data.bindings?.DB ? '✅' : '❌'}`);
-      console.log(`   • KV Namespace (${CONFIG.bindings.kv.name}): ${data.bindings?.ACA_KV ? '✅' : '❌'}`);
-      console.log(`   • Environment: ${data.bindings?.ENVIRONMENT || 'not set'}`);
-      
-      if (data.tests) {
-        console.log('\n🧪 Tests de conectividad:');
-        console.log(`   • Database connected: ${data.tests.database?.connected ? '✅' : '❌'}`);
-        console.log(`   • KV connected: ${data.tests.kv?.connected ? '✅' : '❌'}`);
-        
-        if (data.tests.database?.tables) {
-          console.log(`   • Tables found: ${data.tests.database.tables.length}`);
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.log('❌ Error parseando respuesta:', error.message);
-    }
+    return processBindingsResponse(result.output);
   } else {
     console.log('❌ Error verificando bindings:', result.error);
+    return false;
   }
-  
-  return false;
 }
 
 async function main() {
