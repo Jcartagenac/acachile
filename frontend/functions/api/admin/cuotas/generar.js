@@ -71,7 +71,7 @@ export async function onRequestPost(context) {
     const { results: socios } = await env.DB.prepare(`
       SELECT id, nombre, apellido, valor_cuota, estado_socio
       FROM usuarios 
-      WHERE activo = 1 AND estado_socio = 'activo'
+      WHERE activo = 1 AND (estado_socio = 'activo' OR estado_socio IS NULL)
       ORDER BY apellido, nombre
     `).all();
 
