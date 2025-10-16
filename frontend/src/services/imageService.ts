@@ -86,21 +86,53 @@ class ImageService {
       const img = new Image();
 
       img.onload = () => {
-        // Calcular dimensiones manteniendo proporción
         let { width, height } = options;
-        const aspectRatio = img.width / img.height;
+        
+        // Si se especifican ambas dimensiones (avatar cuadrado), usar crop centrado
+        if (width && height && width === height) {
+          // Calcular dimensiones para crop centrado manteniendo proporción
+          const scale = Math.max(width / img.width, height / img.height);
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
+          
+          // Calcular posición de recorte centrado
+          const offsetX = (scaledWidth - width) / 2;
+          const offsetY = (scaledHeight - height) / 2;
+          
+          // Configurar canvas al tamaño final
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Dibujar imagen escalada y centrada (crop)
+          ctx?.drawImage(
+            img,
+            0, 0, img.width, img.height,           // Área origen (imagen completa)
+            -offsetX, -offsetY, scaledWidth, scaledHeight  // Área destino (centrado)
+          );
+        } else {
+          // Para otras dimensiones, mantener proporción sin crop
+          const aspectRatio = img.width / img.height;
 
-        if (width && !height) {
-          height = width / aspectRatio;
-        } else if (height && !width) {
-          width = height * aspectRatio;
+          if (width && !height) {
+            height = width / aspectRatio;
+          } else if (height && !width) {
+            width = height * aspectRatio;
+          } else if (width && height) {
+            // Si ambas se especifican pero no son cuadradas, respetar proporción
+            const targetRatio = width / height;
+            if (aspectRatio > targetRatio) {
+              height = width / aspectRatio;
+            } else {
+              width = height * aspectRatio;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Dibujar imagen redimensionada
+          ctx?.drawImage(img, 0, 0, width, height);
         }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        // Dibujar imagen redimensionada
-        ctx?.drawImage(img, 0, 0, width, height);
 
         // Convertir a blob
         canvas.toBlob(
@@ -204,9 +236,9 @@ class ImageService {
       maxSize: 5 * 1024 * 1024, // 5MB para avatares
       allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
       resize: {
-        width: 200,
-        height: 200,
-        quality: 90
+        width: 400,
+        height: 400,
+        quality: 92
       }
     };
 
