@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ProfileModule } from '../components/profile/ProfileModule';
 import { AccountModule } from '../components/profile/AccountModule';
+import { CuotasModule } from '../components/profile/CuotasModule';
 import { SettingsModule } from '../components/profile/SettingsModule';
 import { AdminModule } from '../components/profile/AdminModule';
 
@@ -93,7 +94,12 @@ export const ProfilePage: React.FC = () => {
       case 'profile':
         return <ProfileModule />;
       case 'account':
-        return <AccountModule />;
+        return (
+          <div className="space-y-6">
+            <CuotasModule />
+            <AccountModule />
+          </div>
+        );
       case 'settings':
         return <SettingsModule />;
       case 'admin':
