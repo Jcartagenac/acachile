@@ -21,13 +21,18 @@ import {
   SearchResultsPage,
   AdminDashboard,
   ProfilePage,
-  PerfilSocio
+  PerfilSocio,
+  PanelAdminDashboard,
+  AdminContent,
+  AdminNews,
+  AdminSocios,
+  AdminCuotas
 } from './pages';
 import AdminLayout from './components/layout/AdminLayout';
+import PanelAdminLayout from './components/layout/PanelAdminLayout';
 import AdminUsers from './pages/AdminUsers';
 import AdminSettings from './pages/AdminSettings';
 import AdminMonitoring from './pages/AdminMonitoring';
-import AdminCuotas from './pages/AdminCuotas';
 
 function App() {
   return (
@@ -58,7 +63,7 @@ function App() {
           {/* Búsqueda */}
           <Route path="/buscar" element={<SearchResultsPage />} />
           
-          {/* Administración */}
+          {/* Administración Antigua (mantener por compatibilidad) */}
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
@@ -68,11 +73,18 @@ function App() {
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
           <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />
           
+          {/* Panel de Administración Nuevo */}
+          <Route path="/panel-admin" element={<PanelAdminLayout><PanelAdminDashboard /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users/:id" element={<PerfilSocio />} />
+          <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
+          <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
+          <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
+          
           {/* Perfil de Usuario */}
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/configuracion" element={<ProfilePage />} />
           <Route path="/mi-cuenta" element={<ProfilePage />} />
-          <Route path="/panel-admin" element={<ProfilePage defaultTab="admin" />} />
           
           {/* Páginas generales */}
           <Route path="/contacto" element={<ContactPage />} />
