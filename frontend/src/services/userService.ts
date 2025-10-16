@@ -10,6 +10,8 @@ export interface UserProfile {
   direccion?: string;
   avatar?: string;
   region?: string;
+  rut?: string;
+  ciudad?: string;
   fechaIngreso?: string;
   acaMembership?: {
     yearsActive: number;
@@ -26,6 +28,8 @@ export interface UpdateProfileRequest {
   direccion?: string;
   avatar?: string;
   region?: string;
+  rut?: string;
+  ciudad?: string;
 }
 
 export interface ApiResponse<T> {
@@ -133,7 +137,7 @@ class UserService {
     if (profileData.lastName) userUpdates.lastName = profileData.lastName;
     if (profileData.email) userUpdates.email = profileData.email;
     if (profileData.phone !== undefined) userUpdates.phone = profileData.phone;
-    if (profileData.direccion !== undefined) userUpdates.city = profileData.direccion;
+    if (profileData.rut !== undefined) userUpdates.rut = profileData.rut;
     if (profileData.avatar !== undefined) userUpdates.avatar = profileData.avatar;
     if (profileData.region !== undefined) userUpdates.region = profileData.region;
 
@@ -176,7 +180,9 @@ class UserService {
           nombre: profileData.firstName,
           apellido: profileData.lastName,
           telefono: profileData.phone || null,
-          ciudad: profileData.direccion || null
+          rut: profileData.rut || null,
+          ciudad: profileData.ciudad || null,
+          direccion: profileData.direccion || null
         })
       });
 

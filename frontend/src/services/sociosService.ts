@@ -14,6 +14,7 @@ export interface Socio {
   telefono: string | null;
   rut: string | null;
   direccion: string | null;
+  ciudad: string | null;
   fotoUrl: string | null;
   valorCuota: number;
   estadoSocio: 'activo' | 'inactivo' | 'suspendido';
@@ -56,6 +57,7 @@ export interface CreateSocioData {
   telefono?: string;
   rut?: string;
   direccion?: string;
+  ciudad?: string;
   valorCuota?: number;
   password: string;
 }

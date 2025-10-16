@@ -11,6 +11,7 @@ import {
   UserPlus,
   Search,
   Eye,
+  Edit,
   Trash2,
   CheckCircle,
   XCircle,
@@ -27,6 +28,8 @@ export default function AdminSocios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSocio, setEditingSocio] = useState<Socio | null>(null);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
 
   useEffect(() => {
@@ -267,6 +270,16 @@ export default function AdminSocios() {
                         <Eye className="h-5 w-5" />
                       </button>
                       <button
+                        onClick={() => {
+                          setEditingSocio(socio);
+                          setShowEditModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        title="Editar socio"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteSocio(socio)}
                         className="text-red-600 hover:text-red-900"
                         title="Eliminar socio"
@@ -288,6 +301,22 @@ export default function AdminSocios() {
           onClose={() => setShowCreateModal(false)}
           onSocioCreated={() => {
             setShowCreateModal(false);
+            loadSocios();
+          }}
+        />
+      )}
+
+      {/* Modal Editar Socio */}
+      {showEditModal && editingSocio && (
+        <EditSocioModal
+          socio={editingSocio}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingSocio(null);
+          }}
+          onSocioUpdated={() => {
+            setShowEditModal(false);
+            setEditingSocio(null);
             loadSocios();
           }}
         />
@@ -559,6 +588,287 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                   <>
                     <UserPlus className="h-5 w-5 mr-2" />
                     Crear Socio
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal para editar socio
+function EditSocioModal({ socio, onClose, onSocioUpdated }: {
+  socio: Socio;
+  onClose: () => void;
+  onSocioUpdated: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    nombre: socio.nombre,
+    apellido: socio.apellido,
+    email: socio.email,
+    telefono: socio.telefono || '',
+    rut: socio.rut || '',
+    direccion: socio.direccion || '',
+    ciudad: socio.ciudad || '',
+    valorCuota: socio.valorCuota,
+    estadoSocio: socio.estadoSocio,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [foto, setFoto] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(socio.fotoUrl || null);
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Actualizar socio
+      const response = await sociosService.updateSocio(socio.id, formData);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error al actualizar socio');
+      }
+
+      // Si hay foto nueva, subirla
+      if (foto) {
+        await sociosService.subirFotoSocio(foto, socio.id);
+      }
+
+      onSocioUpdated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Editar Socio</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Foto */}
+            <div>
+              <div className="block text-sm font-medium text-gray-700 mb-2">
+                Foto del Socio
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  {fotoPreview ? (
+                    <img
+                      src={fotoPreview}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <label htmlFor="edit-foto-input" className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <span className="text-sm text-gray-700">Cambiar foto</span>
+                  <input
+                    id="edit-foto-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFotoChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Nombre y Apellido */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-nombre-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-nombre-input"
+                  type="text"
+                  required
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-apellido-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  Apellido <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-apellido-input"
+                  type="text"
+                  required
+                  value={formData.apellido}
+                  onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Email y Teléfono */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="edit-email-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="edit-email-input"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-telefono-input" className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono
+                </label>
+                <input
+                  id="edit-telefono-input"
+                  type="tel"
+                  value={formData.telefono}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  placeholder="+56912345678"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* RUT y Ciudad */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  RUT
+                </label>
+                <input
+                  type="text"
+                  value={formData.rut}
+                  onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                  placeholder="12.345.678-9"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ciudad
+                </label>
+                <input
+                  type="text"
+                  value={formData.ciudad}
+                  onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                  placeholder="Santiago, Valparaíso, etc."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Dirección */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección
+              </label>
+              <textarea
+                value={formData.direccion}
+                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Valor Cuota y Estado */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Valor Cuota Mensual (CLP)
+                </label>
+                <input
+                  type="number"
+                  value={formData.valorCuota}
+                  onChange={(e) => setFormData({ ...formData, valorCuota: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Estado del Socio
+                </label>
+                <select
+                  value={formData.estadoSocio}
+                  onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'inactivo' | 'suspendido' })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                  <option value="suspendido">Suspendido</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Actualizando...
+                  </>
+                ) : (
+                  <>
+                    <Edit className="h-5 w-5 mr-2" />
+                    Actualizar Socio
                   </>
                 )}
               </button>

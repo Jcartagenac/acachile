@@ -94,6 +94,7 @@ function validateProfileFields(body: {
   telefono?: string;
   rut?: string;
   ciudad?: string;
+  direccion?: string;
 }): { valid: boolean; error?: string } {
   const { nombre, apellido } = body;
   
@@ -117,11 +118,12 @@ function buildUpdateFields(body: {
   telefono?: string;
   rut?: string;
   ciudad?: string;
+  direccion?: string;
   foto_url?: string;
 }): { fields: string[]; values: any[] } {
   const updateFields: string[] = [];
   const updateValues: any[] = [];
-  const { nombre, apellido, telefono, rut, ciudad, foto_url } = body;
+  const { nombre, apellido, telefono, rut, ciudad, direccion, foto_url } = body;
 
   if (nombre !== undefined) {
     updateFields.push('nombre = ?');
@@ -146,6 +148,11 @@ function buildUpdateFields(body: {
   if (ciudad !== undefined) {
     updateFields.push('ciudad = ?');
     updateValues.push(ciudad || null);
+  }
+
+  if (direccion !== undefined) {
+    updateFields.push('direccion = ?');
+    updateValues.push(direccion || null);
   }
 
   if (foto_url !== undefined) {

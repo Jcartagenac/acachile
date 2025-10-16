@@ -36,7 +36,9 @@ export const ProfileModule: React.FC = () => {
     phone: '',
     direccion: '',
     avatar: '',
-    region: ''
+    region: '',
+    rut: '',
+    ciudad: ''
   });
 
   // Cargar perfil al montar el componente
@@ -73,7 +75,9 @@ export const ProfileModule: React.FC = () => {
           phone: response.data.phone || '',
           direccion: response.data.direccion || '',
           avatar: avatarToUse,
-          region: response.data.region || ''
+          region: response.data.region || '',
+          rut: response.data.rut || '',
+          ciudad: response.data.ciudad || ''
         });
         console.log('✅ ProfileModule: Profile loaded successfully', response.data);
       } else {
@@ -128,7 +132,9 @@ export const ProfileModule: React.FC = () => {
         phone: profile.phone || '',
         direccion: profile.direccion || '',
         avatar: profile.avatar || '',
-        region: profile.region || ''
+        region: profile.region || '',
+        rut: profile.rut || '',
+        ciudad: profile.ciudad || ''
       });
     }
     setIsEditing(false);
@@ -454,6 +460,50 @@ export const ProfileModule: React.FC = () => {
                         : 'cursor-not-allowed opacity-75'
                     }`}
                     placeholder="+56 9 1234 5678"
+                  />
+                </div>
+              </div>
+
+              {/* RUT */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  RUT
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="text"
+                    value={formData.rut}
+                    onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                    disabled={!isEditing}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing 
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                        : 'cursor-not-allowed opacity-75'
+                    }`}
+                    placeholder="12.345.678-9"
+                  />
+                </div>
+              </div>
+
+              {/* Ciudad */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Ciudad
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="text"
+                    value={formData.ciudad}
+                    onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                    disabled={!isEditing}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing 
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                        : 'cursor-not-allowed opacity-75'
+                    }`}
+                    placeholder="Santiago, Valparaíso, etc."
                   />
                 </div>
               </div>
