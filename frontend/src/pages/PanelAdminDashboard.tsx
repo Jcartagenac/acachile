@@ -12,15 +12,18 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
+import { useDashboardStats } from '../hooks/useDashboardStats';
 
 export default function PanelAdminDashboard() {
-  // Datos de ejemplo - en producción vendrían del backend
+  const { totalSocios, cuotasPendientes, eventosActivos, comunicados, loading, error } = useDashboardStats();
+
   const stats = [
     {
       label: 'Total Socios',
-      value: '0',
+      value: loading ? '...' : totalSocios.toString(),
       change: '+0%',
       trend: 'up',
       icon: Users,
@@ -28,7 +31,7 @@ export default function PanelAdminDashboard() {
     },
     {
       label: 'Cuotas Pendientes',
-      value: '0',
+      value: loading ? '...' : cuotasPendientes.toString(),
       change: '-0%',
       trend: 'down',
       icon: Clock,
@@ -36,7 +39,7 @@ export default function PanelAdminDashboard() {
     },
     {
       label: 'Eventos Activos',
-      value: '0',
+      value: loading ? '...' : eventosActivos.toString(),
       change: '+0%',
       trend: 'up',
       icon: FileText,
@@ -44,7 +47,7 @@ export default function PanelAdminDashboard() {
     },
     {
       label: 'Comunicados Publicados',
-      value: '0',
+      value: loading ? '...' : comunicados.toString(),
       change: '+0%',
       trend: 'up',
       icon: Megaphone,
@@ -129,6 +132,24 @@ export default function PanelAdminDashboard() {
             Bienvenido al panel de administración de ACA Chile
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+              <p className="text-red-700">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12 mb-8">
+            <Loader2 className="h-8 w-8 text-red-600 animate-spin mr-2" />
+            <span className="text-gray-600">Cargando estadísticas...</span>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
