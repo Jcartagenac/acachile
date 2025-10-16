@@ -152,26 +152,59 @@ class UserService {
   }
 
   /**
-   * Actualiza el perfil usando AuthContext
+   * Actualiza el perfil usando AuthContext y API real
    */
-  private updateProfileWithAuthContext(profileData: UpdateProfileRequest): ApiResponse<UserProfile> {
+  private async updateProfileWithAuthContext(profileData: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
     if (!this.authContext?.user || !this.authContext.updateUser) {
       return { success: false, error: 'No hay contexto de autenticación' };
     }
 
-    const userUpdates = this.buildUserUpdates(profileData);
-    this.updateFullName(userUpdates, profileData);
-    
-    this.authContext.updateUser(userUpdates);
+    try {
+      // Llamar a la API real para actualizar en la base de datos
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        return { success: false, error: 'No hay token de autenticación' };
+      }
 
-    const updatedUser = { ...this.authContext.user, ...userUpdates };
-    const updatedProfile = this.mapAppUserToProfile(updatedUser);
+      const response = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre: profileData.firstName,
+          apellido: profileData.lastName,
+          telefono: profileData.phone || null,
+          ciudad: profileData.direccion || null
+        })
+      });
 
-    return { 
-      success: true, 
-      data: updatedProfile, 
-      message: 'Perfil actualizado exitosamente' 
-    };
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error actualizando perfil en el servidor' };
+      }
+
+      const result = await response.json();
+      
+      // Ahora actualizar el AuthContext local
+      const userUpdates = this.buildUserUpdates(profileData);
+      this.updateFullName(userUpdates, profileData);
+      
+      this.authContext.updateUser(userUpdates);
+
+      const updatedUser = { ...this.authContext.user, ...userUpdates };
+      const updatedProfile = this.mapAppUserToProfile(updatedUser);
+
+      return { 
+        success: true, 
+        data: updatedProfile, 
+        message: result.message || 'Perfil actualizado exitosamente' 
+      };
+    } catch (error) {
+      console.error('Error calling API:', error);
+      return { success: false, error: 'Error de conexión con el servidor' };
+    }
   }
 
   /**
@@ -199,8 +232,6 @@ class UserService {
   // Actualizar perfil de usuario
   async updateProfile(profileData: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       // Validar datos
       const validation = this.validateProfileData(profileData);
       if (!validation.valid) {
@@ -209,7 +240,7 @@ class UserService {
 
       // Usar AuthContext si está disponible
       if (this.authContext?.user) {
-        return this.updateProfileWithAuthContext(profileData);
+        return await this.updateProfileWithAuthContext(profileData);
       }
 
       // Fallback a respuesta mock
