@@ -18,37 +18,21 @@ interface ImageUploadRequest {
   contentType: string;
 }
 
-// Función para validar y optimizar el nombre del archivo
+// Función para subir imagen sin procesamiento (temporalmente desactivado)
 async function processImage(file: File, folder: string): Promise<{buffer: ArrayBuffer, size: number, contentType: string}> {
-  const config = COMPRESSION_CONFIG[folder as keyof typeof COMPRESSION_CONFIG] || COMPRESSION_CONFIG.gallery;
+  console.log(`📁 Subiendo imagen original sin procesamiento para ${folder}:`, {
+    originalSize: file.size,
+    originalType: file.type,
+    name: file.name
+  });
   
-  try {
-    const buffer = await file.arrayBuffer();
-    
-    // Determinar el content type óptimo
-    let contentType = file.type;
-    
-    // Convertir PNG a JPEG para archivos grandes (simulación de optimización)
-    if (file.type === 'image/png' && file.size > 500 * 1024) { // 500KB
-      contentType = 'image/jpeg';
-      console.log(`📸 PNG grande convertido a JPEG para optimización: ${file.size} bytes`);
-    }
-    
-    console.log(`📁 Configuración para ${folder}:`, {
-      maxDimensions: `${config.maxWidth}x${config.maxHeight}`,
-      quality: `${Math.round(config.quality * 100)}%`,
-      originalSize: file.size,
-      originalType: file.type,
-      finalType: contentType
-    });
-    
-    return { buffer, size: buffer.byteLength, contentType };
-    
-  } catch (error) {
-    console.warn('⚠️ Error procesando imagen, usando original:', error);
-    const buffer = await file.arrayBuffer();
-    return { buffer, size: buffer.byteLength, contentType: file.type };
-  }
+  // Retornar imagen original sin ningún procesamiento
+  const buffer = await file.arrayBuffer();
+  return { 
+    buffer, 
+    size: buffer.byteLength, 
+    contentType: file.type 
+  };
 }
 
 // Validaciones de seguridad (usando nombres en español para consistencia)
