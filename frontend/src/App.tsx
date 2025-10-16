@@ -27,6 +27,7 @@ import AdminLayout from './components/layout/AdminLayout';
 import AdminUsers from './pages/AdminUsers';
 import AdminSettings from './pages/AdminSettings';
 import AdminMonitoring from './pages/AdminMonitoring';
+import AdminSocios from './pages/AdminSocios';
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+          <Route path="/admin/socios" element={<AdminLayout><AdminSocios /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
           <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />
           

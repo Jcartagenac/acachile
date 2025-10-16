@@ -33,6 +33,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Usuarios', href: '/admin/users', icon: Users },
+    { name: 'Socios', href: '/admin/socios', icon: Users },
     { name: 'Eventos', href: '/admin/eventos', icon: Calendar },
     { name: 'Noticias', href: '/admin/noticias', icon: FileText },
     { name: 'Comentarios', href: '/admin/comentarios', icon: MessageSquare },
