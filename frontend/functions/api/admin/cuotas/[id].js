@@ -2,6 +2,18 @@
 // PUT /api/admin/cuotas/:id - Actualizar cuota (desmarcar pago)
 // DELETE /api/admin/cuotas/:id - Eliminar cuota
 
+// OPTIONS - CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
 // PUT - Desmarcar pago
 export async function onRequestPut(context) {
   const { request, env, params } = context;

@@ -684,28 +684,39 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       setShowDeleteModal(false);
 
       console.log('[SocioDetailModal] Eliminando cuota:', cuotaToDelete.id);
+      console.log('[SocioDetailModal] Cuota completa:', cuotaToDelete);
 
       const response = await sociosService.eliminarCuota(cuotaToDelete.id);
 
+      console.log('[SocioDetailModal] Respuesta eliminar:', response);
+
       if (response.success) {
-        // Recargar cuotas
+        console.log('[SocioDetailModal] Cuota eliminada exitosamente, recargando...');
+        
+        // Recargar cuotas del modal
         const cuotasResponse = await sociosService.getCuotas({ 
           año: añoSeleccionado, 
           socioId: socio.id 
         });
         
+        console.log('[SocioDetailModal] Cuotas recargadas:', cuotasResponse);
+        
         if (cuotasResponse.success && cuotasResponse.data) {
           setCuotas(cuotasResponse.data.cuotas || []);
+          console.log('[SocioDetailModal] Cuotas actualizadas en modal:', cuotasResponse.data.cuotas?.length);
         }
         
+        // Recargar lista principal
+        console.log('[SocioDetailModal] Llamando onUpdate para recargar lista principal...');
         onUpdate();
       } else {
+        console.error('[SocioDetailModal] Error al eliminar:', response.error);
         setError(response.error || 'Error al eliminar cuota');
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(`Error al eliminar cuota: ${errorMsg}`);
-      console.error('[SocioDetailModal] Error:', err);
+      console.error('[SocioDetailModal] Error excepción:', err);
     } finally {
       setLoading(false);
       setCuotaToDelete(null);
@@ -795,13 +806,13 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
             <div className="bg-green-50 rounded-lg p-4">
               <p className="text-sm text-gray-600">Meses Pagados</p>
               <p className="text-xl font-bold text-green-700">
-                {cuotas.filter(c => c.pagado).length} / 12
+                {cuotas.filter(c => c.pagado).length} / {cuotas.length}
               </p>
             </div>
             <div className="bg-red-50 rounded-lg p-4">
               <p className="text-sm text-gray-600">Meses Pendientes</p>
               <p className="text-xl font-bold text-red-700">
-                {12 - cuotas.filter(c => c.pagado).length}
+                {cuotas.filter(c => !c.pagado).length}
               </p>
             </div>
           </div>
