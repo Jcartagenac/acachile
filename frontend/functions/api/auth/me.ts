@@ -41,7 +41,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     // Obtener datos del usuario
     const user = await env.DB.prepare(`
-      SELECT id, email, nombre, apellido, telefono, rut, ciudad, role, activo, created_at, last_login
+      SELECT id, email, nombre, apellido, telefono, rut, ciudad, foto_url, role, activo, created_at, last_login
       FROM usuarios WHERE id = ? AND activo = 1
     `).bind(userId).first();
 
@@ -51,7 +51,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     }
 
     // Preparar respuesta del usuario
-    const userData: User = {
+    const userData: any = {
       id: user.id as number,
       email: user.email as string,
       nombre: user.nombre as string,
@@ -59,6 +59,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       telefono: user.telefono as string,
       rut: user.rut as string,
       ciudad: user.ciudad as string,
+      foto_url: user.foto_url as string,
       role: user.role as 'admin' | 'editor' | 'user',
       activo: Boolean(user.activo),
       created_at: user.created_at as string,
@@ -116,10 +117,11 @@ function buildUpdateFields(body: {
   telefono?: string;
   rut?: string;
   ciudad?: string;
+  foto_url?: string;
 }): { fields: string[]; values: any[] } {
   const updateFields: string[] = [];
   const updateValues: any[] = [];
-  const { nombre, apellido, telefono, rut, ciudad } = body;
+  const { nombre, apellido, telefono, rut, ciudad, foto_url } = body;
 
   if (nombre !== undefined) {
     updateFields.push('nombre = ?');
@@ -144,6 +146,11 @@ function buildUpdateFields(body: {
   if (ciudad !== undefined) {
     updateFields.push('ciudad = ?');
     updateValues.push(ciudad || null);
+  }
+
+  if (foto_url !== undefined) {
+    updateFields.push('foto_url = ?');
+    updateValues.push(foto_url || null);
   }
 
   return { fields: updateFields, values: updateValues };
@@ -200,6 +207,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       telefono?: string;
       rut?: string;
       ciudad?: string;
+      foto_url?: string;
     };
 
     const userId = authUser.userId;
@@ -222,7 +230,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     // Obtener datos actualizados
     const updatedUser = await env.DB.prepare(`
-      SELECT id, email, nombre, apellido, telefono, rut, ciudad, role, activo, created_at, last_login
+      SELECT id, email, nombre, apellido, telefono, rut, ciudad, foto_url, role, activo, created_at, last_login
       FROM usuarios WHERE id = ?
     `).bind(userId).first();
 
@@ -231,7 +239,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     }
 
     // Preparar respuesta del usuario
-    const userData: User = {
+    const userData: any = {
       id: updatedUser.id as number,
       email: updatedUser.email as string,
       nombre: updatedUser.nombre as string,
@@ -239,6 +247,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       telefono: updatedUser.telefono as string,
       rut: updatedUser.rut as string,
       ciudad: updatedUser.ciudad as string,
+      foto_url: updatedUser.foto_url as string,
       role: updatedUser.role as 'admin' | 'editor' | 'user',
       activo: Boolean(updatedUser.activo),
       created_at: updatedUser.created_at as string,

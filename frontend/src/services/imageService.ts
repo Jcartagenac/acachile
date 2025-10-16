@@ -212,11 +212,37 @@ class ImageService {
 
     const result = await this.uploadImage(file, options);
     
-    // Si la subida fue exitosa, actualizar el usuario en AuthContext
+    // Si la subida fue exitosa, actualizar en base de datos Y en AuthContext
     if (result.success && result.data && this.authContext?.user) {
+      const fotoUrl = result.data.publicUrl;
+      
+      // Actualizar en AuthContext (UI inmediata)
       this.authContext.updateUser({ 
-        avatar: result.data.publicUrl 
+        avatar: fotoUrl 
       });
+
+      // Actualizar en base de datos (persistencia)
+      try {
+        const token = localStorage.getItem('auth_token');
+        const updateResponse = await fetch('/api/auth/me', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            foto_url: fotoUrl
+          })
+        });
+
+        if (!updateResponse.ok) {
+          console.error('Error actualizando foto_url en base de datos:', await updateResponse.text());
+        } else {
+          console.log('✅ Foto actualizada en base de datos:', fotoUrl);
+        }
+      } catch (error) {
+        console.error('Error actualizando foto_url en base de datos:', error);
+      }
     }
 
     return result;
