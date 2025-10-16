@@ -482,10 +482,64 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
     loadCuotasAño();
   }, [añoSeleccionado, socio.id]);
 
-  const handleTogglePago = async (cuota: Cuota) => {
-    // Mostrar modal de confirmación
-    setCuotaToToggle(cuota);
-    setShowConfirmModal(true);
+  const handleTogglePago = async (mes: number) => {
+    const cuota = getCuotaMes(mes);
+    
+    // Si existe la cuota, mostrar modal de confirmación
+    if (cuota) {
+      setCuotaToToggle(cuota);
+      setShowConfirmModal(true);
+    } else {
+      // Si no existe la cuota, crearla automáticamente como pagada
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('[SocioDetailModal] Creando cuota nueva para mes:', mes);
+        
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/admin/cuotas', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            usuarioId: socio.id,
+            año: añoSeleccionado,
+            mes: mes,
+            valor: socio.valorCuota,
+            pagado: true,
+            metodoPago: 'transferencia'
+          }),
+        });
+        
+        console.log('[SocioDetailModal] Respuesta crear cuota:', response.status);
+        
+        if (response.ok) {
+          // Recargar cuotas
+          const cuotasResponse = await sociosService.getCuotas({ 
+            año: añoSeleccionado, 
+            socioId: socio.id 
+          });
+          
+          if (cuotasResponse.success && cuotasResponse.data) {
+            setCuotas(cuotasResponse.data.cuotas || []);
+          }
+          
+          onUpdate();
+        } else {
+          const errorData = await response.json();
+          setError(errorData.error || 'Error al crear cuota');
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+        setError(`Error al crear cuota: ${errorMsg}`);
+        console.error('[SocioDetailModal] Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const confirmTogglePago = async () => {
@@ -550,6 +604,26 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
 
   const getCuotaMes = (mes: number) => cuotas.find(c => c.mes === mes);
   const esAtrasado = (mes: number) => añoSeleccionado === new Date().getFullYear() && mes < mesActual;
+
+  // Determinar si un mes es válido (desde fecha de ingreso hacia adelante)
+  const esMesValido = (mes: number): boolean => {
+    if (!socio.fechaIngreso) return true; // Si no hay fecha de ingreso, todos son válidos
+    
+    const fechaIngreso = new Date(socio.fechaIngreso);
+    const añoIngreso = fechaIngreso.getFullYear();
+    const mesIngreso = fechaIngreso.getMonth() + 1; // getMonth() es 0-indexed
+    
+    // Si el año seleccionado es anterior al año de ingreso, no es válido
+    if (añoSeleccionado < añoIngreso) return false;
+    
+    // Si es el mismo año de ingreso, solo son válidos los meses desde el mes de ingreso
+    if (añoSeleccionado === añoIngreso) {
+      return mes >= mesIngreso;
+    }
+    
+    // Para años posteriores, todos los meses son válidos
+    return true;
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -624,14 +698,15 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
 
           {/* Advertencia si faltan cuotas */}
           {cuotas.length < 12 && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-yellow-800">
+                <p className="text-sm font-medium text-blue-800">
                   Solo se han generado {cuotas.length} de 12 cuotas para este año
                 </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  Los meses sin cuota aparecen deshabilitados. Usa el botón "Generar Cuotas {añoSeleccionado}" arriba para crear todas las cuotas del año.
+                <p className="text-xs text-blue-700 mt-1">
+                  Los meses sin cuota están en azul. Puedes hacer clic en ellos para marcarlos como pagados (se crearán automáticamente).
+                  También puedes usar el botón "Generar Cuotas {añoSeleccionado}" para crear todas las cuotas pendientes de una vez.
                 </p>
               </div>
             </div>
@@ -643,16 +718,27 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
               const mes = index + 1;
               const cuota = getCuotaMes(mes);
               const atrasado = esAtrasado(mes) && (!cuota || !cuota.pagado);
+              const mesValido = esMesValido(mes);
 
               return (
                 <button
                   key={mes}
-                  onClick={() => cuota && handleTogglePago(cuota)}
-                  disabled={loading || !cuota}
-                  title={!cuota ? 'Cuota no generada - Usa el botón "Generar Cuotas"' : ''}
+                  onClick={() => handleTogglePago(mes)}
+                  disabled={loading || !mesValido}
+                  title={
+                    !mesValido 
+                      ? 'Mes no disponible - Anterior a fecha de ingreso del socio' 
+                      : !cuota 
+                      ? 'Click para marcar como pagado (creará la cuota automáticamente)' 
+                      : cuota.pagado 
+                      ? 'Click para desmarcar como pagado' 
+                      : 'Click para marcar como pagado'
+                  }
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    !cuota
-                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                    !mesValido
+                      ? 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-40'
+                      : !cuota
+                      ? 'border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400'
                       : cuota.pagado
                       ? 'border-green-500 bg-green-50 hover:bg-green-100'
                       : atrasado
@@ -664,17 +750,19 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
                     <span className="text-sm font-medium text-gray-900">
                       {nombreMes}
                     </span>
-                    {cuota && (
-                      cuota.pagado ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : atrasado ? (
-                        <AlertCircle className="h-5 w-5 text-red-600" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-gray-400" />
-                      )
+                    {!mesValido ? (
+                      <div className="h-5 w-5" /> 
+                    ) : !cuota ? (
+                      <Clock className="h-5 w-5 text-blue-500" />
+                    ) : cuota.pagado ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : atrasado ? (
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-gray-400" />
                     )}
                   </div>
-                  {cuota && (
+                  {cuota ? (
                     <div className="text-xs">
                       {cuota.pagado ? (
                         <span className="text-green-700">
@@ -685,6 +773,18 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
                           {atrasado ? 'Atrasado' : 'Pendiente'}
                         </span>
                       )}
+                    </div>
+                  ) : mesValido ? (
+                    <div className="text-xs">
+                      <span className="text-blue-600">
+                        Sin generar
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-xs">
+                      <span className="text-gray-400">
+                        No disponible
+                      </span>
                     </div>
                   )}
                 </button>
@@ -702,8 +802,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           {/* Instrucciones */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              💡 <strong>Tip:</strong> Haz clic en un mes para marcar como pagado/no pagado.
-              Los meses anteriores al actual se marcan automáticamente como atrasados si no están pagados.
+              💡 <strong>Tip:</strong> Haz clic en cualquier mes disponible para marcar como pagado/no pagado.
+              Los meses sin cuota se crearán automáticamente al marcarlos como pagados.
+              Los meses en gris no están disponibles (anteriores a la fecha de ingreso del socio).
             </p>
           </div>
         </div>
