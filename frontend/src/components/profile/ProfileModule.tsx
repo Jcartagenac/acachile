@@ -274,25 +274,32 @@ export const ProfileModule: React.FC = () => {
                 }}
               >
                 {displayAvatarUrl ? (
-                  <img
-                    src={displayAvatarUrl}
-                    alt="Foto de perfil"
-                    style={{ 
-                      width: '128px',
-                      height: '128px',
-                      objectFit: 'cover',
-                      objectPosition: 'center top',
-                      borderRadius: '50%',
-                      aspectRatio: '1/1',
-                      display: 'block'
-                    }}
-                    onError={(e) => {
-                      // Fallback si la imagen no carga
-                      console.warn('⚠️ Error cargando avatar:', displayAvatarUrl);
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
+                  <div style={{
+                    width: '128px',
+                    height: '128px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    backgroundColor: '#f3f4f6'
+                  }}>
+                    <img
+                      src={displayAvatarUrl}
+                      alt="Foto de perfil"
+                      style={{ 
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center top',
+                        display: 'block'
+                      }}
+                      onError={(e) => {
+                        // Fallback si la imagen no carga
+                        console.warn('⚠️ Error cargando avatar:', displayAvatarUrl);
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div 
                     style={{

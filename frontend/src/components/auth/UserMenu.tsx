@@ -41,19 +41,26 @@ export const UserMenu: React.FC = () => {
           }}
         >
           {user.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              style={{
-                width: '32px',
-                height: '32px',
-                objectFit: 'cover',
-                objectPosition: 'center top',
-                borderRadius: '50%',
-                aspectRatio: '1/1',
-                display: 'block'
-              }}
-            />
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              position: 'relative',
+              backgroundColor: '#f3f4f6'
+            }}>
+              <img
+                src={user.avatar}
+                alt={user.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                  display: 'block'
+                }}
+              />
+            </div>
           ) : (
             <div 
               style={{
