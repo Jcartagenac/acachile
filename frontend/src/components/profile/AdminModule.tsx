@@ -15,7 +15,9 @@ import {
   Plus,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Upload,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdminService, Member, Communication, PaymentRecord } from '../../hooks/useAdminService';
@@ -131,10 +133,27 @@ export const AdminModule: React.FC = () => {
   ];
 
   const handleAddMember = () => {
-    console.log('[AdminModule] handleAddMember llamado');
-    alert('¡Botón Agregar Socio clickeado! Abriendo modal...');
+    console.log('[AdminModule] Abriendo modal agregar socio');
     setShowAddMemberModal(true);
-    console.log('[AdminModule] setShowAddMemberModal(true) ejecutado');
+  };
+
+  const handleCreateSocio = async (socioData: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // TODO: Llamar a la API real para crear socio
+      console.log('[AdminModule] Creando socio:', socioData);
+      
+      // Recargar lista de socios
+      await loadAdminData();
+      setShowAddMemberModal(false);
+    } catch (err) {
+      setError('Error al crear socio');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRemoveMember = (memberId: number) => {
@@ -458,76 +477,304 @@ export const AdminModule: React.FC = () => {
 
       {/* Modal Agregar Socio */}
       {showAddMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Agregar Nuevo Socio</h2>
-                <button 
-                  onClick={() => setShowAddMemberModal(false)} 
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <span className="text-2xl">×</span>
-                </button>
-              </div>
-
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded mb-6">
-                <div className="flex items-center">
-                  <AlertCircle className="h-5 w-5 text-blue-400 mr-2" />
-                  <p className="text-blue-700">
-                    <strong>¡Modal funcionando!</strong> Este es un modal temporal de prueba.
-                  </p>
-                </div>
-              </div>
-
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre Completo
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Ej: Juan Pérez"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Ej: juan@example.com"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end space-x-4 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddMemberModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert('Formulario enviado (demo)');
-                      setShowAddMemberModal(false);
-                    }}
-                  >
-                    Guardar Socio
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        <CreateSocioModal
+          onClose={() => setShowAddMemberModal(false)}
+          onSocioCreated={handleCreateSocio}
+        />
       )}
     </div>
   );
 };
+
+// Modal para crear socio - Componente separado
+function CreateSocioModal({ onClose, onSocioCreated }: {
+  onClose: () => void;
+  onSocioCreated: (data: any) => void;
+}) {
+  const [formData, setFormData] = useState({
+    nombre: '',
+    apellido: '',
+    email: '',
+    telefono: '',
+    rut: '',
+    direccion: '',
+    valorCuota: 6500,
+    password: '',
+  });
+  const [foto, setFoto] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Validaciones
+      if (!formData.nombre || !formData.apellido || !formData.email || !formData.password) {
+        throw new Error('Por favor completa todos los campos obligatorios');
+      }
+
+      if (formData.password.length < 6) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
+
+      // Crear socio a través de la API
+      const response = await fetch('/api/admin/socios', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear socio');
+      }
+
+      const data = await response.json();
+      const socioId = data.data?.id;
+
+      // Si hay foto, subirla
+      if (foto && socioId) {
+        const formDataFoto = new FormData();
+        formDataFoto.append('foto', foto);
+
+        await fetch(`/api/admin/socios/${socioId}/foto`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+          body: formDataFoto,
+        });
+      }
+
+      onSocioCreated(data.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Agregar Nuevo Socio</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <span className="text-2xl">×</span>
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Foto */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Foto del Socio <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  {fotoPreview ? (
+                    <img
+                      src={fotoPreview}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <span className="text-sm text-gray-700">Seleccionar foto</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFotoChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Nombre y Apellido */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Apellido <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.apellido}
+                  onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Email y Teléfono */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Correo Electrónico <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={formData.telefono}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  placeholder="+56912345678"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* RUT */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                RUT <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.rut}
+                onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                placeholder="12.345.678-9"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Dirección */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                required
+                value={formData.direccion}
+                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Valor Cuota */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Valor Cuota Mensual (CLP) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                required
+                value={formData.valorCuota}
+                onChange={(e) => setFormData({ ...formData, valorCuota: parseInt(e.target.value) })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-sm text-gray-500">Valor por defecto: $6.500 CLP</p>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                minLength={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-sm text-gray-500">Mínimo 6 caracteres</p>
+            </div>
+
+            {/* Botones */}
+            <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Creando...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-5 w-5 mr-2" />
+                    Crear Socio
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
