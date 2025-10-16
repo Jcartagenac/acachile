@@ -10,12 +10,12 @@ interface CloudflareContext {
   env: Env;
 }
 
-// Carpetas que deben existir en R2
+// Carpetas que deben existir en R2 (usando nombres en español para consistencia)
 const REQUIRED_FOLDERS = [
   'avatars',
   'home', 
-  'events',
-  'news',
+  'eventos',    // Cambio de 'events' a 'eventos' 
+  'noticias',   // Cambio de 'news' a 'noticias'
   'gallery'
 ];
 

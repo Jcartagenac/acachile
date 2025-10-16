@@ -2,8 +2,8 @@
 import { AppUser } from '../../../shared';
 
 export interface ImageUploadOptions {
-  folder: 'avatars' | 'home' | 'events' | 'news' | 'gallery';
-  maxSize?: number; // en bytes, default 5MB
+  folder: 'avatars' | 'home' | 'eventos' | 'noticias' | 'gallery';
+  maxSize?: number; // en bytes, default: 10MB
   allowedTypes?: string[]; // default: image/*
   resize?: {
     width: number;
@@ -257,7 +257,7 @@ class ImageService {
   // Subir imagen para noticias
   async uploadNewsImage(file: File): Promise<ApiResponse<ImageUploadResult>> {
     const options: ImageUploadOptions = {
-      folder: 'news',
+      folder: 'noticias',
       maxSize: 5 * 1024 * 1024, // 5MB para noticias
       allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
       resize: {

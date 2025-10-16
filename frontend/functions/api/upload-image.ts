@@ -18,8 +18,8 @@ interface ImageUploadRequest {
   contentType: string;
 }
 
-// Validaciones de seguridad
-const ALLOWED_FOLDERS = ['avatars', 'home', 'events', 'news', 'gallery'];
+// Validaciones de seguridad (usando nombres en español para consistencia)
+const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery'];
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
