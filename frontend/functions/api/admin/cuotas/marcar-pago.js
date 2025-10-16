@@ -17,6 +17,11 @@ export async function onRequestPost(context) {
       procesadoPor = 1 // TODO: obtener del usuario autenticado
     } = body;
 
+    // Convertir undefined a null para D1
+    const comprobanteUrlFinal = comprobanteUrl || null;
+    const notasFinal = notas || null;
+    const fechaPagoFinal = fechaPago || new Date().toISOString();
+
     // Validaciones
     if (!cuotaId) {
       return new Response(JSON.stringify({
@@ -70,8 +75,6 @@ export async function onRequestPost(context) {
       });
     }
 
-    const fechaToUse = fechaPago || new Date().toISOString();
-
     // Marcar cuota como pagada
     const updateResult = await env.DB.prepare(`
       UPDATE cuotas 
@@ -83,7 +86,7 @@ export async function onRequestPost(context) {
         notas = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).bind(fechaToUse, metodoPago, comprobanteUrl, notas, cuotaId).run();
+    `).bind(fechaPagoFinal, metodoPago, comprobanteUrlFinal, notasFinal, cuotaId).run();
 
     if (!updateResult.success) {
       throw new Error('Error actualizando cuota en la base de datos');
@@ -100,10 +103,10 @@ export async function onRequestPost(context) {
       cuota.usuario_id,
       cuota.valor,
       metodoPago,
-      comprobanteUrl,
-      fechaToUse,
+      comprobanteUrlFinal,
+      fechaPagoFinal,
       procesadoPor,
-      notas
+      notasFinal
     ).run();
 
     // Obtener cuota actualizada
