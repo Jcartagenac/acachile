@@ -16,7 +16,6 @@ import {
   PostDetailPage,
   ContactPage,
   NotFoundPage,
-  AdminPanelPage,
   NewsPage,
   NewsDetailPage,
   SearchResultsPage,
@@ -27,7 +26,6 @@ import AdminLayout from './components/layout/AdminLayout';
 import AdminUsers from './pages/AdminUsers';
 import AdminSettings from './pages/AdminSettings';
 import AdminMonitoring from './pages/AdminMonitoring';
-import AdminSocios from './pages/AdminSocios';
 import AdminCuotas from './pages/AdminCuotas';
 
 function App() {
@@ -63,7 +61,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-          <Route path="/admin/socios" element={<AdminLayout><AdminSocios /></AdminLayout>} />
+          <Route path="/admin/socios" element={<ProfilePage defaultTab="admin" />} />
           <Route path="/admin/cuotas" element={<AdminLayout><AdminCuotas /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
           <Route path="/admin/monitoring" element={<AdminLayout><AdminMonitoring /></AdminLayout>} />
@@ -72,7 +70,7 @@ function App() {
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/configuracion" element={<ProfilePage />} />
           <Route path="/mi-cuenta" element={<ProfilePage />} />
-          <Route path="/panel-admin" element={<ProfilePage />} />
+          <Route path="/panel-admin" element={<ProfilePage defaultTab="admin" />} />
           
           {/* Páginas generales */}
           <Route path="/contacto" element={<ContactPage />} />

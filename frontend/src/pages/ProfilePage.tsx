@@ -18,17 +18,24 @@ import { AdminModule } from '../components/profile/AdminModule';
 
 type ActiveModule = 'profile' | 'account' | 'settings' | 'admin';
 
-export const ProfilePage: React.FC = () => {
+interface ProfilePageProps {
+  defaultTab?: ActiveModule;
+}
+
+export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
   const location = useLocation();
   const { user, getRoleDisplayName } = useAuth();
   const { isAdmin, isDirector, isDirectorEditor } = usePermissions();
 
   // Determine active module based on route
   const getActiveModuleFromRoute = (): ActiveModule => {
+    // Si se proporciona defaultTab, usarlo
+    if (defaultTab) return defaultTab;
+    
     const path = location.pathname;
     if (path === '/mi-cuenta') return 'account';
     if (path === '/configuracion') return 'settings';
-    if (path === '/panel-admin') return 'admin';
+    if (path === '/panel-admin' || path === '/admin/socios') return 'admin';
     return 'profile';
   };
 
@@ -36,7 +43,7 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     setActiveModule(getActiveModuleFromRoute());
-  }, [location.pathname]);
+  }, [location.pathname, defaultTab]);
 
   if (!user) {
     return (
