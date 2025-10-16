@@ -246,12 +246,14 @@ class SociosService {
 
   async marcarCuotaPagada(cuotaId: number, datos: {
     metodoPago: 'transferencia' | 'efectivo' | 'tarjeta';
+    fechaPago?: string;
     comprobanteUrl?: string;
     notas?: string;
   }): Promise<{ success: boolean; data?: Cuota; error?: string }> {
     try {
       // Filtrar valores undefined para evitar errores en D1
       const payload: any = { cuotaId, metodoPago: datos.metodoPago };
+      if (datos.fechaPago) payload.fechaPago = datos.fechaPago;
       if (datos.comprobanteUrl) payload.comprobanteUrl = datos.comprobanteUrl;
       if (datos.notas) payload.notas = datos.notas;
       
@@ -282,6 +284,38 @@ class SociosService {
       return { success: true, data: data.data };
     } catch (error) {
       console.error('[sociosService] Error marking cuota as paid:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+  }
+
+  async eliminarCuota(cuotaId: number): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('[sociosService] Eliminando cuota:', cuotaId);
+      
+      const response = await fetch(`${API_BASE_URL}/admin/cuotas/${cuotaId}`, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders(),
+      });
+
+      console.log('[sociosService] Respuesta eliminar status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[sociosService] Error response:', errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.error || 'Error al eliminar cuota');
+        } catch {
+          throw new Error(`Error ${response.status}: ${errorText || 'Error al eliminar cuota'}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('[sociosService] Cuota eliminada exitosamente:', data);
+      return { success: true };
+    } catch (error) {
+      console.error('[sociosService] Error eliminando cuota:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
     }
   }

@@ -460,6 +460,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   const [cuotaToToggle, setCuotaToToggle] = useState<Cuota | null>(null);
   const [showCreateCuotaModal, setShowCreateCuotaModal] = useState(false);
   const [mesToCreate, setMesToCreate] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [cuotaToDelete, setCuotaToDelete] = useState<Cuota | null>(null);
+  const [fechaPago, setFechaPago] = useState<string>(new Date().toISOString().substring(0, 10));
 
   // Cargar cuotas cuando cambia el año
   useEffect(() => {
@@ -542,8 +545,11 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       if (nuevaCuota) {
         console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuota.id);
         
+        const fechaPagoISO = new Date(fechaPago).toISOString();
+        
         const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuota.id, {
-          metodoPago: 'transferencia'
+          metodoPago: 'transferencia',
+          fechaPago: fechaPagoISO
         });
         
         if (marcarResponse.success) {
@@ -585,9 +591,12 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       console.log('[SocioDetailModal] Marcando cuota:', cuotaToToggle);
 
       if (!cuotaToToggle.pagado) {
-        // Marcar como pagado
+        // Marcar como pagado con la fecha seleccionada
+        const fechaPagoISO = new Date(fechaPago).toISOString();
+        
         const response = await sociosService.marcarCuotaPagada(cuotaToToggle.id, {
-          metodoPago: 'transferencia'
+          metodoPago: 'transferencia',
+          fechaPago: fechaPagoISO
         });
 
         console.log('[SocioDetailModal] Respuesta marcar pagado:', response);
@@ -658,6 +667,48 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
     } finally {
       setLoading(false);
       setCuotaToToggle(null);
+    }
+  };
+
+  const handleDeleteCuota = (cuota: Cuota) => {
+    setCuotaToDelete(cuota);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteCuota = async () => {
+    if (!cuotaToDelete) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setShowDeleteModal(false);
+
+      console.log('[SocioDetailModal] Eliminando cuota:', cuotaToDelete.id);
+
+      const response = await sociosService.eliminarCuota(cuotaToDelete.id);
+
+      if (response.success) {
+        // Recargar cuotas
+        const cuotasResponse = await sociosService.getCuotas({ 
+          año: añoSeleccionado, 
+          socioId: socio.id 
+        });
+        
+        if (cuotasResponse.success && cuotasResponse.data) {
+          setCuotas(cuotasResponse.data.cuotas || []);
+        }
+        
+        onUpdate();
+      } else {
+        setError(response.error || 'Error al eliminar cuota');
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
+      setError(`Error al eliminar cuota: ${errorMsg}`);
+      console.error('[SocioDetailModal] Error:', err);
+    } finally {
+      setLoading(false);
+      setCuotaToDelete(null);
     }
   };
 
@@ -780,31 +831,50 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
               const mesValido = esMesValido(mes);
 
               return (
-                <button
+                <div
                   key={mes}
-                  onClick={() => handleTogglePago(mes)}
-                  disabled={loading || !mesValido}
-                  title={
-                    !mesValido 
-                      ? 'Mes no disponible - Anterior a fecha de ingreso del socio' 
-                      : !cuota 
-                      ? 'Click para marcar como pagado (creará la cuota automáticamente)' 
-                      : cuota.pagado 
-                      ? 'Click para desmarcar como pagado' 
-                      : 'Click para marcar como pagado'
-                  }
-                  className={`p-4 rounded-lg border-2 transition-all ${
+                  className={`p-4 rounded-lg border-2 transition-all relative group ${
                     !mesValido
-                      ? 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-40'
+                      ? 'border-gray-200 bg-gray-100 opacity-40'
                       : !cuota
-                      ? 'border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400'
+                      ? 'border-blue-300 bg-blue-50'
                       : cuota.pagado
-                      ? 'border-green-500 bg-green-50 hover:bg-green-100'
+                      ? 'border-green-500 bg-green-50'
                       : atrasado
-                      ? 'border-red-500 bg-red-50 hover:bg-red-100'
-                      : 'border-gray-300 bg-white hover:bg-gray-50'
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300 bg-white'
                   }`}
                 >
+                  {/* Botón eliminar (solo si hay cuota y no está pagada) */}
+                  {cuota && !cuota.pagado && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCuota(cuota);
+                      }}
+                      disabled={loading}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                      title="Eliminar cuota"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+
+                  {/* Contenido principal - clickeable */}
+                  <button
+                    onClick={() => handleTogglePago(mes)}
+                    disabled={loading || !mesValido}
+                    className="w-full text-left"
+                    title={
+                      !mesValido 
+                        ? 'Mes no disponible - Anterior a fecha de ingreso del socio' 
+                        : !cuota 
+                        ? 'Click para marcar como pagado (creará la cuota automáticamente)' 
+                        : cuota.pagado 
+                        ? 'Click para desmarcar como pagado' 
+                        : 'Click para marcar como pagado'
+                    }
+                  >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-900">
                       {nombreMes}
@@ -841,17 +911,16 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
                     </div>
                   ) : (
                     <div className="text-xs">
-                      <span className="text-gray-400">
+                        <span className="text-gray-400">
                         No disponible
                       </span>
                     </div>
                   )}
                 </button>
+              </div>
               );
             })}
-          </div>
-
-          {error && (
+          </div>          {error && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
               <p className="text-sm text-red-800">{error}</p>
@@ -877,13 +946,32 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
               {cuotaToToggle.pagado ? 'Desmarcar Pago' : 'Marcar como Pagado'}
             </h3>
             
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-gray-600 mb-4">
               {cuotaToToggle.pagado ? (
                 <>¿Estás seguro de desmarcar como pagado el mes de <strong>{MESES[cuotaToToggle.mes - 1]}</strong>?</>
               ) : (
                 <>¿Deseas marcar como pagado el mes de <strong>{MESES[cuotaToToggle.mes - 1]}</strong>?</>
               )}
             </p>
+
+            {/* Selector de fecha solo cuando se marca como pagado */}
+            {!cuotaToToggle.pagado && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha de Pago
+                </label>
+                <input
+                  type="date"
+                  value={fechaPago}
+                  onChange={(e) => setFechaPago(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Por defecto es hoy, pero puedes cambiarla si el pago fue en otra fecha
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3">
               <button
@@ -947,6 +1035,23 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
               </p>
             </div>
 
+            {/* Selector de fecha de pago */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fecha de Pago
+              </label>
+              <input
+                type="date"
+                value={fechaPago}
+                onChange={(e) => setFechaPago(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Por defecto es hoy, pero puedes cambiarla si el pago fue en otra fecha
+              </p>
+            </div>
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
@@ -971,6 +1076,63 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
                 ) : (
                   <>
                     Crear y Marcar como Pagada
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para eliminar cuota */}
+      {showDeleteModal && cuotaToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Eliminar Cuota
+                </h3>
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              ¿Estás seguro de eliminar la cuota de <strong>{MESES[cuotaToDelete.mes - 1]} {cuotaToDelete.año}</strong>?
+            </p>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+              <p className="text-xs text-red-800">
+                ⚠️ <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
+                Solo puedes eliminar cuotas que no estén marcadas como pagadas.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setCuotaToDelete(null);
+                }}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteCuota}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <X className="h-4 w-4" />
+                    Eliminar Cuota
                   </>
                 )}
               </button>
