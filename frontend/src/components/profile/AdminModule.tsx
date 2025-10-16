@@ -20,7 +20,8 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useAdminService, Member, Communication, PaymentRecord } from '../../hooks/useAdminService';
+import { useAdminService, Member, Communication } from '../../hooks/useAdminService';
+import AdminCuotas from '../../pages/AdminCuotas';
 
 export const AdminModule: React.FC = () => {
   const { hasPermission } = useAuth();
@@ -37,7 +38,6 @@ export const AdminModule: React.FC = () => {
   // Data states
   const [members, setMembers] = useState<Member[]>([]);
   const [communications, setCommunications] = useState<Communication[]>([]);
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
 
   // Load admin data
   useEffect(() => {
@@ -49,10 +49,9 @@ export const AdminModule: React.FC = () => {
     setError(null);
     
     try {
-      const [membersRes, communicationsRes, paymentsRes] = await Promise.all([
+      const [membersRes, communicationsRes] = await Promise.all([
         adminService.getMembers(searchTerm),
-        adminService.getCommunications(),
-        adminService.getPaymentRecords()
+        adminService.getCommunications()
       ]);
 
       if (membersRes.success && membersRes.data) {
@@ -60,9 +59,6 @@ export const AdminModule: React.FC = () => {
       }
       if (communicationsRes.success && communicationsRes.data) {
         setCommunications(communicationsRes.data);
-      }
-      if (paymentsRes.success && paymentsRes.data) {
-        setPayments(paymentsRes.data);
       }
     } catch (error) {
       console.error('Error loading admin data:', error);
@@ -190,16 +186,11 @@ export const AdminModule: React.FC = () => {
     }
   };
 
-  const handleMarkPayment = (memberId: number, month: string) => {
-    // Implementar marcado de pago
-    console.log('Marcar pago para socio:', memberId, 'mes:', month);
-  };
-
   const handleSendCommunication = () => {
     setShowAddCommunicationModal(true);
   };
 
-  const handleCreateCommunication = async (data: any) => {
+  const handleCreateCommunication = async (_data: any) => {
     setIsLoading(true);
     try {
       // Aquí se llamará a la API para crear el comunicado
@@ -410,63 +401,7 @@ export const AdminModule: React.FC = () => {
 
         {/* Payments Management */}
         {activeSection === 'payments' && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-neutral-700">Gestión de Cuotas</h3>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <div className="space-y-3">
-                  {members.map((member) => (
-                    <div key={member.id} className="p-4 bg-white/40 backdrop-blur-soft border border-white/20 rounded-xl">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="font-medium text-neutral-700">{member.name}</p>
-                          <p className="text-sm text-neutral-500">Último pago: {new Date(member.lastPayment).toLocaleDateString('es-CL')}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          new Date(member.lastPayment) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {new Date(member.lastPayment) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) ? 'Al día' : 'Atrasado'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {['Oct 2024', 'Nov 2024', 'Dic 2024'].map((month) => (
-                          <button
-                            key={month}
-                            onClick={() => handleMarkPayment(member.id, month)}
-                            className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
-                          >
-                            Marcar {month}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="font-medium text-green-700">Al Día</span>
-                  </div>
-                  <p className="text-2xl font-bold text-green-800">2 socios</p>
-                </div>
-
-                <div className="p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <span className="font-medium text-red-700">Atrasados</span>
-                  </div>
-                  <p className="text-2xl font-bold text-red-800">1 socio</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdminCuotas />
         )}
 
         {/* Communications */}
