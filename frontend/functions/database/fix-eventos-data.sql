@@ -1,0 +1,9 @@
+-- Insertar eventos corregidos directamente en la base de datos
+-- Ejecutar después de limpiar la tabla
+
+INSERT INTO eventos (title, description, date, time, location, image, type, status, registration_open, max_participants, price, organizer_id) VALUES
+('Campeonato Nacional de Asado 2024', 'El evento más importante del año para los asadores de Chile. Competencia oficial con jurado internacional.', '2025-11-16T10:00:00.000Z', '10:00', 'Parque O''Higgins, Santiago', '/api/images?path=eventos/campeonato-nacional-asado.jpg', 'campeonato', 'published', 1, 100, 50000, 1),
+('Taller de Asado para Principiantes', 'Aprende las técnicas fundamentales del asado chileno con nuestros maestros asadores.', '2025-10-23T15:00:00.000Z', '15:00', 'Sede ACA Chile', '/api/images?path=eventos/taller-principiantes-asado.jpg', 'taller', 'published', 1, 20, 25000, 1),
+('Encuentro de Asadores del Fin de Semana', 'Encuentro informal para compartir experiencias y disfrutar de un buen asado.', '2025-10-21T12:00:00.000Z', '12:00', 'Quintas de Recreo Las Condes', '/api/images?path=eventos/encuentro-asadores.jpg', 'encuentro', 'published', 1, NULL, 0, 1),
+('Competencia de Asado Rápido', 'Desafío contra el tiempo para preparar un asado completo en tiempo récord.', '2025-10-29T11:00:00.000Z', '11:00', 'Centro de Eventos ACA', '/api/images?path=eventos/competencia-rapida.jpg', 'competencia', 'published', 1, 40, 15000, 1),
+('Masterclass: Parrilla Argentina', 'Clase magistral sobre técnicas de parrilla argentina con un chef invitado.', '2025-11-05T14:00:00.000Z', '14:00', 'Auditorio Gourmet, Hotel Ritz Carlton', '/api/images?path=eventos/masterclass-parrilla.jpg', 'masterclass', 'published', 1, 30, 45000, 1);

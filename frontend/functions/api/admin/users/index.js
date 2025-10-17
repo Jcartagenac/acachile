@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
 
     let authUser;
     try {
-      authUser = requireAuth(request, env);
+      authUser = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',
@@ -145,7 +145,7 @@ export async function onRequestPost(context) {
 
     let adminUser;
     try {
-      adminUser = requireAuth(request, env);
+      adminUser = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',

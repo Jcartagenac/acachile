@@ -11,7 +11,6 @@ export async function onRequestPost(context) {
   };
 
   try {
-    // TODO: Implementar una verificación de admin más robusta
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ success: false, error: 'Token de autorización requerido' }), {
