@@ -199,7 +199,41 @@ class UserService {
 
       const result = await response.json();
       
-      // Ahora actualizar el AuthContext local
+      // Usar los datos del backend para actualizar el AuthContext
+      // El backend devuelve los datos en formato API (nombre, apellido, etc.)
+      if (result.data) {
+        const backendUser = result.data;
+        const userUpdates: Partial<AppUser> = {
+          firstName: backendUser.nombre,
+          lastName: backendUser.apellido,
+          phone: backendUser.telefono,
+          rut: backendUser.rut,
+          ciudad: backendUser.ciudad,
+          direccion: backendUser.direccion,
+        };
+        
+        // Actualizar nombre completo
+        if (userUpdates.firstName || userUpdates.lastName) {
+          userUpdates.name = [userUpdates.firstName, userUpdates.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+        }
+        
+        console.log('🔄 UserService: Updating AuthContext with backend data:', userUpdates);
+        this.authContext.updateUser(userUpdates);
+
+        const updatedUser = { ...this.authContext.user, ...userUpdates };
+        const updatedProfile = this.mapAppUserToProfile(updatedUser);
+
+        return { 
+          success: true, 
+          data: updatedProfile, 
+          message: result.message || 'Perfil actualizado exitosamente' 
+        };
+      }
+
+      // Fallback si no hay data en la respuesta
       const userUpdates = this.buildUserUpdates(profileData);
       this.updateFullName(userUpdates, profileData);
       
