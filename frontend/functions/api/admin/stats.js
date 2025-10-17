@@ -1,3 +1,5 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../_middleware';
+
 // Endpoint de estadísticas avanzadas para administración
 // GET /api/admin/stats - Obtener estadísticas detalladas del sistema
 
@@ -11,36 +13,37 @@ export async function onRequestGet(context) {
     const period = url.searchParams.get('period') || '30days'; // 7days, 30days, 90days, 1year
     const type = url.searchParams.get('type') || 'all'; // users, events, news, comments, all
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (user.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
+    let authUser;
+    try {
+      authUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
 
     const stats = await getAdvancedStats(env, period, type);
 
     console.log('[ADMIN STATS] Estadísticas avanzadas obtenidas exitosamente');
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: stats
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN STATS] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 

@@ -1,3 +1,5 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+
 // Endpoint de gestión de usuarios para administradores
 // GET /api/admin/users - Listar usuarios
 // POST /api/admin/users - Crear usuario (admin)
@@ -26,14 +28,20 @@ export async function onRequestGet(context) {
     const role = url.searchParams.get('role') || '';
     const status = url.searchParams.get('status') || '';
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (user.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
+    let adminUser;
+    try {
+      adminUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(adminUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
 
     let query = `
       SELECT 
@@ -97,7 +105,7 @@ export async function onRequestGet(context) {
 
     console.log(`[ADMIN USERS] ${users.length} usuarios obtenidos (página ${page})`);
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: users,
       pagination: {
@@ -108,20 +116,15 @@ export async function onRequestGet(context) {
         hasNext: page < totalPages,
         hasPrev: page > 1
       }
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN USERS] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 
@@ -131,14 +134,20 @@ export async function onRequestPost(context) {
   try {
     console.log('[ADMIN USERS] Creando nuevo usuario');
 
-    // TODO: Validar que el usuario es administrador
-    // const adminUser = requireAuth(request, env);
-    // if (adminUser.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
+    let adminUser;
+    try {
+      adminUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(adminUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
 
     const body = await request.json();
     const { email, name, password, role = 'user', send_welcome_email = false } = body;
@@ -150,23 +159,11 @@ export async function onRequestPost(context) {
 
     // Validaciones
     if (!email || !nombre || !password) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Email, nombre y contraseña son requeridos'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Email, nombre y contraseña son requeridos', 400);
     }
 
     if (!['user', 'admin', 'editor'].includes(role)) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Rol inválido. Debe ser: user, admin o editor'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Rol inválido. Debe ser: user, admin o editor', 400);
     }
 
     // Verificar si el email ya existe (activo o inactivo)
@@ -183,13 +180,7 @@ export async function onRequestPost(context) {
     if (existingUser) {
       if (existingUser.activo === 1) {
         // Usuario activo ya existe
-        return new Response(JSON.stringify({
-          success: false,
-          error: 'Ya existe un usuario activo con este email'
-        }), {
-          status: 409,
-          headers: { 'Content-Type': 'application/json' }
-        });
+        return errorResponse('Ya existe un usuario activo con este email', 409);
       } else {
         // Usuario existe pero está inactivo - REACTIVAR
         console.log('[ADMIN USERS] Reactivando usuario eliminado:', email);
@@ -236,26 +227,21 @@ export async function onRequestPost(context) {
 
     console.log('[ADMIN USERS] Usuario creado exitosamente:', newUser.id);
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: {
         ...newUser,
         name: `${newUser.nombre} ${newUser.apellido}`.trim()
       },
       message: 'Usuario creado exitosamente'
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, 201);
 
   } catch (error) {
     console.error('[ADMIN USERS] Error creando usuario:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
