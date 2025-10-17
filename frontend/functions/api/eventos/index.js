@@ -168,9 +168,20 @@ async function getEventos(db, filters) {
     const dataQuery = `SELECT * FROM eventos ${whereString} ORDER BY date DESC LIMIT ? OFFSET ?`;
     const { results } = await db.prepare(dataQuery).bind(...bindings, limit, offset).all();
 
+    // Mapear nombres de columnas de DB a nombres de propiedades del frontend
+    const mappedResults = results.map(evento => ({
+      ...evento,
+      registrationOpen: evento.registration_open,
+      maxParticipants: evento.max_participants,
+      currentParticipants: evento.current_participants || 0,
+      organizerId: evento.organizer_id,
+      createdAt: evento.created_at,
+      updatedAt: evento.updated_at,
+    }));
+
     return {
       success: true,
-      data: results,
+      data: mappedResults,
       pagination: {
         page,
         limit,
