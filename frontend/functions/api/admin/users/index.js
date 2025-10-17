@@ -63,7 +63,6 @@ export async function onRequestGet(context) {
 
     const params = [];
     
-    // Filtros
     if (search) {
       query += ` AND (nombre LIKE ? OR apellido LIKE ? OR email LIKE ?)`;
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
@@ -77,30 +76,27 @@ export async function onRequestGet(context) {
     if (status === 'inactive') {
       query += ' AND activo = 0';
     } else if (status === 'all') {
-      // sin filtro para mostrar todos
+      // mostrar todos los usuarios sin filtrar por estado
     } else {
-      // Por defecto o para 'active', solo usuarios activos
+      // Por defecto y para 'active'
       query += ' AND activo = 1';
     }
 
-    // Contar total para paginación
     const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
     const totalResult = await env.DB.prepare(countQuery).bind(...params).first();
     const total = totalResult?.total || 0;
 
-    // Agregar paginación
     query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, (page - 1) * limit);
 
     const { results } = await env.DB.prepare(query).bind(...params).all();
 
-    // Limpiar datos sensibles
     const users = results.map(user => ({
       id: user.id,
       email: user.email,
       nombre: user.nombre,
       apellido: user.apellido,
-      name: `${user.nombre} ${user.apellido}`.trim(), // Para compatibilidad con frontend
+      name: `${user.nombre} ${user.apellido}`.trim(),
       role: user.role,
       status: user.status ? 'active' : 'inactive',
       email_verified: Boolean(user.email_verified_at),
@@ -164,12 +160,10 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const { email, name, password, role = 'user', send_welcome_email = false } = body;
 
-    // Dividir name en nombre y apellido
     const nameParts = (name || '').trim().split(' ');
     const nombre = nameParts[0] || '';
     const apellido = nameParts.slice(1).join(' ') || '';
 
-    // Validaciones
     if (!email || !nombre || !password) {
       return errorResponse('Email, nombre y contraseña son requeridos', 400);
     }
@@ -178,12 +172,10 @@ export async function onRequestPost(context) {
       return errorResponse('Rol inválido. Debe ser: user, admin o editor', 400);
     }
 
-    // Verificar si el email ya existe (activo o inactivo)
     const existingUser = await env.DB.prepare(
       'SELECT id, activo FROM usuarios WHERE email = ?'
     ).bind(email).first();
 
-    // Hash de la contraseña con SHA-256 + salt
     const hashedPassword = await hashPassword(password);
     const now = new Date().toISOString();
 
@@ -191,10 +183,8 @@ export async function onRequestPost(context) {
 
     if (existingUser) {
       if (existingUser.activo === 1) {
-        // Usuario activo ya existe
         return errorResponse('Ya existe un usuario activo con este email', 409);
       } else {
-        // Usuario existe pero está inactivo - REACTIVAR
         console.log('[ADMIN USERS] Reactivando usuario eliminado:', email);
         
         const updateResult = await env.DB.prepare(`
@@ -207,14 +197,12 @@ export async function onRequestPost(context) {
           throw new Error('Error reactivando usuario en la base de datos');
         }
 
-        // Obtener usuario reactivado
         newUser = await env.DB.prepare(`
           SELECT id, email, nombre, apellido, role, activo as status, created_at, updated_at
           FROM usuarios WHERE id = ?
         `).bind(existingUser.id).first();
       }
     } else {
-      // Usuario no existe - CREAR NUEVO
       const result = await env.DB.prepare(`
         INSERT INTO usuarios (email, nombre, apellido, password_hash, role, activo, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, 1, ?, ?)
@@ -224,14 +212,12 @@ export async function onRequestPost(context) {
         throw new Error('Error creando usuario en la base de datos');
       }
 
-      // Obtener usuario creado
       newUser = await env.DB.prepare(`
         SELECT id, email, nombre, apellido, role, activo as status, created_at, updated_at
         FROM usuarios WHERE email = ?
       `).bind(email).first();
     }
 
-    // TODO: Enviar email de bienvenida si se solicita
     if (send_welcome_email) {
       console.log('[ADMIN USERS] Enviando email de bienvenida a:', email);
       // await sendWelcomeEmail(email, name, password, env);
