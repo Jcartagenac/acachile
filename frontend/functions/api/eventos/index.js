@@ -13,7 +13,6 @@ export async function onRequest(context) {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 
-  // Manejar preflight requests
   if (method === 'OPTIONS') {
     return new Response(null, { 
       status: 204, 
@@ -59,31 +58,19 @@ export async function onRequest(context) {
 // GET /api/eventos - Listar eventos con filtros
 async function handleGetEventos(url, env, corsHeaders) {
   try {
-    const type = url.searchParams.get('type');
-    const status = url.searchParams.get('status') || 'published';
-    const search = url.searchParams.get('search');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '12');
+    const { searchParams } = url;
+    const type = searchParams.get('type');
+    const status = searchParams.get('status') || 'published';
+    const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
 
-    // Obtener eventos desde KV con filtros
-    const result = await getEventos(env, {
-      type: type || undefined,
-      status: status,
-      search: search || undefined,
-      page,
-      limit
-    });
+    const result = await getEventos(env.DB, { type, status, search, page, limit });
 
     if (!result.success) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: result.error
-      }), {
+      return new Response(JSON.stringify({ success: false, error: result.error }), {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
@@ -92,23 +79,14 @@ async function handleGetEventos(url, env, corsHeaders) {
       data: result.data,
       pagination: result.pagination
     }), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
 
   } catch (error) {
     console.error('Error getting eventos:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error obteniendo eventos'
-    }), {
+    return new Response(JSON.stringify({ success: false, error: 'Error obteniendo eventos' }), {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
 }
@@ -116,39 +94,24 @@ async function handleGetEventos(url, env, corsHeaders) {
 // POST /api/eventos - Crear nuevo evento
 async function handleCreateEvento(request, env, corsHeaders) {
   try {
-    // Verificar autenticación
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Token de autorización requerido'
-      }), {
+      return new Response(JSON.stringify({ success: false, error: 'Token de autorización requerido' }), {
         status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
     // TODO: Verificar y decodificar JWT para obtener userId
-    const userId = 1; // Por ahora usamos un ID fijo
+    const userId = 1; // Usamos un ID fijo por ahora
 
     const body = await request.json();
-    
-    // Crear evento
-    const result = await createEvento(env, body, userId);
+    const result = await createEvento(env.DB, body, userId);
 
     if (!result.success) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: result.error
-      }), {
+      return new Response(JSON.stringify({ success: false, error: result.error }), {
         status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
@@ -158,140 +121,125 @@ async function handleCreateEvento(request, env, corsHeaders) {
       message: 'Evento creado exitosamente'
     }), {
       status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
 
   } catch (error) {
     console.error('Error creating evento:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error creando evento'
-    }), {
+    return new Response(JSON.stringify({ success: false, error: 'Error creando evento' }), {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
 }
 
-// Funciones de servicio de eventos (migradas desde eventos-service.ts)
-async function getEventos(env, filters) {
+// --- Funciones de Servicio con D1 ---
+
+async function getEventos(db, filters) {
   try {
     const { type, status, search, page = 1, limit = 12 } = filters;
-    
-    // Obtener todos los eventos desde KV
-    const eventosData = await env.ACA_KV.get('eventos:all');
-    let eventos = eventosData ? JSON.parse(eventosData) : [];
+    const offset = (page - 1) * limit;
 
-    // Aplicar filtros
-    if (type) {
-      eventos = eventos.filter(evento => evento.type === type);
-    }
-    
+    let whereClauses = [];
+    let bindings = [];
+
     if (status) {
-      eventos = eventos.filter(evento => evento.status === status);
+      whereClauses.push('status = ?');
+      bindings.push(status);
     }
-    
+    if (type) {
+      whereClauses.push('type = ?');
+      bindings.push(type);
+    }
     if (search) {
-      const searchLower = search.toLowerCase();
-      eventos = eventos.filter(evento => 
-        evento.title.toLowerCase().includes(searchLower) ||
-        evento.description.toLowerCase().includes(searchLower) ||
-        evento.location.toLowerCase().includes(searchLower) ||
-        (evento.tags && evento.tags.some(tag => tag.toLowerCase().includes(searchLower)))
-      );
+      whereClauses.push('(title LIKE ? OR description LIKE ? OR location LIKE ?)');
+      const searchTerm = `%${search}%`;
+      bindings.push(searchTerm, searchTerm, searchTerm);
     }
 
-    // Ordenar por fecha (más recientes primero)
-    eventos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-    // Calcular paginación
-    const total = eventos.length;
-    const totalPages = Math.ceil(total / limit);
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    const paginatedEventos = eventos.slice(start, end);
+    // Query para obtener el total
+    const countQuery = `SELECT COUNT(*) as total FROM eventos ${whereString}`;
+    const totalResult = await db.prepare(countQuery).bind(...bindings).first();
+    const total = totalResult.total;
+
+    // Query para obtener los eventos paginados
+    const dataQuery = `SELECT * FROM eventos ${whereString} ORDER BY date DESC LIMIT ? OFFSET ?`;
+    const { results } = await db.prepare(dataQuery).bind(...bindings, limit, offset).all();
 
     return {
       success: true,
-      data: paginatedEventos,
+      data: results,
       pagination: {
         page,
         limit,
         total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1
+        totalPages: Math.ceil(total / limit),
       }
     };
 
   } catch (error) {
-    console.error('Error in getEventos:', error);
-    return {
-      success: false,
-      error: 'Error obteniendo eventos'
-    };
+    console.error('Error in getEventos (D1):', error);
+    return { success: false, error: 'Error obteniendo eventos desde la base de datos' };
   }
 }
 
-async function createEvento(env, eventoData, organizerId) {
+async function createEvento(db, eventoData, organizerId) {
   try {
-    // Obtener el siguiente ID
-    const lastIdData = await env.ACA_KV.get('eventos:lastId');
-    const lastId = lastIdData ? parseInt(lastIdData) : 0;
-    const newId = lastId + 1;
+    const {
+      title,
+      description,
+      date,
+      time,
+      location,
+      image,
+      type,
+      status,
+      registration_open,
+      max_participants,
+      price
+    } = eventoData;
 
-    // Crear el evento con datos por defecto
-    const now = new Date().toISOString();
-    const evento = {
-      id: newId,
-      title: eventoData.title,
-      date: eventoData.date,
-      time: eventoData.time,
-      location: eventoData.location,
-      description: eventoData.description,
-      image: eventoData.image || '/images/default-event.jpg',
-      type: eventoData.type || 'encuentro',
-      registrationOpen: eventoData.registrationOpen !== false,
-      maxParticipants: eventoData.maxParticipants,
-      currentParticipants: 0,
-      price: eventoData.price,
-      requirements: eventoData.requirements || [],
-      organizerId: organizerId,
-      createdAt: now,
-      updatedAt: now,
-      status: eventoData.status || 'draft',
-      tags: eventoData.tags || [],
-      contactInfo: eventoData.contactInfo || {}
-    };
+    if (!title || !date || !location || !organizerId) {
+      return { success: false, error: 'Faltan campos requeridos (título, fecha, ubicación, organizador)' };
+    }
 
-    // Guardar evento individual
-    await env.ACA_KV.put(`evento:${newId}`, JSON.stringify(evento));
+    const query = `
+      INSERT INTO eventos (title, description, date, time, location, image, type, status, registration_open, max_participants, price, organizer_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    `;
+    
+    const { success, meta } = await db.prepare(query).bind(
+      title,
+      description || null,
+      date,
+      time || null,
+      location,
+      image || null,
+      type || 'encuentro',
+      status || 'draft',
+      registration_open !== false,
+      max_participants || null,
+      price || 0,
+      organizerId
+    ).run();
 
-    // Actualizar lista de todos los eventos
-    const eventosData = await env.ACA_KV.get('eventos:all');
-    const eventos = eventosData ? JSON.parse(eventosData) : [];
-    eventos.push(evento);
-    await env.ACA_KV.put('eventos:all', JSON.stringify(eventos));
-
-    // Actualizar último ID
-    await env.ACA_KV.put('eventos:lastId', newId.toString());
+    if (!success) {
+      return { success: false, error: 'No se pudo crear el evento en la base de datos.' };
+    }
+    
+    // D1 no devuelve el objeto insertado directamente en `run()`, 
+    // por lo que devolvemos el ID si es posible o simplemente confirmamos la creación.
+    const insertedId = meta.last_row_id;
 
     return {
       success: true,
-      data: evento
+      data: { id: insertedId, ...eventoData, organizer_id: organizerId }
     };
 
   } catch (error) {
-    console.error('Error in createEvento:', error);
-    return {
-      success: false,
-      error: 'Error creando evento'
-    };
+    console.error('Error in createEvento (D1):', error);
+    return { success: false, error: 'Error creando el evento en la base de datos' };
   }
 }

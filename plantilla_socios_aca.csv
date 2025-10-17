@@ -1,0 +1,6 @@
+nombre,apellido,email,telefono,rut,direccion,ciudad,valor_cuota,password,estado_socio
+Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,6500,password123,activo
+María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,6500,password456,activo
+Pedro,Rodríguez,pedro.rodriguez@email.com,+56923456789,23.456.789-0,Los Alamos 789,Concepción,6500,password789,activo
+Ana,Martínez,ana.martinez@email.com,+56934567890,34.567.890-1,"Pasaje Los Olivos 321, Casa 12",La Serena,6500,password321,activo
+Carlos,López,carlos.lopez@email.com,+56945678901,45.678.901-2,Avenida España 654,Antofagasta,7000,password654,activo

@@ -67,6 +67,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+          <Route path="/admin/eventos" element={<AdminLayout><AdminContent /></AdminLayout>} />
           <Route path="/admin/socios" element={<ProfilePage defaultTab="admin" />} />
           <Route path="/admin/socios/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/admin/cuotas" element={<AdminLayout><AdminCuotas /></AdminLayout>} />
