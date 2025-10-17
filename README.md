@@ -28,11 +28,57 @@
 **ACA Chile** es una plataforma web completa para la gestión de una asociación de socios, desarrollada con tecnologías modernas y desplegada en Cloudflare Pages.
 
 ### Estado Actual del Proyecto
-✅ **100% FUNCIONAL EN PRODUCCIÓN**
+✅ **Funcional en producción (actualizaciones en curso)**
 - URL de Producción: https://acachile.pages.dev
 - Repositorio: https://github.com/Jcartagenac/acachile
 - Branch: `main`
-- Última actualización: Enero 2025
+- Última actualización: 16 de octubre de 2025
+
+---
+
+## 🆕 Cambios recientes (16 de octubre de 2025)
+
+Hoy se implementaron y corrigieron varias funcionalidades importantes centradas en la gestión de socios, cuotas y eventos, además de agregar una importación masiva vía CSV en el panel de administración de socios. A continuación se detalla todo lo que se hizo y cómo utilizarlo.
+
+### Principales adiciones y correcciones
+
+- feat: Importación masiva de socios vía CSV en `Gestión de Socios` (Admin)
+  - Botón "Importar CSV" en el header de `Gestión de Socios`.
+  - Modal con upload de `.csv`, validación, vista previa (primeras 5 filas) y reporte de resultados.
+  - Parser CSV robusto con soporte para valores entre comillas (direcciones con comas).
+  - Plantilla de CSV descargable con ejemplos.
+  - Importación por lotes con tracking de errores por fila (fila y mensaje de error).
+  - Columnas soportadas: `nombre, apellido, email, telefono, rut, direccion, ciudad, valor_cuota, password, estado_socio` (foto excluida).
+
+- fix: Perfil de usuario - RUT, Ciudad y Dirección
+  - Se corrigió el guardado y la persistencia de `rut`, `ciudad` y `direccion` en el perfil de usuario.
+  - Se implementó formateo automático de RUT (formato chileno `XX.XXX.XXX-X`) durante la edición.
+  - Backend actualizado para incluir `direccion` en los endpoints de perfil (`/api/auth/me` GET/PUT).
+  - AuthContext y mapeos actualizados para usar `ciudad` y `direccion` (se eliminó `city`).
+
+- fix: Resumen de Cuotas
+  - El panel de estadísticas de cuotas ahora muestra explícitamente los totales **solo para el año 2025**.
+  - Labels actualizados a `Recaudado 2025` y `Pendiente 2025`.
+
+- fix: Crear Evento
+  - Se corrigió la redirección después de crear un evento: ahora navega a `/eventos` (antes `/events`) para evitar 404.
+  - Nota: la lista de eventos se refresca desde la API; si el evento no aparece por paginación o filtros, se añadió comportamiento para forzar actualización en el contexto de eventos (ver sección técnica).
+
+### Nuevas instrucciones importantes
+
+- Importar CSV (Admin → Gestión de Socios):
+  1. Ir a `Gestión de Socios` en el panel administrativo.
+  2. Click en `Importar CSV` (botón azul).
+  3. Seleccionar archivo `.csv` con la plantilla recomendada.
+  4. Revisar la vista previa (primeras 5 filas) y corregir errores si aparecen.
+  5. Ejecutar la importación y revisar el reporte de resultados (conteo éxitos + lista de errores por fila).
+
+  Recomendaciones:
+  - Si una celda contiene comas (por ejemplo direcciones), usar comillas: `"Av. Libertador 123, Depto 45"`.
+  - Campos requeridos: `nombre, apellido, email, password`.
+  - `valor_cuota` por defecto: `6500` si no se especifica.
+
+---
 
 ---
 
@@ -203,6 +249,68 @@ acachile/
 │   └── index.ts                     # Interfaces TypeScript
 │
 └── README.md                        # Este archivo
+
+---
+
+## 🧪 Cómo probar los cambios localmente
+
+1. Clonar el repositorio y moverse al directorio frontend:
+
+```bash
+git clone https://github.com/Jcartagenac/acachile.git
+cd acachile/frontend
+```
+
+2. Instalar dependencias:
+
+```bash
+npm install
+```
+
+3. Ejecutar validación de TypeScript (opcional):
+
+```bash
+npx tsc --noEmit
+```
+
+4. Iniciar servidor de desarrollo:
+
+```bash
+npm run dev
+```
+
+5. Abrir en el navegador: http://localhost:5173 (por defecto con Vite)
+
+### Probar la importación CSV
+
+- Ir a `Gestión de Socios` (requiere rol admin)
+- Hacer click en `Importar CSV` y seleccionar el archivo usando la plantilla (ver carpeta raíz `plantilla_socios_aca.csv` si existe)
+- Revisar la vista previa y lanzar la importación
+- Ver resultados: número de filas importadas y lista de errores por fila
+
+### Probar creación de eventos
+
+- Ir a `Eventos` → `Crear Evento` (usuario autenticado requerido)
+- Completar el formulario y crear el evento
+- Después de crear, la app redirecciona a `/eventos` y el EventContext agrega el evento a la lista y también realiza fetch de la API si es necesario para sincronizar (maneja paginación y filtros)
+
+---
+
+## 🚀 Notas de despliegue
+
+- El frontend está desplegado en Cloudflare Pages. Los cambios en `main` se despliegan automáticamente si pasan la pipeline.
+- Variables de entorno importantes (Cloudflare Pages / entorno local):
+  - `VITE_API_BASE_URL` - URL base de la API (ej: https://acachile.pages.dev)
+  - `CLOUDFLARE_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY`, `R2_SECRET_KEY` - para integración con R2 (backend)
+
+---
+
+## 🧾 Notas técnicas y recomendaciones
+
+- Asegúrate de que la API devuelva correctamente los datos de cuotas y eventos filtrados por año/paginación si no ves inmediatamente nuevos registros después de crear o importar.
+- Para debugging, el frontend incluye logs en consola (AdminCuotas, AdminSocios) que muestran respuestas completas de las llamadas a la API para facilitar diagnóstico.
+
+---
 ```
 
 ---
