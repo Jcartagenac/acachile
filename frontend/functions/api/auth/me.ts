@@ -30,7 +30,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     // Verificar autenticación
     let authUser;
     try {
-      authUser = requireAuth(request, env);
+      authUser = await requireAuth(request, env);
     } catch (error) {
       console.log('[AUTH/ME] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
       return errorResponse('Autenticación requerida', 401);
@@ -202,7 +202,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     // Verificar autenticación
     let authUser;
     try {
-      authUser = requireAuth(request, env);
+      authUser = await requireAuth(request, env);
     } catch (error) {
       console.log('[AUTH/ME] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
       return errorResponse('Autenticación requerida', 401);

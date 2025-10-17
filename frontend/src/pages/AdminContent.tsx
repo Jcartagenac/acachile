@@ -29,7 +29,7 @@ export default function AdminContent() {
       setFilters({ status: undefined });
       fetchEventos(1);
     }
-  }, [activeTab, fetchEventos, setFilters]);
+  }, [activeTab]); // Removido fetchEventos y setFilters ya que son estables
 
   const filteredEventos = eventos.filter(evento =>
     evento.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

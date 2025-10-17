@@ -30,7 +30,7 @@ export async function onRequestGet(context) {
 
     let adminUser;
     try {
-      adminUser = requireAuth(request, env);
+      adminUser = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',
@@ -45,12 +45,20 @@ export async function onRequestGet(context) {
 
     let query = `
       SELECT 
-        id, email, nombre, apellido, role, activo as status, 
-        last_login, created_at, updated_at,
+        id,
+        email,
+        nombre,
+        apellido,
+        role,
+        activo as status, 
+        email_verified_at,
+        last_login,
+        created_at,
+        updated_at,
         (SELECT COUNT(*) FROM eventos WHERE created_by = usuarios.id) as eventos_creados,
         (SELECT COUNT(*) FROM inscripciones WHERE user_id = usuarios.id) as inscripciones_count
       FROM usuarios 
-      WHERE activo = 1
+      WHERE 1 = 1
     `;
 
     const params = [];
@@ -66,9 +74,13 @@ export async function onRequestGet(context) {
       params.push(role);
     }
     
-    if (status) {
-      query += ` AND status = ?`;
-      params.push(status);
+    if (status === 'inactive') {
+      query += ' AND activo = 0';
+    } else if (status === 'all') {
+      // sin filtro para mostrar todos
+    } else {
+      // Por defecto o para 'active', solo usuarios activos
+      query += ' AND activo = 1';
     }
 
     // Contar total para paginación
@@ -91,7 +103,7 @@ export async function onRequestGet(context) {
       name: `${user.nombre} ${user.apellido}`.trim(), // Para compatibilidad con frontend
       role: user.role,
       status: user.status ? 'active' : 'inactive',
-      email_verified: true, // La tabla usuarios no tiene este campo
+      email_verified: Boolean(user.email_verified_at),
       last_login: user.last_login,
       created_at: user.created_at,
       updated_at: user.updated_at,
@@ -136,7 +148,7 @@ export async function onRequestPost(context) {
 
     let adminUser;
     try {
-      adminUser = requireAuth(request, env);
+      adminUser = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',
