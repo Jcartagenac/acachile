@@ -1,17 +1,28 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../_middleware';
+
 // Endpoint para obtener configuraciones globales
 // GET /api/admin/configuracion
 
 export async function onRequestGet(context) {
-  const { env } = context;
+  const { request, env } = context;
 
   try {
     console.log('[ADMIN CONFIG] Obteniendo configuraciones globales');
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || user.role !== 'admin') {
-    //   return errorResponse('Acceso denegado', 403);
-    // }
+    let authUser;
+    try {
+      authUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
 
     // Obtener todas las configuraciones
     const { results: configs } = await env.DB.prepare(`
@@ -45,24 +56,18 @@ export async function onRequestGet(context) {
       };
     });
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: configuraciones
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN CONFIG] Error obteniendo configuraciones:', error);
     
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error obteniendo configuraciones: ' + error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error obteniendo configuraciones: ' + (error instanceof Error ? error.message : String(error)),
+      500
+    );
   }
 }
 
@@ -75,23 +80,26 @@ export async function onRequestPut(context) {
   try {
     console.log('[ADMIN CONFIG] Actualizando configuración');
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || user.role !== 'admin') {
-    //   return errorResponse('Acceso denegado', 403);
-    // }
+    let authUser;
+    try {
+      authUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
 
     const body = await request.json();
     const { clave, valor } = body;
 
     if (!clave || valor === undefined) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Clave y valor son obligatorios'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Clave y valor son obligatorios', 400);
     }
 
     // Obtener la configuración actual para verificar el tipo
@@ -100,13 +108,7 @@ export async function onRequestPut(context) {
     `).bind(clave).first();
 
     if (!currentConfig) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Configuración no encontrada'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Configuración no encontrada', 404);
     }
 
     // Convertir el valor al formato de string para almacenar
@@ -133,24 +135,18 @@ export async function onRequestPut(context) {
       WHERE clave = ?
     `).bind(clave).first();
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       message: 'Configuración actualizada exitosamente',
       data: updatedConfig
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN CONFIG] Error actualizando configuración:', error);
     
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error actualizando configuración: ' + error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error actualizando configuración: ' + (error instanceof Error ? error.message : String(error)),
+      500
+    );
   }
 }

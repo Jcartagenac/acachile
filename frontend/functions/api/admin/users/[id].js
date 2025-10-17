@@ -1,3 +1,5 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+
 // Endpoint de gestión individual de usuarios
 // GET /api/admin/users/[id] - Obtener usuario específico
 // PUT /api/admin/users/[id] - Actualizar usuario
@@ -10,23 +12,23 @@ export async function onRequestGet(context) {
     const userId = params.id;
     console.log(`[ADMIN USER] Obteniendo usuario: ${userId}`);
 
-    // TODO: Validar que el usuario es administrador
-    // const adminUser = requireAuth(request, env);
-    // if (adminUser.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
+    let adminUser;
+    try {
+      adminUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(adminUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
 
     if (!userId) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'ID de usuario requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('ID de usuario requerido', 400);
     }
 
         // Obtener datos del usuario con estadísticas
@@ -46,13 +48,7 @@ export async function onRequestGet(context) {
     `).bind(userId).first();
 
     if (!user) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Usuario no encontrado'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Usuario no encontrado', 404);
     }
 
     // Obtener eventos creados por el usuario
@@ -96,23 +92,18 @@ export async function onRequestGet(context) {
 
     console.log(`[ADMIN USER] Usuario ${userId} obtenido exitosamente`);
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: userDetails
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN USER] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 
@@ -192,14 +183,23 @@ export async function onRequestPut(context) {
     const userId = params.id;
     console.log(`[ADMIN USER] Actualizando usuario: ${userId}`);
 
+    let adminUser;
+    try {
+      adminUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(adminUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
+
     if (!userId) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'ID de usuario requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('ID de usuario requerido', 400);
     }
 
     const body = await request.json();
@@ -210,36 +210,18 @@ export async function onRequestPut(context) {
     ).bind(userId).first();
 
     if (!existingUser) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Usuario no encontrado'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Usuario no encontrado', 404);
     }
 
     // Construir query de actualización dinámicamente
     const { updates, params: updateParams, errors } = buildUpdateFields(body);
 
     if (errors.length > 0) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: errors.join(', ')
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse(errors.join(', '), 400);
     }
 
     if (updates.length === 0) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No hay campos para actualizar'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('No hay campos para actualizar', 400);
     }
 
     // Agregar updated_at y userId al final
@@ -264,24 +246,19 @@ export async function onRequestPut(context) {
 
     console.log(`[ADMIN USER] Usuario ${userId} actualizado exitosamente`);
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: formatUserResponse(updatedUser),
       message: 'Usuario actualizado exitosamente'
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN USER] Error actualizando:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 
@@ -292,23 +269,27 @@ export async function onRequestDelete(context) {
     const userId = params.id;
     console.log(`[ADMIN USER] Eliminando usuario: ${userId}`);
 
-    // TODO: Validar que el usuario es administrador
-    // const adminUser = requireAuth(request, env);
-    // if (adminUser.role !== 'admin' || adminUser.id === userId) {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'No puedes eliminarte a ti mismo o no tienes permisos.'
-    //   }), { status: 403 });
-    // }
+    let adminUser;
+    try {
+      adminUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
+    }
+
+    if (!['admin', 'super_admin'].includes(adminUser.role)) {
+      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+    }
+
+    if (String(adminUser.userId) === String(userId)) {
+      return errorResponse('No puedes eliminar tu propia cuenta.', 403);
+    }
 
     if (!userId) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'ID de usuario requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('ID de usuario requerido', 400);
     }
 
     // Verificar que el usuario existe y no está ya eliminado
@@ -317,13 +298,7 @@ export async function onRequestDelete(context) {
     ).bind(userId).first();
 
     if (!existingUser) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Usuario no encontrado'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Usuario no encontrado', 404);
     }
 
     // Soft delete del usuario (marcar como inactivo)
@@ -338,7 +313,7 @@ export async function onRequestDelete(context) {
 
     console.log(`[ADMIN USER] Usuario ${userId} eliminado exitosamente`);
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: {
         id: userId,
@@ -348,19 +323,14 @@ export async function onRequestDelete(context) {
         deleted_at: now
       },
       message: 'Usuario eliminado exitosamente'
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN USER] Error eliminando:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
