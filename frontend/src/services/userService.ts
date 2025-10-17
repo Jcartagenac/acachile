@@ -77,7 +77,9 @@ class UserService {
       // Use real user data from AuthContext if available
       if (this.authContext?.user) {
         await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
+        console.log('🔍 UserService: AuthContext user data:', this.authContext.user);
         const profile = this.mapAppUserToProfile(this.authContext.user);
+        console.log('🔍 UserService: Mapped profile:', profile);
         return { success: true, data: profile };
       }
 
@@ -140,6 +142,8 @@ class UserService {
     if (profileData.email) userUpdates.email = profileData.email;
     if (profileData.phone !== undefined) userUpdates.phone = profileData.phone;
     if (profileData.rut !== undefined) userUpdates.rut = profileData.rut;
+    if (profileData.ciudad !== undefined) userUpdates.ciudad = profileData.ciudad;
+    if (profileData.direccion !== undefined) userUpdates.direccion = profileData.direccion;
     if (profileData.avatar !== undefined) userUpdates.avatar = profileData.avatar;
     if (profileData.region !== undefined) userUpdates.region = profileData.region;
 
