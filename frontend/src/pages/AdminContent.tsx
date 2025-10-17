@@ -21,14 +21,15 @@ import { Evento } from '@shared/index';
 export default function AdminContent() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'noticias'>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
-  const { eventos, fetchEventos, deleteEvento, isLoading } = useEvents();
+  const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
 
   useEffect(() => {
     if (activeTab === 'eventos') {
-      // Cargar todos los eventos sin filtro de status para admins
+      // Para admins, mostrar todos los eventos sin filtro de status
+      setFilters({ status: undefined });
       fetchEventos(1);
     }
-  }, [activeTab, fetchEventos]);
+  }, [activeTab, fetchEventos, setFilters]);
 
   const filteredEventos = eventos.filter(evento =>
     evento.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
