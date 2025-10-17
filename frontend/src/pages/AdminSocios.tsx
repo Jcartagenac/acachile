@@ -18,6 +18,8 @@ import {
   AlertCircle,
   Loader2,
   Upload,
+  FileUp,
+  Download,
   X
 } from 'lucide-react';
 
@@ -29,6 +31,7 @@ export default function AdminSocios() {
   const [estadoFilter, setEstadoFilter] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingSocio, setEditingSocio] = useState<Socio | null>(null);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
 
@@ -110,13 +113,23 @@ export default function AdminSocios() {
             <p className="text-gray-600">Administra los socios de ACA Chile</p>
           </div>
           
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <UserPlus className="h-5 w-5 mr-2" />
-            Agregar Socio
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FileUp className="h-5 w-5 mr-2" />
+              Importar CSV
+            </button>
+            
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <UserPlus className="h-5 w-5 mr-2" />
+              Agregar Socio
+            </button>
+          </div>
         </div>
 
         {/* Error Display */}
@@ -295,6 +308,17 @@ export default function AdminSocios() {
         </div>
       </div>
 
+      {/* Modal Importar CSV */}
+      {showImportModal && (
+        <ImportCSVModal
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={() => {
+            setShowImportModal(false);
+            loadSocios();
+          }}
+        />
+      )}
+
       {/* Modal Crear Socio */}
       {showCreateModal && (
         <CreateSocioModal
@@ -329,6 +353,331 @@ export default function AdminSocios() {
           onClose={() => setSelectedSocio(null)}
         />
       )}
+    </div>
+  );
+}
+
+// Modal para importar socios desde CSV
+function ImportCSVModal({ onClose, onImportComplete }: {
+  onClose: () => void;
+  onImportComplete: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<any[]>([]);
+  const [results, setResults] = useState<{
+    success: number;
+    errors: Array<{ row: number; error: string }>;
+  } | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.name.endsWith('.csv')) {
+      setError('Por favor selecciona un archivo CSV válido');
+      return;
+    }
+
+    setFile(selectedFile);
+    setError(null);
+    setResults(null);
+    
+    // Preview del archivo
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n').slice(0, 6); // Header + 5 primeras filas
+      const parsed = lines.map(line => line.split(','));
+      setPreview(parsed);
+    };
+    reader.readAsText(selectedFile);
+  };
+
+  const downloadTemplate = () => {
+    const template = `nombre,apellido,email,telefono,rut,direccion,ciudad,valor_cuota,password,estado_socio
+Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,6500,password123,activo
+María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,6500,password456,activo`;
+    
+    const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'plantilla_socios_aca.csv';
+    link.click();
+  };
+
+  const handleImport = async () => {
+    if (!file) {
+      setError('Por favor selecciona un archivo');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setResults(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          setError('El archivo está vacío o no tiene datos');
+          setLoading(false);
+          return;
+        }
+
+        // Parse header
+        const header = lines[0];
+        if (!header) {
+          setError('El archivo no tiene encabezados');
+          setLoading(false);
+          return;
+        }
+        const headers = header.split(',').map(h => h.trim());
+        
+        // Validate headers
+        const requiredHeaders = ['nombre', 'apellido', 'email', 'password'];
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        
+        if (missingHeaders.length > 0) {
+          setError(`Faltan columnas requeridas: ${missingHeaders.join(', ')}`);
+          setLoading(false);
+          return;
+        }
+
+        // Parse rows
+        const errors: Array<{ row: number; error: string }> = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line || !line.trim()) continue;
+
+          try {
+            // Parse CSV line (handle quoted values)
+            const values: string[] = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let j = 0; j < line.length; j++) {
+              const char = line[j];
+              if (char === '"') {
+                inQuotes = !inQuotes;
+              } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+              } else {
+                current += char;
+              }
+            }
+            values.push(current.trim());
+
+            const socioData: any = {};
+            headers.forEach((header, index) => {
+              socioData[header] = values[index] || '';
+            });
+
+            // Create socio
+            const response = await sociosService.createSocio({
+              nombre: socioData.nombre,
+              apellido: socioData.apellido,
+              email: socioData.email,
+              telefono: socioData.telefono || undefined,
+              rut: socioData.rut || undefined,
+              direccion: socioData.direccion || undefined,
+              ciudad: socioData.ciudad || undefined,
+              valorCuota: socioData.valor_cuota ? parseInt(socioData.valor_cuota) : 6500,
+              password: socioData.password,
+            });
+
+            if (!response.success) {
+              errors.push({ row: i + 1, error: response.error || 'Error desconocido' });
+            }
+          } catch (err) {
+            errors.push({ 
+              row: i + 1, 
+              error: err instanceof Error ? err.message : 'Error al procesar fila' 
+            });
+          }
+        }
+
+        setResults({
+          success: lines.length - 1 - errors.length,
+          errors,
+        });
+
+        if (errors.length === 0) {
+          setTimeout(() => {
+            onImportComplete();
+          }, 2000);
+        }
+      };
+
+      reader.readAsText(file);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al importar archivo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Importar Socios desde CSV</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Instrucciones */}
+          <div className="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Instrucciones:</h3>
+                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                  <li>El archivo debe ser formato CSV (separado por comas)</li>
+                  <li>Columnas requeridas: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email, password</code></li>
+                  <li>Columnas opcionales: <code className="bg-blue-100 px-1 rounded">telefono, rut, direccion, ciudad, valor_cuota, estado_socio</code></li>
+                  <li>La primera fila debe contener los nombres de las columnas</li>
+                  <li>Si la dirección contiene comas, enciérrala entre comillas: <code className="bg-blue-100 px-1 rounded">"Calle 123, Depto 4"</code></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Botón descargar plantilla */}
+          <div className="mb-6">
+            <button
+              onClick={downloadTemplate}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Descargar Plantilla CSV
+            </button>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Resultados */}
+          {results && (
+            <div className="mb-6">
+              <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded mb-4">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
+                  <p className="text-green-700 font-semibold">
+                    {results.success} socios importados exitosamente
+                  </p>
+                </div>
+              </div>
+
+              {results.errors.length > 0 && (
+                <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                  <h4 className="font-semibold text-red-900 mb-2">Errores ({results.errors.length}):</h4>
+                  <ul className="text-sm text-red-800 space-y-1 max-h-40 overflow-y-auto">
+                    {results.errors.map((err, idx) => (
+                      <li key={idx}>
+                        <strong>Fila {err.row}:</strong> {err.error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Selector de archivo */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Seleccionar archivo CSV
+            </label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-red-50 file:text-red-700
+                hover:file:bg-red-100
+                cursor-pointer"
+            />
+          </div>
+
+          {/* Preview */}
+          {preview.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Vista previa (primeras 5 filas):</h3>
+              <div className="overflow-x-auto border rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 text-xs">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {preview[0]?.map((header: string, idx: number) => (
+                        <th key={idx} className="px-3 py-2 text-left font-medium text-gray-500">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {preview.slice(1).map((row, rowIdx) => (
+                      <tr key={rowIdx}>
+                        {row.map((cell: string, cellIdx: number) => (
+                          <td key={cellIdx} className="px-3 py-2 text-gray-700">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Botones */}
+          <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleImport}
+              disabled={!file || loading}
+              className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Importando...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-5 w-5 mr-2" />
+                  Importar Socios
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
