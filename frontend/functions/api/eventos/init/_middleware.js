@@ -145,7 +145,20 @@ async function initializeEventos(db) {
     `);
 
     const insertions = eventosIniciales.map(evento => 
-      stmt.bind(...Object.values(evento))
+      stmt.bind(
+        evento.title,
+        evento.description,
+        evento.date,
+        evento.time,
+        evento.location,
+        evento.image,
+        evento.type,
+        evento.status,
+        evento.registration_open,
+        evento.max_participants,
+        evento.price,
+        evento.organizer_id
+      )
     );
 
     await db.batch(insertions);
