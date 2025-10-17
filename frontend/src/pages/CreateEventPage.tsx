@@ -155,14 +155,15 @@ export const CreateEventPage: React.FC = () => {
         maxParticipants: data.maxParticipants,
         price: data.price,
         registrationOpen: data.registrationOpen,
+        status: 'published' as const, // Eventos creados desde el panel se publican automáticamente
         image: selectedImage || 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=300&fit=crop',
         requirements,
         tags,
         contactInfo: Object.keys(contactInfo).length > 0 ? contactInfo : undefined
       };
 
-      await createEvento(eventData);
-      navigate('/events');
+  await createEvento(eventData);
+  navigate('/eventos');
     } catch (error) {
       console.error('Error al crear evento:', error);
     }

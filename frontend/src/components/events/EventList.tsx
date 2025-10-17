@@ -12,9 +12,7 @@ export const EventList: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('published');
   const [sortBy, setSortBy] = useState<SortOption>('date');
-
 
   const {
     eventos,
@@ -28,6 +26,13 @@ export const EventList: React.FC = () => {
 
   const { isAuthenticated } = useAuth();
 
+  const [statusFilter, setStatusFilter] = useState(isAuthenticated ? '' : 'published');
+
+  // Actualizar filtro de status cuando cambie la autenticación
+  useEffect(() => {
+    setStatusFilter(isAuthenticated ? '' : 'published');
+  }, [isAuthenticated]);
+
   // Aplicar filtros cuando cambien
   useEffect(() => {
     const filters = {
@@ -38,10 +43,10 @@ export const EventList: React.FC = () => {
     setFilters(filters);
   }, [searchTerm, typeFilter, statusFilter, setFilters]);
 
-  // Cargar eventos al montar el componente
+  // Cargar eventos al montar el componente y cuando cambie la autenticación
   useEffect(() => {
     fetchEventos(1);
-  }, [fetchEventos]);
+  }, [fetchEventos, isAuthenticated]);
 
   // Ordenar eventos
   const sortedEventos = React.useMemo(() => {
