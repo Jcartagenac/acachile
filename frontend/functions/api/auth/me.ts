@@ -137,22 +137,22 @@ function buildUpdateFields(body: {
 
   if (telefono !== undefined) {
     updateFields.push('telefono = ?');
-    updateValues.push(telefono || null);
+    updateValues.push(telefono && telefono.trim() !== '' ? telefono.trim() : null);
   }
 
   if (rut !== undefined) {
     updateFields.push('rut = ?');
-    updateValues.push(rut || null);
+    updateValues.push(rut && rut.trim() !== '' ? rut.trim() : null);
   }
 
   if (ciudad !== undefined) {
     updateFields.push('ciudad = ?');
-    updateValues.push(ciudad || null);
+    updateValues.push(ciudad && ciudad.trim() !== '' ? ciudad.trim() : null);
   }
 
   if (direccion !== undefined) {
     updateFields.push('direccion = ?');
-    updateValues.push(direccion || null);
+    updateValues.push(direccion && direccion.trim() !== '' ? direccion.trim() : null);
   }
 
   if (foto_url !== undefined) {
@@ -214,11 +214,13 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       telefono?: string;
       rut?: string;
       ciudad?: string;
+      direccion?: string;
       foto_url?: string;
     };
 
     const userId = authUser.userId;
     console.log('[AUTH/ME] Updating profile for user:', userId);
+    console.log('[AUTH/ME] Body received:', JSON.stringify(body, null, 2));
 
     // Validar campos
     const validation = validateProfileFields(body);
@@ -228,6 +230,8 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     // Construir campos de actualización
     const { fields: updateFields, values: updateValues } = buildUpdateFields(body);
+    console.log('[AUTH/ME] Update fields:', updateFields);
+    console.log('[AUTH/ME] Update values:', updateValues);
 
     // Ejecutar actualización
     const updateResult = await executeProfileUpdate(env, userId, updateFields, updateValues);

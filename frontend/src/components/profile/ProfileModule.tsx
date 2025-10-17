@@ -19,6 +19,33 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+/**
+ * Formatea un RUT chileno al formato XX.XXX.XXX-X
+ */
+const formatRUT = (rut: string): string => {
+  // Eliminar puntos, guiones y espacios
+  const cleanRUT = rut.replace(/[.\-\s]/g, '');
+  
+  // Si está vacío, retornar vacío
+  if (!cleanRUT) return '';
+  
+  // Extraer cuerpo y dígito verificador
+  const body = cleanRUT.slice(0, -1);
+  const dv = cleanRUT.slice(-1).toUpperCase();
+  
+  // Formatear el cuerpo con puntos
+  const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  
+  return `${formattedBody}-${dv}`;
+};
+
+/**
+ * Limpia un valor de formulario: convierte strings vacíos en null
+ */
+const cleanFormValue = (value: string): string | null => {
+  return value && value.trim() !== '' ? value.trim() : null;
+};
+
 export const ProfileModule: React.FC = () => {
   const { user, updateUser } = useAuth();
   const userService = useUserService();
@@ -97,8 +124,18 @@ export const ProfileModule: React.FC = () => {
     setMessage(null);
     
     try {
-      console.log('💾 ProfileModule: Saving profile data:', formData);
-      const response = await userService.updateProfile(formData);
+      // Limpiar y preparar los datos antes de enviar
+      const cleanedData = {
+        ...formData,
+        phone: cleanFormValue(formData.phone),
+        rut: cleanFormValue(formData.rut),
+        ciudad: cleanFormValue(formData.ciudad),
+        direccion: cleanFormValue(formData.direccion),
+        region: cleanFormValue(formData.region),
+      };
+      
+      console.log('💾 ProfileModule: Saving profile data:', cleanedData);
+      const response = await userService.updateProfile(cleanedData);
       console.log('📊 ProfileModule: Update response:', response);
       
       if (response.success && response.data) {
@@ -174,6 +211,15 @@ export const ProfileModule: React.FC = () => {
   
   // Determinar la URL del avatar a mostrar (priorizar avatar persistido)
   const displayAvatarUrl = persistedAvatarUrl || formData.avatar || profile?.avatar || '';
+
+  const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Solo permitir números, puntos, guiones y la letra K
+    const cleanValue = value.replace(/[^0-9kK.\-]/g, '');
+    // Formatear automáticamente mientras escribe
+    const formatted = formatRUT(cleanValue);
+    setFormData({ ...formData, rut: formatted });
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -474,7 +520,7 @@ export const ProfileModule: React.FC = () => {
                   <input
                     type="text"
                     value={formData.rut}
-                    onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                    onChange={handleRutChange}
                     disabled={!isEditing}
                     className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
                       isEditing 

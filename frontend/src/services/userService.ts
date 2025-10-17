@@ -24,12 +24,12 @@ export interface UpdateProfileRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phone?: string;
-  direccion?: string;
+  phone?: string | null;
+  direccion?: string | null;
   avatar?: string;
-  region?: string;
-  rut?: string;
-  ciudad?: string;
+  region?: string | null;
+  rut?: string | null;
+  ciudad?: string | null;
 }
 
 export interface ApiResponse<T> {
@@ -222,8 +222,8 @@ class UserService {
       firstName: profileData.firstName || 'Juan',
       lastName: profileData.lastName || 'Pérez',
       email: profileData.email || 'juan.perez@email.com',
-      phone: profileData.phone,
-      direccion: profileData.direccion,
+      phone: profileData.phone || undefined,
+      direccion: profileData.direccion || undefined,
       avatar: profileData.avatar,
       region: profileData.region || 'Región Metropolitana',
       fechaIngreso: '2020-03-15',
