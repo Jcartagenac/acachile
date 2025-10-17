@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
 
     let user;
     try {
-      user = requireAuth(request, env);
+      user = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',
