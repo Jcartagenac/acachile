@@ -13,6 +13,38 @@ export interface AuthResponse {
   message?: string;
 }
 
+export interface PendingRegistration {
+  id: string;
+  userData: {
+    email: string;
+    name: string;
+    phone?: string;
+    region?: string;
+    motivation?: string;
+    experience?: string;
+    references?: string;
+    preferredRole?: string;
+  };
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  reviewedBy?: number;
+  reviewedAt?: string;
+  reviewNotes?: string;
+}
+
+export interface PendingRegistrationResponse {
+  success: boolean;
+  data?: PendingRegistration[];
+  error?: string;
+  message?: string;
+}
+
+export interface RegistrationActionResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
+
 class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'auth_user';
@@ -110,6 +142,145 @@ class AuthService {
     } catch (error) {
       console.error('Error verificando sesión:', error);
       return null;
+    }
+  }
+
+  async getPendingRegistrations(): Promise<PendingRegistrationResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, error: 'Sesión expirada. Inicia sesión nuevamente.' };
+    }
+
+    try {
+      const response = await fetch('/api/admin/registrations/pending', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 404) {
+        console.warn('[authService] Endpoint de registros pendientes no disponible');
+        return { success: true, data: [] };
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: data.error || `Error ${response.status} obteniendo registros pendientes`
+        };
+      }
+
+      const data = await response.json();
+      return {
+        success: Boolean(data.success),
+        data: data.data || [],
+        message: data.message
+      };
+    } catch (error) {
+      console.error('[authService] Error getPendingRegistrations:', error);
+      return {
+        success: false,
+        error: 'Error de conexión obteniendo registros pendientes'
+      };
+    }
+  }
+
+  async approveRegistration(
+    registrationId: string,
+    options: { assignedRole?: string; membershipType?: string; notes?: string } = {}
+  ): Promise<RegistrationActionResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, error: 'Sesión expirada. Inicia sesión nuevamente.' };
+    }
+
+    try {
+      const response = await fetch(`/api/admin/registrations/${registrationId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(options)
+      });
+
+      if (response.status === 404) {
+        console.warn('[authService] Endpoint approveRegistration no disponible');
+        return {
+          success: false,
+          error: 'La aprobación de registros no está disponible actualmente.'
+        };
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || `Error ${response.status} aprobando registro`
+        };
+      }
+
+      return {
+        success: Boolean(data.success),
+        message: data.message,
+        error: data.error
+      };
+    } catch (error) {
+      console.error('[authService] Error approveRegistration:', error);
+      return {
+        success: false,
+        error: 'Error de conexión aprobando registro'
+      };
+    }
+  }
+
+  async rejectRegistration(registrationId: string, reason?: string): Promise<RegistrationActionResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, error: 'Sesión expirada. Inicia sesión nuevamente.' };
+    }
+
+    try {
+      const response = await fetch(`/api/admin/registrations/${registrationId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+      });
+
+      if (response.status === 404) {
+        console.warn('[authService] Endpoint rejectRegistration no disponible');
+        return {
+          success: false,
+          error: 'El rechazo de registros no está disponible actualmente.'
+        };
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || `Error ${response.status} rechazando registro`
+        };
+      }
+
+      return {
+        success: Boolean(data.success),
+        message: data.message,
+        error: data.error
+      };
+    } catch (error) {
+      console.error('[authService] Error rejectRegistration:', error);
+      return {
+        success: false,
+        error: 'Error de conexión rechazando registro'
+      };
     }
   }
 }

@@ -125,7 +125,7 @@ class AdminService {
         return { success: false, error: 'No tienes permisos para ver las comunicaciones' };
       }
 
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token') ?? localStorage.getItem('authToken');
       const response = await fetch('/api/admin/comunicados', {
         headers: {
           'Authorization': `Bearer ${token}`

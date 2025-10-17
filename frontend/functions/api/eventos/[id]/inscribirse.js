@@ -1,3 +1,5 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+
 // Endpoint para inscribirse a un evento específico
 // POST /api/eventos/[id]/inscribirse - Inscribirse al evento
 
@@ -48,23 +50,21 @@ export async function onRequest(context) {
   }
 
   try {
-    // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Token de autorización requerido'
-      }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      });
+    let authUser;
+    try {
+      authUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
     }
 
-    // TODO: Decodificar JWT para obtener userId real
-    const userId = 1; // Por ahora usamos ID fijo
+    const userId = authUser.userId;
+    if (!userId) {
+      return errorResponse('Token sin información de usuario', 401);
+    }
 
     const result = await inscribirseEvento(env, userId, eventId);
 
@@ -81,17 +81,11 @@ export async function onRequest(context) {
       });
     }
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: result.data,
       message: 'Te has inscrito exitosamente al evento'
-    }), {
-      status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
-    });
+    }, 201, corsHeaders);
 
   } catch (error) {
     console.error('Error in evento inscribirse endpoint:', error);
