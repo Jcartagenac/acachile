@@ -86,7 +86,8 @@ export const EventCard: React.FC<EventCardProps> = ({
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      // TODO: Abrir modal de login
+      // Redirigir al login o mostrar modal
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
       return;
     }
 
@@ -199,7 +200,7 @@ export const EventCard: React.FC<EventCardProps> = ({
           </div>
 
           {/* Actions */}
-          {showActions && isAuthenticated && (
+          {showActions && (
             <div className="flex space-x-3 pt-4">
               {canRegister && (
                 <button
@@ -210,7 +211,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                 </button>
               )}
 
-              {isInscribed && (
+              {isInscribed && isAuthenticated && (
                 <span className="flex-1 py-3 px-4 rounded-xl text-center font-medium bg-green-50/80 backdrop-blur-medium border border-green-200/50 text-green-700 shadow-soft-xs">
                   Inscrito ✓
                 </span>
