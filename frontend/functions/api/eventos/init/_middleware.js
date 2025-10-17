@@ -12,11 +12,8 @@ export async function onRequestPost(context) {
 
   try {
     // TODO: Implementar una verificación de admin más robusta
-    // TEMPORAL: Permitir inicialización sin token para desarrollo
     const authHeader = request.headers.get('Authorization');
-    const isDevInit = request.headers.get('X-Dev-Init') === 'true';
-    
-    if (!isDevInit && (!authHeader || !authHeader.startsWith('Bearer '))) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ success: false, error: 'Token de autorización requerido' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
