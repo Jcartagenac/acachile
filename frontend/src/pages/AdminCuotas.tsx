@@ -177,14 +177,16 @@ export default function AdminCuotas() {
     const sociosAlDia = socios.filter(s => s.estadoPago === 'al-dia').length;
     const sociosAtrasados = socios.filter(s => s.estadoPago === 'atrasado').length;
     const sociosSinPagos = socios.filter(s => s.estadoPago === 'sin-pagos').length;
-    
-    const totalRecaudado = cuotas.filter(c => c.pagado).reduce((sum, c) => sum + c.valor, 0);
-    const totalPendiente = cuotas.filter(c => !c.pagado).reduce((sum, c) => sum + c.valor, 0);
 
-    return { 
-      totalSocios, 
-      sociosAlDia, 
-      sociosAtrasados, 
+    // Filtrar solo cuotas del año 2025
+    const cuotas2025 = cuotas.filter(c => c.año === 2025);
+    const totalRecaudado = cuotas2025.filter(c => c.pagado).reduce((sum, c) => sum + c.valor, 0);
+    const totalPendiente = cuotas2025.filter(c => !c.pagado).reduce((sum, c) => sum + c.valor, 0);
+
+    return {
+      totalSocios,
+      sociosAlDia,
+      sociosAtrasados,
       sociosSinPagos,
       totalRecaudado,
       totalPendiente
@@ -289,12 +291,12 @@ export default function AdminCuotas() {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Recaudado</p>
+                <p className="text-sm text-gray-600">Recaudado 2025</p>
                 <p className="text-2xl font-bold text-gray-900">
                   ${(stats.totalRecaudado / 1000).toFixed(0)}K
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Pendiente: ${(stats.totalPendiente / 1000).toFixed(0)}K
+                  Pendiente 2025: ${(stats.totalPendiente / 1000).toFixed(0)}K
                 </p>
               </div>
               <TrendingUp className="h-10 w-10 text-green-500" />
