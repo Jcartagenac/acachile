@@ -41,7 +41,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     // Obtener datos del usuario
     const user = await env.DB.prepare(`
-      SELECT id, email, nombre, apellido, telefono, rut, ciudad, foto_url, role, activo, created_at, last_login
+      SELECT id, email, nombre, apellido, telefono, rut, ciudad, direccion, foto_url, role, activo, created_at, last_login
       FROM usuarios WHERE id = ? AND activo = 1
     `).bind(userId).first();
 
@@ -59,6 +59,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       telefono: user.telefono as string,
       rut: user.rut as string,
       ciudad: user.ciudad as string,
+      direccion: user.direccion as string,
       foto_url: user.foto_url as string,
       role: user.role as 'admin' | 'editor' | 'user',
       activo: Boolean(user.activo),
@@ -241,7 +242,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     // Obtener datos actualizados
     const updatedUser = await env.DB.prepare(`
-      SELECT id, email, nombre, apellido, telefono, rut, ciudad, foto_url, role, activo, created_at, last_login
+      SELECT id, email, nombre, apellido, telefono, rut, ciudad, direccion, foto_url, role, activo, created_at, last_login
       FROM usuarios WHERE id = ?
     `).bind(userId).first();
 
@@ -258,6 +259,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       telefono: updatedUser.telefono as string,
       rut: updatedUser.rut as string,
       ciudad: updatedUser.ciudad as string,
+      direccion: updatedUser.direccion as string,
       foto_url: updatedUser.foto_url as string,
       role: updatedUser.role as 'admin' | 'editor' | 'user',
       activo: Boolean(updatedUser.activo),

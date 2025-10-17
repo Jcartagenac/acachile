@@ -177,6 +177,7 @@ export interface AuthApiUser {
   telefono?: string | null;
   rut?: string | null;
   ciudad?: string | null;
+  direccion?: string | null;
   role: UserRole;
   activo: boolean;
   created_at: string;
@@ -193,7 +194,8 @@ export interface AppUser {
   avatar?: string | null;
   phone?: string | null;
   rut?: string | null;
-  city?: string | null;
+  ciudad?: string | null;
+  direccion?: string | null;
   region?: RegionName | string | null;
   membershipType?: string | null;
   isActive: boolean;
