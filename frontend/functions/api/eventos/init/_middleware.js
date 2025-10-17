@@ -137,8 +137,8 @@ async function initializeEventos(db) {
       },
     ];
 
-    // Limpiar tablas
-    await db.exec('DELETE FROM evento_inscripciones');
+    // Limpiar tablas (solo eventos por ahora)
+    // await db.exec('DELETE FROM evento_inscripciones'); // TODO: Crear tabla cuando sea necesaria
     await db.exec('DELETE FROM eventos');
 
     // Preparar inserción

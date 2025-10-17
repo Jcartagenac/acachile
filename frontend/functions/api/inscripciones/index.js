@@ -1,3 +1,5 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../_middleware';
+
 // Endpoint principal para gestión de inscripciones
 // GET /api/inscripciones - Listar inscripciones (admin)
 // POST /api/inscripciones - Crear nueva inscripción
@@ -58,22 +60,20 @@ export async function onRequest(context) {
 // GET /api/inscripciones - Listar inscripciones (admin)
 async function handleGetInscripciones(request, env, corsHeaders) {
   try {
-    // Verificar autenticación de admin
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Token de autorización requerido'
-      }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      });
+    let authUser;
+    try {
+      authUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
     }
 
-    // TODO: Verificar que es admin mediante JWT
+    if (!['admin', 'super_admin'].includes(authUser.role)) {
+      return errorResponse('Acceso denegado', 403);
+    }
 
     const url = new URL(request.url);
     const eventoId = url.searchParams.get('eventoId');
@@ -99,14 +99,9 @@ async function handleGetInscripciones(request, env, corsHeaders) {
       inscripciones = inscripcionesData ? JSON.parse(inscripcionesData) : [];
     }
 
-    return new Response(JSON.stringify({
+    return setCorsJsonResponse(corsHeaders, {
       success: true,
       data: inscripciones
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
     });
 
   } catch (error) {
@@ -128,22 +123,21 @@ async function handleGetInscripciones(request, env, corsHeaders) {
 async function handleCreateInscripcion(request, env, corsHeaders) {
   try {
     // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Token de autorización requerido'
-      }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      });
+    let authUser;
+    try {
+      authUser = requireAuth(request, env);
+    } catch (error) {
+      return errorResponse(
+        error instanceof Error ? error.message : 'Token inválido',
+        401,
+        env.ENVIRONMENT === 'development' ? { details: error } : undefined
+      );
     }
 
-    // TODO: Decodificar JWT para obtener userId real
-    const userId = 1; // Por ahora usamos ID fijo
+    const userId = authUser.userId;
+    if (!userId) {
+      return errorResponse('Token sin información de usuario', 401);
+    }
 
     const body = await request.json();
     const { eventoId } = body;
@@ -176,17 +170,15 @@ async function handleCreateInscripcion(request, env, corsHeaders) {
       });
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      data: result.data,
-      message: 'Inscripción realizada exitosamente'
-    }), {
-      status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
+    return setCorsJsonResponse(
+      corsHeaders,
+      {
+        success: true,
+        data: result.data,
+        message: 'Inscripción realizada exitosamente'
       },
-    });
+      201
+    );
 
   } catch (error) {
     console.error('Error creating inscripcion:', error);
@@ -201,6 +193,12 @@ async function handleCreateInscripcion(request, env, corsHeaders) {
       },
     });
   }
+}
+
+function setCorsJsonResponse(corsHeaders, body, status = 200) {
+  return jsonResponse(body, status, {
+    ...corsHeaders,
+  });
 }
 
 // Funciones de servicio para inscripciones

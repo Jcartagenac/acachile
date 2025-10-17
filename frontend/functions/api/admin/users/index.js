@@ -1,3 +1,5 @@
+import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+
 // Endpoint de gestión de usuarios para administradores
 // GET /api/admin/users - Listar usuarios
 // POST /api/admin/users - Crear usuario (admin)
