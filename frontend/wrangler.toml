@@ -60,3 +60,10 @@ database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 [[env.preview.r2_buckets]]
 binding = "IMAGES"
 bucket_name = "aca-chile-images"
+
+# Secrets para ambos entornos
+[env.production.secrets]
+JWT_SECRET = "JWT_SECRET"
+
+[env.preview.secrets]
+JWT_SECRET = "JWT_SECRET"
