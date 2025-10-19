@@ -46,3 +46,17 @@ database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 [[env.production.r2_buckets]]
 binding = "IMAGES"
 bucket_name = "aca-chile-images"
+
+# Bindings específicas para preview (mismos valores que producción)
+[[env.preview.kv_namespaces]]
+binding = "ACA_KV"
+id = "60fff9f10819406cad241e326950f056"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
+
+[[env.preview.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "aca-chile-images"
