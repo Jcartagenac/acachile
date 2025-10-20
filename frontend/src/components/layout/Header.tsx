@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container } from './Container';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserMenu, AuthModal } from '../auth';
@@ -8,8 +8,8 @@ import SearchBar from '../SearchBar';
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   const navigation = [
@@ -79,22 +79,18 @@ export const Header: React.FC = () => {
                 <div className="hidden md:flex items-center space-x-2">
                   <button
                     onClick={() => {
-                      setAuthMode('login');
                       setAuthModalOpen(true);
                     }}
                     className="px-6 py-3 text-sm font-semibold text-neutral-700 bg-white/60 backdrop-blur-soft rounded-2xl hover:bg-white/80 hover:shadow-soft-sm transition-all duration-300 border border-white/30"
                   >
                     Iniciar Sesión
                   </button>
-                  <button
-                    onClick={() => {
-                      setAuthMode('register');
-                      setAuthModalOpen(true);
-                    }}
+                  <Link
+                    to="/unete"
                     className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md"
                   >
-                    Registrarse
-                  </button>
+                    Únete a ACA
+                  </Link>
                 </div>
               )}
 
@@ -147,7 +143,6 @@ export const Header: React.FC = () => {
                   <div className="pt-4 space-y-3 border-t border-neutral-200/50 mt-6">
                     <button
                       onClick={() => {
-                        setAuthMode('login');
                         setAuthModalOpen(true);
                         setIsMenuOpen(false);
                       }}
@@ -157,13 +152,12 @@ export const Header: React.FC = () => {
                     </button>
                     <button
                       onClick={() => {
-                        setAuthMode('register');
-                        setAuthModalOpen(true);
                         setIsMenuOpen(false);
+                        navigate('/unete');
                       }}
                       className="w-full px-6 py-4 text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md"
                     >
-                      Registrarse
+                      Únete a ACA
                     </button>
                   </div>
                 )}
@@ -177,7 +171,6 @@ export const Header: React.FC = () => {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
       />
     </>
   );

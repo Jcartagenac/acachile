@@ -1,28 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { LoginForm } from './LoginForm';
-import { RegisterForm } from './RegisterForm';
-
-type AuthMode = 'login' | 'register';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: AuthMode;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ 
   isOpen, 
-  onClose, 
-  initialMode = 'login' 
+  onClose
 }) => {
-  const [mode, setMode] = useState<AuthMode>(initialMode);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
 
   useEffect(() => {
     if (isOpen) {
@@ -70,18 +60,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         {/* Form Content */}
-        <div className="animate-fade-in">
-          {mode === 'login' ? (
-            <LoginForm
-              onSuccess={handleSuccess}
-              onSwitchToRegister={() => setMode('register')}
-            />
-          ) : (
-            <RegisterForm
-              onSuccess={handleSuccess}
-              onSwitchToLogin={() => setMode('login')}
-            />
-          )}
+        <div className="animate-fade-in space-y-6">
+          <LoginForm onSuccess={handleSuccess} />
+          <div className="text-center text-sm text-slate-500">
+            ¿No tienes acceso todavía?{' '}
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/unete');
+              }}
+              className="font-semibold text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-lg px-1"
+            >
+              Únete a ACA
+            </button>
+          </div>
         </div>
       </div>
     </div>

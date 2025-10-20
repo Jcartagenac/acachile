@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container } from './Container';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserMenu, AuthModal } from '../auth';
@@ -8,8 +8,8 @@ import SearchBar from '../SearchBar';
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   const navigation = [
@@ -72,22 +72,18 @@ export const Header: React.FC = () => {
               <>
                 <button 
                   onClick={() => {
-                    setAuthMode('login');
                     setAuthModalOpen(true);
                   }}
                   className="px-6 py-3 rounded-xl text-primary-700 font-medium shadow-neuro-outset hover:shadow-neuro-pressed transition-all duration-300"
                 >
                   Iniciar Sesión
                 </button>
-                <button 
-                  onClick={() => {
-                    setAuthMode('register');
-                    setAuthModalOpen(true);
-                  }}
+                <Link 
+                  to="/unete"
                   className="px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-br from-primary-500 to-primary-600 shadow-neuro-card hover:shadow-neuro-pressed hover:from-primary-600 hover:to-primary-700 transition-all duration-300"
                 >
                   Únete
-                </button>
+                </Link>
               </>
             )}
           </div>
@@ -139,7 +135,6 @@ export const Header: React.FC = () => {
                   <>
                     <button 
                       onClick={() => {
-                        setAuthMode('login');
                         setAuthModalOpen(true);
                         setIsMenuOpen(false);
                       }}
@@ -149,9 +144,8 @@ export const Header: React.FC = () => {
                     </button>
                     <button 
                       onClick={() => {
-                        setAuthMode('register');
-                        setAuthModalOpen(true);
                         setIsMenuOpen(false);
+                        navigate('/unete');
                       }}
                       className="w-full px-4 py-3 rounded-xl text-white font-medium bg-gradient-to-br from-primary-500 to-primary-600 shadow-neuro-card hover:shadow-neuro-pressed transition-all duration-300"
                     >
@@ -166,11 +160,7 @@ export const Header: React.FC = () => {
       </Container>
 
       {/* Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-      />
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </header>
   );
 };

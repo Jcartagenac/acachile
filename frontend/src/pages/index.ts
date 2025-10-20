@@ -26,5 +26,6 @@ export { default as AdminMonitoring } from './AdminMonitoring';
 export { default as PanelAdminDashboard } from './PanelAdminDashboard';
 export { default as AdminContent } from './AdminContent';
 export { default as AdminNews } from './AdminNews';
+export { default as AdminPostulantes } from './AdminPostulantes';
 export { ProfilePage } from './ProfilePage';
 export { default as PerfilSocio } from './PerfilSocio';

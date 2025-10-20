@@ -21,12 +21,10 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
-  onSwitchToRegister?: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ 
-  onSuccess, 
-  onSwitchToRegister 
+  onSuccess
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error, clearError } = useAuth();
@@ -150,13 +148,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             </button>
 
             <div className="space-y-3 text-center text-sm text-slate-500">
-              <button
-                type="button"
-                onClick={onSwitchToRegister}
-                className="font-semibold text-primary-600 transition hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-              >
-                ¿No tienes cuenta? Regístrate aquí
-              </button>
+              <p>
+                ¿Quieres formar parte de ACA Chile?{' '}
+                <Link
+                  to="/unete"
+                  className="font-semibold text-primary-600 transition hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                >
+                  Únete a ACA
+                </Link>
+              </p>
               <div>
                 <Link
                   to="/forgot-password"

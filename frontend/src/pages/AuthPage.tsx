@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { LoginForm, RegisterForm } from '../components/auth';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LoginForm } from '../components/auth';
 import { useAuth } from '../contexts/AuthContext';
 
-type AuthMode = 'login' | 'register';
-
 export const AuthPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [mode, setMode] = useState<AuthMode>(
-    (searchParams.get('mode') as AuthMode) || 'login'
-  );
 
   // Redireccionar si ya está autenticado
   React.useEffect(() => {
@@ -74,44 +68,26 @@ export const AuthPage: React.FC = () => {
                 ACA
               </div>
               <h2 className="text-2xl font-bold text-neutral-900">
-                {mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta ACA'}
+                Bienvenido de vuelta
               </h2>
               <p className="text-sm text-neutral-500">
-                {mode === 'login'
-                  ? 'Accede a tu panel personal para gestionar eventos y experiencias.'
-                  : 'Únete a la asociación oficial de asadores y vive el movimiento parrillero.'}
+                Accede a tu panel personal para gestionar eventos y experiencias.
               </p>
             </div>
 
-            <div className="flex rounded-xl bg-neutral-100/80 p-1 border border-white/40">
-              <button
-                onClick={() => setMode('login')}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  mode === 'login'
-                    ? 'bg-white shadow-soft-lg text-primary-600'
-                    : 'text-neutral-500'
-                }`}
-              >
-                Iniciar Sesión
-              </button>
-              <button
-                onClick={() => setMode('register')}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  mode === 'register'
-                    ? 'bg-white shadow-soft-lg text-primary-600'
-                    : 'text-neutral-500'
-                }`}
-              >
-                Registrarse
-              </button>
-            </div>
-
             <div className="space-y-6">
-              {mode === 'login' ? (
-                <LoginForm onSuccess={handleSuccess} onSwitchToRegister={() => setMode('register')} />
-              ) : (
-                <RegisterForm onSuccess={handleSuccess} onSwitchToLogin={() => setMode('login')} />
-              )}
+              <LoginForm onSuccess={handleSuccess} />
+              <div className="text-center text-sm text-neutral-500">
+                <span className="inline-flex flex-wrap items-center justify-center gap-1">
+                  ¿Aún no eres socio?{' '}
+                  <button
+                    onClick={() => navigate('/unete')}
+                    className="font-semibold text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-lg px-1"
+                  >
+                    Únete a ACA
+                  </button>
+                </span>
+              </div>
             </div>
           </div>
         </div>

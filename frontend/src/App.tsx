@@ -25,6 +25,7 @@ import {
   PanelAdminDashboard,
   AdminContent,
   AdminNews,
+  AdminPostulantes,
   AdminSocios,
   AdminCuotas
 } from './pages';
@@ -81,6 +82,7 @@ function App() {
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
+          <Route path="/panel-admin/postulantes" element={<PanelAdminLayout><AdminPostulantes /></PanelAdminLayout>} />
           
           {/* Perfil de Usuario */}
           <Route path="/perfil" element={<ProfilePage />} />
