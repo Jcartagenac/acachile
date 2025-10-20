@@ -60,8 +60,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="relative rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-primary-500 to-primary-600" />
+      <div className="relative rounded-3xl border border-primary-100 bg-white/90 shadow-xl backdrop-blur-sm">
 
         <div className="px-8 py-10 sm:px-10 sm:py-12">
           <div className="flex flex-col items-center text-center gap-4 mb-8">
