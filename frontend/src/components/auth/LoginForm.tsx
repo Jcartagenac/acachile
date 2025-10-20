@@ -61,11 +61,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="relative rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-orange-400 to-rose-500" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-primary-500 to-primary-600" />
 
         <div className="px-8 py-10 sm:px-10 sm:py-12">
           <div className="flex flex-col items-center text-center gap-4 mb-8">
-            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 ring-1 ring-rose-100">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-500 ring-1 ring-primary-100">
               <LogIn className="h-7 w-7" aria-hidden="true" />
             </span>
             <div>
@@ -79,7 +79,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </div>
 
           {error && (
-            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            <div className="mb-6 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-600">
               {error}
             </div>
           )}
@@ -95,12 +95,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   {...register('email')}
                   type="email"
                   placeholder="tu-email@ejemplo.com"
-                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 ${errors.email ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100 ${errors.email ? 'border-primary-300 focus:border-primary-400 focus:ring-primary-200' : ''}`}
                   autoComplete="email"
                 />
               </div>
               {errors.email && (
-                <p className="text-sm text-rose-500">{errors.email.message}</p>
+                <p className="text-sm text-primary-500">{errors.email.message}</p>
               )}
             </div>
 
@@ -114,13 +114,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Tu contraseña"
-                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-12 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 ${errors.password ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-12 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100 ${errors.password ? 'border-primary-300 focus:border-primary-400 focus:ring-primary-200' : ''}`}
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200"
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   {showPassword ? (
@@ -131,14 +131,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-rose-500">{errors.password.message}</p>
+                <p className="text-sm text-primary-500">{errors.password.message}</p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-rose-200/70 transition hover:from-rose-600 hover:to-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
+              className={`w-full rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-primary-200/70 transition hover:from-primary-600 hover:to-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -154,7 +154,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               <button
                 type="button"
                 onClick={onSwitchToRegister}
-                className="font-semibold text-rose-600 transition hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                className="font-semibold text-primary-600 transition hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 ¿No tienes cuenta? Regístrate aquí
               </button>
