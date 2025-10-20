@@ -1,0 +1,26 @@
+name: Deploy Check
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify-pages-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install curl (if missing)
+        run: sudo apt-get update && sudo apt-get install -y curl
+
+      - name: Run deploy check script
+        run: |
+          chmod +x frontend/scripts/check_deploy.sh
+          frontend/scripts/check_deploy.sh https://acachile.pages.dev
