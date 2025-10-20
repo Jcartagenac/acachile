@@ -5,13 +5,14 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Users, 
-  FileText, 
-  CreditCard, 
+import {
+  Users,
+  FileText,
+  CreditCard,
   Megaphone,
   LayoutDashboard,
-  ChevronLeft
+  ChevronLeft,
+  UserCheck
 } from 'lucide-react';
 
 interface PanelAdminLayoutProps {
@@ -24,6 +25,12 @@ const menuItems = [
     label: 'Dashboard',
     icon: LayoutDashboard,
     description: 'Vista general'
+  },
+  {
+    path: '/panel-admin/postulantes',
+    label: 'Postulantes',
+    icon: UserCheck,
+    description: 'Revisión y aprobación'
   },
   {
     path: '/panel-admin/users',
