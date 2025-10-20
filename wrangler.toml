@@ -10,5 +10,5 @@ FRONTEND_URL = "http://localhost:5173"
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
-database_name = "ACA_DB"
-database_id = "ba77a962-f55a-49b4-865f-e5e3f9c98f7e"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
