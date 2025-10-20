@@ -3,14 +3,13 @@
  * ACA Chile Frontend
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar,
   Newspaper,
   Plus,
   Search,
-  Edit,
   Trash2,
   Eye,
   Users
@@ -19,9 +18,10 @@ import { useEvents } from '../contexts/EventContext';
 import { Evento } from '@shared/index';
 
 export default function AdminContent() {
-  const [activeTab, setActiveTab] = useState<'eventos' | 'noticias'>('eventos');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'eventos' | 'noticias'>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
+  const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
 
   useEffect(() => {
     if (activeTab === 'eventos') {
@@ -90,6 +90,19 @@ export default function AdminContent() {
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
             <button
+              onClick={() => setActiveTab('inicio')}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'inicio'
+                  ? 'border-red-600 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                Inicio
+              </div>
+            </button>
+            <button
               onClick={() => setActiveTab('eventos')}
               className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'eventos'
@@ -98,7 +111,7 @@ export default function AdminContent() {
               }`}
             >
               <div className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
+                <Newspaper className="h-5 w-5 mr-2" />
                 Eventos
               </div>
             </button>
@@ -119,6 +132,20 @@ export default function AdminContent() {
         </div>
 
         {/* Content based on active tab */}
+        {activeTab === 'inicio' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold">Editor de Inicio</h2>
+            </div>
+            <div>
+              {/* AdminHomeEditor component lazy loaded to avoid bundle size */}
+              <React.Suspense fallback={<div>Cargando editor...</div>}>
+                <AdminHomeEditor />
+              </React.Suspense>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'eventos' && (
           <div>
             {/* Actions Bar */}
