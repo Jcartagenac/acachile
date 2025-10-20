@@ -91,294 +91,217 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     }
   };
 
+  const baseInput =
+    'w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100';
+  const errorInput = 'border-rose-300 focus:border-rose-400 focus:ring-rose-200';
+  const withIconPadding = 'pl-12 pr-4';
+  const defaultPadding = 'px-4';
+
   return (
-    <div 
-      className="w-full max-w-md mx-auto p-8 rounded-3xl"
-      style={{ 
-        backgroundColor: '#e8ecf4',
-        boxShadow: '20px 20px 40px #bec8d7, -20px -20px 40px #ffffff'
-      }}
-    >
-      <div className="text-center mb-8">
-        <div 
-          className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-          style={{ 
-            backgroundColor: '#e8ecf4',
-            boxShadow: 'inset 8px 8px 16px #bec8d7, inset -8px -8px 16px #ffffff'
-          }}
-        >
-          <UserPlus className="w-8 h-8" style={{ color: '#EF4444' }} />
-        </div>
-        <h2 className="text-2xl font-bold" style={{ color: '#374151' }}>
-          Únete a ACA Chile
-        </h2>
-        <p className="text-sm mt-2" style={{ color: '#6B7280' }}>
-          Crea tu cuenta y forma parte de la comunidad
-        </p>
-      </div>
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="relative rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-orange-400 to-rose-500" />
 
-      {error && (
-        <div 
-          className="mb-6 p-4 rounded-2xl text-sm"
-          style={{ 
-            backgroundColor: '#FEE2E2',
-            color: '#DC2626',
-            border: '1px solid #FECACA'
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Nombre Completo *
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <User className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('name')}
-                type="text"
-                placeholder="Tu nombre completo"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
+        <div className="px-8 py-10 sm:px-10 sm:py-12">
+          <div className="flex flex-col items-center text-center gap-4 mb-8">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 ring-1 ring-rose-100">
+              <UserPlus className="h-7 w-7" aria-hidden="true" />
+            </span>
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Únete a ACA Chile
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Crea tu cuenta y forma parte de la comunidad.
+              </p>
             </div>
           </div>
-          {errors.name && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.name.message}
-            </p>
-          )}
-        </div>
 
-        {/* Email Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Email *
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <Mail className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('email')}
-                type="email"
-                placeholder="tu-email@ejemplo.com"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
+          {error && (
+            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {error}
             </div>
-          </div>
-          {errors.email && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.email.message}
-            </p>
           )}
-        </div>
 
-        {/* Phone Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Teléfono (opcional)
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <Phone className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('phone')}
-                type="tel"
-                placeholder="+56 9 1234 5678"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
-            </div>
-          </div>
-          {errors.phone && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.phone.message}
-            </p>
-          )}
-        </div>
-
-        {/* Region Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Región (opcional)
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <MapPin className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <select
-                {...register('region')}
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              >
-                <option value="">Selecciona tu región</option>
-                {REGIONES_CHILE.map((region) => (
-                  <option key={region} value={region}>
-                    {region}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {errors.region && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.region.message}
-            </p>
-          )}
-        </div>
-
-        {/* Password Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Contraseña *
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <Lock className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('password')}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Mínimo 6 caracteres"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="ml-3 focus:outline-none"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" style={{ color: '#6B7280' }} />
-                ) : (
-                  <Eye className="w-5 h-5" style={{ color: '#6B7280' }} />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Nombre completo *
+                </label>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    {...register('name')}
+                    type="text"
+                    placeholder="Tu nombre completo"
+                    className={`${baseInput} ${withIconPadding} ${errors.name ? errorInput : ''}`}
+                    autoComplete="name"
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-sm text-rose-500">{errors.name.message}</p>
                 )}
-              </button>
-            </div>
-          </div>
-          {errors.password && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+              </div>
 
-        {/* Confirm Password Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Confirmar Contraseña *
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <Lock className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('confirmPassword')}
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirma tu contraseña"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="ml-3 focus:outline-none"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="w-5 h-5" style={{ color: '#6B7280' }} />
-                ) : (
-                  <Eye className="w-5 h-5" style={{ color: '#6B7280' }} />
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Email *
+                </label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    {...register('email')}
+                    type="email"
+                    placeholder="tu-email@ejemplo.com"
+                    className={`${baseInput} ${withIconPadding} ${errors.email ? errorInput : ''}`}
+                    autoComplete="email"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-rose-500">{errors.email.message}</p>
                 )}
-              </button>
+              </div>
             </div>
-          </div>
-          {errors.confirmPassword && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 ${
-            isLoading 
-              ? 'opacity-70 cursor-not-allowed' 
-              : 'transform hover:scale-105'
-          }`}
-          style={{ 
-            background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-            boxShadow: isLoading 
-              ? 'none' 
-              : '0 10px 20px rgba(239, 68, 68, 0.3)'
-          }}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              Creando cuenta...
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Teléfono (opcional)
+                </label>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    {...register('phone')}
+                    type="tel"
+                    placeholder="+56 9 1234 5678"
+                    className={`${baseInput} ${withIconPadding} ${errors.phone ? errorInput : ''}`}
+                    autoComplete="tel"
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="text-sm text-rose-500">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Región (opcional)
+                </label>
+                <div className="relative">
+                  <MapPin className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <select
+                    {...register('region')}
+                    className={`${baseInput} ${withIconPadding} appearance-none ${errors.region ? errorInput : ''}`}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      Selecciona tu región
+                    </option>
+                    {REGIONES_CHILE.map((region) => (
+                      <option key={region} value={region}>
+                        {region}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.region && (
+                  <p className="text-sm text-rose-500">{errors.region.message}</p>
+                )}
+              </div>
             </div>
-          ) : (
-            'Crear Cuenta'
-          )}
-        </button>
 
-        {/* Switch to Login */}
-        <div className="text-center">
-          <p className="text-sm" style={{ color: '#6B7280' }}>
-            ¿Ya tienes cuenta?{' '}
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Contraseña *
+                </label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    {...register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Mínimo 6 caracteres"
+                    className={`${baseInput} ${withIconPadding} ${errors.password ? errorInput : ''}`}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-5 w-5" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-rose-500">{errors.password.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Confirmar contraseña *
+                </label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    {...register('confirmPassword')}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Repite tu contraseña"
+                    className={`${baseInput} ${withIconPadding} ${errors.confirmPassword ? errorInput : ''}`}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+                    aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-5 w-5" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-rose-500">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+            </div>
+
             <button
-              type="button"
-              onClick={onSwitchToLogin}
-              className="font-semibold hover:underline"
-              style={{ color: '#EF4444' }}
+              type="submit"
+              disabled={isLoading}
+              className={`w-full rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-rose-200/70 transition hover:from-rose-600 hover:to-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
             >
-              Inicia sesión
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Creando cuenta...
+                </div>
+              ) : (
+                'Crear cuenta'
+              )}
             </button>
-          </p>
+
+            <div className="text-center text-sm text-slate-500">
+              <button
+                type="button"
+                onClick={onSwitchToLogin}
+                className="font-semibold text-rose-600 transition hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              >
+                ¿Ya tienes cuenta? Inicia sesión aquí
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

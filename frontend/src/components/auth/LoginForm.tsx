@@ -59,168 +59,117 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <div 
-      className="w-full max-w-md mx-auto p-8 rounded-3xl"
-      style={{ 
-        backgroundColor: '#e8ecf4',
-        boxShadow: '20px 20px 40px #bec8d7, -20px -20px 40px #ffffff'
-      }}
-    >
-      <div className="text-center mb-8">
-        <div 
-          className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-          style={{ 
-            backgroundColor: '#e8ecf4',
-            boxShadow: 'inset 8px 8px 16px #bec8d7, inset -8px -8px 16px #ffffff'
-          }}
-        >
-          <LogIn className="w-8 h-8" style={{ color: '#EF4444' }} />
-        </div>
-        <h2 className="text-2xl font-bold" style={{ color: '#374151' }}>
-          Iniciar Sesión
-        </h2>
-        <p className="text-sm mt-2" style={{ color: '#6B7280' }}>
-          Bienvenido de vuelta a ACA Chile
-        </p>
-      </div>
+    <div className="w-full max-w-md mx-auto">
+      <div className="relative rounded-3xl border border-slate-200 bg-white/90 shadow-xl backdrop-blur-sm">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-orange-400 to-rose-500" />
 
-      {error && (
-        <div 
-          className="mb-6 p-4 rounded-2xl text-sm"
-          style={{ 
-            backgroundColor: '#FEE2E2',
-            color: '#DC2626',
-            border: '1px solid #FECACA'
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Email Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Email
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
-            >
-              <Mail className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('email')}
-                type="email"
-                placeholder="tu-email@ejemplo.com"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
+        <div className="px-8 py-10 sm:px-10 sm:py-12">
+          <div className="flex flex-col items-center text-center gap-4 mb-8">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 ring-1 ring-rose-100">
+              <LogIn className="h-7 w-7" aria-hidden="true" />
+            </span>
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Iniciar sesión
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Accede a tu cuenta para gestionar tus actividades en ACA Chile.
+              </p>
             </div>
           </div>
-          {errors.email && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.email.message}
-            </p>
-          )}
-        </div>
 
-        {/* Password Field */}
-        <div>
-          <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-            Contraseña
-          </label>
-          <div className="relative">
-            <div 
-              className="flex items-center px-4 py-3 rounded-xl"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: 'inset 6px 6px 12px #bec8d7, inset -6px -6px 12px #ffffff'
-              }}
+          {error && (
+            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
+                  {...register('email')}
+                  type="email"
+                  placeholder="tu-email@ejemplo.com"
+                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 ${errors.email ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+                  autoComplete="email"
+                />
+              </div>
+              {errors.email && (
+                <p className="text-sm text-rose-500">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
+                  {...register('password')}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Tu contraseña"
+                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-12 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 ${errors.password ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''}`}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-rose-500">{errors.password.message}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-rose-200/70 transition hover:from-rose-600 hover:to-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
             >
-              <Lock className="w-5 h-5 mr-3" style={{ color: '#6B7280' }} />
-              <input
-                {...register('password')}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Tu contraseña"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: '#374151' }}
-              />
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Iniciando sesión...
+                </div>
+              ) : (
+                'Iniciar sesión'
+              )}
+            </button>
+
+            <div className="space-y-3 text-center text-sm text-slate-500">
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="ml-3 focus:outline-none"
+                onClick={onSwitchToRegister}
+                className="font-semibold text-rose-600 transition hover:text-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" style={{ color: '#6B7280' }} />
-                ) : (
-                  <Eye className="w-5 h-5" style={{ color: '#6B7280' }} />
-                )}
+                ¿No tienes cuenta? Regístrate aquí
               </button>
+              <div>
+                <Link
+                  to="/forgot-password"
+                  className="font-medium text-slate-500 transition hover:text-slate-700"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
-          </div>
-          {errors.password && (
-            <p className="mt-2 text-sm" style={{ color: '#DC2626' }}>
-              {errors.password.message}
-            </p>
-          )}
+          </form>
         </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-4 rounded-xl font-bold text-white text-lg transition-all duration-300 ${
-            isLoading 
-              ? 'opacity-70 cursor-not-allowed' 
-              : 'transform hover:scale-105'
-          }`}
-          style={{ 
-            background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-            boxShadow: isLoading 
-              ? 'none' 
-              : '0 10px 20px rgba(239, 68, 68, 0.3)'
-          }}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-              Iniciando sesión...
-            </div>
-          ) : (
-            'Iniciar Sesión'
-          )}
-        </button>
-
-        {/* Switch to Register */}
-        <div className="text-center">
-          <p className="text-sm" style={{ color: '#6B7280' }}>
-            ¿No tienes cuenta?{' '}
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="font-semibold hover:underline"
-              style={{ color: '#EF4444' }}
-            >
-              Regístrate aquí
-            </button>
-          </p>
-        </div>
-
-        {/* Forgot Password */}
-        <div className="text-center">
-          <Link
-            to="/forgot-password"
-            className="text-sm hover:underline transition-colors"
-            style={{ color: '#6B7280' }}
-          >
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };
