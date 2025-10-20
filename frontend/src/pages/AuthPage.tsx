@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Container } from '../components/layout/Container';
 import { LoginForm, RegisterForm } from '../components/auth';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,144 +29,93 @@ export const AuthPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e8ecf4' }}>
-      <Container className="py-16">
-        <div className="max-w-lg mx-auto">
-          {/* Logo y título */}
-          <div className="text-center mb-8">
-            <div 
-              className="w-20 h-20 mx-auto mb-6 rounded-3xl flex items-center justify-center"
-              style={{ 
-                backgroundColor: '#e8ecf4',
-                boxShadow: '12px 12px 24px #bec8d7, -12px -12px 24px #ffffff'
-              }}
-            >
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                style={{ 
-                  background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
-                }}
-              >
-                <span className="text-white font-bold text-xl">A</span>
-              </div>
-            </div>
-            
-            <h1 className="text-3xl font-bold mb-2" style={{ color: '#374151' }}>
-              ACA Chile
+    <div className="min-h-screen bg-soft-gradient-light relative overflow-hidden py-16">
+      <div className="absolute inset-y-0 left-0 w-64 bg-primary-500/10 blur-3xl" />
+      <div className="absolute -top-20 right-10 w-72 h-72 bg-pastel-blue/20 rounded-full blur-3xl" />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-stretch">
+          {/* Columna de storytelling */}
+          <div className="hidden lg:flex flex-col justify-center rounded-3xl bg-white/60 backdrop-blur-md border border-white/30 shadow-soft-xl p-10 space-y-8">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full shadow-soft-sm border border-white/40 text-primary-600 font-semibold text-sm uppercase">
+              Comunidad ACA Chile
+            </span>
+            <h1 className="text-4xl font-bold leading-tight text-neutral-900">
+              Tu entrada a la red oficial de asadores en Chile
             </h1>
-            <p className="text-lg" style={{ color: '#6B7280' }}>
-              Asociación Chilena de Asadores
+            <p className="text-lg text-neutral-600 leading-relaxed">
+              Participa de campeonatos, talleres exclusivos y encuentros únicos en torno al fuego.
+              Administra tus eventos y conecta con una comunidad que comparte tu pasión.
             </p>
-          </div>
-
-          {/* Selector de modo */}
-          <div 
-            className="flex rounded-2xl p-2 mb-8"
-            style={{ 
-              backgroundColor: '#e8ecf4',
-              boxShadow: 'inset 8px 8px 16px #bec8d7, inset -8px -8px 16px #ffffff'
-            }}
-          >
-            <button
-              onClick={() => setMode('login')}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300 ${
-                mode === 'login' 
-                  ? 'text-white' 
-                  : 'text-gray-600'
-              }`}
-              style={{
-                background: mode === 'login' 
-                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-                  : 'transparent',
-                boxShadow: mode === 'login' 
-                  ? '0 4px 12px rgba(239, 68, 68, 0.3)'
-                  : 'none'
-              }}
-            >
-              Iniciar Sesión
-            </button>
-            
-            <button
-              onClick={() => setMode('register')}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300 ${
-                mode === 'register' 
-                  ? 'text-white' 
-                  : 'text-gray-600'
-              }`}
-              style={{
-                background: mode === 'register' 
-                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-                  : 'transparent',
-                boxShadow: mode === 'register' 
-                  ? '0 4px 12px rgba(239, 68, 68, 0.3)'
-                  : 'none'
-              }}
-            >
-              Registrarse
-            </button>
-          </div>
-
-          {/* Formularios */}
-          <div className="space-y-6">
-            {mode === 'login' ? (
-              <LoginForm
-                onSuccess={handleSuccess}
-                onSwitchToRegister={() => setMode('register')}
-              />
-            ) : (
-              <RegisterForm
-                onSuccess={handleSuccess}
-                onSwitchToLogin={() => setMode('login')}
-              />
-            )}
-          </div>
-
-          {/* Información adicional */}
-          <div className="mt-8 text-center">
-            <div 
-              className="rounded-2xl p-6"
-              style={{ 
-                backgroundColor: '#F0F9FF',
-                border: '1px solid #E0F2FE'
-              }}
-            >
-              <h3 className="font-semibold mb-2" style={{ color: '#0369A1' }}>
-                ¿Por qué unirse a ACA Chile?
-              </h3>
-              <ul className="text-sm space-y-1" style={{ color: '#075985' }}>
-                <li>• Participa en eventos exclusivos de asadores</li>
-                <li>• Conecta con la comunidad de parrilleros</li>
-                <li>• Accede a talleres y workshops especializados</li>
-                <li>• Compite en campeonatos de asado</li>
-              </ul>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Eventos organizados', value: '150+' },
+                { label: 'Miembros activos', value: '500+' },
+                { label: 'Ciudades presentes', value: '25+' },
+                { label: 'Años de trayectoria', value: '10' }
+              ].map((stat) => (
+                <div key={stat.label} className="bg-white/70 rounded-2xl p-4 text-center border border-white/60 shadow-soft-lg">
+                  <p className="text-2xl font-bold text-primary-600">{stat.value}</p>
+                  <p className="text-xs uppercase tracking-wide text-neutral-500">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl bg-primary-50/60 border border-primary-100/50 p-6 text-sm text-primary-900">
+              <p className="font-semibold mb-2">Credenciales de Demo</p>
+              <p>Admin: <span className="font-mono">admin@acachile.com / 123456</span></p>
+              <p>Usuario: <span className="font-mono">usuario@acachile.com / 123456</span></p>
             </div>
           </div>
 
-          {/* Demo credentials */}
-          <div className="mt-6 text-center">
-            <div 
-              className="rounded-2xl p-4"
-              style={{ 
-                backgroundColor: '#FFFBEB',
-                border: '1px solid #FEF3C7'
-              }}
-            >
-              <p className="text-xs font-semibold mb-2" style={{ color: '#92400E' }}>
-                Credenciales de Demo:
-              </p>
-              <div className="text-xs space-y-1" style={{ color: '#A16207' }}>
-                <div>
-                  <strong>Admin:</strong> admin@acachile.com / 123456
-                </div>
-                <div>
-                  <strong>Usuario:</strong> usuario@acachile.com / 123456
-                </div>
+          {/* Columna formulario */}
+          <div className="rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-soft-xl p-8 sm:p-10 space-y-8">
+            <div className="text-center space-y-3">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white text-2xl font-bold">
+                ACA
               </div>
+              <h2 className="text-2xl font-bold text-neutral-900">
+                {mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta ACA'}
+              </h2>
+              <p className="text-sm text-neutral-500">
+                {mode === 'login'
+                  ? 'Accede a tu panel personal para gestionar eventos y experiencias.'
+                  : 'Únete a la asociación oficial de asadores y vive el movimiento parrillero.'}
+              </p>
+            </div>
+
+            <div className="flex rounded-xl bg-neutral-100/80 p-1 border border-white/40">
+              <button
+                onClick={() => setMode('login')}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  mode === 'login'
+                    ? 'bg-white shadow-soft-lg text-primary-600'
+                    : 'text-neutral-500'
+                }`}
+              >
+                Iniciar Sesión
+              </button>
+              <button
+                onClick={() => setMode('register')}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  mode === 'register'
+                    ? 'bg-white shadow-soft-lg text-primary-600'
+                    : 'text-neutral-500'
+                }`}
+              >
+                Registrarse
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {mode === 'login' ? (
+                <LoginForm onSuccess={handleSuccess} onSwitchToRegister={() => setMode('register')} />
+              ) : (
+                <RegisterForm onSuccess={handleSuccess} onSwitchToLogin={() => setMode('login')} />
+              )}
             </div>
           </div>
         </div>
-      </Container>
+      </div>
     </div>
   );
 };
