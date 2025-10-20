@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/Button';
-import type { SiteSection } from '@shared/siteSections';
+import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
 import { DEFAULT_SITE_SECTIONS } from '@shared/siteSections';
+import type { Evento } from '@shared/index';
+import type { NewsArticle } from '../../services/newsService';
 
 type EditableSection = SiteSection & { preview_image?: string };
+
+const cloneDefaults = (): EditableSection[] =>
+  DEFAULT_SITE_SECTIONS.map((section) => ({ ...section }));
+
+const coerceSourceType = (value: unknown): SiteSectionSourceType =>
+  value === 'event' || value === 'news' ? value : 'custom';
 
 const mergeWithDefaults = (incoming: Partial<SiteSection>[] | undefined): EditableSection[] => {
   const defaults = new Map(DEFAULT_SITE_SECTIONS.map((section) => [section.key, section]));
@@ -11,7 +19,7 @@ const mergeWithDefaults = (incoming: Partial<SiteSection>[] | undefined): Editab
 
   (incoming || []).forEach((raw, index) => {
     const tentativeKey =
-      typeof raw?.key === 'string' && raw.key.trim()
+      typeof raw?.key === 'string' && raw.key.trim().length > 0
         ? raw.key.trim()
         : DEFAULT_SITE_SECTIONS[index]?.key ?? `section_${index}`;
 
@@ -26,7 +34,26 @@ const mergeWithDefaults = (incoming: Partial<SiteSection>[] | undefined): Editab
       title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
       content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
       image_url: typeof raw?.image_url === 'string' ? raw.image_url : fallback?.image_url ?? '',
-      sort_order: sortOrder
+      sort_order: sortOrder,
+      source_type: coerceSourceType(raw?.source_type ?? fallback?.source_type),
+      source_id:
+        typeof raw?.source_id === 'string'
+          ? raw.source_id
+          : typeof fallback?.source_id === 'string'
+            ? fallback.source_id
+            : undefined,
+      cta_label:
+        typeof raw?.cta_label === 'string'
+          ? raw.cta_label
+          : typeof fallback?.cta_label === 'string'
+            ? fallback.cta_label
+            : undefined,
+      cta_url:
+        typeof raw?.cta_url === 'string'
+          ? raw.cta_url
+          : typeof fallback?.cta_url === 'string'
+            ? fallback.cta_url
+            : undefined
     });
 
     defaults.delete(tentativeKey);
@@ -46,11 +73,13 @@ const sanitizeSectionsForSave = (sections: EditableSection[]): SiteSection[] =>
       title: section.title.trim(),
       content: section.content,
       image_url: section.image_url,
-      sort_order: typeof section.sort_order === 'number' ? section.sort_order : index
+      sort_order: typeof section.sort_order === 'number' ? section.sort_order : index,
+      source_type: section.source_type ?? 'custom',
+      source_id: section.source_id,
+      cta_label: section.cta_label?.trim() || undefined,
+      cta_url: section.cta_url?.trim() || undefined
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
-
-const cloneDefaults = () => DEFAULT_SITE_SECTIONS.map((section) => ({ ...section }));
 
 export default function AdminHomeEditor() {
   const [sections, setSections] = useState<EditableSection[]>(cloneDefaults);
@@ -60,40 +89,186 @@ export default function AdminHomeEditor() {
   const [uploadsInProgress, setUploadsInProgress] = useState(0);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [uploadError, setUploadError] = useState<Record<string, string>>({});
+  const [events, setEvents] = useState<Evento[]>([]);
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [listsLoaded, setListsLoaded] = useState(false);
 
   useEffect(() => {
-    fetchSections();
+    (async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/admin/content', { cache: 'no-store' });
+        const json = await response.json();
+        if (json?.success) {
+          setSections(mergeWithDefaults(json.sections));
+        } else {
+          setSections(cloneDefaults());
+        }
+      } catch (error) {
+        console.error('[AdminHomeEditor] fetchSections error:', error);
+        setSections(cloneDefaults());
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  async function fetchSections() {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/content', { cache: 'no-store' });
-      const json = await res.json();
-      if (json.success) {
-        setSections(mergeWithDefaults(json.sections));
-      } else {
-        setSections(cloneDefaults());
+  useEffect(() => {
+    if (listsLoaded) return;
+
+    (async () => {
+      try {
+        const [eventsRes, newsRes] = await Promise.all([
+          fetch('/api/eventos?status=published&limit=100', { cache: 'no-store' })
+            .then((res) => res.json())
+            .catch(() => ({ success: false })),
+          fetch('/api/noticias?limit=100', { cache: 'no-store' })
+            .then((res) => res.json())
+            .catch(() => ({ success: false }))
+        ]);
+
+        if (eventsRes?.success && Array.isArray(eventsRes.data)) {
+          setEvents(eventsRes.data as Evento[]);
+        }
+
+        if (newsRes?.success && Array.isArray(newsRes.data)) {
+          setNews(newsRes.data as NewsArticle[]);
+        }
+      } finally {
+        setListsLoaded(true);
       }
-    } catch (e) {
-      console.error(e);
-      setSections(cloneDefaults());
-    } finally {
-      setLoading(false);
-    }
-  }
+    })();
+  }, [listsLoaded]);
 
-  function updateSection(sectionKey: string, key: keyof EditableSection, value: string | number) {
-    setSections((prev) =>
-      prev.map((section) =>
-        section.key === sectionKey
-          ? { ...section, [key]: value }
-          : section
-      )
-    );
-  }
+  const sortedSections = useMemo(
+    () => [...sections].sort((a, b) => a.sort_order - b.sort_order),
+    [sections]
+  );
 
-  async function save() {
+  const updateSection = useCallback(
+    <K extends keyof EditableSection>(sectionKey: string, key: K, value: EditableSection[K]) => {
+      setSections((prev) =>
+        prev.map((section) =>
+          section.key === sectionKey
+            ? { ...section, [key]: value }
+            : section
+        )
+      );
+    },
+    []
+  );
+
+  const applyEventToSection = useCallback(
+    (sectionKey: string, eventId: string) => {
+      const event = events.find((item) => String(item.id) === eventId);
+      if (!event) {
+        updateSection(sectionKey, 'source_id', undefined);
+        return;
+      }
+
+      const descriptionParts: string[] = [];
+      if (event.description) descriptionParts.push(event.description);
+      if (event.date) {
+        const formattedDate = new Date(event.date).toLocaleDateString('es-CL', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        descriptionParts.push(`Fecha: ${formattedDate}`);
+      }
+      if (event.location) descriptionParts.push(`Lugar: ${event.location}`);
+      if (event.registrationOpen) descriptionParts.push('Inscripciones abiertas');
+
+      setSections((prev) =>
+        prev.map((section) =>
+          section.key === sectionKey
+            ? {
+                ...section,
+                source_type: 'event',
+                source_id: eventId,
+                title: event.title || section.title,
+                content: descriptionParts.filter(Boolean).join('\n\n') || section.content,
+                image_url: event.image || section.image_url,
+                cta_label: section.cta_label || 'Ver evento',
+                cta_url: `/eventos/${event.id}`
+              }
+            : section
+        )
+      );
+    },
+    [events, updateSection]
+  );
+
+  const applyNewsToSection = useCallback(
+    (sectionKey: string, slug: string) => {
+      const article = news.find((item) => item.slug === slug);
+      if (!article) {
+        updateSection(sectionKey, 'source_id', undefined);
+        return;
+      }
+
+      const content = article.excerpt || article.content || '';
+
+      setSections((prev) =>
+        prev.map((section) =>
+          section.key === sectionKey
+            ? {
+                ...section,
+                source_type: 'news',
+                source_id: slug,
+                title: article.title || section.title,
+                content,
+                image_url: article.featured_image || section.image_url,
+                cta_label: section.cta_label || 'Leer noticia',
+                cta_url: `/noticias/${article.slug}`
+              }
+            : section
+        )
+      );
+    },
+    [news, updateSection]
+  );
+
+  const handleSourceTypeChange = useCallback(
+    (sectionKey: string, value: SiteSectionSourceType) => {
+      if (value === 'custom') {
+        setSections((prev) =>
+          prev.map((section) =>
+            section.key === sectionKey
+              ? {
+                  ...section,
+                  source_type: 'custom',
+                  source_id: undefined
+                }
+              : section
+          )
+        );
+        return;
+      }
+
+      setSections((prev) =>
+        prev.map((section) =>
+          section.key === sectionKey
+            ? {
+                ...section,
+                source_type: value
+              }
+            : section
+        )
+      );
+
+      if (value === 'event' && events[0]) {
+        applyEventToSection(sectionKey, String(events[0].id));
+      }
+
+      if (value === 'news' && news[0]) {
+        applyNewsToSection(sectionKey, news[0].slug);
+      }
+    },
+    [events, news, applyEventToSection, applyNewsToSection]
+  );
+
+  const save = useCallback(async () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token') || '';
@@ -114,83 +289,84 @@ export default function AdminHomeEditor() {
       } else {
         alert(json.error || 'No se pudo guardar la información');
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('[AdminHomeEditor] save error:', error);
       alert('Error guardando');
     } finally {
       setSaving(false);
     }
-  }
+  }, [sections]);
 
-  async function uploadImage(sectionKey: string, file: File) {
-    if (!file) return;
-    setUploadsInProgress((v) => v + 1);
-    setUploadError((p) => ({ ...p, [sectionKey]: '' }));
+  const uploadImage = useCallback(
+    async (sectionKey: string, file: File) => {
+      if (!file) return;
+      setUploadsInProgress((value) => value + 1);
+      setUploadError((prev) => ({ ...prev, [sectionKey]: '' }));
 
-    // Show local preview immediately
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateSection(sectionKey, 'image_url', String(reader.result));
-    };
-    reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        updateSection(sectionKey, 'image_url', String(reader.result));
+      };
+      reader.readAsDataURL(file);
 
-    try {
-      const token = localStorage.getItem('token') || '';
-      const form = new FormData();
-      form.append('file', file);
-      form.append('folder', 'home');
-      form.append('filename', file.name);
+      try {
+        const token = localStorage.getItem('token') || '';
+        const form = new FormData();
+        form.append('file', file);
+        form.append('folder', 'home');
+        form.append('filename', file.name);
 
-      // Use XHR to track progress
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/admin/content/upload');
-        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/admin/content/upload');
+          if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
-        xhr.upload.onprogress = (ev) => {
-          if (ev.lengthComputable) {
-            const pct = Math.round((ev.loaded / ev.total) * 100);
-            setUploadProgress((p) => ({ ...p, [sectionKey]: pct }));
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const json = JSON.parse(xhr.responseText);
-              if (json.success && json.url) {
-                updateSection(sectionKey, 'image_url', json.url);
-                resolve();
-              } else {
-                setUploadError((p) => ({ ...p, [sectionKey]: json.error || 'Error subida' }));
-                reject(new Error(json.error || 'Upload failed'));
-              }
-            } catch (e) {
-              setUploadError((p) => ({ ...p, [sectionKey]: 'Respuesta inválida' }));
-              reject(e);
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentage = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress((prev) => ({ ...prev, [sectionKey]: percentage }));
             }
-          } else {
-            setUploadError((p) => ({ ...p, [sectionKey]: `HTTP ${xhr.status}` }));
-            reject(new Error(`HTTP ${xhr.status}`));
-          }
-        };
+          };
 
-        xhr.onerror = () => {
-          setUploadError((p) => ({ ...p, [sectionKey]: 'Error de red' }));
-          reject(new Error('Network error'));
-        };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const json = JSON.parse(xhr.responseText);
+                if (json.success && json.url) {
+                  updateSection(sectionKey, 'image_url', json.url);
+                  resolve();
+                } else {
+                  setUploadError((prev) => ({ ...prev, [sectionKey]: json.error || 'Error subida' }));
+                  reject(new Error(json.error || 'Upload failed'));
+                }
+              } catch (error) {
+                setUploadError((prev) => ({ ...prev, [sectionKey]: 'Respuesta inválida' }));
+                reject(error);
+              }
+            } else {
+              setUploadError((prev) => ({ ...prev, [sectionKey]: `HTTP ${xhr.status}` }));
+              reject(new Error(`HTTP ${xhr.status}`));
+            }
+          };
 
-        xhr.send(form);
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setUploadProgress((p) => ({ ...p, [sectionKey]: 0 }));
-      setUploadsInProgress((v) => Math.max(0, v - 1));
-    }
-  }
+          xhr.onerror = () => {
+            setUploadError((prev) => ({ ...prev, [sectionKey]: 'Error de red' }));
+            reject(new Error('Network error'));
+          };
 
-  async function clearCache() {
+          xhr.send(form);
+        });
+      } catch (error) {
+        console.error('[AdminHomeEditor] uploadImage error:', error);
+      } finally {
+        setUploadProgress((prev) => ({ ...prev, [sectionKey]: 0 }));
+        setUploadsInProgress((value) => Math.max(0, value - 1));
+      }
+    },
+    [updateSection]
+  );
+
+  const clearCache = useCallback(async () => {
     setClearingCache(true);
     try {
       const token = localStorage.getItem('token') || '';
@@ -202,38 +378,34 @@ export default function AdminHomeEditor() {
       if (json.success) {
         alert('Cache KV borrado');
       } else {
-        alert('No se pudo borrar cache');
+        alert(json.error || 'No se pudo borrar cache');
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('[AdminHomeEditor] clearCache error:', error);
       alert('Error al borrar cache');
     } finally {
       setClearingCache(false);
     }
-  }
+  }, []);
 
-  function addSection() {
+  const addSection = useCallback(() => {
     const nextIndex = sections.length;
     const newSection: EditableSection = {
       key: `section_${Date.now()}`,
       title: `Nueva sección ${nextIndex + 1}`,
       content: '',
       image_url: '',
-      sort_order: nextIndex
+      sort_order: nextIndex,
+      source_type: 'custom'
     };
     setSections((prev) => [...prev, newSection]);
-  }
+  }, [sections.length]);
 
-  function resetToDefaults() {
+  const resetToDefaults = useCallback(() => {
     if (window.confirm('¿Restablecer las secciones a los valores por defecto?')) {
       setSections(cloneDefaults());
     }
-  }
-
-  const sortedSections = useMemo(
-    () => [...sections].sort((a, b) => a.sort_order - b.sort_order),
-    [sections]
-  );
+  }, []);
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm">
@@ -242,37 +414,85 @@ export default function AdminHomeEditor() {
         <div>Cargando...</div>
       ) : (
         <div className="space-y-4">
-          {sortedSections.map((s, idx) => {
-            const sectionNumber = idx + 1;
-            const label = `Sección ${sectionNumber}${s.key ? ` · ${s.key}` : ''}`;
+          {sortedSections.map((section, index) => {
+            const label = section.key ? `Sección ${index + 1} · ${section.key}` : `Sección ${index + 1}`;
 
             return (
-              <div key={s.key || idx} className="border p-4 rounded space-y-3">
+              <div key={section.key || index} className="border p-4 rounded space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-700">{label}</p>
                   <div className="flex items-center gap-2">
                     <label className="text-xs text-gray-500">Orden</label>
                     <input
                       type="number"
-                      value={s.sort_order ?? idx}
-                      onChange={(e) => updateSection(s.key, 'sort_order', Number(e.target.value))}
+                      value={section.sort_order ?? index}
+                      onChange={(event) => updateSection(section.key, 'sort_order', Number(event.target.value))}
                       className="w-20 border rounded px-2 py-1 text-sm"
                     />
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium">Contenido basado en</label>
+                    <select
+                      value={section.source_type ?? 'custom'}
+                      onChange={(event) => handleSourceTypeChange(section.key, event.target.value as SiteSectionSourceType)}
+                      className="w-full border rounded px-2 py-1"
+                    >
+                      <option value="custom">Contenido manual</option>
+                      <option value="event">Evento destacado</option>
+                      <option value="news">Noticia destacada</option>
+                    </select>
+                  </div>
+                  {section.source_type === 'event' && (
+                    <div>
+                      <label className="block text-sm font-medium">Selecciona evento</label>
+                      <select
+                        value={section.source_id ?? ''}
+                        onChange={(event) => applyEventToSection(section.key, event.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                      >
+                        <option value="">-- selecciona --</option>
+                        {events.map((event) => (
+                          <option key={event.id} value={String(event.id)}>
+                            {event.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {section.source_type === 'news' && (
+                    <div>
+                      <label className="block text-sm font-medium">Selecciona noticia</label>
+                      <select
+                        value={section.source_id ?? ''}
+                        onChange={(event) => applyNewsToSection(section.key, event.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                      >
+                        <option value="">-- selecciona --</option>
+                        {news.map((article) => (
+                          <option key={article.id} value={article.slug}>
+                            {article.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
                 <label className="block text-sm font-medium">Título</label>
                 <input
-                  value={s.title || ''}
-                  onChange={(e) => updateSection(s.key, 'title', e.target.value)}
+                  value={section.title || ''}
+                  onChange={(event) => updateSection(section.key, 'title', event.target.value)}
                   className="w-full border rounded px-2 py-1"
                   placeholder="Título de la sección"
                 />
 
                 <label className="block text-sm font-medium mt-2">Imagen (URL)</label>
                 <input
-                  value={s.image_url || ''}
-                  onChange={(e) => updateSection(s.key, 'image_url', e.target.value)}
+                  value={section.image_url || ''}
+                  onChange={(event) => updateSection(section.key, 'image_url', event.target.value)}
                   className="w-full border rounded px-2 py-1"
                   placeholder="https://..."
                 />
@@ -280,39 +500,62 @@ export default function AdminHomeEditor() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) uploadImage(s.key, f);
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) uploadImage(section.key, file);
                     }}
                   />
                   <span className="text-sm text-gray-500">o pega una URL arriba</span>
                 </div>
-                {/* Thumbnail & progress */}
-                {s.image_url ? (
+
+                {section.image_url ? (
                   <div className="mb-2">
-                    <img src={s.image_url} alt="preview" style={{ maxHeight: 120 }} className="rounded" />
+                    <img src={section.image_url} alt="preview" style={{ maxHeight: 120 }} className="rounded" />
                   </div>
                 ) : null}
-                {uploadProgress[s.key] ? (
+                {uploadProgress[section.key] ? (
                   <div className="mb-2">
                     <div className="w-full bg-gray-200 rounded h-2">
-                      <div style={{ width: `${uploadProgress[s.key]}%` }} className="bg-blue-500 h-2 rounded" />
+                      <div style={{ width: `${uploadProgress[section.key]}%` }} className="bg-blue-500 h-2 rounded" />
                     </div>
-                    <div className="text-xs text-gray-600">{uploadProgress[s.key]}%</div>
+                    <div className="text-xs text-gray-600">{uploadProgress[section.key]}%</div>
                   </div>
                 ) : null}
-                {uploadError[s.key] ? <div className="text-sm text-red-600">{uploadError[s.key]}</div> : null}
+                {uploadError[section.key] ? <div className="text-sm text-red-600">{uploadError[section.key]}</div> : null}
+
                 <label className="block text-sm font-medium">Contenido</label>
                 <textarea
-                  value={s.content || ''}
-                  onChange={(e) => updateSection(s.key, 'content', e.target.value)}
+                  value={section.content || ''}
+                  onChange={(event) => updateSection(section.key, 'content', event.target.value)}
                   className="w-full border rounded px-2 py-1 mb-2"
+                  rows={5}
                 />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium">Texto del botón</label>
+                    <input
+                      value={section.cta_label || ''}
+                      onChange={(event) => updateSection(section.key, 'cta_label', event.target.value)}
+                      className="w-full border rounded px-2 py-1"
+                      placeholder="Ej: Ver evento"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">URL del botón</label>
+                    <input
+                      value={section.cta_url || ''}
+                      onChange={(event) => updateSection(section.key, 'cta_url', event.target.value)}
+                      className="w-full border rounded px-2 py-1"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
               </div>
             );
           })}
 
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button onClick={save} className="bg-red-600 text-white" disabled={saving || uploadsInProgress > 0}>
               {saving ? 'Guardando…' : 'Guardar secciones'}
             </Button>
@@ -326,7 +569,7 @@ export default function AdminHomeEditor() {
               Restaurar por defecto
             </Button>
             {uploadsInProgress > 0 && (
-              <div className="text-sm text-gray-600 self-center">Subiendo imágenes… ({uploadsInProgress})</div>
+              <div className="text-sm text-gray-600">Subiendo imágenes… ({uploadsInProgress})</div>
             )}
           </div>
         </div>
@@ -334,3 +577,4 @@ export default function AdminHomeEditor() {
     </div>
   );
 }
+

@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { SiteSection } from '@shared/siteSections';
+import type { Evento } from '@shared/index';
+import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
 import { DEFAULT_SITE_SECTIONS } from '@shared/siteSections';
+import type { NewsArticle } from '../services/newsService';
+
+type SectionDisplay = SiteSection & {
+  display_title: string;
+  display_content: string;
+  display_image?: string;
+  display_cta_label?: string;
+  display_cta_url?: string;
+};
 
 const cloneDefaults = (): SiteSection[] => DEFAULT_SITE_SECTIONS.map((section) => ({ ...section }));
 
@@ -22,16 +32,29 @@ const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSe
 
     merged.set(tentativeKey, {
       key: tentativeKey,
-      title:
-        typeof raw?.title === 'string' && raw.title.trim().length > 0
-          ? raw.title.trim()
-          : fallback?.title ?? '',
+      title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
       content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
-      image_url:
-        typeof raw?.image_url === 'string' && raw.image_url.trim().length > 0
-          ? raw.image_url.trim()
-          : fallback?.image_url ?? '',
-      sort_order: sortOrder
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : fallback?.image_url ?? '',
+      sort_order: sortOrder,
+      source_type: (raw?.source_type as SiteSectionSourceType) ?? fallback?.source_type ?? 'custom',
+      source_id:
+        typeof raw?.source_id === 'string'
+          ? raw.source_id
+          : typeof fallback?.source_id === 'string'
+            ? fallback.source_id
+            : undefined,
+      cta_label:
+        typeof raw?.cta_label === 'string'
+          ? raw.cta_label
+          : typeof fallback?.cta_label === 'string'
+            ? fallback.cta_label
+            : undefined,
+      cta_url:
+        typeof raw?.cta_url === 'string'
+          ? raw.cta_url
+          : typeof fallback?.cta_url === 'string'
+            ? fallback.cta_url
+            : undefined
     });
 
     defaults.delete(tentativeKey);
@@ -65,9 +88,8 @@ const parseContentBlocks = (content: string) => {
   return blocks;
 };
 
-const SectionBlock: React.FC<{ section: SiteSection; index: number }> = ({ section, index }) => {
-  const reverse = index % 2 === 1;
-  const blocks = useMemo(() => parseContentBlocks(section.content || ''), [section.content]);
+const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = ({ section, reverse }) => {
+  const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
 
   return (
     <section className="py-20 bg-soft-gradient-light relative overflow-hidden">
@@ -76,15 +98,12 @@ const SectionBlock: React.FC<{ section: SiteSection; index: number }> = ({ secti
           className={`flex flex-col gap-10 lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
         >
           <div className="lg:w-1/2 flex flex-col justify-center space-y-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-soft-sm border border-white/40 text-sm font-semibold text-primary-600">
-              {`Sección ${index + 1}`}
-            </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight">
-              {section.title}
+              {section.display_title}
             </h2>
             <div className="space-y-4 text-neutral-600 text-lg leading-relaxed">
               {blocks.length === 0 ? (
-                <p>{section.content}</p>
+                <p>{section.display_content}</p>
               ) : (
                 blocks.map((block, blockIndex) => {
                   if (block.type === 'paragraph') {
@@ -100,13 +119,23 @@ const SectionBlock: React.FC<{ section: SiteSection; index: number }> = ({ secti
                 })
               )}
             </div>
+            {section.display_cta_label && section.display_cta_url ? (
+              <div>
+                <a
+                  href={section.display_cta_url}
+                  className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
+                >
+                  {section.display_cta_label}
+                </a>
+              </div>
+            ) : null}
           </div>
-          {section.image_url ? (
+          {section.display_image ? (
             <div className="lg:w-1/2">
               <div className="relative bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
                 <img
-                  src={section.image_url}
-                  alt={section.title}
+                  src={section.display_image}
+                  alt={section.display_title}
                   className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                 />
               </div>
@@ -118,7 +147,9 @@ const SectionBlock: React.FC<{ section: SiteSection; index: number }> = ({ secti
   );
 };
 
-const HeroSection: React.FC<{ section: SiteSection; loading: boolean }> = ({ section, loading }) => {
+const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ section, loading }) => {
+  const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
+
   return (
     <section className="relative overflow-hidden py-20 bg-soft-gradient-light">
       <div className="relative px-4 py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-28">
@@ -128,29 +159,46 @@ const HeroSection: React.FC<{ section: SiteSection; loading: boolean }> = ({ sec
               {loading ? 'Cargando…' : 'Inicio ACA Chile'}
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
-              {section.title}
+              {section.display_title}
             </h1>
             <div className="text-lg sm:text-xl text-neutral-600 font-light leading-relaxed space-y-4 max-w-xl">
-              {parseContentBlocks(section.content).map((block, index) =>
-                block.type === 'paragraph' ? (
-                  <p key={index}>{block.text}</p>
-                ) : (
-                  <ul key={index} className="list-disc pl-5 space-y-1">
-                    {block.items.map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
-                    ))}
-                  </ul>
+              {blocks.length === 0 ? (
+                <p>{section.display_content}</p>
+              ) : (
+                blocks.map((block, index) =>
+                  block.type === 'paragraph' ? (
+                    <p key={index}>{block.text}</p>
+                  ) : (
+                    <ul key={index} className="list-disc pl-5 space-y-1">
+                      {block.items.map((item, itemIndex) => (
+                        <li key={itemIndex}>{item}</li>
+                      ))}
+                    </ul>
+                  )
                 )
               )}
             </div>
+            {section.display_cta_label && section.display_cta_url ? (
+              <div>
+                <a
+                  href={section.display_cta_url}
+                  className="inline-flex items-center px-8 py-4 rounded-2xl text-white font-semibold text-lg transition-all duration-500"
+                  style={{
+                    background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
+                  }}
+                >
+                  {section.display_cta_label}
+                </a>
+              </div>
+            ) : null}
           </div>
-          {section.image_url ? (
+          {section.display_image ? (
             <div className="mt-12 lg:mt-0 lg:col-span-6">
               <div className="relative bg-white/20 backdrop-blur-md rounded-3xl p-6 shadow-soft-xl border border-white/40">
                 <div className="overflow-hidden rounded-2xl">
                   <img
-                    src={section.image_url}
-                    alt={section.title}
+                    src={section.display_image}
+                    alt={section.display_title}
                     className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                   />
                 </div>
@@ -166,6 +214,10 @@ const HeroSection: React.FC<{ section: SiteSection; loading: boolean }> = ({ sec
 const HomePage: React.FC = () => {
   const [sections, setSections] = useState<SiteSection[]>(cloneDefaults);
   const [loading, setLoading] = useState(true);
+  const [eventLookup, setEventLookup] = useState<Record<string, Evento>>({});
+  const [newsLookup, setNewsLookup] = useState<Record<string, NewsArticle>>({});
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [newsLoaded, setNewsLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -197,14 +249,133 @@ const HomePage: React.FC = () => {
     };
   }, []);
 
-  const heroSection = sections[0] ?? DEFAULT_SITE_SECTIONS[0];
-  const otherSections = sections.slice(1);
+  useEffect(() => {
+    const eventIds = new Set(
+      sections
+        .filter((section) => section.source_type === 'event' && section.source_id)
+        .map((section) => String(section.source_id))
+    );
+
+    if (eventIds.size === 0 || eventsLoaded) {
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch('/api/eventos?status=published&limit=200', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          const map: Record<string, Evento> = {};
+          (json.data as Evento[]).forEach((event) => {
+            map[String(event.id)] = event;
+          });
+          setEventLookup(map);
+        }
+      } finally {
+        setEventsLoaded(true);
+      }
+    })();
+  }, [sections, eventsLoaded]);
+
+  useEffect(() => {
+    const newsSlugs = new Set(
+      sections
+        .filter((section) => section.source_type === 'news' && section.source_id)
+        .map((section) => String(section.source_id))
+    );
+
+    if (newsSlugs.size === 0 || newsLoaded) {
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch('/api/noticias?limit=200', { cache: 'no-store' });
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          const map: Record<string, NewsArticle> = {};
+          (json.data as NewsArticle[]).forEach((article) => {
+            map[article.slug] = article;
+          });
+          setNewsLookup(map);
+        }
+      } finally {
+        setNewsLoaded(true);
+      }
+    })();
+  }, [sections, newsLoaded]);
+
+  const resolvedSections = useMemo<SectionDisplay[]>(() => {
+    return sections.map((section) => {
+      let title = section.title || '';
+      let content = section.content || '';
+      let image = section.image_url || '';
+      let ctaLabel = section.cta_label;
+      let ctaUrl = section.cta_url;
+
+      if (section.source_type === 'event' && section.source_id) {
+        const event = eventLookup[String(section.source_id)];
+        if (event) {
+          title = section.title || event.title || title;
+          if (!section.content && event.description) {
+            const parts = [event.description];
+            if (event.date) {
+              const formattedDate = new Date(event.date).toLocaleDateString('es-CL', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              });
+              parts.push(`Fecha: ${formattedDate}`);
+            }
+            if (event.location) parts.push(`Lugar: ${event.location}`);
+            if (event.registrationOpen) parts.push('Inscripciones abiertas');
+            content = parts.filter(Boolean).join('\n\n');
+          }
+          image = section.image_url || event.image || image;
+          ctaLabel = section.cta_label || 'Ver evento';
+          ctaUrl = section.cta_url || `/eventos/${event.id}`;
+        }
+      }
+
+      if (section.source_type === 'news' && section.source_id) {
+        const article = newsLookup[String(section.source_id)];
+        if (article) {
+          title = section.title || article.title || title;
+          if (!section.content) {
+            content = article.excerpt || article.content || content;
+          }
+          image = section.image_url || article.featured_image || image;
+          ctaLabel = section.cta_label || 'Leer noticia';
+          ctaUrl = section.cta_url || `/noticias/${article.slug}`;
+        }
+      }
+
+      return {
+        ...section,
+        display_title: title,
+        display_content: content,
+        display_image: image,
+        display_cta_label: ctaLabel,
+        display_cta_url: ctaUrl
+      };
+    });
+  }, [sections, eventLookup, newsLookup]);
+
+  const heroSection = resolvedSections[0] ?? {
+    ...DEFAULT_SITE_SECTIONS[0],
+    display_title: DEFAULT_SITE_SECTIONS[0].title,
+    display_content: DEFAULT_SITE_SECTIONS[0].content,
+    display_image: DEFAULT_SITE_SECTIONS[0].image_url,
+    display_cta_label: DEFAULT_SITE_SECTIONS[0].cta_label,
+    display_cta_url: DEFAULT_SITE_SECTIONS[0].cta_url
+  };
+  const otherSections = resolvedSections.slice(1);
 
   return (
     <div className="min-h-screen bg-soft-gradient-light">
       <HeroSection section={heroSection} loading={loading} />
       {otherSections.map((section, index) => (
-        <SectionBlock key={section.key ?? index} section={section} index={index + 1} />
+        <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />
       ))}
     </div>
   );
@@ -212,3 +383,4 @@ const HomePage: React.FC = () => {
 
 export { HomePage };
 export default HomePage;
+

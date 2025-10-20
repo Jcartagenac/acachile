@@ -1,6 +1,11 @@
 import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
 import type { Env } from '../../../types';
-import { DEFAULT_SITE_SECTIONS, SECTION_CACHE_KEY, SiteSection } from '../../../../../shared/siteSections';
+import {
+  DEFAULT_SITE_SECTIONS,
+  SECTION_CACHE_KEY,
+  SiteSection,
+  SiteSectionSourceType
+} from '../../../../../shared/siteSections';
 
 type RawSection = Partial<SiteSection> & Record<string, unknown>;
 
@@ -13,11 +18,30 @@ async function ensureTable(db: D1Database) {
         image_url TEXT,
         content TEXT,
         sort_order INTEGER DEFAULT 0,
+        source_type TEXT DEFAULT 'custom',
+        source_id TEXT,
+        cta_label TEXT,
+        cta_url TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `)
     .run();
+
+  const alterStatements = [
+    "ALTER TABLE site_sections ADD COLUMN source_type TEXT DEFAULT 'custom'",
+    'ALTER TABLE site_sections ADD COLUMN source_id TEXT',
+    'ALTER TABLE site_sections ADD COLUMN cta_label TEXT',
+    'ALTER TABLE site_sections ADD COLUMN cta_url TEXT'
+  ];
+
+  for (const statement of alterStatements) {
+    try {
+      await db.prepare(statement).run();
+    } catch (error) {
+      // Column already exists or alteration not needed; ignore
+    }
+  }
 }
 
 function coerceNumber(value: unknown, fallback: number): number {
@@ -33,6 +57,13 @@ function coerceNumber(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function coerceSourceType(value: unknown): SiteSectionSourceType {
+  if (value === 'event' || value === 'news') {
+    return value;
+  }
+  return 'custom';
+}
+
 function normalizeSections(rawSections: RawSection[] | undefined): SiteSection[] {
   const defaults = new Map(DEFAULT_SITE_SECTIONS.map((section) => [section.key, section]));
   const collected = new Map<string, SiteSection>();
@@ -45,6 +76,10 @@ function normalizeSections(rawSections: RawSection[] | undefined): SiteSection[]
 
     const fallback = defaults.get(tentativeKey);
     const sortOrder = coerceNumber(raw?.sort_order, fallback?.sort_order ?? index);
+    const sourceType = coerceSourceType(raw?.source_type);
+    const sourceId = typeof raw?.source_id === 'string' ? raw.source_id : fallback?.source_id;
+    const ctaLabel = typeof raw?.cta_label === 'string' ? raw.cta_label : fallback?.cta_label;
+    const ctaUrl = typeof raw?.cta_url === 'string' ? raw.cta_url : fallback?.cta_url;
 
     const normalized: SiteSection = {
       key: tentativeKey,
@@ -57,7 +92,11 @@ function normalizeSections(rawSections: RawSection[] | undefined): SiteSection[]
         typeof raw?.image_url === 'string' && raw.image_url.trim().length > 0
           ? raw.image_url.trim()
           : fallback?.image_url ?? '',
-      sort_order: sortOrder
+      sort_order: sortOrder,
+      source_type: sourceType,
+      source_id: sourceId,
+      cta_label: ctaLabel,
+      cta_url: ctaUrl
     };
 
     collected.set(normalized.key, normalized);
@@ -79,7 +118,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     if (env.DB) {
       await ensureTable(env.DB);
-      const res = await env.DB.prepare<SiteSection>('SELECT key, title, image_url, content, sort_order FROM site_sections ORDER BY sort_order ASC').all();
+      const res = await env.DB
+        .prepare<SiteSection>(
+          'SELECT key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url FROM site_sections ORDER BY sort_order ASC'
+        )
+        .all();
       if (res.results && res.results.length > 0) {
         sections = normalizeSections(res.results);
         if (env.ACA_KV) {
@@ -143,19 +186,34 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       const keys = normalized.map((section) => section.key);
 
       for (const section of normalized) {
-        await env.DB.prepare(
-          `
-            INSERT INTO site_sections (key, title, image_url, content, sort_order, updated_at)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
-            ON CONFLICT(key) DO UPDATE SET
-              title=excluded.title,
-              image_url=excluded.image_url,
-              content=excluded.content,
-              sort_order=excluded.sort_order,
-              updated_at=datetime('now')
-          `
-        )
-          .bind(section.key, section.title, section.image_url, section.content, section.sort_order)
+        await env.DB
+          .prepare(
+            `
+              INSERT INTO site_sections (key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+              ON CONFLICT(key) DO UPDATE SET
+                title=excluded.title,
+                image_url=excluded.image_url,
+                content=excluded.content,
+                sort_order=excluded.sort_order,
+                source_type=excluded.source_type,
+                source_id=excluded.source_id,
+                cta_label=excluded.cta_label,
+                cta_url=excluded.cta_url,
+                updated_at=datetime('now')
+            `
+          )
+          .bind(
+            section.key,
+            section.title,
+            section.image_url,
+            section.content,
+            section.sort_order,
+            section.source_type ?? 'custom',
+            section.source_id ?? null,
+            section.cta_label ?? null,
+            section.cta_url ?? null
+          )
           .run();
       }
 
