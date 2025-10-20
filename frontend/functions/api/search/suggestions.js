@@ -1,52 +1,166 @@
 // Endpoint de sugerencias para búsqueda
 // GET /api/search/suggestions?q={query}&limit={number}
 
+const SECTION_PAGES = [
+  { key: 'home', label: 'Inicio' },
+  { key: 'about', label: 'Quiénes Somos' },
+  { key: 'contact', label: 'Contacto' }
+];
+
+const SECTION_KV_PREFIX = 'site:sections:';
+const DEFAULT_SECTION_FALLBACK = {
+  home: [
+    { title: 'Asociación Chilena de Asadores' },
+    { title: 'Somos Internacionales' },
+    { title: 'Comunidad y Formación' }
+  ],
+  about: [
+    { title: 'Quiénes Somos' },
+    { title: 'Nuestra Misión' }
+  ],
+  contact: [
+    { title: 'Hablemos' },
+    { title: 'Información de contacto' }
+  ]
+};
+
+function toLikeParam(term) {
+  return `%${term}%`;
+}
+
+async function fetchSections(env, pageKey) {
+  let sections = [];
+
+  if (env.ACA_KV) {
+    try {
+      const cached = await env.ACA_KV.get(`${SECTION_KV_PREFIX}${pageKey}`);
+      if (cached) {
+        sections = JSON.parse(cached);
+      }
+    } catch (error) {
+      console.error('[SEARCH/SUGGESTIONS] Error leyendo secciones desde KV:', error);
+    }
+  }
+
+  if ((!sections || sections.length === 0) && env.DB) {
+    try {
+      const dbResult = await env.DB.prepare(
+        `
+          SELECT title
+          FROM site_sections
+          WHERE page = ?
+        `
+      )
+        .bind(pageKey)
+        .all();
+
+      if (dbResult?.results?.length) {
+        sections = dbResult.results;
+      }
+    } catch (error) {
+      // Tabla puede no existir aún; ignorar
+    }
+  }
+
+  if (!sections || sections.length === 0) {
+    sections = DEFAULT_SECTION_FALLBACK[pageKey] || [];
+  }
+
+  return sections;
+}
+
+async function getSectionSuggestions(env, searchTerm, limit) {
+  const matches = [];
+
+  for (const page of SECTION_PAGES) {
+    const sections = await fetchSections(env, page.key);
+    sections
+      .filter((section) => section.title?.toLowerCase().includes(searchTerm))
+      .forEach((section) => {
+        matches.push(`${section.title} (${page.label})`);
+      });
+  }
+
+  return matches.slice(0, limit);
+}
+
+async function getUserSuggestions(env, searchTerm, limit) {
+  if (!env.DB) return [];
+
+  try {
+    const likeParam = toLikeParam(searchTerm);
+    const result = await env.DB.prepare(
+      `
+        SELECT nombre, apellido, ciudad
+        FROM usuarios
+        WHERE activo = 1
+          AND (
+            LOWER(nombre) LIKE ?
+            OR LOWER(apellido) LIKE ?
+            OR LOWER(ciudad) LIKE ?
+          )
+        ORDER BY nombre ASC
+        LIMIT ?
+      `
+    )
+      .bind(likeParam, likeParam, likeParam, limit)
+      .all();
+
+    const rows = result?.results || [];
+
+    return rows
+      .map((row) => {
+        const name = [row.nombre, row.apellido].filter(Boolean).join(' ').trim();
+        if (!name) return null;
+        const city = row.ciudad ? ` (${row.ciudad})` : '';
+        return `${name}${city}`;
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.error('[SEARCH/SUGGESTIONS] Error obteniendo socios:', error);
+    return [];
+  }
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
   try {
     const url = new URL(request.url);
     const query = url.searchParams.get('q');
-    const limit = parseInt(url.searchParams.get('limit')) || 5;
+    const limit = parseInt(url.searchParams.get('limit')) || 8;
 
     console.log(`[SEARCH/SUGGESTIONS] Query: "${query}", Limit: ${limit}`);
 
     if (!query || query.trim().length < 1) {
-      return new Response(JSON.stringify({
-        success: true,
-        data: []
-      }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: []
+        }),
+        {
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const searchTerm = query.toLowerCase().trim();
-    const suggestions = new Set(); // Usar Set para evitar duplicados
+    const suggestions = new Set();
 
-    // Obtener sugerencias de eventos
+    // Eventos
     try {
       const eventosData = await env.ACA_KV.get('eventos:all');
       if (eventosData) {
-        const eventos = JSON.parse(eventosData);
-        eventos.forEach(evento => {
-          // Agregar título si contiene el término
+        const eventos = JSON.parse(eventosData) || [];
+        eventos.forEach((evento) => {
           if (evento.title?.toLowerCase().includes(searchTerm)) {
             suggestions.add(evento.title);
           }
-          
-          // Agregar tags que contengan el término
-          evento.tags?.forEach(tag => {
+          evento.tags?.forEach((tag) => {
             if (tag.toLowerCase().includes(searchTerm)) {
               suggestions.add(tag);
             }
           });
-
-          // Agregar tipo si contiene el término
-          if (evento.type?.toLowerCase().includes(searchTerm)) {
-            suggestions.add(evento.type);
-          }
-
-          // Agregar ubicación si contiene el término
           if (evento.location?.toLowerCase().includes(searchTerm)) {
             suggestions.add(evento.location);
           }
@@ -56,25 +170,20 @@ export async function onRequestGet(context) {
       console.error('[SEARCH/SUGGESTIONS] Error obteniendo eventos:', error);
     }
 
-    // Obtener sugerencias de noticias
+    // Noticias
     try {
       const noticiasData = await env.ACA_KV.get('noticias:all');
       if (noticiasData) {
-        const noticias = JSON.parse(noticiasData);
-        noticias.forEach(noticia => {
-          // Agregar título si contiene el término
+        const noticias = JSON.parse(noticiasData) || [];
+        noticias.forEach((noticia) => {
           if (noticia.title?.toLowerCase().includes(searchTerm)) {
             suggestions.add(noticia.title);
           }
-          
-          // Agregar tags que contengan el término
-          noticia.tags?.forEach(tag => {
+          noticia.tags?.forEach((tag) => {
             if (tag.toLowerCase().includes(searchTerm)) {
               suggestions.add(tag);
             }
           });
-
-          // Agregar categoría si contiene el término
           if (noticia.category?.toLowerCase().includes(searchTerm)) {
             suggestions.add(noticia.category);
           }
@@ -84,54 +193,76 @@ export async function onRequestGet(context) {
       console.error('[SEARCH/SUGGESTIONS] Error obteniendo noticias:', error);
     }
 
-    // Agregar términos comunes predefinidos
+    // Secciones del sitio
+    try {
+      const sectionSuggestions = await getSectionSuggestions(env, searchTerm, Math.max(2, Math.floor(limit / 2)));
+      sectionSuggestions.forEach((suggestion) => suggestions.add(suggestion));
+    } catch (error) {
+      console.error('[SEARCH/SUGGESTIONS] Error obteniendo secciones:', error);
+    }
+
+    // Socios (perfiles públicos)
+    try {
+      const userSuggestions = await getUserSuggestions(env, searchTerm, Math.max(2, Math.floor(limit / 2)));
+      userSuggestions.forEach((suggestion) => suggestions.add(suggestion));
+    } catch (error) {
+      console.error('[SEARCH/SUGGESTIONS] Error obteniendo socios:', error);
+    }
+
+    // Términos comunes
     const commonTerms = [
-      'campeonato', 'taller', 'encuentro', 'competencia', 'masterclass',
-      'asado', 'parrilla', 'carne', 'técnicas', 'fuego',
-      'nacional', 'regional', 'local', 'internacional',
-      'chile', 'santiago', 'valparaíso', 'concepción',
-      'barbacoa', 'costillar', 'chorizo', 'ahumado', 'vacuno', 'cerdo', 'cordero'
+      'calendario de eventos',
+      'quiénes somos',
+      'noticias ACA',
+      'directorio de socios',
+      'campeonato',
+      'taller',
+      'competencia',
+      'parrilla'
     ];
 
-    commonTerms.forEach(term => {
+    commonTerms.forEach((term) => {
       if (term.includes(searchTerm)) {
         suggestions.add(term);
       }
     });
 
-    // Convertir Set a Array, ordenar y limitar
     const suggestionsArray = Array.from(suggestions)
       .sort((a, b) => {
-        // Priorizar coincidencias al inicio
-        const aStartsWith = a.toLowerCase().startsWith(searchTerm);
-        const bStartsWith = b.toLowerCase().startsWith(searchTerm);
-        
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
-        
-        // Luego por longitud (más cortos primero)
+        const aLower = a.toLowerCase();
+        const bLower = b.toLowerCase();
+        const aStarts = aLower.startsWith(searchTerm);
+        const bStarts = bLower.startsWith(searchTerm);
+
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
         return a.length - b.length;
       })
       .slice(0, limit);
 
     console.log(`[SEARCH/SUGGESTIONS] Encontradas: ${suggestionsArray.length} sugerencias`);
 
-    return new Response(JSON.stringify({
-      success: true,
-      data: suggestionsArray
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: suggestionsArray
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   } catch (error) {
-    console.error('[SEARCH/SUGGESTIONS] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error('[SEARCH/SUGGESTIONS] Error general:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Error interno del servidor',
+        details: env.ENVIRONMENT === 'development' ? error.message : undefined
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }

@@ -8,6 +8,9 @@ import { Link } from 'react-router-dom';
 import {
   Calendar,
   Newspaper,
+  Home,
+  Users2,
+  Mail,
   Plus,
   Search,
   Trash2,
@@ -16,12 +19,39 @@ import {
 } from 'lucide-react';
 import { useEvents } from '../contexts/EventContext';
 import { Evento } from '@shared/index';
+import type { SitePageKey } from '@shared/siteSections';
 
 export default function AdminContent() {
-  const [activeTab, setActiveTab] = useState<'inicio' | 'eventos' | 'noticias'>('eventos');
+  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'noticias';
+  const [activeTab, setActiveTab] = useState<ContentTab>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
+
+  const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
+    switch (tab) {
+      case 'inicio':
+        return 'home';
+      case 'quienes':
+        return 'about';
+      case 'contacto':
+        return 'contact';
+      default:
+        return null;
+    }
+  };
+
+  const tabs: Array<{
+    id: ContentTab;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    { id: 'inicio', label: 'Inicio', icon: Home },
+    { id: 'quienes', label: 'Quiénes Somos', icon: Users2 },
+    { id: 'contacto', label: 'Contacto', icon: Mail },
+    { id: 'eventos', label: 'Eventos', icon: Calendar },
+    { id: 'noticias', label: 'Noticias Editoriales', icon: Newspaper }
+  ];
 
   useEffect(() => {
     if (activeTab === 'eventos') {
@@ -82,69 +112,61 @@ export default function AdminContent() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Contenido</h1>
           <p className="text-gray-600 mt-2">
-            Administra eventos y noticias editoriales de ACA Chile
+            Administra portada, secciones institucionales, eventos y noticias de ACA Chile
           </p>
         </div>
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('inicio')}
-              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'inicio'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Inicio
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('eventos')}
-              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'eventos'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center">
-                <Newspaper className="h-5 w-5 mr-2" />
-                Eventos
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('noticias')}
-              className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'noticias'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center">
-                <Newspaper className="h-5 w-5 mr-2" />
-                Noticias Editoriales
-              </div>
-            </button>
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    isActive
+                      ? 'border-red-600 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <Icon className="h-5 w-5 mr-2" />
+                    {tab.label}
+                  </div>
+                </button>
+              );
+            })}
           </nav>
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === 'inicio' && (
+        {(() => {
+          const pageKey = resolvePageKey(activeTab);
+          if (!pageKey) return null;
+          return (
           <div>
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold">Editor de Inicio</h2>
+              <h2 className="text-2xl font-semibold">
+                {activeTab === 'inicio' && 'Editor de Inicio'}
+                {activeTab === 'quienes' && 'Editor de Quiénes Somos'}
+                {activeTab === 'contacto' && 'Editor de Contacto'}
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Gestiona las secciones que se muestran públicamente en esta página usando el editor modular.
+              </p>
             </div>
             <div>
               {/* AdminHomeEditor component lazy loaded to avoid bundle size */}
               <React.Suspense fallback={<div>Cargando editor...</div>}>
-                <AdminHomeEditor />
+                <AdminHomeEditor key={pageKey} initialPage={pageKey} />
               </React.Suspense>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {activeTab === 'eventos' && (
           <div>

@@ -3,17 +3,20 @@
  * ACA Chile Frontend
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { searchService, AdvancedSearchFilters, SearchResult } from '../services/searchService';
-import { 
+import {
   Search,
   Filter,
   Calendar,
   MapPin,
-  Clock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  UserCircle,
+  FileText,
+  Phone,
+  Mail
 } from 'lucide-react';
 
 const SearchResultsPage: React.FC = () => {
@@ -123,18 +126,113 @@ const SearchResultsPage: React.FC = () => {
       case 'evento':
         return <Calendar className="h-5 w-5 text-red-600" />;
       case 'noticia':
-        return <Clock className="h-5 w-5 text-blue-600" />;
+        return <FileText className="h-5 w-5 text-blue-600" />;
+      case 'usuario':
+        return <UserCircle className="h-5 w-5 text-amber-600" />;
+      case 'section':
+        return <FileText className="h-5 w-5 text-emerald-600" />;
       default:
         return <Search className="h-5 w-5 text-gray-600" />;
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'evento':
+        return 'Evento';
+      case 'noticia':
+        return 'Noticia';
+      case 'usuario':
+        return 'Perfil de socio';
+      case 'section':
+        return 'Sección del sitio';
+      default:
+        return 'Resultado';
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return null;
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const getMetaItems = (result: SearchResult): Array<{ key: string; icon: ReactNode; label: string }> => {
+    const items: Array<{ key: string; icon: ReactNode; label: string }> = [];
+
+    if (result.type === 'evento' && result.location) {
+      items.push(
+        {
+          key: 'evento-location',
+          icon: <MapPin className="h-4 w-4" />,
+          label: result.location
+        }
+      );
+    }
+
+    if (result.type === 'noticia') {
+      if (result.category) {
+        items.push(
+          {
+            key: 'noticia-category',
+            icon: <FileText className="h-4 w-4" />,
+            label: result.category
+          }
+        );
+      }
+    }
+
+    if (result.type === 'usuario' && result.metadata) {
+      const { city, region, email, phone } = result.metadata as Record<string, string | undefined>;
+
+      if (city || region) {
+        items.push(
+          {
+            key: 'usuario-location',
+            icon: <MapPin className="h-4 w-4" />,
+            label: [city, region].filter(Boolean).join(', ')
+          }
+        );
+      }
+
+      if (email) {
+        items.push(
+          {
+            key: 'usuario-email',
+            icon: <Mail className="h-4 w-4" />,
+            label: email
+          }
+        );
+      }
+
+      if (phone) {
+        items.push(
+          {
+            key: 'usuario-phone',
+            icon: <Phone className="h-4 w-4" />,
+            label: phone
+          }
+        );
+      }
+    }
+
+    if (result.type === 'section' && result.metadata) {
+      const { pageLabel } = result.metadata as Record<string, string | undefined>;
+      if (pageLabel) {
+        items.push(
+          {
+            key: 'section-page',
+            icon: <FileText className="h-4 w-4" />,
+            label: pageLabel
+          }
+        );
+      }
+    }
+
+    return items;
   };
 
   return (
@@ -162,7 +260,7 @@ const SearchResultsPage: React.FC = () => {
               type="text"
               value={filters.query}
               onChange={(e) => handleFilterChange('query', e.target.value)}
-              placeholder="Buscar eventos, noticias, usuarios..."
+              placeholder="Buscar eventos, noticias, socios o secciones..."
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
@@ -189,7 +287,9 @@ const SearchResultsPage: React.FC = () => {
               >
                 <option value="">Todos los tipos</option>
                 <option value="eventos">Eventos</option>
-                <option value="noticias">Noticias</option>
+                <option value="noticias">Noticias editoriales</option>
+                <option value="usuarios">Perfiles de socios</option>
+                <option value="secciones">Secciones del sitio</option>
               </select>
 
               {/* Fecha desde */}
@@ -286,45 +386,98 @@ const SearchResultsPage: React.FC = () => {
           <>
             {results.length > 0 ? (
               <div className="space-y-4 mb-6">
-                {results.map((result, index) => (
-                  <div key={`${result.type}-${result.id}-${index}`} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          {getResultIcon(result.type)}
-                          <span className="text-sm font-medium text-gray-600 capitalize">
-                            {result.type}
-                          </span>
-                          <span className="text-sm text-gray-400">•</span>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(result.date)}
-                          </span>
-                        </div>
+                {results.map((result, index) => {
+                  const formattedDate = formatDate(result.date);
+                  const typeLabel = getTypeLabel(result.type);
+                  const metaItems = getMetaItems(result);
+                  const hasRelevance = typeof result.relevance === 'number';
+                  const description =
+                    result.description ||
+                    (result.type === 'usuario'
+                      ? 'Perfil público de socio ACA Chile.'
+                      : result.type === 'section'
+                        ? 'Contenido destacado del sitio.'
+                        : 'Sin descripción disponible.');
 
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                          <Link 
-                            to={result.url}
-                            className="hover:text-red-600 transition-colors"
-                          >
-                            {result.title}
-                          </Link>
-                        </h3>
+                  const hrefIsExternal = result.url?.startsWith('http');
+                  const titleNode = hrefIsExternal ? (
+                    <a
+                      href={result.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-red-600 transition-colors"
+                    >
+                      {result.title}
+                    </a>
+                  ) : (
+                    <Link
+                      to={result.url}
+                      className="hover:text-red-600 transition-colors"
+                    >
+                      {result.title}
+                    </Link>
+                  );
 
-                        <p className="text-gray-600 line-clamp-3">
-                          {result.description}
-                        </p>
+                  return (
+                    <div key={`${result.type}-${result.id}-${index}`} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex items-start gap-4">
+                        {result.type === 'usuario' && result.avatar && (
+                          <img
+                            src={result.avatar}
+                            alt={result.title}
+                            className="h-16 w-16 rounded-full object-cover border border-gray-200"
+                          />
+                        )}
+                        {result.type === 'evento' && result.image && (
+                          <img
+                            src={result.image}
+                            alt={result.title}
+                            className="h-20 w-20 rounded-lg object-cover border border-gray-200"
+                          />
+                        )}
 
-                        <div className="mt-3 flex items-center text-sm text-gray-500">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          <span className="mr-4">Ver detalles</span>
-                          <span className="bg-gray-100 px-2 py-1 rounded text-xs">
-                            Relevancia: {Math.round(result.relevance * 100)}%
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            {getResultIcon(result.type)}
+                            <span className="text-sm font-medium text-gray-600">
+                              {typeLabel}
+                            </span>
+                            {formattedDate && (
+                              <>
+                                <span className="text-sm text-gray-400">•</span>
+                                <span className="text-sm text-gray-500">{formattedDate}</span>
+                              </>
+                            )}
+                          </div>
+
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            {titleNode}
+                          </h3>
+
+                          <p className="text-gray-600 line-clamp-3">
+                            {description}
+                          </p>
+
+                          {(metaItems.length > 0 || hasRelevance) && (
+                            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                              {metaItems.map((item) => (
+                                <span key={`${index}-${item.key}`} className="flex items-center gap-1">
+                                  {item.icon}
+                                  {item.label}
+                                </span>
+                              ))}
+                              {hasRelevance && (
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase tracking-wide">
+                                  Relevancia: {Math.round((result.relevance || 0) * 100)}%
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : filters.query && (
               <div className="bg-white rounded-lg shadow-md p-8 text-center">

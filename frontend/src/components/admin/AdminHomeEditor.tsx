@@ -101,8 +101,12 @@ const sanitizeSectionsForSave = (page: SitePageKey, sections: EditableSection[])
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
 
-export default function AdminHomeEditor() {
-  const [activePage, setActivePage] = useState<SitePageKey>('home');
+interface AdminHomeEditorProps {
+  initialPage?: SitePageKey;
+}
+
+export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEditorProps) {
+  const [activePage, setActivePage] = useState<SitePageKey>(initialPage);
   const [sections, setSections] = useState<EditableSection[]>(cloneDefaults('home'));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -113,6 +117,10 @@ export default function AdminHomeEditor() {
   const [events, setEvents] = useState<Evento[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [listsLoaded, setListsLoaded] = useState(false);
+
+  useEffect(() => {
+    setActivePage(initialPage);
+  }, [initialPage]);
 
   useEffect(() => {
     let active = true;

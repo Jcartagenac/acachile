@@ -5,23 +5,33 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile.pages.dev';
 
+export type SearchResultType = 'evento' | 'noticia' | 'usuario' | 'section';
+
 export interface SearchResult {
-  type: 'evento' | 'noticia' | 'usuario';
-  id: number;
+  type: SearchResultType;
+  id: number | string;
   title: string;
-  description: string;
+  description?: string;
   url: string;
-  date: string;
-  relevance: number;
+  date?: string;
+  relevance?: number;
+  image?: string;
+  location?: string;
+  avatar?: string;
+  category?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SearchResponse {
   success: boolean;
   data?: {
     query: string;
-    resultados: SearchResult[];
     total: number;
-    filters: any;
+    eventos?: SearchResult[];
+    noticias?: SearchResult[];
+    usuarios?: SearchResult[];
+    secciones?: SearchResult[];
+    combined?: SearchResult[];
   };
   error?: string;
 }
@@ -44,7 +54,7 @@ export interface PopularSearchesResponse {
 
 export interface AdvancedSearchFilters {
   query?: string;
-  tipo?: 'eventos' | 'noticias';
+  tipo?: 'eventos' | 'noticias' | 'usuarios' | 'secciones' | 'all';
   fechaDesde?: string;
   fechaHasta?: string;
   categoria?: string;
@@ -121,7 +131,7 @@ class SearchService {
   // Búsqueda global
   async search(params: {
     query: string;
-    type?: 'eventos' | 'noticias' | 'usuarios' | 'all';
+    type?: 'eventos' | 'noticias' | 'usuarios' | 'secciones' | 'all';
     dateFrom?: string;
     dateTo?: string;
     category?: string;
