@@ -268,10 +268,22 @@ export default function AdminHomeEditor() {
     [events, news, applyEventToSection, applyNewsToSection]
   );
 
+  const getAuthToken = () => {
+    if (typeof document === 'undefined') return '';
+    const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]+)/);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem('auth_token') || '';
+    }
+    return '';
+  };
+
   const save = useCallback(async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token') || '';
+      const token = getAuthToken();
       const payload = sanitizeSectionsForSave(sections);
 
       const res = await fetch('/api/admin/content', {
@@ -310,7 +322,7 @@ export default function AdminHomeEditor() {
       reader.readAsDataURL(file);
 
       try {
-        const token = localStorage.getItem('token') || '';
+        const token = getAuthToken();
         const form = new FormData();
         form.append('file', file);
         form.append('folder', 'home');
@@ -369,7 +381,7 @@ export default function AdminHomeEditor() {
   const clearCache = useCallback(async () => {
     setClearingCache(true);
     try {
-      const token = localStorage.getItem('token') || '';
+      const token = getAuthToken();
       const res = await fetch('/api/admin/content/clear_cache', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined
@@ -577,4 +589,3 @@ export default function AdminHomeEditor() {
     </div>
   );
 }
-
