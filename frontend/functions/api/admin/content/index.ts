@@ -1,19 +1,32 @@
 import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
 import type { Env } from '../../../types';
 import {
-  DEFAULT_SITE_SECTIONS,
   SECTION_CACHE_KEY,
   SiteSection,
-  SiteSectionSourceType
+  SiteSectionSourceType,
+  SitePageKey,
+  getDefaultSections
 } from '../../../../../shared/siteSections';
 
 type RawSection = Partial<SiteSection> & Record<string, unknown>;
+
+const DEFAULT_PAGE: SitePageKey = 'home';
+
+const parsePage = (value: string | null): SitePageKey => {
+  if (value === 'about' || value === 'contact') {
+    return value;
+  }
+  return DEFAULT_PAGE;
+};
+
+const cacheKeyFor = (page: SitePageKey) => `${SECTION_CACHE_KEY}:${page}`;
 
 async function ensureTable(db: D1Database) {
   await db
     .prepare(`
       CREATE TABLE IF NOT EXISTS site_sections (
-        key TEXT PRIMARY KEY,
+        page TEXT NOT NULL,
+        key TEXT NOT NULL,
         title TEXT,
         image_url TEXT,
         content TEXT,
@@ -23,7 +36,8 @@ async function ensureTable(db: D1Database) {
         cta_label TEXT,
         cta_url TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (page, key)
       )
     `)
     .run();
@@ -32,19 +46,26 @@ async function ensureTable(db: D1Database) {
     "ALTER TABLE site_sections ADD COLUMN source_type TEXT DEFAULT 'custom'",
     'ALTER TABLE site_sections ADD COLUMN source_id TEXT',
     'ALTER TABLE site_sections ADD COLUMN cta_label TEXT',
-    'ALTER TABLE site_sections ADD COLUMN cta_url TEXT'
+    'ALTER TABLE site_sections ADD COLUMN cta_url TEXT',
+    "ALTER TABLE site_sections ADD COLUMN page TEXT DEFAULT 'home'"
   ];
 
   for (const statement of alterStatements) {
     try {
       await db.prepare(statement).run();
     } catch (error) {
-      // Column already exists or alteration not needed; ignore
+      // Column already exists or alteration not needed; ignore.
     }
+  }
+
+  try {
+    await db.prepare("UPDATE site_sections SET page = 'home' WHERE page IS NULL").run();
+  } catch (error) {
+    // Ignored.
   }
 }
 
-function coerceNumber(value: unknown, fallback: number): number {
+const coerceNumber = (value: unknown, fallback: number): number => {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value;
   }
@@ -55,24 +76,24 @@ function coerceNumber(value: unknown, fallback: number): number {
     }
   }
   return fallback;
-}
+};
 
-function coerceSourceType(value: unknown): SiteSectionSourceType {
+const coerceSourceType = (value: unknown): SiteSectionSourceType => {
   if (value === 'event' || value === 'news') {
     return value;
   }
   return 'custom';
-}
+};
 
-function normalizeSections(rawSections: RawSection[] | undefined): SiteSection[] {
-  const defaults = new Map(DEFAULT_SITE_SECTIONS.map((section) => [section.key, section]));
+const normalizeSections = (rawSections: RawSection[] | undefined, page: SitePageKey): SiteSection[] => {
+  const defaults = new Map(getDefaultSections(page).map((section) => [section.key, section]));
   const collected = new Map<string, SiteSection>();
 
   (rawSections || []).forEach((raw, index) => {
     const tentativeKey =
       typeof raw?.key === 'string' && raw.key.trim().length > 0
         ? raw.key.trim()
-        : DEFAULT_SITE_SECTIONS[index]?.key ?? `section_${index}`;
+        : getDefaultSections(page)[index]?.key ?? `section_${index}`;
 
     const fallback = defaults.get(tentativeKey);
     const sortOrder = coerceNumber(raw?.sort_order, fallback?.sort_order ?? index);
@@ -82,6 +103,7 @@ function normalizeSections(rawSections: RawSection[] | undefined): SiteSection[]
     const ctaUrl = typeof raw?.cta_url === 'string' ? raw.cta_url : fallback?.cta_url;
 
     const normalized: SiteSection = {
+      page,
       key: tentativeKey,
       title:
         typeof raw?.title === 'string' && raw.title.trim().length > 0
@@ -104,39 +126,44 @@ function normalizeSections(rawSections: RawSection[] | undefined): SiteSection[]
   });
 
   for (const remaining of defaults.values()) {
-    collected.set(remaining.key, remaining);
+    collected.set(remaining.key, { ...remaining, page });
   }
 
   return Array.from(collected.values()).sort((a, b) => a.sort_order - b.sort_order);
-}
+};
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { env } = context;
+  const { request, env } = context;
 
   try {
+    const page = parsePage(new URL(request.url).searchParams.get('page'));
+    const cacheKey = cacheKeyFor(page);
+    const defaults = getDefaultSections(page);
     let sections: SiteSection[] = [];
 
     if (env.DB) {
       await ensureTable(env.DB);
       const res = await env.DB
         .prepare<SiteSection>(
-          'SELECT key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url FROM site_sections ORDER BY sort_order ASC'
+          'SELECT page, key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url FROM site_sections WHERE page = ? ORDER BY sort_order ASC'
         )
+        .bind(page)
         .all();
+
       if (res.results && res.results.length > 0) {
-        sections = normalizeSections(res.results);
+        sections = normalizeSections(res.results, page);
         if (env.ACA_KV) {
-          await env.ACA_KV.put(SECTION_CACHE_KEY, JSON.stringify(sections));
+          await env.ACA_KV.put(cacheKey, JSON.stringify(sections));
         }
       }
     }
 
     if ((!sections || sections.length === 0) && env.ACA_KV) {
-      const cached = await env.ACA_KV.get(SECTION_CACHE_KEY);
+      const cached = await env.ACA_KV.get(cacheKey);
       if (cached) {
         try {
           const parsed = JSON.parse(cached) as RawSection[];
-          sections = normalizeSections(parsed);
+          sections = normalizeSections(parsed, page);
         } catch (error) {
           console.warn('[CONTENT GET] Failed to parse KV cache, using defaults', error);
         }
@@ -144,9 +171,9 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     }
 
     if (!sections || sections.length === 0) {
-      sections = DEFAULT_SITE_SECTIONS;
+      sections = defaults;
       if (env.ACA_KV) {
-        await env.ACA_KV.put(SECTION_CACHE_KEY, JSON.stringify(sections));
+        await env.ACA_KV.put(cacheKey, JSON.stringify(sections));
       }
     }
 
@@ -161,6 +188,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
   try {
+    const page = parsePage(new URL(request.url).searchParams.get('page'));
+    const cacheKey = cacheKeyFor(page);
+
     let authUser;
     try {
       authUser = await requireAuth(request, env);
@@ -178,7 +208,10 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     const body = await request.json().catch(() => ({}));
     const incoming = Array.isArray(body?.sections) ? (body.sections as RawSection[]) : [];
-    const normalized = normalizeSections(incoming);
+    const normalized = normalizeSections(incoming, page).map((section, index) => ({
+      ...section,
+      sort_order: typeof section.sort_order === 'number' ? section.sort_order : index
+    }));
 
     if (env.DB) {
       await ensureTable(env.DB);
@@ -189,9 +222,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         await env.DB
           .prepare(
             `
-              INSERT INTO site_sections (key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-              ON CONFLICT(key) DO UPDATE SET
+              INSERT INTO site_sections (page, key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+              ON CONFLICT(page, key) DO UPDATE SET
                 title=excluded.title,
                 image_url=excluded.image_url,
                 content=excluded.content,
@@ -204,6 +237,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
             `
           )
           .bind(
+            section.page,
             section.key,
             section.title,
             section.image_url,
@@ -219,14 +253,17 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
       if (keys.length > 0) {
         const placeholders = keys.map(() => '?').join(', ');
-        await env.DB.prepare(`DELETE FROM site_sections WHERE key NOT IN (${placeholders})`).bind(...keys).run();
+        await env.DB
+          .prepare(`DELETE FROM site_sections WHERE page = ? AND key NOT IN (${placeholders})`)
+          .bind(page, ...keys)
+          .run();
       } else {
-        await env.DB.prepare('DELETE FROM site_sections').run();
+        await env.DB.prepare('DELETE FROM site_sections WHERE page = ?').bind(page).run();
       }
     }
 
     if (env.ACA_KV) {
-      await env.ACA_KV.put(SECTION_CACHE_KEY, JSON.stringify(normalized));
+      await env.ACA_KV.put(cacheKey, JSON.stringify(normalized));
     }
 
     return jsonResponse({ success: true, sections: normalized });
@@ -239,3 +276,4 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     );
   }
 }
+

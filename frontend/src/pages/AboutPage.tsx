@@ -1,207 +1,251 @@
-import React from 'react';
-import { Container } from '../components/ui/Container';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { SiteSection } from '@shared/siteSections';
+import { getDefaultSections } from '@shared/siteSections';
+
+type DisplaySection = SiteSection & {
+  display_title: string;
+  display_content: string;
+  display_image?: string;
+  display_cta_label?: string;
+  display_cta_url?: string;
+};
+
+const cloneDefaults = (): SiteSection[] => getDefaultSections('about').map((section) => ({ ...section }));
+
+const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
+  const defaults = new Map(getDefaultSections('about').map((section) => [section.key, section]));
+  const merged = new Map<string, SiteSection>();
+
+  (incoming || []).forEach((raw, index) => {
+    const tentativeKey =
+      typeof raw?.key === 'string' && raw.key.trim().length > 0
+        ? raw.key.trim()
+        : getDefaultSections('about')[index]?.key ?? `section_${index}`;
+
+    const fallback = defaults.get(tentativeKey);
+    const normalized: SiteSection = {
+      page: 'about',
+      key: tentativeKey,
+      title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
+      content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : fallback?.image_url ?? '',
+      sort_order:
+        typeof raw?.sort_order === 'number'
+          ? raw.sort_order
+          : fallback?.sort_order ?? index,
+      source_type: raw?.source_type ?? fallback?.source_type,
+      source_id: raw?.source_id ?? fallback?.source_id,
+      cta_label: raw?.cta_label ?? fallback?.cta_label,
+      cta_url: raw?.cta_url ?? fallback?.cta_url
+    };
+
+    merged.set(normalized.key, normalized);
+    defaults.delete(normalized.key);
+  });
+
+  for (const remaining of defaults.values()) {
+    merged.set(remaining.key, { ...remaining });
+  }
+
+  return Array.from(merged.values()).sort((a, b) => a.sort_order - b.sort_order);
+};
+
+const parseContentBlocks = (content: string) => {
+  const lines = content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const blocks: Array<{ type: 'paragraph'; text: string } | { type: 'list'; items: string[] }> = [];
+  let currentList: string[] | null = null;
+
+  lines.forEach((line) => {
+    if (line.startsWith('- ')) {
+      if (!currentList) {
+        currentList = [];
+        blocks.push({ type: 'list', items: currentList });
+      }
+      currentList.push(line.slice(2));
+    } else {
+      currentList = null;
+      blocks.push({ type: 'paragraph', text: line });
+    }
+  });
+
+  return blocks;
+};
+
+const HeroSection: React.FC<{ section: DisplaySection; loading: boolean }> = ({ section, loading }) => {
+  const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
+
+  return (
+    <section className="relative overflow-hidden py-20 bg-soft-gradient-light">
+      <div className="relative px-4 py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-28">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
+          <div className="lg:col-span-7 space-y-8">
+            <span className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-soft rounded-full shadow-soft-sm border border-white/40 text-primary-600 font-semibold text-sm tracking-wide uppercase">
+              {loading ? 'Cargando…' : 'Nuestra historia'}
+            </span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
+              {section.display_title}
+            </h1>
+            <div className="text-lg sm:text-xl text-neutral-600 font-light leading-relaxed space-y-4 max-w-2xl">
+              {blocks.length === 0 ? (
+                <p>{section.display_content}</p>
+              ) : (
+                blocks.map((block, index) =>
+                  block.type === 'paragraph' ? (
+                    <p key={index}>{block.text}</p>
+                  ) : (
+                    <ul key={index} className="list-disc pl-5 space-y-1">
+                      {block.items.map((item, itemIndex) => (
+                        <li key={itemIndex}>{item}</li>
+                      ))}
+                    </ul>
+                  )
+                )
+              )}
+            </div>
+            {section.display_cta_label && section.display_cta_url ? (
+              <a
+                href={section.display_cta_url}
+                className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
+              >
+                {section.display_cta_label}
+              </a>
+            ) : null}
+          </div>
+          {section.display_image ? (
+            <div className="mt-12 lg:mt-0 lg:col-span-5">
+              <div className="relative bg-white/20 backdrop-blur-md rounded-3xl p-6 shadow-soft-xl border border-white/40">
+                <div className="overflow-hidden rounded-2xl">
+                  <img
+                    src={section.display_image}
+                    alt={section.display_title}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const SectionBlock: React.FC<{ section: DisplaySection; reverse?: boolean }> = ({ section, reverse }) => {
+  const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
+
+  return (
+    <section className="py-20 bg-soft-gradient-light relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={`flex flex-col gap-10 lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+          <div className="lg:w-1/2 flex flex-col justify-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight">
+              {section.display_title}
+            </h2>
+            <div className="space-y-4 text-neutral-600 text-lg leading-relaxed">
+              {blocks.length === 0 ? (
+                <p>{section.display_content}</p>
+              ) : (
+                blocks.map((block, blockIndex) =>
+                  block.type === 'paragraph' ? (
+                    <p key={blockIndex}>{block.text}</p>
+                  ) : (
+                    <ul key={blockIndex} className="list-disc pl-5 space-y-1">
+                      {block.items.map((item, itemIndex) => (
+                        <li key={itemIndex}>{item}</li>
+                      ))}
+                    </ul>
+                  )
+                )
+              )}
+            </div>
+            {section.display_cta_label && section.display_cta_url ? (
+              <div>
+                <a
+                  href={section.display_cta_url}
+                  className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
+                >
+                  {section.display_cta_label}
+                </a>
+              </div>
+            ) : null}
+          </div>
+          {section.display_image ? (
+            <div className="lg:w-1/2">
+              <div className="relative bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
+                <img
+                  src={section.display_image}
+                  alt={section.display_title}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export const AboutPage: React.FC = () => {
+  const [sections, setSections] = useState<SiteSection[]>(cloneDefaults());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/content?page=about', { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        if (active && json?.success) {
+          setSections(normalizeSections(json.sections));
+        }
+      } catch (error) {
+        console.warn('[AboutPage] No se pudo obtener contenido dinámico, usando valores por defecto.', error);
+        if (active) {
+          setSections(cloneDefaults());
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const displaySections: DisplaySection[] = useMemo(() => {
+    return sections.map((section, index) => ({
+      ...section,
+      display_title: section.title || `Sección ${index + 1}`,
+      display_content: section.content || '',
+      display_image: section.image_url || undefined,
+      display_cta_label: section.cta_label,
+      display_cta_url: section.cta_url
+    }));
+  }, [sections]);
+
+  const heroSection = displaySections[0] ?? {
+    ...cloneDefaults()[0],
+    display_title: cloneDefaults()[0].title,
+    display_content: cloneDefaults()[0].content,
+    display_image: cloneDefaults()[0].image_url
+  };
+  const otherSections = displaySections.slice(1);
+
   return (
     <div className="min-h-screen bg-soft-gradient-light">
-      <div className="py-24">
-        <Container>
-          <div className="max-w-5xl mx-auto">
-            {/* Header Section - Soft UI 2.0 */}
-            <div className="text-center mb-16 animate-slide-up">
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-soft rounded-full shadow-soft-sm border border-white/40 mb-8">
-                <span className="text-2xl">🔥</span>
-                <span className="text-primary-600 font-semibold text-sm tracking-wide uppercase">Conoce ACA Chile</span>
-              </div>
-              
-              <h1 className="text-5xl font-bold mb-6 text-neutral-900 lg:text-6xl">
-                Quiénes <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Somos</span>
-              </h1>
-              
-              <p className="text-xl text-neutral-600 font-light max-w-3xl mx-auto leading-relaxed">
-                Una comunidad apasionada que celebra la tradición del asado chileno y la camaradería en torno al fuego.
-              </p>
-            </div>
-
-            {/* Contenido Principal */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-              {/* Contenido de texto */}
-              <div className="lg:col-span-8 space-y-8">
-                {/* Tarjeta principal de bienvenida */}
-                <div className="bg-white/60 backdrop-blur-soft rounded-3xl p-8 shadow-soft-lg border border-white/30 animate-slide-in-left">
-                  <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0 w-16 h-16 bg-primary-500/10 rounded-2xl flex items-center justify-center">
-                      <span className="text-3xl">👋</span>
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                        Te damos la bienvenida a la <span className="text-primary-600">ASOCIACIÓN CHILENA DE ASADORES (ACA)</span>
-                      </h2>
-                      <p className="text-lg leading-relaxed text-neutral-600 font-light">
-                        ACA es una asociación de Asadores en donde nos reunimos amantes de los fuegos,
-                        las brasas y la parrilla.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información legal y estructura */}
-                <div className="bg-soft-gradient-glass backdrop-blur-soft rounded-3xl p-8 shadow-soft-lg border border-white/30 animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
-                  <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0 w-16 h-16 bg-pastel-blue rounded-2xl flex items-center justify-center">
-                      <span className="text-3xl">🏛️</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-neutral-800 mb-4">
-                        Organización Legal
-                      </h3>
-                      <p className="text-lg leading-relaxed text-neutral-600 font-light mb-4">
-                        ACA es una asociación <span className="font-semibold text-primary-600">sin fines de lucro</span>, 
-                        con sede en la ciudad de <span className="font-semibold">Viña del Mar</span> y está 
-                        legalmente constituida según los registros de Servicio de Registro Civil e Identificación 
-                        y con asociados a lo largo de todo Chile.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Objetivos y filosofía */}
-                <div className="bg-white/60 backdrop-blur-soft rounded-3xl p-8 shadow-soft-lg border border-white/30 animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
-                  <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0 w-16 h-16 bg-pastel-green rounded-2xl flex items-center justify-center">
-                      <span className="text-3xl">🎯</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-neutral-800 mb-4">
-                        Nuestro Objetivo
-                      </h3>
-                      <p className="text-lg leading-relaxed text-neutral-600 font-light mb-4">
-                        Nuestro principal objetivo es <span className="font-semibold text-primary-600">compartir sanamente en torno al fuego</span> 
-                        y juntos hacer crecer el movimiento parrillero nacional de la mano de nuestros asociados, 
-                        los que van desde expertos asadores hasta asadores principiantes.
-                      </p>
-                      <div className="bg-primary-50/50 rounded-2xl p-4 border border-primary-100/50">
-                        <p className="text-base text-primary-700 font-medium">
-                          💡 ACA no exige destreza ni experiencia parrillera, solo ganas y entusiasmo.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Valores y comunidad */}
-                <div className="bg-soft-gradient-glass backdrop-blur-soft rounded-3xl p-8 shadow-soft-lg border border-white/30 animate-slide-in-left" style={{ animationDelay: '0.3s' }}>
-                  <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0 w-16 h-16 bg-pastel-purple rounded-2xl flex items-center justify-center">
-                      <span className="text-3xl">🤝</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-neutral-800 mb-4">
-                        Nuestra Comunidad
-                      </h3>
-                      <p className="text-lg leading-relaxed text-neutral-600 font-light mb-4">
-                        Esta asociación la hacen sus socios, quienes velamos que sean personas de 
-                        <span className="font-semibold text-primary-600"> buenas intenciones</span> 
-                        y que tengan las ganas de recorrer junto a nosotros el camino de la búsqueda 
-                        de la <span className="font-semibold text-primary-600">identidad del asado Chileno</span>.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Historia y tradición */}
-                <div className="bg-white/60 backdrop-blur-soft rounded-3xl p-8 shadow-soft-lg border border-white/30 animate-slide-in-left" style={{ animationDelay: '0.4s' }}>
-                  <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0 w-16 h-16 bg-pastel-orange rounded-2xl flex items-center justify-center">
-                      <span className="text-3xl">📚</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-neutral-800 mb-4">
-                        Tradición y Cultura
-                      </h3>
-                      <p className="text-lg leading-relaxed text-neutral-600 font-light">
-                        Creemos que el asado va más allá de cocinar carne: es una 
-                        <span className="font-semibold text-primary-600"> tradición que une familias</span>, 
-                        forja amistades y preserva nuestra cultura gastronómica chilena para las futuras generaciones.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sidebar con elementos visuales */}
-              <div className="lg:col-span-4 space-y-8">
-                {/* Estadísticas */}
-                <div className="bg-white/60 backdrop-blur-soft rounded-3xl p-6 shadow-soft-lg border border-white/30 animate-slide-in-right">
-                  <h4 className="text-lg font-bold text-neutral-800 mb-6 text-center">
-                    ACA en Números
-                  </h4>
-                  <div className="space-y-4">
-                    {[
-                      { icon: '👥', label: 'Miembros Activos', value: '500+' },
-                      { icon: '🏆', label: 'Eventos Realizados', value: '150+' },
-                      { icon: '🌎', label: 'Ciudades', value: '25+' },
-                      { icon: '🥩', label: 'Asados Compartidos', value: '1000+' }
-                    ].map((stat, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-white/20">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{stat.icon}</span>
-                          <span className="text-sm font-medium text-neutral-700">{stat.label}</span>
-                        </div>
-                        <span className="text-xl font-bold text-primary-600">{stat.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Call to action */}
-                <div className="bg-primary-50/50 backdrop-blur-soft rounded-3xl p-6 shadow-soft-lg border border-primary-100/30 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-primary-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-3xl">🔥</span>
-                    </div>
-                    <h4 className="text-lg font-bold text-neutral-800 mb-3">
-                      ¿Te interesa unirte?
-                    </h4>
-                    <p className="text-sm text-neutral-600 mb-6">
-                      Forma parte de nuestra comunidad de asadores apasionados
-                    </p>
-                    <button 
-                      className="w-full px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-lg"
-                      onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform', '_blank')}
-                    >
-                      Únete Ahora
-                    </button>
-                  </div>
-                </div>
-
-                {/* Contacto */}
-                <div className="bg-white/60 backdrop-blur-soft rounded-3xl p-6 shadow-soft-lg border border-white/30 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
-                  <h4 className="text-lg font-bold text-neutral-800 mb-4 text-center">
-                    Contáctanos
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
-                      <span className="text-xl">📍</span>
-                      <span className="text-sm text-neutral-700">Viña del Mar, Chile</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
-                      <span className="text-xl">📧</span>
-                      <span className="text-sm text-neutral-700">info@acachile.com</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
-                      <span className="text-xl">📱</span>
-                      <span className="text-sm text-neutral-700">@acachile</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </div>
+      <HeroSection section={heroSection} loading={loading} />
+      {otherSections.map((section, index) => (
+        <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />
+      ))}
     </div>
   );
 };
 
-export default AboutPage;

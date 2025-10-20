@@ -1,27 +1,45 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/Button';
-import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
-import { DEFAULT_SITE_SECTIONS } from '@shared/siteSections';
+import type { SiteSection, SiteSectionSourceType, SitePageKey } from '@shared/siteSections';
+import { getDefaultSections } from '@shared/siteSections';
 import type { Evento } from '@shared/index';
 import type { NewsArticle } from '../../services/newsService';
 
 type EditableSection = SiteSection & { preview_image?: string };
 
-const cloneDefaults = (): EditableSection[] =>
-  DEFAULT_SITE_SECTIONS.map((section) => ({ ...section }));
+const PAGE_TABS: Array<{ key: SitePageKey; label: string }> = [
+  { key: 'home', label: 'Inicio' },
+  { key: 'about', label: 'Quiénes Somos' },
+  { key: 'contact', label: 'Contacto' }
+];
 
 const coerceSourceType = (value: unknown): SiteSectionSourceType =>
   value === 'event' || value === 'news' ? value : 'custom';
 
-const mergeWithDefaults = (incoming: Partial<SiteSection>[] | undefined): EditableSection[] => {
-  const defaults = new Map(DEFAULT_SITE_SECTIONS.map((section) => [section.key, section]));
+const getAuthToken = () => {
+  if (typeof document === 'undefined') return '';
+  const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]+)/);
+  if (match && match[1]) {
+    return decodeURIComponent(match[1]);
+  }
+  if (typeof window !== 'undefined') {
+    return window.localStorage.getItem('auth_token') || '';
+  }
+  return '';
+};
+
+const cloneDefaults = (page: SitePageKey): EditableSection[] =>
+  getDefaultSections(page).map((section) => ({ ...section }));
+
+const mergeWithDefaults = (page: SitePageKey, incoming: Partial<SiteSection>[] | undefined): EditableSection[] => {
+  const defaults = new Map(getDefaultSections(page).map((section) => [section.key, section]));
   const merged = new Map<string, EditableSection>();
 
   (incoming || []).forEach((raw, index) => {
     const tentativeKey =
       typeof raw?.key === 'string' && raw.key.trim().length > 0
         ? raw.key.trim()
-        : DEFAULT_SITE_SECTIONS[index]?.key ?? `section_${index}`;
+        : getDefaultSections(page)[index]?.key ?? `section_${index}`;
 
     const fallback = defaults.get(tentativeKey);
     const sortOrder =
@@ -30,6 +48,7 @@ const mergeWithDefaults = (incoming: Partial<SiteSection>[] | undefined): Editab
         : fallback?.sort_order ?? index;
 
     merged.set(tentativeKey, {
+      page,
       key: tentativeKey,
       title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
       content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
@@ -66,9 +85,10 @@ const mergeWithDefaults = (incoming: Partial<SiteSection>[] | undefined): Editab
   return Array.from(merged.values()).sort((a, b) => a.sort_order - b.sort_order);
 };
 
-const sanitizeSectionsForSave = (sections: EditableSection[]): SiteSection[] =>
+const sanitizeSectionsForSave = (page: SitePageKey, sections: EditableSection[]): SiteSection[] =>
   sections
     .map((section, index) => ({
+      page,
       key: section.key,
       title: section.title.trim(),
       content: section.content,
@@ -82,7 +102,8 @@ const sanitizeSectionsForSave = (sections: EditableSection[]): SiteSection[] =>
     .sort((a, b) => a.sort_order - b.sort_order);
 
 export default function AdminHomeEditor() {
-  const [sections, setSections] = useState<EditableSection[]>(cloneDefaults);
+  const [activePage, setActivePage] = useState<SitePageKey>('home');
+  const [sections, setSections] = useState<EditableSection[]>(cloneDefaults('home'));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
@@ -94,27 +115,36 @@ export default function AdminHomeEditor() {
   const [listsLoaded, setListsLoaded] = useState(false);
 
   useEffect(() => {
+    let active = true;
     (async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/admin/content', { cache: 'no-store' });
+        const response = await fetch(`/api/admin/content?page=${activePage}`, { cache: 'no-store' });
         const json = await response.json();
-        if (json?.success) {
-          setSections(mergeWithDefaults(json.sections));
-        } else {
-          setSections(cloneDefaults());
+        if (active && json?.success) {
+          setSections(mergeWithDefaults(activePage, json.sections));
+        } else if (active) {
+          setSections(cloneDefaults(activePage));
         }
       } catch (error) {
         console.error('[AdminHomeEditor] fetchSections error:', error);
-        setSections(cloneDefaults());
+        if (active) {
+          setSections(cloneDefaults(activePage));
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     })();
-  }, []);
+
+    return () => {
+      active = false;
+    };
+  }, [activePage]);
 
   useEffect(() => {
-    if (listsLoaded) return;
+    if (activePage !== 'home' || listsLoaded) return;
 
     (async () => {
       try {
@@ -138,7 +168,7 @@ export default function AdminHomeEditor() {
         setListsLoaded(true);
       }
     })();
-  }, [listsLoaded]);
+  }, [activePage, listsLoaded]);
 
   const sortedSections = useMemo(
     () => [...sections].sort((a, b) => a.sort_order - b.sort_order),
@@ -231,27 +261,13 @@ export default function AdminHomeEditor() {
 
   const handleSourceTypeChange = useCallback(
     (sectionKey: string, value: SiteSectionSourceType) => {
-      if (value === 'custom') {
-        setSections((prev) =>
-          prev.map((section) =>
-            section.key === sectionKey
-              ? {
-                  ...section,
-                  source_type: 'custom',
-                  source_id: undefined
-                }
-              : section
-          )
-        );
-        return;
-      }
-
       setSections((prev) =>
         prev.map((section) =>
           section.key === sectionKey
             ? {
                 ...section,
-                source_type: value
+                source_type: value,
+                source_id: value === 'custom' ? undefined : section.source_id
               }
             : section
         )
@@ -268,25 +284,13 @@ export default function AdminHomeEditor() {
     [events, news, applyEventToSection, applyNewsToSection]
   );
 
-  const getAuthToken = () => {
-    if (typeof document === 'undefined') return '';
-    const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]+)/);
-    if (match && match[1]) {
-      return decodeURIComponent(match[1]);
-    }
-    if (typeof window !== 'undefined') {
-      return window.localStorage.getItem('auth_token') || '';
-    }
-    return '';
-  };
-
   const save = useCallback(async () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const payload = sanitizeSectionsForSave(sections);
+      const payload = sanitizeSectionsForSave(activePage, sections);
 
-      const res = await fetch('/api/admin/content', {
+      const res = await fetch(`/api/admin/content?page=${activePage}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -297,7 +301,7 @@ export default function AdminHomeEditor() {
       const json = await res.json();
       if (json.success) {
         alert('Secciones guardadas correctamente');
-        setSections(mergeWithDefaults(json.sections));
+        setSections(mergeWithDefaults(activePage, json.sections));
       } else {
         alert(json.error || 'No se pudo guardar la información');
       }
@@ -307,7 +311,7 @@ export default function AdminHomeEditor() {
     } finally {
       setSaving(false);
     }
-  }, [sections]);
+  }, [sections, activePage]);
 
   const uploadImage = useCallback(
     async (sectionKey: string, file: File) => {
@@ -325,7 +329,7 @@ export default function AdminHomeEditor() {
         const token = getAuthToken();
         const form = new FormData();
         form.append('file', file);
-        form.append('folder', 'home');
+        form.append('folder', activePage === 'home' ? 'home' : 'content');
         form.append('filename', file.name);
 
         await new Promise<void>((resolve, reject) => {
@@ -375,14 +379,14 @@ export default function AdminHomeEditor() {
         setUploadsInProgress((value) => Math.max(0, value - 1));
       }
     },
-    [updateSection]
+    [updateSection, activePage]
   );
 
   const clearCache = useCallback(async () => {
     setClearingCache(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('/api/admin/content/clear_cache', {
+      const res = await fetch(`/api/admin/content/clear_cache?page=${activePage}`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined
       });
@@ -398,11 +402,12 @@ export default function AdminHomeEditor() {
     } finally {
       setClearingCache(false);
     }
-  }, []);
+  }, [activePage]);
 
   const addSection = useCallback(() => {
     const nextIndex = sections.length;
     const newSection: EditableSection = {
+      page: activePage,
       key: `section_${Date.now()}`,
       title: `Nueva sección ${nextIndex + 1}`,
       content: '',
@@ -411,161 +416,172 @@ export default function AdminHomeEditor() {
       source_type: 'custom'
     };
     setSections((prev) => [...prev, newSection]);
-  }, [sections.length]);
+  }, [sections.length, activePage]);
 
   const resetToDefaults = useCallback(() => {
     if (window.confirm('¿Restablecer las secciones a los valores por defecto?')) {
-      setSections(cloneDefaults());
+      setSections(cloneDefaults(activePage));
     }
-  }, []);
+  }, [activePage]);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm">
-      <h2 className="text-xl font-bold mb-4">Editor de Inicio</h2>
+    <div className="p-6 bg-white rounded-lg shadow-sm space-y-6">
+      <div className="flex flex-wrap gap-2">
+        {PAGE_TABS.map((tab) => (
+          <Button
+            key={tab.key}
+            variant={tab.key === activePage ? 'primary' : 'outline'}
+            onClick={() => setActivePage(tab.key)}
+            disabled={saving || uploadsInProgress > 0 || clearingCache}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
       {loading ? (
         <div>Cargando...</div>
       ) : (
         <div className="space-y-4">
-          {sortedSections.map((section, index) => {
-            const label = section.key ? `Sección ${index + 1} · ${section.key}` : `Sección ${index + 1}`;
-
-            return (
-              <div key={section.key || index} className="border p-4 rounded space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">{label}</p>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-500">Orden</label>
-                    <input
-                      type="number"
-                      value={section.sort_order ?? index}
-                      onChange={(event) => updateSection(section.key, 'sort_order', Number(event.target.value))}
-                      className="w-20 border rounded px-2 py-1 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium">Contenido basado en</label>
-                    <select
-                      value={section.source_type ?? 'custom'}
-                      onChange={(event) => handleSourceTypeChange(section.key, event.target.value as SiteSectionSourceType)}
-                      className="w-full border rounded px-2 py-1"
-                    >
-                      <option value="custom">Contenido manual</option>
-                      <option value="event">Evento destacado</option>
-                      <option value="news">Noticia destacada</option>
-                    </select>
-                  </div>
-                  {section.source_type === 'event' && (
-                    <div>
-                      <label className="block text-sm font-medium">Selecciona evento</label>
-                      <select
-                        value={section.source_id ?? ''}
-                        onChange={(event) => applyEventToSection(section.key, event.target.value)}
-                        className="w-full border rounded px-2 py-1"
-                      >
-                        <option value="">-- selecciona --</option>
-                        {events.map((event) => (
-                          <option key={event.id} value={String(event.id)}>
-                            {event.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  {section.source_type === 'news' && (
-                    <div>
-                      <label className="block text-sm font-medium">Selecciona noticia</label>
-                      <select
-                        value={section.source_id ?? ''}
-                        onChange={(event) => applyNewsToSection(section.key, event.target.value)}
-                        className="w-full border rounded px-2 py-1"
-                      >
-                        <option value="">-- selecciona --</option>
-                        {news.map((article) => (
-                          <option key={article.id} value={article.slug}>
-                            {article.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                <label className="block text-sm font-medium">Título</label>
-                <input
-                  value={section.title || ''}
-                  onChange={(event) => updateSection(section.key, 'title', event.target.value)}
-                  className="w-full border rounded px-2 py-1"
-                  placeholder="Título de la sección"
-                />
-
-                <label className="block text-sm font-medium mt-2">Imagen (URL)</label>
-                <input
-                  value={section.image_url || ''}
-                  onChange={(event) => updateSection(section.key, 'image_url', event.target.value)}
-                  className="w-full border rounded px-2 py-1"
-                  placeholder="https://..."
-                />
-                <div className="flex items-center space-x-2 mb-2">
+          {sortedSections.map((section, index) => (
+            <div key={section.key || index} className="border p-4 rounded space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-700">
+                  {section.key ? `${section.key}` : `Sección ${index + 1}`}
+                </p>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-gray-500">Orden</label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) uploadImage(section.key, file);
-                    }}
+                    type="number"
+                    value={section.sort_order ?? index}
+                    onChange={(event) => updateSection(section.key, 'sort_order', Number(event.target.value))}
+                    className="w-20 border rounded px-2 py-1 text-sm"
                   />
-                  <span className="text-sm text-gray-500">o pega una URL arriba</span>
-                </div>
-
-                {section.image_url ? (
-                  <div className="mb-2">
-                    <img src={section.image_url} alt="preview" style={{ maxHeight: 120 }} className="rounded" />
-                  </div>
-                ) : null}
-                {uploadProgress[section.key] ? (
-                  <div className="mb-2">
-                    <div className="w-full bg-gray-200 rounded h-2">
-                      <div style={{ width: `${uploadProgress[section.key]}%` }} className="bg-blue-500 h-2 rounded" />
-                    </div>
-                    <div className="text-xs text-gray-600">{uploadProgress[section.key]}%</div>
-                  </div>
-                ) : null}
-                {uploadError[section.key] ? <div className="text-sm text-red-600">{uploadError[section.key]}</div> : null}
-
-                <label className="block text-sm font-medium">Contenido</label>
-                <textarea
-                  value={section.content || ''}
-                  onChange={(event) => updateSection(section.key, 'content', event.target.value)}
-                  className="w-full border rounded px-2 py-1 mb-2"
-                  rows={5}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium">Texto del botón</label>
-                    <input
-                      value={section.cta_label || ''}
-                      onChange={(event) => updateSection(section.key, 'cta_label', event.target.value)}
-                      className="w-full border rounded px-2 py-1"
-                      placeholder="Ej: Ver evento"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">URL del botón</label>
-                    <input
-                      value={section.cta_url || ''}
-                      onChange={(event) => updateSection(section.key, 'cta_url', event.target.value)}
-                      className="w-full border rounded px-2 py-1"
-                      placeholder="https://..."
-                    />
-                  </div>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium">Contenido basado en</label>
+                  <select
+                    value={section.source_type ?? 'custom'}
+                    onChange={(event) => handleSourceTypeChange(section.key, event.target.value as SiteSectionSourceType)}
+                    className="w-full border rounded px-2 py-1"
+                    disabled={activePage !== 'home'}
+                  >
+                    <option value="custom">Contenido manual</option>
+                    <option value="event">Evento destacado</option>
+                    <option value="news">Noticia destacada</option>
+                  </select>
+                </div>
+                {activePage === 'home' && section.source_type === 'event' && (
+                  <div>
+                    <label className="block text-sm font-medium">Selecciona evento</label>
+                    <select
+                      value={section.source_id ?? ''}
+                      onChange={(event) => applyEventToSection(section.key, event.target.value)}
+                      className="w-full border rounded px-2 py-1"
+                    >
+                      <option value="">-- selecciona --</option>
+                      {events.map((event) => (
+                        <option key={event.id} value={String(event.id)}>
+                          {event.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {activePage === 'home' && section.source_type === 'news' && (
+                  <div>
+                    <label className="block text-sm font-medium">Selecciona noticia</label>
+                    <select
+                      value={section.source_id ?? ''}
+                      onChange={(event) => applyNewsToSection(section.key, event.target.value)}
+                      className="w-full border rounded px-2 py-1"
+                    >
+                      <option value="">-- selecciona --</option>
+                      {news.map((article) => (
+                        <option key={article.id} value={article.slug}>
+                          {article.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <label className="block text-sm font-medium">Título</label>
+              <input
+                value={section.title || ''}
+                onChange={(event) => updateSection(section.key, 'title', event.target.value)}
+                className="w-full border rounded px-2 py-1"
+                placeholder="Título de la sección"
+              />
+
+              <label className="block text-sm font-medium mt-2">Imagen (URL)</label>
+              <input
+                value={section.image_url || ''}
+                onChange={(event) => updateSection(section.key, 'image_url', event.target.value)}
+                className="w-full border rounded px-2 py-1"
+                placeholder="https://..."
+              />
+              <div className="flex items-center space-x-2 mb-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) uploadImage(section.key, file);
+                  }}
+                />
+                <span className="text-sm text-gray-500">o pega una URL arriba</span>
+              </div>
+
+              {section.image_url ? (
+                <div className="mb-2">
+                  <img src={section.image_url} alt="preview" style={{ maxHeight: 120 }} className="rounded" />
+                </div>
+              ) : null}
+              {uploadProgress[section.key] ? (
+                <div className="mb-2">
+                  <div className="w-full bg-gray-200 rounded h-2">
+                    <div style={{ width: `${uploadProgress[section.key]}%` }} className="bg-blue-500 h-2 rounded" />
+                  </div>
+                  <div className="text-xs text-gray-600">{uploadProgress[section.key]}%</div>
+                </div>
+              ) : null}
+              {uploadError[section.key] ? <div className="text-sm text-red-600">{uploadError[section.key]}</div> : null}
+
+              <label className="block text-sm font-medium">Contenido</label>
+              <textarea
+                value={section.content || ''}
+                onChange={(event) => updateSection(section.key, 'content', event.target.value)}
+                className="w-full border rounded px-2 py-1 mb-2"
+                rows={activePage === 'contact' ? 6 : 4}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium">Texto del botón</label>
+                  <input
+                    value={section.cta_label || ''}
+                    onChange={(event) => updateSection(section.key, 'cta_label', event.target.value)}
+                    className="w-full border rounded px-2 py-1"
+                    placeholder="Ej: Ver evento"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">URL del botón</label>
+                  <input
+                    value={section.cta_url || ''}
+                    onChange={(event) => updateSection(section.key, 'cta_url', event.target.value)}
+                    className="w-full border rounded px-2 py-1"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
 
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={save} className="bg-red-600 text-white" disabled={saving || uploadsInProgress > 0}>

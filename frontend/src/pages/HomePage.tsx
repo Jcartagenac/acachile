@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { Evento } from '@shared/index';
 import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
-import { DEFAULT_SITE_SECTIONS } from '@shared/siteSections';
+import { getDefaultSections } from '@shared/siteSections';
 import type { NewsArticle } from '../services/newsService';
 
 type SectionDisplay = SiteSection & {
@@ -12,17 +12,17 @@ type SectionDisplay = SiteSection & {
   display_cta_url?: string;
 };
 
-const cloneDefaults = (): SiteSection[] => DEFAULT_SITE_SECTIONS.map((section) => ({ ...section }));
+const cloneDefaults = (): SiteSection[] => getDefaultSections('home').map((section) => ({ ...section }));
 
 const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
-  const defaults = new Map(DEFAULT_SITE_SECTIONS.map((section) => [section.key, section]));
+  const defaults = new Map(getDefaultSections('home').map((section) => [section.key, section]));
   const merged = new Map<string, SiteSection>();
 
   (incoming || []).forEach((raw, index) => {
     const tentativeKey =
       typeof raw?.key === 'string' && raw.key.trim().length > 0
         ? raw.key.trim()
-        : DEFAULT_SITE_SECTIONS[index]?.key ?? `section_${index}`;
+        : getDefaultSections('home')[index]?.key ?? `section_${index}`;
 
     const fallback = defaults.get(tentativeKey);
     const sortOrder =
@@ -31,6 +31,7 @@ const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSe
         : fallback?.sort_order ?? index;
 
     merged.set(tentativeKey, {
+      page: 'home',
       key: tentativeKey,
       title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
       content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
@@ -224,7 +225,7 @@ const HomePage: React.FC = () => {
 
     (async () => {
       try {
-        const res = await fetch('/api/admin/content', { cache: 'no-store' });
+        const res = await fetch('/api/admin/content?page=home', { cache: 'no-store' });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -383,4 +384,3 @@ const HomePage: React.FC = () => {
 
 export { HomePage };
 export default HomePage;
-
