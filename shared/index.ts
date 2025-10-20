@@ -111,7 +111,8 @@ export interface Evento {
   id: number;
   title: string;
   description: string;
-  date: string;
+  date: string; // Fecha de inicio
+  endDate?: string; // Fecha de fin (opcional para eventos multi-día)
   time?: string;
   location: string;
   image: string;
@@ -133,7 +134,8 @@ export interface Evento {
 export interface EventoForm {
   title: string;
   description: string;
-  date: string;
+  date: string; // Fecha de inicio
+  endDate?: string; // Fecha de fin (opcional para eventos multi-día)
   time?: string;
   location: string;
   image?: string;

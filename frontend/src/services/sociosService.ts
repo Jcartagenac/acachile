@@ -17,8 +17,10 @@ export interface Socio {
   ciudad: string | null;
   fotoUrl: string | null;
   valorCuota: number;
-  estadoSocio: 'activo' | 'inactivo' | 'suspendido';
+  estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
   fechaIngreso: string;
+  listaNegra: boolean;
+  motivoListaNegra?: string;
   createdAt: string;
   estadisticasCuotas?: {
     totalCuotas: number;
@@ -26,6 +28,22 @@ export interface Socio {
     cuotasPendientes: number;
     totalDeuda: number;
   };
+}
+
+export interface CreateSocioData {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono?: string;
+  rut?: string;
+  direccion?: string;
+  ciudad?: string;
+  valorCuota: number;
+  estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
+  fechaIngreso: string;
+  listaNegra?: boolean;
+  motivoListaNegra?: string;
+  password: string;
 }
 
 export interface Cuota {

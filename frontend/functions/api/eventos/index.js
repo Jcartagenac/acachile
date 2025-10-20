@@ -177,6 +177,7 @@ async function getEventos(db, filters) {
       organizerId: evento.organizer_id,
       createdAt: evento.created_at,
       updatedAt: evento.updated_at,
+      endDate: evento.end_date,
     }));
 
     return {
@@ -209,7 +210,8 @@ async function createEvento(db, eventoData, organizerId) {
       status,
       registration_open,
       max_participants,
-      price
+      price,
+      endDate
     } = eventoData;
 
     if (!title || !date || !location || !organizerId) {
@@ -217,8 +219,8 @@ async function createEvento(db, eventoData, organizerId) {
     }
 
     const query = `
-      INSERT INTO eventos (title, description, date, time, location, image, type, status, registration_open, max_participants, price, organizer_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      INSERT INTO eventos (title, description, date, time, location, image, type, status, registration_open, max_participants, price, organizer_id, end_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
     
     const { success, meta } = await db.prepare(query).bind(
@@ -233,7 +235,8 @@ async function createEvento(db, eventoData, organizerId) {
       registration_open !== false,
       max_participants || null,
       price || 0,
-      organizerId
+      organizerId,
+      endDate || null
     ).run();
 
     if (!success) {

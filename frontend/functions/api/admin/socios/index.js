@@ -46,6 +46,8 @@ export async function onRequestGet(context) {
         u.valor_cuota,
         u.fecha_ingreso,
         u.estado_socio,
+        u.lista_negra,
+        u.motivo_lista_negra,
         u.created_at,
         u.last_login,
         -- Estadísticas de cuotas del año actual
@@ -125,6 +127,8 @@ export async function onRequestGet(context) {
       valorCuota: socio.valor_cuota || 6500,
       fechaIngreso: socio.fecha_ingreso || socio.created_at,
       estadoSocio: socio.estado_socio || 'activo',
+      listaNegra: socio.lista_negra === 1,
+      motivoListaNegra: socio.motivo_lista_negra,
       ultimoLogin: socio.last_login,
       // Estadísticas del año
       estadisticasAño: {
@@ -199,6 +203,9 @@ export async function onRequestPost(context) {
       fotoUrl, 
       valorCuota = 6500,
       estadoSocio = 'activo',
+      fechaIngreso,
+      listaNegra = false,
+      motivoListaNegra,
       password, // Password enviado desde el frontend
       rol = 'usuario' // Rol/perfil del usuario
     } = body;
@@ -266,6 +273,7 @@ export async function onRequestPost(context) {
           UPDATE usuarios 
           SET nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, direccion = ?,
               foto_url = ?, valor_cuota = ?, estado_socio = ?, fecha_ingreso = ?,
+              lista_negra = ?, motivo_lista_negra = ?,
               password_hash = ?, role = ?, activo = 1, updated_at = ?
           WHERE id = ?
         `).bind(
@@ -278,7 +286,9 @@ export async function onRequestPost(context) {
           fotoUrl || null,
           valorCuota,
           estadoSocio,
-          now,
+          fechaIngreso || now,
+          listaNegra ? 1 : 0,
+          motivoListaNegra || null,
           passwordHash,
           rol,
           now,
@@ -299,8 +309,9 @@ export async function onRequestPost(context) {
         INSERT INTO usuarios (
           email, nombre, apellido, telefono, rut, ciudad, direccion, 
           foto_url, valor_cuota, estado_socio, fecha_ingreso,
+          lista_negra, motivo_lista_negra,
           password_hash, role, activo, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
       `).bind(
         email.toLowerCase(),
         nombre,
@@ -312,7 +323,9 @@ export async function onRequestPost(context) {
         fotoUrl || null,
         valorCuota,
         estadoSocio,
-        now,
+        fechaIngreso || now,
+        listaNegra ? 1 : 0,
+        motivoListaNegra || null,
         passwordHash,
         rol,
         now
@@ -331,7 +344,8 @@ export async function onRequestPost(context) {
     newSocio = await env.DB.prepare(`
       SELECT 
         id, email, nombre, apellido, telefono, rut, ciudad, direccion,
-        foto_url, valor_cuota, fecha_ingreso, estado_socio, created_at
+        foto_url, valor_cuota, fecha_ingreso, estado_socio, 
+        lista_negra, motivo_lista_negra, created_at
       FROM usuarios 
       WHERE id = ?
     `).bind(socioId).first();
@@ -355,6 +369,8 @@ export async function onRequestPost(context) {
         valorCuota: newSocio.valor_cuota,
         fechaIngreso: newSocio.fecha_ingreso,
         estadoSocio: newSocio.estado_socio,
+        listaNegra: newSocio.lista_negra === 1,
+        motivoListaNegra: newSocio.motivo_lista_negra,
         createdAt: newSocio.created_at
       }
     }), {

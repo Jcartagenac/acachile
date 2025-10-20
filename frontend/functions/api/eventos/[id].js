@@ -243,23 +243,40 @@ async function handleDeleteEvento(request, eventId, env, corsHeaders) {
 // Funciones de servicio
 async function getEventoById(env, id) {
   try {
-    const eventoData = await env.ACA_KV.get(`evento:${id}`);
+    const query = `
+      SELECT * FROM eventos WHERE id = ?
+    `;
     
-    if (!eventoData) {
+    const { results } = await env.DB.prepare(query).bind(id).all();
+    
+    if (results.length === 0) {
       return {
         success: false,
         error: 'Evento no encontrado'
       };
     }
 
-    const evento = JSON.parse(eventoData);
+    const evento = results[0];
+    
+    // Mapear nombres de columnas de DB a nombres de propiedades del frontend
+    const mappedEvento = {
+      ...evento,
+      registrationOpen: evento.registration_open,
+      maxParticipants: evento.max_participants,
+      currentParticipants: evento.current_participants || 0,
+      organizerId: evento.organizer_id,
+      createdAt: evento.created_at,
+      updatedAt: evento.updated_at,
+      endDate: evento.end_date,
+    };
+
     return {
       success: true,
-      data: evento
+      data: mappedEvento
     };
 
   } catch (error) {
-    console.error('Error in getEventoById:', error);
+    console.error('Error in getEventoById (D1):', error);
     return {
       success: false,
       error: 'Error obteniendo evento'
@@ -270,45 +287,87 @@ async function getEventoById(env, id) {
 async function updateEvento(env, id, updateData) {
   try {
     // Verificar que el evento existe
-    const eventoData = await env.ACA_KV.get(`evento:${id}`);
+    const existingQuery = `SELECT * FROM eventos WHERE id = ?`;
+    const { results } = await env.DB.prepare(existingQuery).bind(id).all();
     
-    if (!eventoData) {
+    if (results.length === 0) {
       return {
         success: false,
         error: 'Evento no encontrado'
       };
     }
 
-    const evento = JSON.parse(eventoData);
+    // Construir consulta de actualización dinámica
+    const updateFields = [];
+    const values = [];
     
-    // Actualizar campos
-    const updatedEvento = {
-      ...evento,
-      ...updateData,
-      id: id, // Mantener ID original
-      updatedAt: new Date().toISOString()
+    const fieldsMap = {
+      title: 'title',
+      description: 'description', 
+      date: 'date',
+      time: 'time',
+      location: 'location',
+      image: 'image',
+      type: 'type',
+      status: 'status',
+      registrationOpen: 'registration_open',
+      maxParticipants: 'max_participants',
+      price: 'price',
+      endDate: 'end_date'
     };
 
-    // Guardar evento actualizado
-    await env.ACA_KV.put(`evento:${id}`, JSON.stringify(updatedEvento));
+    Object.keys(updateData).forEach(key => {
+      if (fieldsMap[key] !== undefined && updateData[key] !== undefined) {
+        updateFields.push(`${fieldsMap[key]} = ?`);
+        values.push(updateData[key]);
+      }
+    });
 
-    // Actualizar en la lista de todos los eventos
-    const eventosData = await env.ACA_KV.get('eventos:all');
-    const eventos = eventosData ? JSON.parse(eventosData) : [];
-    const eventoIndex = eventos.findIndex(e => e.id === id);
+    if (updateFields.length === 0) {
+      return {
+        success: false,
+        error: 'No hay campos para actualizar'
+      };
+    }
+
+    // Agregar updated_at
+    updateFields.push('updated_at = ?');
+    values.push(new Date().toISOString());
     
-    if (eventoIndex !== -1) {
-      eventos[eventoIndex] = updatedEvento;
-      await env.ACA_KV.put('eventos:all', JSON.stringify(eventos));
+    // Agregar ID al final para el WHERE
+    values.push(id);
+
+    const updateQuery = `
+      UPDATE eventos 
+      SET ${updateFields.join(', ')}
+      WHERE id = ?
+    `;
+
+    const { success } = await env.DB.prepare(updateQuery).bind(...values).run();
+
+    if (!success) {
+      return {
+        success: false,
+        error: 'Error actualizando evento en la base de datos'
+      };
+    }
+
+    // Obtener el evento actualizado
+    const updatedResult = await getEventoById(env, id);
+    if (!updatedResult.success) {
+      return {
+        success: false,
+        error: 'Evento actualizado pero no se pudo recuperar'
+      };
     }
 
     return {
       success: true,
-      data: updatedEvento
+      data: updatedResult.data
     };
 
   } catch (error) {
-    console.error('Error in updateEvento:', error);
+    console.error('Error in updateEvento (D1):', error);
     return {
       success: false,
       error: 'Error actualizando evento'
@@ -319,33 +378,33 @@ async function updateEvento(env, id, updateData) {
 async function deleteEvento(env, id) {
   try {
     // Verificar que el evento existe
-    const eventoData = await env.ACA_KV.get(`evento:${id}`);
+    const existingQuery = `SELECT id FROM eventos WHERE id = ?`;
+    const { results } = await env.DB.prepare(existingQuery).bind(id).all();
     
-    if (!eventoData) {
+    if (results.length === 0) {
       return {
         success: false,
         error: 'Evento no encontrado'
       };
     }
 
-    // Eliminar evento individual
-    await env.ACA_KV.delete(`evento:${id}`);
+    // Eliminar el evento
+    const deleteQuery = `DELETE FROM eventos WHERE id = ?`;
+    const { success } = await env.DB.prepare(deleteQuery).bind(id).run();
 
-    // Eliminar de la lista de todos los eventos
-    const eventosData = await env.ACA_KV.get('eventos:all');
-    const eventos = eventosData ? JSON.parse(eventosData) : [];
-    const updatedEventos = eventos.filter(e => e.id !== id);
-    await env.ACA_KV.put('eventos:all', JSON.stringify(updatedEventos));
-
-    // TODO: También eliminar inscripciones relacionadas
-    // await env.ACA_KV.delete(`inscripciones:evento:${id}`);
+    if (!success) {
+      return {
+        success: false,
+        error: 'Error eliminando evento de la base de datos'
+      };
+    }
 
     return {
       success: true
     };
 
   } catch (error) {
-    console.error('Error in deleteEvento:', error);
+    console.error('Error in deleteEvento (D1):', error);
     return {
       success: false,
       error: 'Error eliminando evento'

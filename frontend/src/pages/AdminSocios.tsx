@@ -83,10 +83,14 @@ export default function AdminSocios() {
     switch (estado) {
       case 'activo':
         return 'bg-green-100 text-green-800';
-      case 'inactivo':
+      case 'honorario':
+        return 'bg-blue-100 text-blue-800';
+      case 'postumo':
         return 'bg-gray-100 text-gray-800';
-      case 'suspendido':
+      case 'expulsado':
         return 'bg-red-100 text-red-800';
+      case 'renunciado':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -489,6 +493,8 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
               direccion: socioData.direccion || undefined,
               ciudad: socioData.ciudad || undefined,
               valorCuota: socioData.valor_cuota ? parseInt(socioData.valor_cuota) : 6500,
+              estadoSocio: 'activo',
+              fechaIngreso: new Date().toISOString().split('T')[0],
               password: socioData.password,
             });
 
@@ -695,6 +701,10 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
     rut: '',
     direccion: '',
     valorCuota: 6500,
+    estadoSocio: 'activo',
+    fechaIngreso: new Date().toISOString().substring(0, 10),
+    listaNegra: false,
+    motivoListaNegra: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
@@ -899,6 +909,64 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
               <p className="mt-1 text-sm text-gray-500">Por defecto: $6.500 CLP</p>
             </div>
 
+            {/* Estado del Socio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estado del Socio
+              </label>
+              <select
+                value={formData.estadoSocio}
+                onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              >
+                <option value="activo">Activo</option>
+                <option value="honorario">Honorario</option>
+                <option value="postumo">Póstumo</option>
+                <option value="expulsado">Expulsado</option>
+                <option value="renunciado">Renunciado</option>
+              </select>
+            </div>
+
+            {/* Fecha de Ingreso */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fecha de Ingreso
+              </label>
+              <input
+                type="date"
+                value={formData.fechaIngreso}
+                onChange={(e) => setFormData({ ...formData, fechaIngreso: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Lista Negra */}
+            <div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.listaNegra}
+                  onChange={(e) => setFormData({ ...formData, listaNegra: e.target.checked })}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">Lista Negra (Prohibición permanente)</span>
+              </label>
+              {formData.listaNegra && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Motivo de la Lista Negra
+                  </label>
+                  <textarea
+                    value={formData.motivoListaNegra}
+                    onChange={(e) => setFormData({ ...formData, motivoListaNegra: e.target.value })}
+                    rows={3}
+                    placeholder="Explique el motivo de la prohibición permanente..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -964,6 +1032,9 @@ function EditSocioModal({ socio, onClose, onSocioUpdated }: {
     ciudad: socio.ciudad || '',
     valorCuota: socio.valorCuota,
     estadoSocio: socio.estadoSocio,
+    fechaIngreso: socio.fechaIngreso,
+    listaNegra: socio.listaNegra,
+    motivoListaNegra: socio.motivoListaNegra || '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1185,14 +1256,56 @@ function EditSocioModal({ socio, onClose, onSocioUpdated }: {
                 </label>
                 <select
                   value={formData.estadoSocio}
-                  onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'inactivo' | 'suspendido' })}
+                  onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="suspendido">Suspendido</option>
+                  <option value="honorario">Honorario</option>
+                  <option value="postumo">Póstumo</option>
+                  <option value="expulsado">Expulsado</option>
+                  <option value="renunciado">Renunciado</option>
                 </select>
               </div>
+            </div>
+
+            {/* Fecha de Ingreso */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fecha de Ingreso
+              </label>
+              <input
+                type="date"
+                value={formData.fechaIngreso}
+                onChange={(e) => setFormData({ ...formData, fechaIngreso: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Lista Negra */}
+            <div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.listaNegra}
+                  onChange={(e) => setFormData({ ...formData, listaNegra: e.target.checked })}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">Lista Negra (Prohibición permanente)</span>
+              </label>
+              {formData.listaNegra && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Motivo de la Lista Negra
+                  </label>
+                  <textarea
+                    value={formData.motivoListaNegra}
+                    onChange={(e) => setFormData({ ...formData, motivoListaNegra: e.target.value })}
+                    rows={3}
+                    placeholder="Explique el motivo de la prohibición permanente..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Botones */}

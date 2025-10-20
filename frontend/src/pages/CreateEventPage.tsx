@@ -36,6 +36,8 @@ const eventSchema = z.object({
       return eventDate >= today;
     }, 'La fecha debe ser hoy o en el futuro'),
   
+  endDate: z.string().optional(),
+  
   time: z.string().min(1, 'La hora es requerida'),
   
   location: z.string()
@@ -68,6 +70,18 @@ const eventSchema = z.object({
   contactPhone: z.string().optional(),
   
   contactWebsite: z.string().url('Debe ser una URL válida').optional().or(z.literal(''))
+}).superRefine((data, ctx) => {
+  if (data.endDate && data.date) {
+    const start = new Date(data.date);
+    const end = new Date(data.endDate);
+    if (end < start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La fecha de fin debe ser posterior o igual a la fecha de inicio',
+        path: ['endDate']
+      });
+    }
+  }
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -336,7 +350,7 @@ export const CreateEventPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                          Fecha *
+                          Fecha de Inicio *
                         </label>
                         <input
                           type="date"
@@ -356,11 +370,12 @@ export const CreateEventPage: React.FC = () => {
 
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: '#374151' }}>
-                          Hora *
+                          Fecha de Fin (opcional)
                         </label>
                         <input
-                          type="time"
-                          {...register('time')}
+                          type="date"
+                          {...register('endDate')}
+                          min={new Date().toISOString().split('T')[0]}
                           className="w-full px-4 py-3 rounded-xl border-0 outline-0"
                           style={{ 
                             backgroundColor: '#e8ecf4',
@@ -368,8 +383,8 @@ export const CreateEventPage: React.FC = () => {
                             color: '#374151'
                           }}
                         />
-                        {errors.time && (
-                          <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>
+                        {errors.endDate && (
+                          <p className="text-red-500 text-sm mt-1">{errors.endDate.message}</p>
                         )}
                       </div>
                     </div>
