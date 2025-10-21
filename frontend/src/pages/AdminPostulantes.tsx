@@ -8,6 +8,7 @@ import {
   Loader2,
   Mail,
   MapPin,
+  Home,
   Phone,
   RefreshCw,
   Search,
@@ -308,7 +309,7 @@ const AdminPostulantes: React.FC = () => {
                         {postulacion.photoUrl && (
                           <button
                             type="button"
-                            onClick={() => window.open(postulacion.photoUrl as string, '_blank')}
+                            onClick={() => window.open(postulacion.photoUrl, '_blank')}
                             className="inline-flex items-center text-xs text-primary-600 hover:text-primary-700"
                           >
                             Ver foto en tamaño completo
