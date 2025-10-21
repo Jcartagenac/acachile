@@ -44,12 +44,12 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Search Bar - Solo en desktop */}
-            <div className="hidden lg:flex items-center flex-1 lg:max-w-4xl xl:max-w-5xl mx-6">
+            <div className="hidden lg:flex items-center flex-1 justify-center mx-6">
               <div className="w-full relative">
                 <SearchBar 
                   placeholder="Buscar eventos, noticias..."
                   size="medium"
-                  className="w-full bg-white/60 backdrop-blur-soft rounded-2xl shadow-soft-inset-sm border border-white/40 focus-within:shadow-soft-inset-md focus-within:border-primary-300 transition-all duration-300"
+                  className="max-w-full bg-white/60 backdrop-blur-soft rounded-2xl shadow-soft-inset-sm border border-white/40 focus-within:shadow-soft-inset-md focus-within:border-primary-300 transition-all duration-300"
                 />
               </div>
             </div>

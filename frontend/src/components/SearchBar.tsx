@@ -333,29 +333,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
   type SizeKey = 'small' | 'medium' | 'large';
   const sizeKey = size as SizeKey;
 
-  const baseWidthClasses: Record<SizeKey, string> = {
-    small: 'w-full sm:max-w-[14rem]',
-    medium: 'w-full md:max-w-[20rem]',
-    large: 'w-full lg:max-w-[24rem]'
-  };
-
-  const expandedWidthClasses: Record<SizeKey, string> = {
-    small: 'sm:max-w-[24rem]',
-    medium: 'md:max-w-[32rem] xl:max-w-[38rem]',
-    large: 'lg:max-w-[36rem] xl:max-w-[44rem]'
-  };
-
   const isExpanded = isFocused || showSuggestions || query.trim().length > 0;
 
   const widthSettings: Record<SizeKey, { base: string; expanded: string }> = {
-    small: { base: '14rem', expanded: '24rem' },
-    medium: { base: '20rem', expanded: '34rem' },
-    large: { base: '24rem', expanded: '40rem' }
+    small: { base: '100%', expanded: '100%' },
+    medium: { base: 'min(100%, 22rem)', expanded: 'min(100%, 38rem)' },
+    large: { base: 'min(100%, 24rem)', expanded: 'min(100%, 44rem)' }
   };
 
   const appliedStyle: React.CSSProperties = {
-    maxWidth: `min(100%, ${widthSettings[sizeKey][isExpanded ? 'expanded' : 'base']})`,
-    transition: 'max-width 0.3s ease, transform 0.3s ease',
+    width: widthSettings[sizeKey][isExpanded ? 'expanded' : 'base'],
+    transition: 'width 0.3s ease, transform 0.3s ease',
     ...style
   };
 
@@ -363,9 +351,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     <div
       ref={searchRef}
       className={`
-        relative transition-all duration-300 ease-in-out
-        ${baseWidthClasses[sizeKey]}
-        ${isExpanded ? expandedWidthClasses[sizeKey] : ''}
+        relative transition-all duration-300 ease-in-out w-full
         ${className}
       `}
       style={appliedStyle}
