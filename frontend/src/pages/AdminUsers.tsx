@@ -58,7 +58,7 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUpdateUserRole = async (userId: string, newRole: 'admin' | 'user') => {
+  const handleUpdateUserRole = async (userId: string, newRole: 'admin' | 'director' | 'director_editor' | 'usuario') => {
     try {
       await adminService.updateUser(userId, { role: newRole });
       loadUsers(); // Recargar lista
@@ -81,7 +81,9 @@ export default function AdminUsers() {
   const getRoleBadgeColor = (role: string): string => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800';
-      case 'user': return 'bg-green-100 text-green-800';
+      case 'director': return 'bg-purple-100 text-purple-800';
+      case 'director_editor': return 'bg-blue-100 text-blue-800';
+      case 'usuario': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -171,7 +173,9 @@ export default function AdminUsers() {
               >
                 <option value="all">Todos los roles</option>
                 <option value="admin">Administradores</option>
-                <option value="user">Usuarios</option>
+                <option value="director">Directores</option>
+                <option value="director_editor">Directores Editores</option>
+                <option value="usuario">Usuarios</option>
               </select>
             </div>
 
@@ -241,10 +245,12 @@ export default function AdminUsers() {
                         {/* Cambiar rol */}
                         <select
                           value={user.role}
-                          onChange={(e) => handleUpdateUserRole(user.id, e.target.value as 'admin' | 'user')}
+                          onChange={(e) => handleUpdateUserRole(user.id, e.target.value as 'admin' | 'director' | 'director_editor' | 'usuario')}
                           className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="user">Usuario</option>
+                          <option value="usuario">Usuario</option>
+                          <option value="director">Director</option>
+                          <option value="director_editor">Director Editor</option>
                           <option value="admin">Admin</option>
                         </select>
 
@@ -368,7 +374,7 @@ function CreateUserModal({ onClose, onUserCreated }: {
     name: '',
     email: '',
     password: '',
-    role: 'user' as 'admin' | 'user'
+    role: 'usuario' as 'admin' | 'director' | 'director_editor' | 'usuario'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -454,10 +460,12 @@ function CreateUserModal({ onClose, onUserCreated }: {
               </label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'director' | 'director_editor' | 'usuario' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="user">Usuario</option>
+                <option value="usuario">Usuario</option>
+                <option value="director">Director</option>
+                <option value="director_editor">Director Editor</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
@@ -562,10 +570,12 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
               </label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'director' | 'director_editor' | 'usuario' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="user">Usuario</option>
+                <option value="usuario">Usuario</option>
+                <option value="director">Director</option>
+                <option value="director_editor">Director Editor</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
