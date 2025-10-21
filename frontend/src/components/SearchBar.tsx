@@ -351,7 +351,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     <div
       ref={searchRef}
       className={`
-        relative transition-all duration-300 ease-in-out w-full
+        relative transition-all duration-300 ease-in-out
         ${className}
       `}
       style={appliedStyle}
