@@ -62,6 +62,26 @@ const DEFAULT_SECTION_FALLBACK = {
 
 const MIN_QUERY_LENGTH = 2;
 
+const DEFAULT_MEMBER_FALLBACK = [
+  {
+    id: 1,
+    nombre: 'Juan',
+    apellido: 'Cartagena',
+    email: 'juan@juancartagena.cl',
+    telefono: '+56 9 1234 5678',
+    ciudad: 'Santiago',
+    region: 'Región Metropolitana',
+    direccion: null,
+    rut: null,
+    foto_url: 'https://pub-85ac8c62baca4966b2ac0b16e1b9b6c6.r2.dev/socios/demo-juan-cartagena.jpg',
+    show_email: 1,
+    show_phone: 1,
+    show_rut: 0,
+    show_address: 0,
+    show_birthdate: 0
+  }
+];
+
 const ensurePrivacyTable = async (db) => {
   if (!db) return;
   await db
@@ -391,9 +411,21 @@ async function searchUsuarios(env, searchTerm, limit) {
       .bind(likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, limit)
       .all();
 
-    const rows = usuariosResult?.results || [];
+    let rows = usuariosResult?.results || [];
 
-    return rows.map((row) => {
+    if (rows.length === 0) {
+      rows = DEFAULT_MEMBER_FALLBACK.filter((fallback) => {
+        const fullName = `${fallback.nombre} ${fallback.apellido}`.toLowerCase();
+        return (
+          fullName.includes(searchTerm) ||
+          (fallback.email && fallback.email.toLowerCase().includes(searchTerm)) ||
+          (fallback.ciudad && fallback.ciudad.toLowerCase().includes(searchTerm)) ||
+          (fallback.region && fallback.region.toLowerCase().includes(searchTerm))
+        );
+      }).slice(0, limit);
+    }
+
+    return rows.map((row: any) => {
       const fullName = [row.nombre, row.apellido].filter(Boolean).join(' ').trim() || row.email;
       const city = row.ciudad || '';
       const region = row.region || '';
