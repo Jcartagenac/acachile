@@ -439,7 +439,7 @@ async function searchUsuarios(env, searchTerm, limit) {
     }
 
     return rows
-      .map((row: any) => {
+      .map((row) => {
         const fullName = [row.nombre, row.apellido].filter(Boolean).join(' ').trim() || row.email;
         const city = row.ciudad || '';
         const region = row.region || '';
