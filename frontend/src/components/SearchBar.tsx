@@ -40,6 +40,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const requestIdRef = useRef(0);
@@ -154,7 +155,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
             ? resultsRes.data.combined
             : [
                 ...(Array.isArray(resultsRes.data.eventos) ? resultsRes.data.eventos : []),
-                ...(Array.isArray(resultsRes.data.noticias) ? resultsRes.data.noticias : [])
+                ...(Array.isArray(resultsRes.data.noticias) ? resultsRes.data.noticias : []),
+                ...(Array.isArray(resultsRes.data.usuarios) ? resultsRes.data.usuarios : []),
+                ...(Array.isArray(resultsRes.data.secciones) ? resultsRes.data.secciones : [])
               ];
 
           const preview = combined
@@ -267,6 +270,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
+        setIsFocused(false);
       }
     };
 
@@ -324,17 +328,58 @@ const SearchBar: React.FC<SearchBarProps> = ({
     large: 'h-6 w-6'
   };
 
+  type SizeKey = 'small' | 'medium' | 'large';
+  const sizeKey = size as SizeKey;
+
+  const baseWidthClasses: Record<SizeKey, string> = {
+    small: 'w-full sm:max-w-[14rem]',
+    medium: 'w-full md:max-w-[20rem]',
+    large: 'w-full lg:max-w-[24rem]'
+  };
+
+  const expandedWidthClasses: Record<SizeKey, string> = {
+    small: 'sm:max-w-[24rem]',
+    medium: 'md:max-w-[32rem] xl:max-w-[38rem]',
+    large: 'lg:max-w-[36rem] xl:max-w-[44rem]'
+  };
+
+  const isExpanded = isFocused || showSuggestions || query.trim().length > 0;
+
   return (
-    <div ref={searchRef} className={`relative ${className}`}>
+    <div
+      ref={searchRef}
+      className={`
+        relative transition-all duration-300 ease-in-out
+        ${baseWidthClasses[sizeKey]}
+        ${isExpanded ? expandedWidthClasses[sizeKey] : ''}
+        ${className}
+      `}
+    >
       <div className="relative">
-        <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${iconSizeClasses[size]}`} />
+        <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${iconSizeClasses[sizeKey]}`} />
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => query.length > 1 && setShowSuggestions(true)}
+          onFocus={() => {
+            setIsFocused(true);
+            if (query.trim().length > 1) {
+              setShowSuggestions(true);
+            }
+          }}
+          onBlur={() => {
+            window.setTimeout(() => {
+              if (!searchRef.current) {
+                setIsFocused(false);
+                return;
+              }
+              if (!searchRef.current.contains(document.activeElement)) {
+                setIsFocused(false);
+              }
+            }, 120);
+          }}
           placeholder={placeholder}
           className={`
             w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
