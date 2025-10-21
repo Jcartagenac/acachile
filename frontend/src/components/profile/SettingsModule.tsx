@@ -60,7 +60,8 @@ export const SettingsModule: React.FC = () => {
     showPhone: false,
     showRut: false,
     showAddress: false,
-    showBirthdate: false
+    showBirthdate: false,
+    showPublicProfile: true
   });
 
   // Load notification preferences on component mount
@@ -212,6 +213,12 @@ export const SettingsModule: React.FC = () => {
     description: string;
     icon: React.ComponentType<{ className?: string }>;
   }> = [
+    {
+      key: 'showPublicProfile',
+      label: 'Perfil público visible',
+      description: 'Permite que otros socios encuentren tu perfil en el buscador público.',
+      icon: Eye
+    },
     {
       key: 'showEmail',
       label: 'Correo electrónico',

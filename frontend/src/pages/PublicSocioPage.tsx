@@ -25,6 +25,7 @@ interface PrivacyFlags {
   showRut: boolean;
   showAddress: boolean;
   showBirthdate: boolean;
+  showPublicProfile: boolean;
 }
 
 interface ContactInfo {

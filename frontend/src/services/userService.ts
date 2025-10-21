@@ -7,6 +7,7 @@ export interface PrivacyPreferences {
   showRut: boolean;
   showAddress: boolean;
   showBirthdate: boolean;
+  showPublicProfile: boolean;
 }
 
 export interface UserProfile {
@@ -341,7 +342,18 @@ class UserService {
         return { success: false, error: result?.error || 'Error obteniendo preferencias de privacidad' };
       }
 
-      return { success: true, data: result.data as PrivacyPreferences };
+      const data = result.data as PrivacyPreferences;
+      return {
+        success: true,
+        data: {
+          showEmail: Boolean(data?.showEmail),
+          showPhone: Boolean(data?.showPhone),
+          showRut: Boolean(data?.showRut),
+          showAddress: Boolean(data?.showAddress),
+          showBirthdate: Boolean(data?.showBirthdate),
+          showPublicProfile: data?.showPublicProfile === false ? false : true
+        }
+      };
     } catch (error) {
       console.error('Error getting privacy preferences:', error);
       return { success: false, error: 'Error obteniendo preferencias de privacidad' };
@@ -370,9 +382,17 @@ class UserService {
         return { success: false, error: result?.error || 'Error guardando preferencias de privacidad' };
       }
 
+      const data = result.data as PrivacyPreferences;
       return {
         success: true,
-        data: result.data as PrivacyPreferences,
+        data: {
+          showEmail: Boolean(data?.showEmail),
+          showPhone: Boolean(data?.showPhone),
+          showRut: Boolean(data?.showRut),
+          showAddress: Boolean(data?.showAddress),
+          showBirthdate: Boolean(data?.showBirthdate),
+          showPublicProfile: data?.showPublicProfile === false ? false : true
+        },
         message: result?.message || 'Preferencias de privacidad actualizadas'
       };
     } catch (error) {

@@ -6,6 +6,7 @@ interface PrivacyFlags {
   showRut: boolean;
   showAddress: boolean;
   showBirthdate: boolean;
+  showPublicProfile: boolean;
 }
 
 const ensurePrivacyTable = async (db: any) => {
@@ -19,11 +20,18 @@ const ensurePrivacyTable = async (db: any) => {
           show_rut INTEGER DEFAULT 0,
           show_address INTEGER DEFAULT 0,
           show_birthdate INTEGER DEFAULT 0,
+          show_public_profile INTEGER DEFAULT 1,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `
     )
     .run();
+
+  try {
+    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+  } catch (error) {
+    // ignore if already exists
+  }
 };
 
 const mapPrivacyFlags = (row: any): PrivacyFlags => ({
@@ -31,7 +39,11 @@ const mapPrivacyFlags = (row: any): PrivacyFlags => ({
   showPhone: row?.show_phone === 1,
   showRut: row?.show_rut === 1,
   showAddress: row?.show_address === 1,
-  showBirthdate: row?.show_birthdate === 1
+  showBirthdate: row?.show_birthdate === 1,
+  showPublicProfile:
+    row?.show_public_profile === null || row?.show_public_profile === undefined
+      ? true
+      : row.show_public_profile === 1
 });
 
 const sanitizeString = (value: any): string | null => {
@@ -94,7 +106,8 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
           privacy.show_phone,
           privacy.show_rut,
           privacy.show_address,
-          privacy.show_birthdate
+          privacy.show_birthdate,
+          privacy.show_public_profile
         FROM usuarios u
         LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
         WHERE u.id = ? AND (u.activo = 1 OR u.activo IS NULL)
@@ -114,6 +127,16 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
     }
 
     const privacy = mapPrivacyFlags(socioRow);
+
+    if (!privacy.showPublicProfile) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Este socio mantiene su perfil en privado.'
+        }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     const firstName = sanitizeString(socioRow.nombre);
     const lastName = sanitizeString(socioRow.apellido);
     const fullName = [firstName, lastName].filter(Boolean).join(' ').trim() || sanitizeString(socioRow.email) || 'Socio ACA';

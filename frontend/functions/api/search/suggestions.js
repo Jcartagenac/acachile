@@ -36,15 +36,26 @@ const ensurePrivacyTable = async (db) => {
           show_rut INTEGER DEFAULT 0,
           show_address INTEGER DEFAULT 0,
           show_birthdate INTEGER DEFAULT 0,
+          show_public_profile INTEGER DEFAULT 1,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `
     )
     .run();
+
+  try {
+    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+  } catch (error) {
+    // ignore if exists
+  }
 };
 
 const mapPrivacyFlags = (row) => ({
-  showAddress: row?.show_address === 1
+  showAddress: row?.show_address === 1,
+  showPublicProfile:
+    row?.show_public_profile === null || row?.show_public_profile === undefined
+      ? true
+      : row.show_public_profile === 1
 });
 
 function toLikeParam(term) {
@@ -120,7 +131,8 @@ async function getUserSuggestions(env, searchTerm, limit) {
           u.nombre,
           u.apellido,
           u.ciudad,
-          privacy.show_address
+          privacy.show_address,
+          privacy.show_public_profile
         FROM usuarios u
         LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
         WHERE u.activo = 1
@@ -146,6 +158,10 @@ async function getUserSuggestions(env, searchTerm, limit) {
         const name = [row.nombre, row.apellido].filter(Boolean).join(' ').trim();
         if (!name) return null;
         const privacy = mapPrivacyFlags(row);
+
+        if (!privacy.showPublicProfile) {
+          return null;
+        }
         const city = privacy.showAddress && row.ciudad ? ` (${row.ciudad})` : '';
         return `${name}${city}`;
       })

@@ -78,7 +78,8 @@ const DEFAULT_MEMBER_FALLBACK = [
     show_phone: 1,
     show_rut: 0,
     show_address: 0,
-    show_birthdate: 0
+    show_birthdate: 0,
+    show_public_profile: 1
   }
 ];
 
@@ -94,11 +95,18 @@ const ensurePrivacyTable = async (db) => {
           show_rut INTEGER DEFAULT 0,
           show_address INTEGER DEFAULT 0,
           show_birthdate INTEGER DEFAULT 0,
+          show_public_profile INTEGER DEFAULT 1,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `
     )
     .run();
+
+  try {
+    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+  } catch (error) {
+    // ignore if exists
+  }
 };
 
 const mapPrivacyFlags = (row) => ({
@@ -106,7 +114,11 @@ const mapPrivacyFlags = (row) => ({
   showPhone: row?.show_phone === 1,
   showRut: row?.show_rut === 1,
   showAddress: row?.show_address === 1,
-  showBirthdate: row?.show_birthdate === 1
+  showBirthdate: row?.show_birthdate === 1,
+  showPublicProfile:
+    row?.show_public_profile === null || row?.show_public_profile === undefined
+      ? true
+      : row.show_public_profile === 1
 });
 
 function truncateText(text = '', maxLength = 180) {
@@ -390,7 +402,8 @@ async function searchUsuarios(env, searchTerm, limit) {
           privacy.show_phone,
           privacy.show_rut,
           privacy.show_address,
-          privacy.show_birthdate
+          privacy.show_birthdate,
+          privacy.show_public_profile
         FROM usuarios u
         LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
         WHERE u.activo = 1
@@ -425,17 +438,22 @@ async function searchUsuarios(env, searchTerm, limit) {
       }).slice(0, limit);
     }
 
-    return rows.map((row: any) => {
-      const fullName = [row.nombre, row.apellido].filter(Boolean).join(' ').trim() || row.email;
-      const city = row.ciudad || '';
-      const region = row.region || '';
-      const address = row.direccion || '';
-      const rut = row.rut || '';
+    return rows
+      .map((row: any) => {
+        const fullName = [row.nombre, row.apellido].filter(Boolean).join(' ').trim() || row.email;
+        const city = row.ciudad || '';
+        const region = row.region || '';
+        const address = row.direccion || '';
+        const rut = row.rut || '';
 
-      const privacy = mapPrivacyFlags(row);
+        const privacy = mapPrivacyFlags(row);
 
-      const searchablePieces = [fullName];
-      const metadata = {};
+        if (!privacy.showPublicProfile) {
+          return null;
+        }
+
+        const searchablePieces = [fullName];
+        const metadata = {};
 
       if (privacy.showEmail && row.email) {
         searchablePieces.push(row.email);
@@ -467,34 +485,36 @@ async function searchUsuarios(env, searchTerm, limit) {
         }
       }
 
-      const description =
-        privacy.showAddress && (city || region)
-          ? `Reside en ${city}${region ? `, ${region}` : ''}`
-          : 'Socio activo de ACA Chile.';
+        const description =
+          privacy.showAddress && (city || region)
+            ? `Reside en ${city}${region ? `, ${region}` : ''}`
+            : 'Socio activo de ACA Chile.';
 
-      const contentBlob = searchablePieces.filter(Boolean).join(' ');
+        const contentBlob = searchablePieces.filter(Boolean).join(' ');
 
-      const metadataPayload = Object.keys(metadata).length > 0 ? metadata : undefined;
+        const metadataPayload = Object.keys(metadata).length > 0 ? metadata : undefined;
 
-      return {
-        type: 'usuario',
-        id: row.id,
-        title: fullName,
-        description,
-        url: `/socios/${row.id}`,
-        avatar: row.foto_url || undefined,
-        metadata: metadataPayload,
-        relevance: calculateRelevance(
-          {
-            title: fullName,
-            description,
-            content: contentBlob,
-            metadata: metadataPayload
-          },
-          searchTerm
-        )
-      };
-    });
+        return {
+          type: 'usuario',
+          id: row.id,
+          title: fullName,
+          description,
+          url: `/socios/${row.id}`,
+          avatar: row.foto_url || undefined,
+          metadata: metadataPayload,
+          privacy,
+          relevance: calculateRelevance(
+            {
+              title: fullName,
+              description,
+              content: contentBlob,
+              metadata: metadataPayload
+            },
+            searchTerm
+          )
+        };
+      })
+      .filter(Boolean);
   } catch (error) {
     console.error('[SEARCH] Error buscando usuarios:', error);
     return [];

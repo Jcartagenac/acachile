@@ -20,6 +20,7 @@ export interface SearchResult {
   avatar?: string;
   category?: string;
   metadata?: Record<string, string | undefined>;
+  privacy?: Record<string, boolean>;
 }
 
 export interface SearchResponse {
