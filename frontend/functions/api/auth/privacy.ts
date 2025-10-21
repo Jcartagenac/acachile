@@ -103,7 +103,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       `;
 
     const row = await env.DB.prepare<PrivacyRow>(selectQuery)
-      .bind(auth.userId)
+      .bind(userId)
       .first();
 
     return jsonResponse({
