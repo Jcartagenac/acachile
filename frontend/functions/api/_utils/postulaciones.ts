@@ -36,7 +36,9 @@ export interface PostulacionRecord {
   competition_details: string | null;
   instagram: string | null;
   other_networks: string | null;
-  references: string | null;
+  references_info: string | null;
+  /** @deprecated columna legacy mantenida temporalmente para migración */
+  references?: string | null;
   photo_url: string | null;
   status: PostulacionStatus;
   approvals_required: number;
@@ -70,7 +72,7 @@ export const ensurePostulacionesSchema = async (db: any) => {
       competition_details TEXT,
       instagram TEXT,
       other_networks TEXT,
-      references TEXT,
+      references_info TEXT,
       photo_url TEXT,
       status TEXT NOT NULL DEFAULT 'pendiente' CHECK(status IN ('pendiente','en_revision','aprobada','rechazada')),
       approvals_required INTEGER NOT NULL DEFAULT ${DEFAULT_APPROVALS_REQUIRED},
@@ -89,6 +91,21 @@ export const ensurePostulacionesSchema = async (db: any) => {
     await db.prepare(`ALTER TABLE postulaciones ADD COLUMN photo_url TEXT`).run();
   } catch (error) {
     // En caso de que la columna ya exista, ignorar error
+  }
+
+  try {
+    const columnsResult = await db.prepare(`PRAGMA table_info(postulaciones)`).all();
+    const columns = columnsResult?.results ?? [];
+    const hasLegacyReferences = columns.some((column: any) => column.name === 'references');
+    const hasNewReferences = columns.some((column: any) => column.name === 'references_info');
+
+    if (hasLegacyReferences && !hasNewReferences) {
+      await db
+        .prepare(`ALTER TABLE postulaciones RENAME COLUMN "references" TO references_info`)
+        .run();
+    }
+  } catch (error) {
+    console.warn('[postulaciones] Error migrating legacy references column', error);
   }
 
   await db.prepare(`
@@ -159,7 +176,7 @@ export const mapPostulacionRow = (row: any) => {
     competitionDetails: row.competition_details,
     instagram: row.instagram,
     otherNetworks: row.other_networks,
-    references: row.references,
+    references: row.references_info ?? row.references ?? null,
     photoUrl: row.photo_url,
     status: row.status as PostulacionStatus,
     approvalsRequired: row.approvals_required,

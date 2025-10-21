@@ -96,7 +96,7 @@ export const onRequestPost = async ({ request, env }) => {
         competition_details,
         instagram,
         other_networks,
-        references,
+        references_info,
         photo_url,
         status,
         approvals_required,
