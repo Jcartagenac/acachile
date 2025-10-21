@@ -105,7 +105,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     });
   } catch (error) {
     console.error('[PRIVACY] GET error:', error);
-    return errorResponse('Error obteniendo preferencias de privacidad', 500);
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes('authorization')) {
+      return errorResponse('No autorizado', 401, { message });
+    }
+    return errorResponse('Error obteniendo preferencias de privacidad', 500, { message });
   }
 };
 
@@ -192,6 +196,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     });
   } catch (error) {
     console.error('[PRIVACY] PUT error:', error);
-    return errorResponse('Error guardando preferencias de privacidad', 500);
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes('authorization')) {
+      return errorResponse('No autorizado', 401, { message });
+    }
+    return errorResponse('Error guardando preferencias de privacidad', 500, { message });
   }
 };
