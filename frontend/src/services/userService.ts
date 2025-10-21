@@ -1,6 +1,14 @@
 // Servicio para gestión de perfil de usuario
 import { AppUser } from '../../../shared';
 
+export interface PrivacyPreferences {
+  showEmail: boolean;
+  showPhone: boolean;
+  showRut: boolean;
+  showAddress: boolean;
+  showBirthdate: boolean;
+}
+
 export interface UserProfile {
   id: string;
   firstName: string;
@@ -48,6 +56,16 @@ class UserService {
   // Set the auth context for real data integration
   setAuthContext(authContext: { user: AppUser | null; updateUser: (userData: Partial<AppUser>) => void }) {
     this.authContext = authContext;
+  }
+
+  private getAuthToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return (
+      window.localStorage.getItem('auth_token') ||
+      window.localStorage.getItem('authToken') ||
+      window.localStorage.getItem('token') ||
+      null
+    );
   }
 
   private mapAppUserToProfile(user: AppUser): UserProfile {
@@ -171,7 +189,7 @@ class UserService {
 
     try {
       // Llamar a la API real para actualizar en la base de datos
-      const token = localStorage.getItem('auth_token');
+      const token = this.getAuthToken();
       if (!token) {
         return { success: false, error: 'No hay token de autenticación' };
       }
@@ -299,6 +317,67 @@ class UserService {
     } catch (error) {
       console.error('Error updating profile:', error);
       return { success: false, error: 'Error actualizando perfil' };
+    }
+  }
+
+  async getPrivacyPreferences(): Promise<ApiResponse<PrivacyPreferences>> {
+    try {
+      const token = this.getAuthToken();
+      if (!token) {
+        return { success: false, error: 'No hay token de autenticación' };
+      }
+
+      const response = await fetch('/api/auth/privacy', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result?.error || 'Error obteniendo preferencias de privacidad' };
+      }
+
+      return { success: true, data: result.data as PrivacyPreferences };
+    } catch (error) {
+      console.error('Error getting privacy preferences:', error);
+      return { success: false, error: 'Error obteniendo preferencias de privacidad' };
+    }
+  }
+
+  async updatePrivacyPreferences(preferences: PrivacyPreferences): Promise<ApiResponse<PrivacyPreferences>> {
+    try {
+      const token = this.getAuthToken();
+      if (!token) {
+        return { success: false, error: 'No hay token de autenticación' };
+      }
+
+      const response = await fetch('/api/auth/privacy', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(preferences)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result?.error || 'Error guardando preferencias de privacidad' };
+      }
+
+      return {
+        success: true,
+        data: result.data as PrivacyPreferences,
+        message: result?.message || 'Preferencias de privacidad actualizadas'
+      };
+    } catch (error) {
+      console.error('Error updating privacy preferences:', error);
+      return { success: false, error: 'Error guardando preferencias de privacidad' };
     }
   }
 

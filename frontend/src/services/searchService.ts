@@ -19,7 +19,7 @@ export interface SearchResult {
   location?: string;
   avatar?: string;
   category?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, string | undefined>;
 }
 
 export interface SearchResponse {

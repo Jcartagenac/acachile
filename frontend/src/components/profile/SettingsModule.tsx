@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Lock, 
-  Bell, 
-  Mail, 
-  MessageCircle, 
+import {
+  Lock,
+  Bell,
+  Mail,
+  MessageCircle,
   Smartphone,
   Eye,
   EyeOff,
@@ -11,9 +11,14 @@ import {
   AlertTriangle,
   Save,
   Settings as SettingsIcon,
-  Loader2
+  Loader2,
+  Shield,
+  MapPin,
+  Fingerprint,
+  Cake
 } from 'lucide-react';
 import { NotificationPreferences } from '@shared/index';
+import type { PrivacyPreferences } from '../../services/userService';
 import { useUserService } from '../../hooks/useUserService';
 
 interface PasswordChangeForm {
@@ -22,9 +27,11 @@ interface PasswordChangeForm {
   confirmPassword: string;
 }
 
+type SettingsSection = 'password' | 'notifications' | 'privacy';
+
 export const SettingsModule: React.FC = () => {
   const userService = useUserService();
-  const [activeSection, setActiveSection] = useState<'password' | 'notifications'>('password');
+  const [activeSection, setActiveSection] = useState<SettingsSection>('password');
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -44,8 +51,16 @@ export const SettingsModule: React.FC = () => {
     medios: {
       email: true,
       whatsapp: true,
-      sms: false
+    sms: false
     }
+  });
+
+  const [privacy, setPrivacy] = useState<PrivacyPreferences>({
+    showEmail: false,
+    showPhone: false,
+    showRut: false,
+    showAddress: false,
+    showBirthdate: false
   });
 
   // Load notification preferences on component mount
@@ -58,6 +73,17 @@ export const SettingsModule: React.FC = () => {
     };
     
     loadNotificationPreferences();
+  }, []);
+
+  useEffect(() => {
+    const loadPrivacyPreferences = async () => {
+      const response = await userService.getPrivacyPreferences();
+      if (response.success && response.data) {
+        setPrivacy(response.data);
+      }
+    };
+
+    loadPrivacyPreferences();
   }, []);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -129,10 +155,17 @@ export const SettingsModule: React.FC = () => {
     }));
   };
 
+  const handlePrivacyChange = (field: keyof PrivacyPreferences, value: boolean) => {
+    setPrivacy((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const saveNotifications = async () => {
     setIsLoading(true);
     setSaveMessage(null);
-    
+
     try {
       const response = await userService.updateNotificationPreferences(notifications);
       
@@ -148,9 +181,67 @@ export const SettingsModule: React.FC = () => {
     }
   };
 
-  const sections = [
+  const savePrivacySettings = async () => {
+    setIsLoading(true);
+    setSaveMessage(null);
+
+    try {
+      const response = await userService.updatePrivacyPreferences(privacy);
+
+      if (response.success) {
+        setSaveMessage({ type: 'success', message: response.message || 'Preferencias de privacidad actualizadas' });
+      } else {
+        setSaveMessage({ type: 'error', message: response.error || 'Error al guardar la privacidad' });
+      }
+    } catch (error) {
+      setSaveMessage({ type: 'error', message: 'Error al guardar la privacidad' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sections: Array<{ id: SettingsSection; title: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'password', title: 'Cambiar Contraseña', icon: Lock },
     { id: 'notifications', title: 'Notificaciones', icon: Bell },
+    { id: 'privacy', title: 'Privacidad', icon: Shield }
+  ];
+
+  const privacyOptions: Array<{
+    key: keyof PrivacyPreferences;
+    label: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    {
+      key: 'showEmail',
+      label: 'Correo electrónico',
+      description: 'Permite que otros socios vean tu email público para contactarte.',
+      icon: Mail
+    },
+    {
+      key: 'showPhone',
+      label: 'Teléfono',
+      description: 'Comparte tu número de contacto con quienes visiten tu perfil.',
+      icon: Smartphone
+    },
+    {
+      key: 'showAddress',
+      label: 'Dirección y ciudad',
+      description: 'Muestra tu ciudad, región y dirección configurada en el perfil.',
+      icon: MapPin
+    },
+    {
+      key: 'showRut',
+      label: 'RUT',
+      description: 'Exhibe tu RUT en tu perfil público sólo si decides compartirlo.',
+      icon: Fingerprint
+    },
+    {
+      key: 'showBirthdate',
+      label: 'Fecha de nacimiento',
+      description: 'Permite que tu comunidad conozca tu fecha de cumpleaños.',
+      icon: Cake
+    }
   ];
 
   return (
@@ -168,7 +259,10 @@ export const SettingsModule: React.FC = () => {
             return (
               <button
                 key={section.id}
-                onClick={() => setActiveSection(section.id as any)}
+                onClick={() => {
+                  setActiveSection(section.id);
+                  setSaveMessage(null);
+                }}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-soft-sm'
@@ -308,6 +402,80 @@ export const SettingsModule: React.FC = () => {
               )}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Privacy Section */}
+      {activeSection === 'privacy' && (
+        <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6 space-y-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center">
+              <Shield className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-neutral-700">Privacidad de Perfil</h3>
+              <p className="text-sm text-neutral-500">Controla qué información personal es visible para la comunidad.</p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white/40 backdrop-blur-soft border border-white/20 rounded-xl">
+            <p className="text-sm text-neutral-600">
+              Tu <strong>nombre y foto</strong> siempre son públicos para identificarte como socio activo. El resto de los datos son opcionales y puedes activarlos o desactivarlos cuando quieras.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {privacyOptions.map((option) => {
+              const OptionIcon = option.icon;
+              const checked = privacy[option.key];
+
+              return (
+                <div
+                  key={option.key}
+                  className="flex items-center justify-between p-4 bg-white/40 backdrop-blur-soft border border-white/20 rounded-xl"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${checked ? 'bg-emerald-500/15 text-emerald-600' : 'bg-neutral-100 text-neutral-500'}`}>
+                      <OptionIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-700">{option.label}</p>
+                      <p className="text-sm text-neutral-500">{option.description}</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => handlePrivacyChange(option.key, e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={savePrivacySettings}
+              disabled={isLoading}
+              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl shadow-soft-sm hover:shadow-soft-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Guardando…</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Guardar privacidad</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 

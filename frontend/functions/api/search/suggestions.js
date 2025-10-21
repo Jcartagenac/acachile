@@ -24,6 +24,29 @@ const DEFAULT_SECTION_FALLBACK = {
   ]
 };
 
+const ensurePrivacyTable = async (db) => {
+  if (!db) return;
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS user_privacy_settings (
+          user_id INTEGER PRIMARY KEY,
+          show_email INTEGER DEFAULT 0,
+          show_phone INTEGER DEFAULT 0,
+          show_rut INTEGER DEFAULT 0,
+          show_address INTEGER DEFAULT 0,
+          show_birthdate INTEGER DEFAULT 0,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `
+    )
+    .run();
+};
+
+const mapPrivacyFlags = (row) => ({
+  showAddress: row?.show_address === 1
+});
+
 function toLikeParam(term) {
   return `%${term}%`;
 }
@@ -88,18 +111,25 @@ async function getUserSuggestions(env, searchTerm, limit) {
   if (!env.DB) return [];
 
   try {
+    await ensurePrivacyTable(env.DB);
+
     const likeParam = toLikeParam(searchTerm);
     const result = await env.DB.prepare(
       `
-        SELECT nombre, apellido, ciudad
-        FROM usuarios
-        WHERE activo = 1
+        SELECT 
+          u.nombre,
+          u.apellido,
+          u.ciudad,
+          privacy.show_address
+        FROM usuarios u
+        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
+        WHERE u.activo = 1
           AND (
-            LOWER(nombre) LIKE ?
-            OR LOWER(apellido) LIKE ?
-            OR LOWER(ciudad) LIKE ?
+            LOWER(u.nombre) LIKE ?
+            OR LOWER(u.apellido) LIKE ?
+            OR LOWER(u.ciudad) LIKE ?
           )
-        ORDER BY nombre ASC
+        ORDER BY u.nombre ASC
         LIMIT ?
       `
     )
@@ -112,7 +142,8 @@ async function getUserSuggestions(env, searchTerm, limit) {
       .map((row) => {
         const name = [row.nombre, row.apellido].filter(Boolean).join(' ').trim();
         if (!name) return null;
-        const city = row.ciudad ? ` (${row.ciudad})` : '';
+        const privacy = mapPrivacyFlags(row);
+        const city = privacy.showAddress && row.ciudad ? ` (${row.ciudad})` : '';
         return `${name}${city}`;
       })
       .filter(Boolean);

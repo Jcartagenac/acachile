@@ -16,7 +16,10 @@ import {
   UserCircle,
   FileText,
   Phone,
-  Mail
+  Mail,
+  Fingerprint,
+  Home,
+  Cake
 } from 'lucide-react';
 
 const SearchResultsPage: React.FC = () => {
@@ -160,6 +163,19 @@ const SearchResultsPage: React.FC = () => {
     });
   };
 
+  const formatBirthdate = (raw?: string) => {
+    if (!raw) return null;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+      return raw;
+    }
+    return parsed.toLocaleDateString('es-CL', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   const getMetaItems = (result: SearchResult): Array<{ key: string; icon: ReactNode; label: string }> => {
     const items: Array<{ key: string; icon: ReactNode; label: string }> = [];
 
@@ -186,7 +202,10 @@ const SearchResultsPage: React.FC = () => {
     }
 
     if (result.type === 'usuario' && result.metadata) {
-      const { city, region, email, phone } = result.metadata as Record<string, string | undefined>;
+      const { city, region, email, phone, address, rut, birthdate } = result.metadata as Record<
+        string,
+        string | undefined
+      >;
 
       if (city || region) {
         items.push(
@@ -194,6 +213,16 @@ const SearchResultsPage: React.FC = () => {
             key: 'usuario-location',
             icon: <MapPin className="h-4 w-4" />,
             label: [city, region].filter(Boolean).join(', ')
+          }
+        );
+      }
+
+      if (address) {
+        items.push(
+          {
+            key: 'usuario-address',
+            icon: <Home className="h-4 w-4" />,
+            label: address
           }
         );
       }
@@ -214,6 +243,27 @@ const SearchResultsPage: React.FC = () => {
             key: 'usuario-phone',
             icon: <Phone className="h-4 w-4" />,
             label: phone
+          }
+        );
+      }
+
+      if (rut) {
+        items.push(
+          {
+            key: 'usuario-rut',
+            icon: <Fingerprint className="h-4 w-4" />,
+            label: rut
+          }
+        );
+      }
+
+      const formattedBirthdate = formatBirthdate(birthdate);
+      if (formattedBirthdate) {
+        items.push(
+          {
+            key: 'usuario-birthdate',
+            icon: <Cake className="h-4 w-4" />,
+            label: formattedBirthdate
           }
         );
       }

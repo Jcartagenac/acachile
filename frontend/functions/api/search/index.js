@@ -62,6 +62,33 @@ const DEFAULT_SECTION_FALLBACK = {
 
 const MIN_QUERY_LENGTH = 2;
 
+const ensurePrivacyTable = async (db) => {
+  if (!db) return;
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS user_privacy_settings (
+          user_id INTEGER PRIMARY KEY,
+          show_email INTEGER DEFAULT 0,
+          show_phone INTEGER DEFAULT 0,
+          show_rut INTEGER DEFAULT 0,
+          show_address INTEGER DEFAULT 0,
+          show_birthdate INTEGER DEFAULT 0,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `
+    )
+    .run();
+};
+
+const mapPrivacyFlags = (row) => ({
+  showEmail: row?.show_email === 1,
+  showPhone: row?.show_phone === 1,
+  showRut: row?.show_rut === 1,
+  showAddress: row?.show_address === 1,
+  showBirthdate: row?.show_birthdate === 1
+});
+
 function truncateText(text = '', maxLength = 180) {
   if (!text) return '';
   if (text.length <= maxLength) return text;
@@ -323,20 +350,38 @@ async function searchUsuarios(env, searchTerm, limit) {
   if (!env.DB) return [];
 
   try {
+    await ensurePrivacyTable(env.DB);
+
     const likeParam = `%${searchTerm}%`;
     const usuariosResult = await env.DB.prepare(
       `
-        SELECT id, nombre, apellido, email, telefono, ciudad, region, foto_url
-        FROM usuarios
-        WHERE activo = 1
+        SELECT 
+          u.id,
+          u.nombre,
+          u.apellido,
+          u.email,
+          u.telefono,
+          u.ciudad,
+          u.region,
+          u.direccion,
+          u.rut,
+          u.foto_url,
+          privacy.show_email,
+          privacy.show_phone,
+          privacy.show_rut,
+          privacy.show_address,
+          privacy.show_birthdate
+        FROM usuarios u
+        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
+        WHERE u.activo = 1
           AND (
-            LOWER(nombre) LIKE ?
-            OR LOWER(apellido) LIKE ?
-            OR LOWER(email) LIKE ?
-            OR LOWER(ciudad) LIKE ?
-            OR LOWER(region) LIKE ?
+            LOWER(u.nombre) LIKE ?
+            OR LOWER(u.apellido) LIKE ?
+            OR LOWER(u.email) LIKE ?
+            OR LOWER(u.ciudad) LIKE ?
+            OR LOWER(u.region) LIKE ?
           )
-        ORDER BY nombre ASC
+        ORDER BY u.nombre ASC
         LIMIT ?
       `
     )
@@ -349,31 +394,67 @@ async function searchUsuarios(env, searchTerm, limit) {
       const fullName = [row.nombre, row.apellido].filter(Boolean).join(' ').trim() || row.email;
       const city = row.ciudad || '';
       const region = row.region || '';
+      const address = row.direccion || '';
+      const rut = row.rut || '';
 
-      const contentBlob = [fullName, row.email, row.telefono, city, region].filter(Boolean).join(' ');
+      const privacy = mapPrivacyFlags(row);
+
+      const searchablePieces = [fullName];
+      const metadata = {};
+
+      if (privacy.showEmail && row.email) {
+        searchablePieces.push(row.email);
+        metadata.email = row.email;
+      }
+
+      if (privacy.showPhone && row.telefono) {
+        searchablePieces.push(row.telefono);
+        metadata.phone = row.telefono;
+      }
+
+      if (privacy.showRut && rut) {
+        searchablePieces.push(rut);
+        metadata.rut = rut;
+      }
+
+      if (privacy.showAddress) {
+        if (city) {
+          searchablePieces.push(city);
+          metadata.city = city;
+        }
+        if (region) {
+          searchablePieces.push(region);
+          metadata.region = region;
+        }
+        if (address) {
+          searchablePieces.push(address);
+          metadata.address = address;
+        }
+      }
+
+      const description =
+        privacy.showAddress && (city || region)
+          ? `Reside en ${city}${region ? `, ${region}` : ''}`
+          : 'Socio activo de ACA Chile.';
+
+      const contentBlob = searchablePieces.filter(Boolean).join(' ');
+
+      const metadataPayload = Object.keys(metadata).length > 0 ? metadata : undefined;
 
       return {
         type: 'usuario',
         id: row.id,
         title: fullName,
-        description: city ? `Reside en ${city}${region ? `, ${region}` : ''}` : 'Socio activo de ACA Chile.',
+        description,
         url: `/socios/${row.id}`,
         avatar: row.foto_url || undefined,
-        metadata: {
-          city: city || undefined,
-          region: region || undefined
-        },
+        metadata: metadataPayload,
         relevance: calculateRelevance(
           {
             title: fullName,
-            description: city,
+            description,
             content: contentBlob,
-            metadata: {
-              city,
-              region,
-              email: row.email,
-              phone: row.telefono
-            }
+            metadata: metadataPayload
           },
           searchTerm
         )
