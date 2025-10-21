@@ -29,8 +29,13 @@ export const Header: React.FC = () => {
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-3 sm:space-x-4 group">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 transform group-hover:scale-105 border border-white/30">
-                  <span className="text-2xl">🔥</span>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 transform group-hover:scale-105 border border-white/30 p-2">
+                  <img
+                    src="https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/logos/aca-logo.png"
+                    alt="ACA Chile"
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                  />
                 </div>
                 <div className="hidden sm:block">
                   <div className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
