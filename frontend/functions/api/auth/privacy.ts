@@ -76,6 +76,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   try {
     const auth = requireAuth(request, env);
+    const resolvedUserId = auth?.userId ?? auth?.id ?? auth?.sub;
+
+    const userId = typeof resolvedUserId === 'string' ? parseInt(resolvedUserId, 10) : resolvedUserId;
+
+    if (!userId || Number.isNaN(userId)) {
+      return errorResponse('Token inválido', 401, { message: 'No se pudo resolver el identificador de usuario' });
+    }
 
     if (!env.DB) {
       return errorResponse('Base de datos no configurada', 500);
@@ -170,7 +177,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     const params = hasPublicColumn
       ? [
-          auth.userId,
+          userId,
           payload.showEmail ? 1 : 0,
           payload.showPhone ? 1 : 0,
           payload.showRut ? 1 : 0,
@@ -179,7 +186,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
           payload.showPublicProfile ? 1 : 0
         ]
       : [
-          auth.userId,
+          userId,
           payload.showEmail ? 1 : 0,
           payload.showPhone ? 1 : 0,
           payload.showRut ? 1 : 0,
