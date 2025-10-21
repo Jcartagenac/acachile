@@ -195,14 +195,14 @@ const AdminPostulantes: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 sm:gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Postulaciones a ACA Chile</h1>
             <p className="text-gray-600">Revisa, aprueba o rechaza las postulaciones pendientes.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleRefresh}
               className={"inline-flex items-center px-4 py-2 rounded-lg border border-gray-300 bg-white shadow-sm hover:bg-gray-100 transition-colors" + (loading ? ' opacity-70 cursor-not-allowed' : '')}
@@ -226,7 +226,7 @@ const AdminPostulantes: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSearchSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <form onSubmit={handleSearchSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Buscar postulaciones</label>

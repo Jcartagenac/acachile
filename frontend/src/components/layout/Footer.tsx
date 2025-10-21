@@ -10,13 +10,13 @@ export const Footer: React.FC = () => {
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-pastel-blue/10 rounded-full blur-3xl translate-x-48 translate-y-48"></div>
       
       <Container>
-        <div className="py-16 relative">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="py-10 sm:py-16 relative">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
             {/* Logo y descripción */}
             <div className="md:col-span-2">
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 bg-white/60 backdrop-blur-soft rounded-3xl flex items-center justify-center shadow-soft-lg border border-white/30">
-                  <span className="text-3xl">🔥</span>
+                <div className="w-14 h-14 bg-white/60 backdrop-blur-soft rounded-3xl flex items-center justify-center shadow-soft-lg border border-white/30">
+                  <span className="text-2xl">🔥</span>
                 </div>
                 <div>
                   <div className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
@@ -28,8 +28,8 @@ export const Footer: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white/40 backdrop-blur-soft rounded-2xl p-6 shadow-soft-sm border border-white/30 mb-8">
-                <p className="text-neutral-600 text-base leading-relaxed font-light">
+              <div className="bg-white/40 backdrop-blur-soft rounded-2xl p-5 sm:p-6 shadow-soft-sm border border-white/30 mb-8">
+                <p className="text-neutral-600 text-sm sm:text-base leading-relaxed font-light">
                   ACA es una asociación de Asadores donde nos reunimos amantes de los fuegos, 
                   las brasas y la parrilla. Una asociación sin fines de lucro que busca 
                   hacer crecer el movimiento parrillero nacional.
@@ -37,7 +37,7 @@ export const Footer: React.FC = () => {
               </div>
               
               {/* Redes sociales */}
-              <div className="flex space-x-4">
+              <div className="flex space-x-3 sm:space-x-4">
                 <a
                   href="https://www.instagram.com/aca.chile/"
                   target="_blank"
@@ -138,7 +138,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Línea divisoria */}
-          <div className="mt-16 pt-8 border-t border-white/20">
+          <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-white/20">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="text-center md:text-left">
                 <p className="text-neutral-600 text-sm font-medium">
@@ -149,7 +149,7 @@ export const Footer: React.FC = () => {
                 </p>
               </div>
               
-              <div className="flex items-center space-x-6 text-sm">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 text-sm">
                 <Link 
                   to="/privacidad" 
                   className="text-neutral-600 hover:text-primary-600 font-medium transition-colors duration-300"
@@ -166,7 +166,7 @@ export const Footer: React.FC = () => {
                   href="https://wbqachile2025.cl/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 hover:text-primary-700 rounded-xl font-semibold transition-all duration-300 hover:shadow-soft-sm border border-primary-200/50"
+                  className="px-3 py-2 sm:px-4 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 hover:text-primary-700 rounded-xl font-semibold transition-all duration-300 hover:shadow-soft-sm border border-primary-200/50"
                 >
                   WBQA 2025
                 </a>

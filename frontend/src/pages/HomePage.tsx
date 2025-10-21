@@ -93,16 +93,16 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="py-20 bg-soft-gradient-light relative overflow-hidden">
+    <section className="py-12 sm:py-16 lg:py-20 bg-soft-gradient-light relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
-          className={`flex flex-col gap-10 lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
+          className={`flex flex-col gap-8 sm:gap-12 lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
         >
-          <div className="lg:w-1/2 flex flex-col justify-center space-y-6">
-            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight">
+          <div className="lg:w-1/2 flex flex-col justify-center space-y-5 sm:space-y-6">
+            <h2 className="text-2xl sm:text-4xl font-bold text-neutral-900 leading-tight">
               {section.display_title}
             </h2>
-            <div className="space-y-4 text-neutral-600 text-lg leading-relaxed">
+            <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
               {blocks.length === 0 ? (
                 <p>{section.display_content}</p>
               ) : (
@@ -124,7 +124,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
               <div>
                 <a
                   href={section.display_cta_url}
-                  className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
+                  className="inline-flex items-center px-5 py-3 sm:px-6 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
                 >
                   {section.display_cta_label}
                 </a>
@@ -133,7 +133,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
           </div>
           {section.display_image ? (
             <div className="lg:w-1/2">
-              <div className="relative bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
+              <div className="relative bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
                 <img
                   src={section.display_image}
                   alt={section.display_title}
@@ -152,17 +152,17 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="relative overflow-hidden py-20 bg-soft-gradient-light">
-      <div className="relative px-4 py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-28">
+    <section className="relative overflow-hidden py-14 sm:py-20 bg-soft-gradient-light">
+      <div className="relative px-4 py-14 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-24">
         <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
           <div className="lg:col-span-6 space-y-8">
             <span className="inline-block px-6 py-2 bg-soft-gradient-primary rounded-full shadow-soft-sm border border-white/40 text-primary-700 font-semibold text-sm uppercase tracking-wide">
               {loading ? 'Cargando…' : 'Inicio ACA Chile'}
             </span>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
               {section.display_title}
             </h1>
-            <div className="text-lg sm:text-xl text-neutral-600 font-light leading-relaxed space-y-4 max-w-xl">
+            <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4 max-w-xl">
               {blocks.length === 0 ? (
                 <p>{section.display_content}</p>
               ) : (
@@ -183,7 +183,7 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
               <div>
                 <a
                   href={section.display_cta_url}
-                  className="inline-flex items-center px-8 py-4 rounded-2xl text-white font-semibold text-lg transition-all duration-500"
+                  className="inline-flex items-center px-7 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl text-white font-semibold text-lg transition-all duration-500"
                   style={{
                     background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
                   }}
@@ -195,8 +195,8 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
           </div>
           {section.display_image ? (
             <div className="mt-12 lg:mt-0 lg:col-span-6">
-              <div className="relative bg-white/20 backdrop-blur-md rounded-3xl p-6 shadow-soft-xl border border-white/40">
-                <div className="overflow-hidden rounded-2xl">
+              <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
+                <div className="overflow-hidden rounded-xl sm:rounded-2xl">
                   <img
                     src={section.display_image}
                     alt={section.display_title}
