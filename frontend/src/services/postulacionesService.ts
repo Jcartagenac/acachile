@@ -51,6 +51,7 @@ export interface JoinApplicationPayload {
   instagram?: string | null;
   otherNetworks?: string | null;
   references?: string | null;
+  photoUrl?: string | null;
 }
 
 export interface JoinApplicationResponse {
@@ -92,6 +93,7 @@ export interface PostulanteSummary {
   instagram: string | null;
   otherNetworks: string | null;
   references: string | null;
+  photoUrl: string | null;
   status: 'pendiente' | 'en_revision' | 'aprobada' | 'rechazada';
   approvalsRequired: number;
   approvalsCount: number;

@@ -36,7 +36,7 @@ async function processImage(file: File, folder: string): Promise<{buffer: ArrayB
 }
 
 // Validaciones de seguridad (usando nombres en español para consistencia)
-const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery'];
+const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones'];
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 

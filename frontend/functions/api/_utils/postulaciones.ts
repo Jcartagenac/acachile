@@ -37,6 +37,7 @@ export interface PostulacionRecord {
   instagram: string | null;
   other_networks: string | null;
   references: string | null;
+  photo_url: string | null;
   status: PostulacionStatus;
   approvals_required: number;
   approvals_count: number;
@@ -70,6 +71,7 @@ export const ensurePostulacionesSchema = async (db: any) => {
       instagram TEXT,
       other_networks TEXT,
       references TEXT,
+      photo_url TEXT,
       status TEXT NOT NULL DEFAULT 'pendiente' CHECK(status IN ('pendiente','en_revision','aprobada','rechazada')),
       approvals_required INTEGER NOT NULL DEFAULT ${DEFAULT_APPROVALS_REQUIRED},
       approvals_count INTEGER NOT NULL DEFAULT 0,
@@ -82,6 +84,12 @@ export const ensurePostulacionesSchema = async (db: any) => {
       FOREIGN KEY (socio_id) REFERENCES usuarios(id)
     )
   `).run();
+
+  try {
+    await db.prepare(`ALTER TABLE postulaciones ADD COLUMN photo_url TEXT`).run();
+  } catch (error) {
+    // En caso de que la columna ya exista, ignorar error
+  }
 
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS postulacion_aprobaciones (
@@ -152,6 +160,7 @@ export const mapPostulacionRow = (row: any) => {
     instagram: row.instagram,
     otherNetworks: row.other_networks,
     references: row.references,
+    photoUrl: row.photo_url,
     status: row.status as PostulacionStatus,
     approvalsRequired: row.approvals_required,
     approvalsCount: row.approvals_count,

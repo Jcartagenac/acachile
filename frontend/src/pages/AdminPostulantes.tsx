@@ -286,12 +286,34 @@ const AdminPostulantes: React.FC = () => {
               return (
                 <div key={postulacion.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 space-y-4">
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-gray-900">{postulacion.fullName}</h3>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                        <span className="flex items-center gap-1"><Mail className="h-4 w-4 text-gray-400" /> {postulacion.email}</span>
-                        <span className="flex items-center gap-1"><Phone className="h-4 w-4 text-gray-400" /> {postulacion.phone || 'Sin teléfono'}</span>
-                        <span className="flex items-center gap-1"><MapPin className="h-4 w-4 text-gray-400" /> {postulacion.region || 'Región no indicada'}</span>
+                    <div className="flex items-start gap-4">
+                      {postulacion.photoUrl ? (
+                        <img
+                          src={postulacion.photoUrl}
+                          alt={`Foto de ${postulacion.fullName}`}
+                          className="h-16 w-16 rounded-xl object-cover border border-gray-200 shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-sm uppercase">
+                          {postulacion.fullName.slice(0, 2)}
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-semibold text-gray-900">{postulacion.fullName}</h3>
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                          <span className="flex items-center gap-1"><Mail className="h-4 w-4 text-gray-400" /> {postulacion.email}</span>
+                          <span className="flex items-center gap-1"><Phone className="h-4 w-4 text-gray-400" /> {postulacion.phone || 'Sin teléfono'}</span>
+                          <span className="flex items-center gap-1"><MapPin className="h-4 w-4 text-gray-400" /> {postulacion.region || 'Región no indicada'}</span>
+                        </div>
+                        {postulacion.photoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => window.open(postulacion.photoUrl as string, '_blank')}
+                            className="inline-flex items-center text-xs text-primary-600 hover:text-primary-700"
+                          >
+                            Ver foto en tamaño completo
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="text-right space-y-1">

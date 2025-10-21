@@ -26,6 +26,7 @@ const applicationSchema = z
     instagram: z.string().trim().max(120).optional().or(z.literal('')).nullable(),
     otherNetworks: z.string().trim().max(200).optional().or(z.literal('')).nullable(),
     references: z.string().trim().max(500).optional().or(z.literal('')).nullable(),
+    photoUrl: z.string().trim().url().optional().or(z.literal('')).nullable(),
   })
   .refine(
     (data) => {
@@ -96,10 +97,11 @@ export const onRequestPost = async ({ request, env }) => {
         instagram,
         other_networks,
         references,
+        photo_url,
         status,
         approvals_required,
         approvals_count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', 2, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', 2, 0)
     `,
     )
       .bind(
@@ -121,6 +123,7 @@ export const onRequestPost = async ({ request, env }) => {
         data.instagram && data.instagram.length > 0 ? data.instagram : null,
         data.otherNetworks && data.otherNetworks.length > 0 ? data.otherNetworks : null,
         data.references && data.references.length > 0 ? data.references : null,
+        data.photoUrl && data.photoUrl.length > 0 ? data.photoUrl : null,
       )
       .run();
 

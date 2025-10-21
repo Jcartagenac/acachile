@@ -2,7 +2,7 @@
 import { AppUser } from '../../../shared';
 
 export interface ImageUploadOptions {
-  folder: 'avatars' | 'home' | 'eventos' | 'noticias' | 'gallery';
+  folder: 'avatars' | 'home' | 'eventos' | 'noticias' | 'gallery' | 'postulaciones';
   maxSize?: number; // en bytes, default: 10MB
   allowedTypes?: string[]; // default: image/*
   resize?: {

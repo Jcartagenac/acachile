@@ -10,6 +10,7 @@ import {
   JoinApplicationPayload,
 } from '../../services/postulacionesService';
 import { Check, Loader2, Sparkles, ClipboardCheck } from 'lucide-react';
+import { useImageService } from '../../hooks/useImageService';
 
 const availabilityOptions: Array<{
   id: AvailabilityOption;
@@ -116,6 +117,7 @@ const joinApplicationSchema = z
       .or(z.literal('')),
     otherNetworks: z.string().max(200, 'Máximo 200 caracteres').optional().or(z.literal('')),
     references: z.string().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
+    photoUrl: z.string().url().optional().or(z.literal('')),
   })
   .refine(
     (data) => {
@@ -135,9 +137,13 @@ interface JoinApplicationFormProps {
 }
 
 export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSuccess }) => {
+  const imageService = useImageService();
   const [submissionState, setSubmissionState] = useState<
     { status: 'idle' } | { status: 'success'; id: number } | { status: 'error'; message: string }
   >({ status: 'idle' });
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const {
     handleSubmit,
@@ -167,6 +173,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       instagram: '',
       otherNetworks: '',
       references: '',
+      photoUrl: '',
     },
   });
 
@@ -188,6 +195,14 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
   }, [watch('experienceLevel')]);
 
   const onSubmit = async (data: JoinApplicationFormData) => {
+    if (photoUploading) {
+      setSubmissionState({
+        status: 'error',
+        message: 'Espera a que la foto termine de subir antes de enviar tu postulación.'
+      });
+      return;
+    }
+
     setSubmissionState({ status: 'idle' });
 
     const payload: JoinApplicationPayload = {
@@ -209,6 +224,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       instagram: data.instagram?.trim() || null,
       otherNetworks: data.otherNetworks?.trim() || null,
       references: data.references?.trim() || null,
+      photoUrl: data.photoUrl?.trim() || null
     };
 
     const result = await postulacionesService.submitApplication(payload);
@@ -217,6 +233,8 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       setSubmissionState({ status: 'success', id: result.data.id });
       reset();
       onSuccess?.();
+      setPhotoPreview(null);
+      setPhotoError(null);
     } else {
       setSubmissionState({
         status: 'error',
@@ -225,13 +243,55 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
     }
   };
 
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setPhotoError(null);
+    setPhotoUploading(true);
+
+    try {
+      const upload = await imageService.uploadImage(file, {
+        folder: 'postulaciones',
+        maxSize: 5 * 1024 * 1024,
+        allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        resize: {
+          width: 900,
+          height: 900,
+          quality: 85,
+        },
+      });
+
+      if (upload.success && upload.data) {
+        setValue('photoUrl', upload.data.url, { shouldValidate: true });
+        setPhotoPreview(upload.data.url);
+      } else {
+        setPhotoError(upload.error || 'No pudimos subir la imagen. Intenta nuevamente.');
+        setValue('photoUrl', '', { shouldValidate: true });
+      }
+    } catch (error) {
+      console.error('[JoinApplicationForm] Error uploading photo:', error);
+      setPhotoError('Ocurrió un error al subir la imagen. Intenta nuevamente.');
+      setValue('photoUrl', '', { shouldValidate: true });
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoPreview(null);
+    setPhotoError(null);
+    setValue('photoUrl', '', { shouldValidate: true });
+  };
+
   return (
     <div className="relative mx-auto w-full max-w-4xl">
       <div className="absolute inset-x-8 inset-y-0 -z-10 blur-3xl bg-gradient-to-br from-primary-500/10 via-orange-400/10 to-primary-500/5" />
       <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="relative overflow-hidden rounded-3xl border border-primary-100 bg-white/90 shadow-soft-xl backdrop-blur"
-      >
+      onSubmit={handleSubmit(onSubmit)}
+      className="relative overflow-hidden rounded-3xl border border-primary-100 bg-white/90 shadow-soft-xl backdrop-blur"
+    >
+      <input type="hidden" {...register('photoUrl')} />
         <div className="border-b border-primary-100 bg-primary-50/70 px-8 py-10 sm:px-12">
           <div className="flex items-start gap-4">
             <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500 text-white shadow-lg shadow-primary-500/40">
@@ -297,6 +357,62 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 />
                 {errors.rut && <p className="mt-2 text-sm text-primary-600">{errors.rut.message}</p>}
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium text-neutral-700 flex items-center justify-between">
+                  Foto de perfil <span className="text-xs text-neutral-400">(opcional, máx. 5MB)</span>
+                </label>
+                <div className="mt-3 rounded-2xl border-2 border-dashed border-slate-200 bg-white/50 p-4 transition hover:border-primary-200">
+                  <div className="flex flex-col md:flex-row md:items-center md:space-x-6 space-y-4 md:space-y-0">
+                    <div className="flex-shrink-0">
+                      {photoPreview ? (
+                        <img
+                          src={photoPreview}
+                          alt="Vista previa de la foto"
+                          className="h-24 w-24 rounded-2xl object-cover shadow-soft-md"
+                        />
+                      ) : (
+                        <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center text-neutral-400 text-sm">
+                          Sin foto
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <p className="text-sm text-neutral-600">
+                        Sube una fotografía reciente para tu perfil público. Aceptamos JPG, PNG o WEBP.
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <label className="inline-flex items-center space-x-2 rounded-xl border border-primary-500 bg-primary-50/70 px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 cursor-pointer transition">
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handlePhotoUpload}
+                          />
+                          <span>{photoPreview ? 'Cambiar foto' : 'Seleccionar foto'}</span>
+                        </label>
+                        {photoPreview && (
+                          <button
+                            type="button"
+                            onClick={removePhoto}
+                            className="inline-flex items-center space-x-2 rounded-xl border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100 transition"
+                          >
+                            <span>Eliminar foto</span>
+                          </button>
+                        )}
+                      </div>
+                      {photoUploading && (
+                        <div className="inline-flex items-center space-x-2 text-sm text-primary-600">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Subiendo imagen...</span>
+                        </div>
+                      )}
+                      {photoError && (
+                        <p className="text-sm text-red-500">{photoError}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-neutral-700">Fecha de nacimiento</label>
