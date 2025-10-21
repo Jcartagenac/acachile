@@ -128,12 +128,15 @@ async function getUserSuggestions(env, searchTerm, limit) {
             LOWER(u.nombre) LIKE ?
             OR LOWER(u.apellido) LIKE ?
             OR LOWER(u.ciudad) LIKE ?
+            OR LOWER(u.nombre || ' ' || IFNULL(u.apellido, '')) LIKE ?
+            OR LOWER(u.apellido || ' ' || IFNULL(u.nombre, '')) LIKE ?
+            OR LOWER(REPLACE(u.nombre || u.apellido, ' ', '')) LIKE REPLACE(?, ' ', '')
           )
         ORDER BY u.nombre ASC
         LIMIT ?
       `
     )
-      .bind(likeParam, likeParam, likeParam, limit)
+      .bind(likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, limit)
       .all();
 
     const rows = result?.results || [];
