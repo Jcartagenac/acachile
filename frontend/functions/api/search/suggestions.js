@@ -25,7 +25,7 @@ const DEFAULT_SECTION_FALLBACK = {
 };
 
 const ensurePrivacyTable = async (db) => {
-  if (!db) return;
+  if (!db) return false;
   await db
     .prepare(
       `
@@ -43,11 +43,22 @@ const ensurePrivacyTable = async (db) => {
     )
     .run();
 
+  let hasPublicProfileColumn = false;
+
   try {
-    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+    const info = await db.prepare(`PRAGMA table_info(user_privacy_settings)`).all();
+    const columns = info?.results || [];
+    hasPublicProfileColumn = columns.some((column) => column.name === 'show_public_profile');
+
+    if (!hasPublicProfileColumn) {
+      await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+      hasPublicProfileColumn = true;
+    }
   } catch (error) {
-    // ignore if exists
+    console.warn('[SEARCH/SUGGESTIONS] No se pudo garantizar show_public_profile, usando valor por defecto.', error);
   }
+
+  return hasPublicProfileColumn;
 };
 
 const mapPrivacyFlags = (row) => ({
@@ -122,11 +133,11 @@ async function getUserSuggestions(env, searchTerm, limit) {
   if (!env.DB) return [];
 
   try {
-    await ensurePrivacyTable(env.DB);
+    const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
     const likeParam = toLikeParam(searchTerm);
-    const result = await env.DB.prepare(
-      `
+    const selectQuery = hasPublicColumn
+      ? `
         SELECT 
           u.nombre,
           u.apellido,
@@ -147,7 +158,29 @@ async function getUserSuggestions(env, searchTerm, limit) {
         ORDER BY u.nombre ASC
         LIMIT ?
       `
-    )
+      : `
+        SELECT 
+          u.nombre,
+          u.apellido,
+          u.ciudad,
+          privacy.show_address,
+          1 AS show_public_profile
+        FROM usuarios u
+        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
+        WHERE u.activo = 1
+          AND (
+            LOWER(u.nombre) LIKE ?
+            OR LOWER(u.apellido) LIKE ?
+            OR LOWER(u.ciudad) LIKE ?
+            OR LOWER(u.nombre || ' ' || IFNULL(u.apellido, '')) LIKE ?
+            OR LOWER(u.apellido || ' ' || IFNULL(u.nombre, '')) LIKE ?
+            OR LOWER(REPLACE(u.nombre || u.apellido, ' ', '')) LIKE REPLACE(?, ' ', '')
+          )
+        ORDER BY u.nombre ASC
+        LIMIT ?
+      `;
+
+    const result = await env.DB.prepare(selectQuery)
       .bind(likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, limit)
       .all();
 

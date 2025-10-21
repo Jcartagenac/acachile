@@ -9,7 +9,7 @@ interface PrivacyFlags {
   showPublicProfile: boolean;
 }
 
-const ensurePrivacyTable = async (db: any) => {
+const ensurePrivacyTable = async (db: any): Promise<boolean> => {
   await db
     .prepare(
       `
@@ -27,11 +27,22 @@ const ensurePrivacyTable = async (db: any) => {
     )
     .run();
 
+  let hasPublicProfileColumn = false;
+
   try {
-    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+    const info = await db.prepare(`PRAGMA table_info(user_privacy_settings)`).all();
+    const columns = info?.results || [];
+    hasPublicProfileColumn = columns.some((column: any) => column.name === 'show_public_profile');
+
+    if (!hasPublicProfileColumn) {
+      await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+      hasPublicProfileColumn = true;
+    }
   } catch (error) {
-    // ignore if already exists
+    console.warn('[PUBLIC SOCIO] No se pudo garantizar show_public_profile, usando valor por defecto.', error);
   }
+
+  return hasPublicProfileColumn;
 };
 
 const mapPrivacyFlags = (row: any): PrivacyFlags => ({
@@ -82,10 +93,10 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
   }
 
   try {
-    await ensurePrivacyTable(env.DB);
+    const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
-    const socioRow = await env.DB.prepare(
-      `
+    const selectQuery = hasPublicColumn
+      ? `
         SELECT 
           u.id,
           u.nombre,
@@ -112,7 +123,35 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
         LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
         WHERE u.id = ? AND (u.activo = 1 OR u.activo IS NULL)
       `
-    )
+      : `
+        SELECT 
+          u.id,
+          u.nombre,
+          u.apellido,
+          u.email,
+          u.telefono,
+          u.rut,
+          u.ciudad,
+          u.region,
+          u.direccion,
+          u.fecha_nacimiento,
+          u.fecha_ingreso,
+          u.foto_url,
+          u.role,
+          u.estado_socio,
+          u.activo,
+          privacy.show_email,
+          privacy.show_phone,
+          privacy.show_rut,
+          privacy.show_address,
+          privacy.show_birthdate,
+          1 AS show_public_profile
+        FROM usuarios u
+        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
+        WHERE u.id = ? AND (u.activo = 1 OR u.activo IS NULL)
+      `;
+
+    const socioRow = await env.DB.prepare(selectQuery)
       .bind(socioId)
       .first();
 

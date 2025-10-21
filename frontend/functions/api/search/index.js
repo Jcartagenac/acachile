@@ -84,7 +84,7 @@ const DEFAULT_MEMBER_FALLBACK = [
 ];
 
 const ensurePrivacyTable = async (db) => {
-  if (!db) return;
+  if (!db) return false;
   await db
     .prepare(
       `
@@ -102,11 +102,22 @@ const ensurePrivacyTable = async (db) => {
     )
     .run();
 
+  let hasPublicProfileColumn = false;
+
   try {
-    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+    const info = await db.prepare(`PRAGMA table_info(user_privacy_settings)`).all();
+    const columns = info?.results || [];
+    hasPublicProfileColumn = columns.some((column) => column.name === 'show_public_profile');
+
+    if (!hasPublicProfileColumn) {
+      await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+      hasPublicProfileColumn = true;
+    }
   } catch (error) {
-    // ignore if exists
+    console.warn('[SEARCH] No se pudo garantizar show_public_profile, usando valor por defecto.', error);
   }
+
+  return hasPublicProfileColumn;
 };
 
 const mapPrivacyFlags = (row) => ({
@@ -382,11 +393,10 @@ async function searchUsuarios(env, searchTerm, limit) {
   if (!env.DB) return [];
 
   try {
-    await ensurePrivacyTable(env.DB);
+    const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
-    const likeParam = `%${searchTerm}%`;
-    const usuariosResult = await env.DB.prepare(
-      `
+    const selectQuery = hasPublicColumn
+      ? `
         SELECT 
           u.id,
           u.nombre,
@@ -420,7 +430,43 @@ async function searchUsuarios(env, searchTerm, limit) {
         ORDER BY u.nombre ASC
         LIMIT ?
       `
-    )
+      : `
+        SELECT 
+          u.id,
+          u.nombre,
+          u.apellido,
+          u.email,
+          u.telefono,
+          u.ciudad,
+          u.region,
+          u.direccion,
+          u.rut,
+          u.foto_url,
+          privacy.show_email,
+          privacy.show_phone,
+          privacy.show_rut,
+          privacy.show_address,
+          privacy.show_birthdate,
+          1 AS show_public_profile
+        FROM usuarios u
+        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
+        WHERE u.activo = 1
+          AND (
+            LOWER(u.nombre) LIKE ?
+            OR LOWER(u.apellido) LIKE ?
+            OR LOWER(u.email) LIKE ?
+            OR LOWER(u.ciudad) LIKE ?
+            OR LOWER(u.region) LIKE ?
+            OR LOWER(u.nombre || ' ' || IFNULL(u.apellido, '')) LIKE ?
+            OR LOWER(u.apellido || ' ' || IFNULL(u.nombre, '')) LIKE ?
+            OR LOWER(REPLACE(u.nombre || u.apellido, ' ', '')) LIKE REPLACE(?, ' ', '')
+          )
+        ORDER BY u.nombre ASC
+        LIMIT ?
+      `;
+
+    const likeParam = `%${searchTerm}%`;
+    const usuariosResult = await env.DB.prepare(selectQuery)
       .bind(likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, limit)
       .all();
 

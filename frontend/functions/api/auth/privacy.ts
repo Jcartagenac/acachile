@@ -19,8 +19,9 @@ const DEFAULT_PRIVACY: PrivacyRow = {
   show_public_profile: 1
 };
 
-const ensurePrivacyTable = async (db: Env['DB']) => {
-  if (!db) return;
+const ensurePrivacyTable = async (db: Env['DB']): Promise<boolean> => {
+  if (!db) return false;
+
   await db
     .prepare(
       `
@@ -38,11 +39,22 @@ const ensurePrivacyTable = async (db: Env['DB']) => {
     )
     .run();
 
+  let hasPublicProfileColumn = false;
+
   try {
-    await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+    const info = await db.prepare(`PRAGMA table_info(user_privacy_settings)`).all();
+    const columns = info?.results || [];
+    hasPublicProfileColumn = columns.some((column: any) => column.name === 'show_public_profile');
+
+    if (!hasPublicProfileColumn) {
+      await db.prepare(`ALTER TABLE user_privacy_settings ADD COLUMN show_public_profile INTEGER DEFAULT 1`).run();
+      hasPublicProfileColumn = true;
+    }
   } catch (error) {
-    // ignore if already exists
+    console.warn('[PRIVACY] No se pudo garantizar la columna show_public_profile. Usaremos valor por defecto.', error);
   }
+
+  return hasPublicProfileColumn;
 };
 
 const toBoolean = (value: number | null | undefined): boolean => value === 1;
@@ -69,15 +81,21 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       return errorResponse('Base de datos no configurada', 500);
     }
 
-    await ensurePrivacyTable(env.DB);
+    const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
-    const row = await env.DB.prepare<PrivacyRow>(
-      `
+    const selectQuery = hasPublicColumn
+      ? `
         SELECT show_email, show_phone, show_rut, show_address, show_birthdate, show_public_profile
         FROM user_privacy_settings
         WHERE user_id = ?
       `
-    )
+      : `
+        SELECT show_email, show_phone, show_rut, show_address, show_birthdate, 1 AS show_public_profile
+        FROM user_privacy_settings
+        WHERE user_id = ?
+      `;
+
+    const row = await env.DB.prepare<PrivacyRow>(selectQuery)
       .bind(auth.userId)
       .first();
 
@@ -119,10 +137,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       showPublicProfile: body.showPublicProfile === undefined ? true : Boolean(body.showPublicProfile)
     };
 
-    await ensurePrivacyTable(env.DB);
+    const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
-    await env.DB.prepare(
-      `
+    const upsertQuery = hasPublicColumn
+      ? `
         INSERT INTO user_privacy_settings (user_id, show_email, show_phone, show_rut, show_address, show_birthdate, show_public_profile, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(user_id) DO UPDATE SET
@@ -134,17 +152,38 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
           show_public_profile = excluded.show_public_profile,
           updated_at = CURRENT_TIMESTAMP
       `
-    )
-      .bind(
-        auth.userId,
-        payload.showEmail ? 1 : 0,
-        payload.showPhone ? 1 : 0,
-        payload.showRut ? 1 : 0,
-        payload.showAddress ? 1 : 0,
-        payload.showBirthdate ? 1 : 0,
-        payload.showPublicProfile ? 1 : 0
-      )
-      .run();
+      : `
+        INSERT INTO user_privacy_settings (user_id, show_email, show_phone, show_rut, show_address, show_birthdate, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id) DO UPDATE SET
+          show_email = excluded.show_email,
+          show_phone = excluded.show_phone,
+          show_rut = excluded.show_rut,
+          show_address = excluded.show_address,
+          show_birthdate = excluded.show_birthdate,
+          updated_at = CURRENT_TIMESTAMP
+      `;
+
+    const params = hasPublicColumn
+      ? [
+          auth.userId,
+          payload.showEmail ? 1 : 0,
+          payload.showPhone ? 1 : 0,
+          payload.showRut ? 1 : 0,
+          payload.showAddress ? 1 : 0,
+          payload.showBirthdate ? 1 : 0,
+          payload.showPublicProfile ? 1 : 0
+        ]
+      : [
+          auth.userId,
+          payload.showEmail ? 1 : 0,
+          payload.showPhone ? 1 : 0,
+          payload.showRut ? 1 : 0,
+          payload.showAddress ? 1 : 0,
+          payload.showBirthdate ? 1 : 0
+        ];
+
+    await env.DB.prepare(upsertQuery).bind(...params).run();
 
     return jsonResponse({
       success: true,
