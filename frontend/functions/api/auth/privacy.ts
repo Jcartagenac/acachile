@@ -148,6 +148,13 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       showPublicProfile: body.showPublicProfile === undefined ? true : Boolean(body.showPublicProfile)
     };
 
+    const resolvedUserId = auth?.userId ?? auth?.id ?? auth?.sub;
+    const userId = typeof resolvedUserId === 'string' ? parseInt(resolvedUserId, 10) : resolvedUserId;
+
+    if (!userId || Number.isNaN(userId)) {
+      return errorResponse('Token inválido', 401, { message: 'No se pudo resolver el identificador de usuario' });
+    }
+
     const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
     const upsertQuery = hasPublicColumn
