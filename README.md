@@ -36,47 +36,48 @@
 
 ---
 
-## 🆕 Cambios recientes (16 de octubre de 2025)
+## 🆕 Cambios recientes (18 de febrero de 2026)
 
-Hoy se implementaron y corrigieron varias funcionalidades importantes centradas en la gestión de socios, cuotas y eventos, además de agregar una importación masiva vía CSV en el panel de administración de socios. A continuación se detalla todo lo que se hizo y cómo utilizarlo.
+Durante los últimos sprints se consolidó una versión “todo en uno” orientada a operaciones y continuidad a largo plazo. Estas son las mejoras más relevantes que ya están en producción:
 
 ### Principales adiciones y correcciones
 
-- feat: Importación masiva de socios vía CSV en `Gestión de Socios` (Admin)
-  - Botón "Importar CSV" en el header de `Gestión de Socios`.
-  - Modal con upload de `.csv`, validación, vista previa (primeras 5 filas) y reporte de resultados.
-  - Parser CSV robusto con soporte para valores entre comillas (direcciones con comas).
-  - Plantilla de CSV descargable con ejemplos.
-  - Importación por lotes con tracking de errores por fila (fila y mensaje de error).
-  - Columnas soportadas: `nombre, apellido, email, telefono, rut, direccion, ciudad, valor_cuota, password, estado_socio` (foto excluida).
+- **feat: Búsqueda global 2.0 (frontend + Pages Functions)**
+  - `/api/search` ahora combina eventos, noticias, secciones CMS y perfiles públicos de socios en una sola respuesta.
+  - `/api/search/suggestions` aprovecha KV + D1 para sugerencias contextualizadas (títulos, etiquetas, ciudades, nombres de socios) con debounce y orden inteligente.
+  - El componente `<SearchBar />` muestra vista previa enriquecida, iconografía por tipo, recordatorio de búsquedas recientes y scrolling responsivo.
+  - La página de resultados (`/buscar`) se rediseñó con metadatos, enlaces externos y soporte de filtros multi tipo.
 
-- fix: Perfil de usuario - RUT, Ciudad y Dirección
-  - Se corrigió el guardado y la persistencia de `rut`, `ciudad` y `direccion` en el perfil de usuario.
-  - Se implementó formateo automático de RUT (formato chileno `XX.XXX.XXX-X`) durante la edición.
-  - Backend actualizado para incluir `direccion` en los endpoints de perfil (`/api/auth/me` GET/PUT).
-  - AuthContext y mapeos actualizados para usar `ciudad` y `direccion` (se eliminó `city`).
+- **feat: Privacidad de perfil y búsqueda segura**
+  - Nuevo endpoint `/api/auth/privacy` (GET/PUT) persiste preferencias en D1 (`user_privacy_settings`).
+  - El módulo de configuración (`Perfil > Configuración > Privacidad`) permite decidir si se muestran email, teléfono, dirección, RUT y fecha de nacimiento en el perfil público.
+  - Las funciones de búsqueda y sugerencias respetan estas banderas antes de exponer la información.
 
-- fix: Resumen de Cuotas
-  - El panel de estadísticas de cuotas ahora muestra explícitamente los totales **solo para el año 2025**.
-  - Labels actualizados a `Recaudado 2025` y `Pendiente 2025`.
+- **feat: Editor de contenido institucional mejorado**
+  - `Panel → Contenido` ahora separa Inicio, Quiénes Somos y Contacto en pestañas dedicadas con carga diferida del editor (`AdminHomeEditor`).
+  - Cada pestaña escribe en D1 + KV (cache) y refleja inmediatamente los cambios en el sitio público.
 
-- fix: Crear Evento
-  - Se corrigió la redirección después de crear un evento: ahora navega a `/eventos` (antes `/events`) para evitar 404.
-  - Nota: la lista de eventos se refresca desde la API; si el evento no aparece por paginación o filtros, se añadió comportamiento para forzar actualización en el contexto de eventos (ver sección técnica).
+- **feat: Postulación con foto y revisión centralizada**
+  - El formulario `/unete` permite subir una foto de perfil (valida 5 MB, recorta y sube a R2 carpeta `postulaciones/`).
+  - El panel `Admin → Postulaciones` muestra miniaturas, acceso rápido a la foto original y estado de aprobación.
+  - Se amplió el esquema `postulaciones` (columna `photo_url`) y el payload `JoinApplicationPayload`.
 
-### Nuevas instrucciones importantes
+### Cómo probar las novedades
 
-- Importar CSV (Admin → Gestión de Socios):
-  1. Ir a `Gestión de Socios` en el panel administrativo.
-  2. Click en `Importar CSV` (botón azul).
-  3. Seleccionar archivo `.csv` con la plantilla recomendada.
-  4. Revisar la vista previa (primeras 5 filas) y corregir errores si aparecen.
-  5. Ejecutar la importación y revisar el reporte de resultados (conteo éxitos + lista de errores por fila).
+1. **Búsqueda global**
+   - Abre la barra de búsqueda global y escribe “asado” o el nombre de un socio.
+   - Verifica las sugerencias, la vista previa y los resultados en `/buscar?q=` con filtros por tipo.
 
-  Recomendaciones:
-  - Si una celda contiene comas (por ejemplo direcciones), usar comillas: `"Av. Libertador 123, Depto 45"`.
-  - Campos requeridos: `nombre, apellido, email, password`.
-  - `valor_cuota` por defecto: `6500` si no se especifica.
+2. **Privacidad de perfil**
+   - Inicia sesión como socio, ve a `Perfil > Configuración > Privacidad`.
+   - Activa/desactiva email, teléfono, dirección, RUT y cumpleaños; luego búscate desde una sesión separada para confirmar los cambios.
+
+3. **Postulación con foto**
+   - Completa el formulario en `/unete`, sube una imagen (JPG/PNG/WebP).
+   - Revisa en `Admin → Postulaciones` la miniatura, el enlace “Ver foto en tamaño completo” y el flujo de aprobación/rechazo.
+
+4. **Gestión de contenido institucional**
+   - Ingresa a `Panel → Contenido`, edita bloques en las pestañas “Quiénes Somos” o “Contacto” y comprueba que los cambios aparezcan en el sitio público tras limpiar cache.
 
 ---
 
@@ -151,6 +152,25 @@ Hoy se implementaron y corrigieron varias funcionalidades importantes centradas 
 - ✅ **Rutas de imágenes:**
   - Fotos de socios: `socios/{id}/foto.{ext}`
   - Comprobantes: `comprobantes/{año}/{mes}/{socioId}/{filename}`
+
+### 🔎 Búsqueda Global Inteligente
+- ✅ Búsqueda unificada (eventos, noticias, secciones institucionales y perfiles públicos de socios) con relevancia ponderada.
+- ✅ API `/api/search` con soporte para filtros, paginación y respuesta combinada (`combined`).
+- ✅ Sugerencias en tiempo real (`/api/search/suggestions`) alimentadas desde D1 + KV.
+- ✅ Barra de búsqueda con vista previa, rescate de búsquedas recientes y atajos de teclado.
+- ✅ Página `/buscar` con metadatos por tipo, paginación, filtros responsivos y enlaces externos seguros.
+
+### 🔐 Privacidad y Perfiles Públicos
+- ✅ Preferencias de visibilidad configurables por socio (`/api/auth/privacy`).
+- ✅ Controles UI en `Perfil → Configuración → Privacidad` con toggles para email, teléfono, dirección, RUT y cumpleaños.
+- ✅ Persistencia en D1 (`user_privacy_settings`) y verificación antes de responder desde la API de búsqueda/sugerencias.
+- ✅ Mensajería contextual en resultados de búsqueda cuando un dato está oculto por privacidad.
+
+### 🧾 Postulaciones y Onboarding
+- ✅ Formulario `/unete` extendido con subida de foto (validación 5 MB, resize 900×900 @85 % quality, carpeta `postulaciones/` en R2).
+- ✅ Persistencia de `photo_url` en la tabla `postulaciones` y servicio `postulacionesService`.
+- ✅ Panel `Admin → Postulaciones` con miniaturas, acceso a la foto original y estado/contador de aprobaciones.
+- ✅ Flujo de aprobación/rechazo que mantiene coherencia con los nuevos campos.
 
 ---
 
@@ -299,9 +319,20 @@ npm run dev
 ## 🚀 Notas de despliegue
 
 - El frontend está desplegado en Cloudflare Pages. Los cambios en `main` se despliegan automáticamente si pasan la pipeline.
-- Variables de entorno importantes (Cloudflare Pages / entorno local):
-  - `VITE_API_BASE_URL` - URL base de la API (ej: https://acachile.pages.dev)
-  - `CLOUDFLARE_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY`, `R2_SECRET_KEY` - para integración con R2 (backend)
+- Variables de entorno y bindings clave:
+  - **Frontend (`.env.local` / Pages → VITE_*)**
+    - `VITE_API_BASE_URL` → URL base de las Functions (`https://acachile.pages.dev`)
+    - `VITE_ENVIRONMENT` → `development | staging | production`
+  - **Backend (Pages Functions / wrangler.toml)**
+    - `IMAGES` (R2) → Bucket `aca-chile-images`
+    - `ACA_KV` (KV) → Cache de contenidos y sugerencias
+    - `DB` (D1) → Base de datos relacional
+    - `ENVIRONMENT`, `CORS_ORIGIN`, `FRONTEND_URL`
+    - `FROM_EMAIL`, `ADMIN_EMAIL`
+    - `R2_PUBLIC_URL` → Endpoint público de R2 (ej: `https://pub-85ac8c62baca4966b2ac0b16e1b9b6c6.r2.dev`)
+  - **Secretos (Pages Secrets)**
+    - `JWT_SECRET`
+    - `RESEND_API_KEY`
 
 ---
 
@@ -486,9 +517,14 @@ Obtiene el perfil del usuario autenticado.
     "nombre": "string",
     "apellido": "string",
     "telefono": "string | null",
+    "rut": "string | null",
+    "ciudad": "string | null",
+    "direccion": "string | null",
     "foto_url": "string | null",
-    "role": "string",
-    "estado_socio": "string"
+    "role": "admin | director | director_editor | usuario",
+    "estado_socio": "activo | inactivo | suspendido",
+    "created_at": "string (ISO)",
+    "last_login": "string | null"
   }
 }
 ```
@@ -506,6 +542,9 @@ Actualiza el perfil del usuario autenticado.
   "nombre": "string (opcional)",
   "apellido": "string (opcional)",
   "telefono": "string (opcional)",
+  "rut": "string (opcional)",
+  "ciudad": "string (opcional)",
+  "direccion": "string (opcional)",
   "foto_url": "string (opcional)"
 }
 ```
@@ -515,6 +554,113 @@ Actualiza el perfil del usuario autenticado.
 {
   "success": true,
   "message": "Perfil actualizado correctamente"
+}
+```
+
+---
+
+#### `GET /api/auth/privacy`
+Obtiene las preferencias de privacidad del usuario autenticado.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "showEmail": true,
+    "showPhone": false,
+    "showRut": false,
+    "showAddress": true,
+    "showBirthdate": false
+  }
+}
+```
+
+---
+
+#### `PUT /api/auth/privacy`
+Actualiza las preferencias de privacidad del usuario autenticado.
+
+**Headers:** `Authorization: Bearer {token}`
+
+**Request:**
+```json
+{
+  "showEmail": true,
+  "showPhone": true,
+  "showRut": false,
+  "showAddress": true,
+  "showBirthdate": false
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Preferencias de privacidad actualizadas",
+  "data": {
+    "showEmail": true,
+    "showPhone": true,
+    "showRut": false,
+    "showAddress": true,
+    "showBirthdate": false
+  }
+}
+```
+
+---
+
+### 🔎 Búsqueda Global (`/api/search`)
+
+#### `GET /api/search`
+Devuelve resultados combinados de eventos, noticias, secciones institucionales y perfiles públicos (según sus preferencias de privacidad).
+
+**Query Params:**
+- `q` (string, requerido): Término de búsqueda (mínimo 2 caracteres).
+- `type` (string, opcional): `eventos | noticias | usuarios | secciones | all` (default `all`).
+- `limit` (number, opcional): Máximo de resultados por grupo (default 10, máximo sugerido 50).
+- `offset` (number, opcional): Desplazamiento para paginación (se calcula con `page` en el frontend).
+
+**Response 200 (resumen):**
+```json
+{
+  "success": true,
+  "data": {
+    "query": "asado",
+    "total": 8,
+    "eventos": [{ "id": 42, "title": "Campeonato de Asado", "url": "/eventos/42", "relevance": 0.92 }],
+    "noticias": [{ "id": 5, "title": "Entrevista a maestros parrilleros", "url": "/noticias/la-entrevista", "relevance": 0.81 }],
+    "usuarios": [{ "id": 7, "title": "María González", "metadata": { "city": "Santiago" }, "url": "/socios/7" }],
+    "secciones": [{ "id": "about-hero", "title": "Quiénes Somos", "url": "/quienes-somos#about-hero" }],
+    "combined": [
+      { "type": "evento", "title": "Campeonato de Asado", "url": "/eventos/42", "relevance": 0.92 },
+      { "type": "usuario", "title": "María González", "url": "/socios/7", "relevance": 0.87 }
+    ]
+  }
+}
+```
+
+---
+
+#### `GET /api/search/suggestions`
+Entrega sugerencias inteligentes para autocompletado.
+
+**Query Params:**
+- `q` (string, requerido): Prefijo de la búsqueda.
+- `limit` (number, opcional): Cantidad máxima de sugerencias (default 8).
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    "Campeonato Nacional de Asado",
+    "María González (Santiago)",
+    "Quiénes Somos (Sección institucional)"
+  ]
 }
 ```
 
@@ -897,27 +1043,40 @@ Project: acachile
 
 ### Variables de Entorno (wrangler.toml)
 ```toml
-[env.production]
-vars = { 
-  ENVIRONMENT = "production",
-  CORS_ORIGIN = "https://acachile.pages.dev",
-  FRONTEND_URL = "https://acachile.pages.dev",
-  FROM_EMAIL = "noreply@mail.juancartagena.cl",
-  ADMIN_EMAIL = "admin@acachile.cl"
-}
+[env.production.vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://acachile.pages.dev"
+FRONTEND_URL = "https://acachile.pages.dev"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
+ADMIN_EMAIL = "admin@acachile.cl"
+R2_PUBLIC_URL = "https://pub-85ac8c62baca4966b2ac0b16e1b9b6c6.r2.dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
+
+[[kv_namespaces]]
+binding = "ACA_KV"
+id = "b080082921d4476e6995c8085f1033286"
+preview_id = "deda506587a1476a96578cb545f0128e"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "aca-chile-images"
+
+[[env.production.kv_namespaces]]
+binding = "ACA_KV"
+id = "60fff9f10819406cad241e326950f056"
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "ACA_DB"
-database_id = "ba77a962-f55a-49b4-865f-e5e3f9c98f7e"
-
-[[env.production.kv_namespaces]]
-binding = "CACHE"
-id = "8ef0d38f0a4c4be1a23af9e741e2e1d7"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 
 [[env.production.r2_buckets]]
-binding = "ACA_BUCKET"
-bucket_name = "aca-chile"
+binding = "IMAGES"
+bucket_name = "aca-chile-images"
 ```
 
 ### Secrets de Cloudflare
@@ -927,27 +1086,29 @@ wrangler secret put JWT_SECRET
 
 # RESEND_API_KEY (para envío de emails)
 wrangler secret put RESEND_API_KEY
-# Valor actual: re_Yk8S9iyk_63xGiXBqE3K2wG6ckLzq9zyM
+# Valor actual: re_Yk8S9iyk_63xGiXBqE3K2wG6ckLzq9zyM (rotar antes de cada sprint)
 ```
 
 ### Cloudflare R2 Bucket: `aca-chile`
 ```
-Binding: ACA_BUCKET
-Public URL: https://pub-[hash].r2.dev
+Binding: IMAGES
+Public URL: https://pub-85ac8c62baca4966b2ac0b16e1b9b6c6.r2.dev
 
 Estructura de carpetas:
 /socios/{id}/foto.{ext}                    # Fotos de perfil
 /comprobantes/{año}/{mes}/{socioId}/...    # Comprobantes de pago
+/postulaciones/{postulacionId}-{hash}.{ext}  # Fotos de nuevos postulantes
 ```
 
 ### Cloudflare KV Namespace
 ```
-Binding: CACHE
-ID: 8ef0d38f0a4c4be1a23af9e741e2e1d7
+Binding: ACA_KV
+ID (producción): 60fff9f10819406cad241e326950f056
 
 Uso actual:
 - Cache de estadísticas
-- Configuraciones temporales
+- Cache de secciones de contenido (home/about/contact)
+- Sugestiones de búsqueda y fallback de noticias/eventos
 ```
 
 ---
@@ -1273,12 +1434,15 @@ const id = context.params.id;
 ### Versiones de Dependencias Críticas
 ```json
 {
+  "node": ">=18.0.0 (desarrollo local)",
   "react": "18.3.1",
-  "react-router-dom": "7.1.1",
-  "typescript": "5.6.2",
-  "vite": "5.4.20",
-  "tailwindcss": "3.4.1",
-  "@cloudflare/workers-types": "^4.20250115.0"
+  "react-router-dom": "6.25.1",
+  "react-hook-form": "7.52.1",
+  "typescript": "5.5.4",
+  "vite": "5.3.5",
+  "tailwindcss": "3.4.18",
+  "lucide-react": "0.545.0",
+  "wrangler": "3.x (compatibilidad 2024-09-23)"
 }
 ```
 
@@ -1346,8 +1510,8 @@ chore: Tareas de mantenimiento
 
 ---
 
-**Última actualización**: 16 de Enero de 2025  
-**Versión**: 1.0.0  
+**Última actualización**: 18 de febrero de 2026  
+**Versión**: 1.1.0  
 **Estado**: ✅ Producción Estable
 
 ---
