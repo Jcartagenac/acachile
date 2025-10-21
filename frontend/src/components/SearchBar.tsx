@@ -337,13 +337,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const widthSettings: Record<SizeKey, { base: string; expanded: string }> = {
     small: { base: '100%', expanded: '100%' },
-    medium: { base: 'min(100%, 22rem)', expanded: 'min(100%, 38rem)' },
-    large: { base: 'min(100%, 24rem)', expanded: 'min(100%, 44rem)' }
+    medium: { base: 'min(100%, 24rem)', expanded: 'min(100%, 40rem)' },
+    large: { base: 'min(100%, 28rem)', expanded: 'min(100%, 48rem)' }
   };
 
   const appliedStyle: React.CSSProperties = {
     width: widthSettings[sizeKey][isExpanded ? 'expanded' : 'base'],
     transition: 'width 0.3s ease, transform 0.3s ease',
+    margin: '0 auto',
     ...style
   };
 

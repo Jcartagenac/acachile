@@ -43,15 +43,6 @@ export const Header: React.FC = () => {
               </Link>
             </div>
 
-            {/* Search Bar - Solo en desktop */}
-            <div className="hidden lg:flex items-center flex-1 justify-center mx-6">
-              <SearchBar 
-                placeholder="Buscar eventos, noticias..."
-                size="medium"
-                className="bg-white/60 backdrop-blur-soft rounded-2xl shadow-soft-inset-sm border border-white/40 focus-within:shadow-soft-inset-md focus-within:border-primary-300 transition-all duration-300"
-              />
-            </div>
-
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-2">
               {navigation.map((item) => (
@@ -115,6 +106,19 @@ export const Header: React.FC = () => {
             />
           </div>
         </Container>
+
+        {/* Desktop Search Bar */}
+        <div className="hidden lg:block border-t border-white/20 bg-white/80">
+          <Container>
+            <div className="py-4 flex justify-center">
+              <SearchBar 
+                placeholder="Buscar eventos, noticias, socios..."
+                size="large"
+                className="bg-white/70 backdrop-blur-soft rounded-2xl shadow-soft-inset-sm border border-white/40 focus-within:shadow-soft-inset-md focus-within:border-primary-300"
+              />
+            </div>
+          </Container>
+        </div>
 
         {/* Mobile Navigation Menu */}
         {isMenuOpen && (
