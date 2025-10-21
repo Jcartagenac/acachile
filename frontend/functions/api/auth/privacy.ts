@@ -194,6 +194,8 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
           payload.showBirthdate ? 1 : 0
         ];
 
+    console.log('[PRIVACY] Saving settings for user', userId, 'params:', params, 'hasPublicColumn:', hasPublicColumn);
+
     await env.DB.prepare(upsertQuery).bind(...params).run();
 
     return jsonResponse({
