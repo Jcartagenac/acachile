@@ -44,7 +44,7 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Search Bar - Solo en desktop */}
-            <div className="hidden lg:flex items-center flex-1 max-w-xl mx-8">
+            <div className="hidden lg:flex items-center flex-1 lg:max-w-4xl xl:max-w-5xl mx-6">
               <div className="w-full relative">
                 <SearchBar 
                   placeholder="Buscar eventos, noticias..."
