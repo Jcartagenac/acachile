@@ -22,6 +22,7 @@ import {
   AdminDashboard,
   ProfilePage,
   PerfilSocio,
+  PublicSocioPage,
   PanelAdminDashboard,
   AdminContent,
   AdminNews,
@@ -63,7 +64,8 @@ function App() {
           
           {/* Búsqueda */}
           <Route path="/buscar" element={<SearchResultsPage />} />
-          
+          <Route path="/socios/:id" element={<PublicSocioPage />} />
+
           {/* Administración Antigua (mantener por compatibilidad) */}
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />

@@ -29,3 +29,4 @@ export { default as AdminNews } from './AdminNews';
 export { default as AdminPostulantes } from './AdminPostulantes';
 export { ProfilePage } from './ProfilePage';
 export { default as PerfilSocio } from './PerfilSocio';
+export { default as PublicSocioPage } from './PublicSocioPage';
