@@ -12,6 +12,7 @@ interface SearchBarProps {
   placeholder?: string;
   size?: 'small' | 'medium' | 'large';
   className?: string;
+  style?: React.CSSProperties;
 }
 
 interface PreviewResult {
@@ -31,7 +32,8 @@ import { logger } from '../utils/logger';
 const SearchBar: React.FC<SearchBarProps> = ({ 
   placeholder = "Buscar eventos, noticias...",
   size = 'medium',
-  className = ''
+  className = '',
+  style
 }) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
@@ -345,6 +347,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const isExpanded = isFocused || showSuggestions || query.trim().length > 0;
 
+  const widthSettings: Record<SizeKey, { base: string; expanded: string }> = {
+    small: { base: '14rem', expanded: '24rem' },
+    medium: { base: '20rem', expanded: '34rem' },
+    large: { base: '24rem', expanded: '40rem' }
+  };
+
+  const appliedStyle: React.CSSProperties = {
+    maxWidth: `min(100%, ${widthSettings[sizeKey][isExpanded ? 'expanded' : 'base']})`,
+    transition: 'max-width 0.3s ease, transform 0.3s ease',
+    ...style
+  };
+
   return (
     <div
       ref={searchRef}
@@ -354,6 +368,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         ${isExpanded ? expandedWidthClasses[sizeKey] : ''}
         ${className}
       `}
+      style={appliedStyle}
     >
       <div className="relative">
         <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${iconSizeClasses[sizeKey]}`} />
