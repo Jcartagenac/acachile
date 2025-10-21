@@ -48,6 +48,7 @@ export async function onRequestGet(context) {
         u.estado_socio,
         u.lista_negra,
         u.motivo_lista_negra,
+        u.role,
         u.created_at,
         u.last_login,
         -- Estadísticas de cuotas del año actual
@@ -129,6 +130,7 @@ export async function onRequestGet(context) {
       estadoSocio: socio.estado_socio || 'activo',
       listaNegra: socio.lista_negra === 1,
       motivoListaNegra: socio.motivo_lista_negra,
+      role: socio.role || 'usuario',
       ultimoLogin: socio.last_login,
       // Estadísticas del año
       estadisticasAño: {
@@ -345,7 +347,7 @@ export async function onRequestPost(context) {
       SELECT 
         id, email, nombre, apellido, telefono, rut, ciudad, direccion,
         foto_url, valor_cuota, fecha_ingreso, estado_socio, 
-        lista_negra, motivo_lista_negra, created_at
+        lista_negra, motivo_lista_negra, role, created_at
       FROM usuarios 
       WHERE id = ?
     `).bind(socioId).first();
@@ -371,6 +373,7 @@ export async function onRequestPost(context) {
         estadoSocio: newSocio.estado_socio,
         listaNegra: newSocio.lista_negra === 1,
         motivoListaNegra: newSocio.motivo_lista_negra,
+        role: newSocio.role,
         createdAt: newSocio.created_at
       }
     }), {
