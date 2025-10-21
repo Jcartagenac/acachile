@@ -23,6 +23,29 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAdminService, Member, Communication } from '../../hooks/useAdminService';
 import AdminCuotas from '../../pages/AdminCuotas';
 
+const ROLE_OPTIONS: Array<{ key: 'usuario' | 'director_editor' | 'director' | 'admin'; label: string; description: string }> = [
+  {
+    key: 'usuario',
+    label: 'Usuario / Socio',
+    description: 'Acceso básico al portal de socios: eventos, noticias y perfil personal.'
+  },
+  {
+    key: 'director_editor',
+    label: 'Director Editor',
+    description: 'Puede administrar contenido (eventos, noticias) y revisar postulaciones.'
+  },
+  {
+    key: 'director',
+    label: 'Director',
+    description: 'Gestión completa de socios, postulaciones y cuotas (sin configuración de sistema).'
+  },
+  {
+    key: 'admin',
+    label: 'Administrador',
+    description: 'Acceso total al sistema, incluida la configuración avanzada.'
+  }
+];
+
 export const AdminModule: React.FC = () => {
   const { hasPermission } = useAuth();
   const adminService = useAdminService();
@@ -521,12 +544,44 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
     direccion: '',
     valorCuota: 6500,
     password: '',
-    rol: 'usuario' as 'admin' | 'director' | 'director_editor' | 'usuario',
+    rol: 'usuario' as string,
   });
+  const [availableRoles, setAvailableRoles] = useState<Array<{ key: string; label: string; description: string }>>(ROLE_OPTIONS);
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cargar cat\u00e1logo de roles desde el backend (si est\u00e1 disponible)
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const response = await fetch('/api/admin/roles', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+
+          if (!response.ok) {
+            throw new Error('No se pudo obtener el listado de roles');
+          }
+
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+          setAvailableRoles(result.data);
+          if (!result.data.some((role: any) => role.key === formData.rol)) {
+            setFormData((prev) => ({ ...prev, rol: result.data[0].key }));
+          }
+        }
+      } catch (err) {
+        console.warn('[CreateSocioModal] No se pudo obtener roles desde la API, usando defaults.', err);
+        setAvailableRoles(ROLE_OPTIONS);
+      }
+    };
+
+    loadRoles();
+  }, []);
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -784,16 +839,17 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
                 id="socio-rol"
                 required
                 value={formData.rol}
-                onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
-                <option value="usuario">Usuario/Socio</option>
-                <option value="director_editor">Director Editor</option>
-                <option value="director">Director</option>
-                <option value="admin">Administrador</option>
+                {availableRoles.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
               <p className="mt-1 text-sm text-gray-500">
-                Define los permisos y accesos del usuario en el sistema
+                {availableRoles.find((option) => option.key === formData.rol)?.description || 'Define los permisos de la cuenta.'}
               </p>
             </div>
 
@@ -859,9 +915,33 @@ function EditMemberModal({ member, onClose, onMemberUpdated }: {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<Array<{ key: string; label: string; description: string }>>(ROLE_OPTIONS);
 
-  // Cargar datos completos del socio al abrir el modal
+  // Cargar datos completos del socio y roles al abrir el modal
   useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const response = await fetch('/api/admin/roles', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('No se pudo obtener el listado de roles');
+        }
+
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+          setAvailableRoles(result.data);
+        }
+      } catch (err) {
+        console.warn('[EditMemberModal] No se pudo obtener roles desde la API, usando defaults.', err);
+        setAvailableRoles(ROLE_OPTIONS);
+      }
+    };
+
     const fetchMemberDetails = async () => {
       try {
         const response = await fetch(`/api/admin/socios/${member.id}`, {
@@ -895,6 +975,7 @@ function EditMemberModal({ member, onClose, onMemberUpdated }: {
       }
     };
     
+    fetchCatalog();
     fetchMemberDetails();
   }, [member.id]);
 
@@ -1121,13 +1202,14 @@ function EditMemberModal({ member, onClose, onMemberUpdated }: {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="usuario">Usuario/Socio</option>
-                  <option value="director_editor">Director Editor</option>
-                  <option value="director">Director</option>
-                  <option value="admin">Administrador</option>
+                  {availableRoles.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
                 <p className="mt-1 text-sm text-gray-500">
-                  Define los permisos y accesos del usuario en el sistema
+                  {availableRoles.find((option) => option.key === formData.role)?.description || 'Define los permisos del socio en el sistema.'}
                 </p>
               </div>
             </div>

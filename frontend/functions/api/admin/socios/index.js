@@ -13,6 +13,59 @@ async function hashPassword(password) {
   return hashHex;
 }
 
+const DEFAULT_ROLES = [
+  {
+    key: 'usuario',
+    label: 'Usuario / Socio',
+    description: 'Acceso básico al portal de socios.',
+    priority: 100
+  },
+  {
+    key: 'director_editor',
+    label: 'Director Editor',
+    description: 'Puede administrar contenido y revisar postulaciones.',
+    priority: 80
+  },
+  {
+    key: 'director',
+    label: 'Director',
+    description: 'Gestión avanzada de socios y cuotas.',
+    priority: 60
+  },
+  {
+    key: 'admin',
+    label: 'Administrador',
+    description: 'Acceso total al sistema.',
+    priority: 40
+  }
+];
+
+async function ensureRolesCatalog(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS roles_catalog (
+      key TEXT PRIMARY KEY,
+      label TEXT NOT NULL,
+      description TEXT,
+      priority INTEGER DEFAULT 100,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  for (const role of DEFAULT_ROLES) {
+    await db.prepare(`
+      INSERT INTO roles_catalog (key, label, description, priority)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        label = excluded.label,
+        description = excluded.description,
+        priority = excluded.priority
+    `).bind(role.key, role.label, role.description, role.priority).run();
+  }
+
+  const rolesResult = await db.prepare(`SELECT key FROM roles_catalog`).all();
+  return new Set((rolesResult?.results || []).map(row => row.key));
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
@@ -224,8 +277,8 @@ export async function onRequestPost(context) {
     }
 
     // Validar que el rol sea válido
-    const rolesValidos = ['admin', 'director', 'director_editor', 'usuario'];
-    if (!rolesValidos.includes(rol)) {
+    const rolesValidos = env.DB ? await ensureRolesCatalog(env.DB) : new Set(DEFAULT_ROLES.map((role) => role.key));
+    if (!rolesValidos.has(rol)) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Rol inválido. Debe ser: admin, director, director_editor o usuario'
