@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../services/userService';
 import { useUserService } from '../../hooks/useUserService';
 import { useImageService } from '../../hooks/useImageService';
-import { normalizeRut, normalizePhone } from '../../../shared/utils/validators';
+import { normalizeRut, normalizePhone } from '@shared/utils/validators';
 import { AddressInput } from '../ui/AddressInput';
 import {
   User,

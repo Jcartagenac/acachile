@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { normalizeAddress } from '../../../shared/utils/validators';
+import { normalizeAddress } from '@shared/utils/validators';
 
 interface AddressInputProps {
   value: string;
