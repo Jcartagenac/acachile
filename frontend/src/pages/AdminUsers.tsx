@@ -718,13 +718,11 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
     email: string;
     role: RoleKey;
     status: 'active' | 'inactive';
-    email_verified: boolean;
   }>(() => ({
     name: user.name,
     email: user.email,
     role: user.role,
-    status: user.status ?? (user.is_active ? 'active' : 'inactive'),
-    email_verified: user.email_verified ?? true
+    status: user.status ?? (user.is_active ? 'active' : 'inactive')
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -735,8 +733,7 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
       name: user.name,
       email: user.email,
       role: user.role,
-      status: user.status ?? (user.is_active ? 'active' : 'inactive'),
-      email_verified: user.email_verified ?? true
+      status: user.status ?? (user.is_active ? 'active' : 'inactive')
     });
   }, [user]);
 
@@ -746,10 +743,7 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
     try {
       setLoading(true);
       setError(null);
-      const payload: Partial<User> & {
-        status?: 'active' | 'inactive';
-        email_verified?: boolean;
-      } = {};
+      const payload: Partial<User> = {};
 
       const trimmedName = formData.name.trim();
       if (trimmedName && trimmedName !== user.name.trim()) {
@@ -763,11 +757,6 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
       const currentStatus = user.status ?? (user.is_active ? 'active' : 'inactive');
       if (formData.status !== currentStatus) {
         payload.status = formData.status;
-      }
-
-      const currentEmailVerified = user.email_verified ?? true;
-      if (formData.email_verified !== currentEmailVerified) {
-        payload.email_verified = formData.email_verified;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -863,19 +852,6 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
               </select>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label htmlFor="email-verified" className="text-sm font-medium text-gray-700">
-                Email verificado
-              </label>
-              <input
-                id="email-verified"
-                type="checkbox"
-                checked={formData.email_verified}
-                onChange={(e) => setFormData({ ...formData, email_verified: e.target.checked })}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">
