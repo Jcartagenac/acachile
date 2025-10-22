@@ -716,6 +716,8 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                 value={formData.rut}
                 onChange={(e) => {
                   const value = e.target.value;
+                  console.log('🔄 RUT onChange - Input value:', value);
+
                   // Limpiar errores previos
                   if (validationErrors.rut) {
                     setValidationErrors(prev => ({ ...prev, rut: '' }));
@@ -727,8 +729,11 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                     try {
                       // Normalizar completamente en vivo
                       const cleanValue = value.replace(/[^0-9kK]/g, '');
+                      console.log('🧹 RUT cleaned value:', cleanValue);
+
                       if (cleanValue.length >= 8) {
                         formattedValue = normalizeRut(cleanValue);
+                        console.log('✅ RUT normalized live:', formattedValue);
                       } else {
                         // Formateo básico mientras escribe
                         formattedValue = cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -737,13 +742,16 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                           const dv = cleanValue.slice(-1);
                           formattedValue = `${body.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}-${dv}`;
                         }
+                        console.log('📝 RUT formatted basic:', formattedValue);
                       }
                     } catch (err) {
+                      console.error('❌ Error formatting RUT live:', err);
                       // Si hay error, mantener el valor limpio
                       formattedValue = value.replace(/[^0-9kK.\-]/g, '');
                     }
                   }
 
+                  console.log('💾 RUT setting formData to:', formattedValue);
                   setFormData({ ...formData, rut: formattedValue });
                 }}
                 onBlur={() => {
@@ -752,11 +760,11 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                     try {
                       console.log('🔍 Validando RUT al perder foco:', formData.rut);
                       const normalizedRut = normalizeRut(formData.rut);
-                      console.log('✅ RUT normalizado:', normalizedRut);
+                      console.log('✅ RUT normalizado final:', normalizedRut);
                       setFormData(prev => ({ ...prev, rut: normalizedRut }));
                       setValidationErrors(prev => ({ ...prev, rut: '' }));
                     } catch (err) {
-                      console.error('❌ Error validando RUT:', err);
+                      console.error('❌ Error validando RUT final:', err);
                       setValidationErrors(prev => ({
                         ...prev,
                         rut: err instanceof Error ? err.message : 'RUT inválido'
@@ -781,6 +789,8 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                 value={formData.telefono}
                 onChange={(e) => {
                   const value = e.target.value;
+                  console.log('🔄 Phone onChange - Input value:', value);
+
                   // Limpiar errores previos
                   if (validationErrors.telefono) {
                     setValidationErrors(prev => ({ ...prev, telefono: '' }));
@@ -792,20 +802,26 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                     try {
                       // Normalizar completamente en vivo
                       const cleanValue = value.replace(/[^0-9]/g, '');
+                      console.log('🧹 Phone cleaned value:', cleanValue);
+
                       if (cleanValue.length >= 9) {
                         formattedValue = normalizePhone(cleanValue);
+                        console.log('✅ Phone normalized live:', formattedValue);
                       } else if (cleanValue.length >= 8) {
                         // Formateo básico mientras escribe
                         formattedValue = `+56${cleanValue}`;
+                        console.log('📝 Phone formatted basic:', formattedValue);
                       } else {
                         formattedValue = cleanValue;
                       }
                     } catch (err) {
+                      console.error('❌ Error formatting phone live:', err);
                       // Si hay error, mantener el valor limpio
                       formattedValue = value.replace(/[^0-9+]/g, '');
                     }
                   }
 
+                  console.log('💾 Phone setting formData to:', formattedValue);
                   setFormData({ ...formData, telefono: formattedValue });
                 }}
                 onBlur={() => {
@@ -814,11 +830,11 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                     try {
                       console.log('🔍 Validando teléfono al perder foco:', formData.telefono);
                       const normalizedPhone = normalizePhone(formData.telefono);
-                      console.log('✅ Teléfono normalizado:', normalizedPhone);
+                      console.log('✅ Teléfono normalizado final:', normalizedPhone);
                       setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
                       setValidationErrors(prev => ({ ...prev, telefono: '' }));
                     } catch (err) {
-                      console.error('❌ Error validando teléfono:', err);
+                      console.error('❌ Error validando teléfono final:', err);
                       setValidationErrors(prev => ({
                         ...prev,
                         telefono: err instanceof Error ? err.message : 'Teléfono inválido'
