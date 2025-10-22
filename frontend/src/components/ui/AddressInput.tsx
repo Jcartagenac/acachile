@@ -93,6 +93,22 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     }
   };
 
+  // Test function to check if Google Maps is working
+  const testGoogleMaps = () => {
+    console.log('🧪 Testing Google Maps API...');
+    console.log('Google object exists:', typeof google !== 'undefined');
+    if (typeof google !== 'undefined') {
+      console.log('Google Maps exists:', !!google.maps);
+      console.log('Google Places exists:', !!google.maps.places);
+      console.log('AutocompleteService available:', !!google.maps.places.AutocompleteService);
+    }
+  };
+
+  useEffect(() => {
+    // Test Google Maps on component mount
+    testGoogleMaps();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     console.log('🔄 Address input change:', `"${newValue}"`);
