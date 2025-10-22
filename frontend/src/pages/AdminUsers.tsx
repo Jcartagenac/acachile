@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminService, type User } from '../services/adminService';
 import { authService } from '../services/authService';
-import { normalizeRut, normalizePhone } from '../../../shared/utils/validators';
+import { normalizeRut, normalizePhone } from '@shared/utils/validators';
 import { AddressInput } from '../components/ui/AddressInput';
 
 type RoleKey = User['role'];
