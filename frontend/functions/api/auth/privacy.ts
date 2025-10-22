@@ -75,7 +75,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { env, request } = context;
 
   try {
-    const auth = requireAuth(request, env);
+  const auth = await requireAuth(request, env);
     const resolvedUserId = auth?.userId ?? auth?.id ?? auth?.sub;
 
     const userId = typeof resolvedUserId === 'string' ? parseInt(resolvedUserId, 10) : resolvedUserId;
@@ -124,7 +124,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
   const { env, request } = context;
 
   try {
-    const auth = requireAuth(request, env);
+  const auth = await requireAuth(request, env);
 
     if (!env.DB) {
       return errorResponse('Base de datos no configurada', 500);
