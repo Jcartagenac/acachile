@@ -472,6 +472,7 @@ export default function AdminSocios() {
             setEditingSocio(null);
             closeEditModal();
           }}
+          roleOptions={roleOptions}
         />
       )}
 
@@ -1184,10 +1185,11 @@ function CreateSocioModal({ onClose, onSocioCreated, roleOptions }: {
 }
 
 // Modal para editar socio
-function EditSocioModal({ socio, onClose, onSocioUpdated }: {
+function EditSocioModal({ socio, onClose, onSocioUpdated, roleOptions }: {
   socio: Socio;
   onClose: () => void;
   onSocioUpdated: () => void;
+  roleOptions: Array<{ key: string; label: string; description?: string; priority?: number }>;
 }) {
   const [formData, setFormData] = useState({
     nombre: socio.nombre,
@@ -1202,6 +1204,7 @@ function EditSocioModal({ socio, onClose, onSocioUpdated }: {
     fechaIngreso: socio.fechaIngreso,
     listaNegra: socio.listaNegra,
     motivoListaNegra: socio.motivoListaNegra || '',
+    role: (socio as any).role || roleOptions[0]?.key || 'usuario'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1388,6 +1391,22 @@ function EditSocioModal({ socio, onClose, onSocioUpdated }: {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
+            </div>
+
+            {/* Rol */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rol
+              </label>
+              <select
+                value={(formData as any).role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              >
+                {roleOptions.map((opt) => (
+                  <option key={opt.key} value={opt.key}>{opt.label}</option>
+                ))}
+              </select>
             </div>
 
             {/* Dirección */}
