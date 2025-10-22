@@ -167,6 +167,14 @@ const PublicSocioPage: React.FC = () => {
     return computeYearsActive(socio.joinedAt);
   }, [socio]);
 
+  const initials = useMemo(() => {
+    if (!socio?.fullName) return 'A';
+    const parts = socio.fullName.split(' ').filter(Boolean);
+    if (parts.length === 0) return 'A';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+  }, [socio?.fullName]);
+
   if (loading) {
     return (
       <div className="min-h-[60vh] bg-soft-gradient-light flex items-center justify-center">
@@ -199,13 +207,6 @@ const PublicSocioPage: React.FC = () => {
   const formattedJoinDate = formatDate(socio?.joinedAt ?? null);
   const formattedBirthdate = formatDate(socio?.birthdate ?? null);
 
-  const initials = useMemo(() => {
-    if (!socio?.fullName) return 'A';
-    const parts = socio.fullName.split(' ').filter(Boolean);
-    if (parts.length === 0) return 'A';
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
-  }, [socio?.fullName]);
 
   return (
     <LocalErrorBoundary>
