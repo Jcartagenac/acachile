@@ -612,7 +612,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
       return;
     }
 
-    // Validar y normalizar campos
+    // Validar y normalizar campos antes de enviar
     if (!validateAndNormalizeFields()) {
       setError('Por favor corrige los errores en el formulario');
       return;
@@ -621,7 +621,9 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     try {
       setLoading(true);
       setError(null);
-      await adminService.createUser({
+
+      // Preparar datos para envío
+      const userData = {
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
@@ -631,7 +633,12 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
         telefono: formData.telefono.trim() || undefined,
         ciudad: formData.ciudad.trim() || undefined,
         direccion: formData.direccion.trim() || undefined
-      });
+      };
+
+      console.log('📤 Enviando datos del usuario:', userData);
+      await adminService.createUser(userData);
+
+      // Limpiar formulario
       setFormData({
         name: '',
         email: '',

@@ -57,6 +57,13 @@ export default function TestUser() {
 
     console.log('💾 RUT final value:', `"${formattedValue}"`);
     setFormData({ ...formData, rut: formattedValue });
+
+    // Mantener el foco en el input después de actualizar el estado
+    setTimeout(() => {
+      const input = e.target as HTMLInputElement;
+      const len = formattedValue.length;
+      input.setSelectionRange(len, len);
+    }, 0);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,6 +105,13 @@ export default function TestUser() {
 
     console.log('💾 Phone final value:', `"${formattedValue}"`);
     setFormData({ ...formData, telefono: formattedValue });
+
+    // Mantener el foco en el input después de actualizar el estado
+    setTimeout(() => {
+      const input = e.target as HTMLInputElement;
+      const len = formattedValue.length;
+      input.setSelectionRange(len, len);
+    }, 0);
   };
 
   const handleRutBlur = () => {
