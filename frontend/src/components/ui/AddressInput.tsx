@@ -32,9 +32,19 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 
   // Initialize Google Places Autocomplete service
   useEffect(() => {
-    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-      autocompleteService.current = new google.maps.places.AutocompleteService();
-    }
+    // Check if Google Maps is loaded
+    const checkGoogleMaps = () => {
+      if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+        console.log('✅ Google Maps API loaded, initializing AutocompleteService');
+        autocompleteService.current = new google.maps.places.AutocompleteService();
+      } else {
+        console.log('⏳ Waiting for Google Maps API to load...');
+        // Retry after a short delay
+        setTimeout(checkGoogleMaps, 500);
+      }
+    };
+
+    checkGoogleMaps();
   }, []);
 
   const fetchSuggestions = async (query: string) => {
@@ -48,18 +58,30 @@ export const AddressInput: React.FC<AddressInputProps> = ({
       const request = {
         input: query,
         componentRestrictions: { country: 'cl' },
-        fields: ['place_id', 'description', 'structured_formatting'],
         types: ['address']
       };
 
-      console.log('🔍 Fetching Google Places suggestions for:', query);
+      console.log('🔍 Fetching Google Places suggestions for:', `"${query}"`);
+      console.log('📡 Request:', request);
+
       autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
+        console.log('📊 Google Places response status:', status);
+        console.log('📋 Predictions received:', predictions);
+
         if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
           console.log('✅ Found suggestions:', predictions.length);
+          console.log('📝 First suggestion:', predictions[0]?.description);
           setSuggestions(predictions);
           setShowSuggestions(true);
         } else {
           console.warn('⚠️ Google Places failed:', status);
+          if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            console.log('📭 No results found for query');
+          } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
+            console.error('🚫 Query limit exceeded');
+          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+            console.error('🚫 Request denied - check API key');
+          }
           setSuggestions([]);
         }
         setIsLoading(false);
@@ -96,6 +118,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 
   const handleSuggestionClick = (suggestion: google.maps.places.AutocompletePrediction) => {
     console.log('🎯 Selected suggestion:', `"${suggestion.description}"`);
+    console.log('🏷️ Full suggestion object:', suggestion);
     setInputValue(suggestion.description);
     onChange(suggestion.description);
     if (onNormalizedChange) {
