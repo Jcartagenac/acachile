@@ -134,7 +134,7 @@ class AdminService {
 
     const fallbackName = raw?.email ? raw.email.split('@')[0] : 'Usuario sin nombre';
     const joinedName = `${raw?.nombre ?? ''} ${raw?.apellido ?? ''}`.trim();
-    const name = (raw?.name ?? joinedName || fallbackName).trim();
+    const name = (raw?.name ?? (joinedName || fallbackName)).trim();
 
     const statsSource = raw?.stats ?? raw?.statistics ?? null;
     let normalizedStats: User['stats'] | undefined;
