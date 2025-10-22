@@ -62,6 +62,13 @@ export const AddressInput: React.FC<AddressInputProps> = ({
         }
       }, 100); // Pequeño delay para evitar llamadas excesivas
     }
+
+    // Mantener el foco en el input después de actualizar el estado
+    setTimeout(() => {
+      const input = e.target as HTMLInputElement;
+      const len = newValue.length;
+      input.setSelectionRange(len, len);
+    }, 0);
   };
 
   useEffect(() => {
