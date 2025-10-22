@@ -13,6 +13,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
+import { roleUtils } from '@shared';
 
 const MESES = [
   'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
@@ -182,7 +183,14 @@ export default function PerfilSocio() {
                 </div>
               )}
               <div className="flex-1 text-white">
-                <h1 className="text-3xl font-bold mb-2">{socio.nombreCompleto}</h1>
+                <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                  {socio.nombreCompleto}
+                  {socio.role && (
+                    <span className={`ml-2 px-2 py-1 text-sm font-semibold rounded-full bg-white/20`}>
+                      {roleUtils.getRoleDisplayName((socio.role as any) || 'usuario')}
+                    </span>
+                  )}
+                </h1>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
