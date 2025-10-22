@@ -80,6 +80,8 @@ function App() {
           {/* Panel de Administración Nuevo */}
           <Route path="/panel-admin" element={<PanelAdminLayout><PanelAdminDashboard /></PanelAdminLayout>} />
           <Route path="/panel-admin/users" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users/createuser" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users/:socioId/edituser" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
           <Route path="/panel-admin/users/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
