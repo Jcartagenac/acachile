@@ -3,8 +3,8 @@
  * ACA Chile Frontend
  */
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { sociosService, Socio, CreateSocioData } from '../services/sociosService';
 import { 
   Users,
@@ -29,15 +29,84 @@ export default function AdminSocios() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<string>('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingSocio, setEditingSocio] = useState<Socio | null>(null);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
+  const [isEditLoading, setIsEditLoading] = useState(false);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { socioId } = useParams<{ socioId?: string }>();
+
+  const isCreateRoute = location.pathname.endsWith('/createuser');
+  const isEditRoute = location.pathname.endsWith('/edituser');
 
   useEffect(() => {
     loadSocios();
   }, [searchTerm, estadoFilter]);
+
+  const closeCreateModal = useCallback(() => {
+    navigate('/panel-admin/users', { replace: true });
+  }, [navigate]);
+
+  const closeEditModal = useCallback(() => {
+    navigate('/panel-admin/users', { replace: true });
+  }, [navigate]);
+
+  const openCreateModalRoute = useCallback(() => {
+    navigate('/panel-admin/users/createuser');
+  }, [navigate]);
+
+  const openEditModalRoute = useCallback((id: number) => {
+    navigate(`/panel-admin/users/${id}/edituser`);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!isEditRoute) {
+      setEditingSocio(null);
+      setIsEditLoading(false);
+      return;
+    }
+
+    if (!socioId) {
+      setEditingSocio(null);
+      return;
+    }
+
+    const socioIdNumber = Number(socioId);
+    if (Number.isNaN(socioIdNumber)) {
+      setEditingSocio(null);
+      return;
+    }
+
+    const existingSocio = socios.find((socio) => socio.id === socioIdNumber);
+    if (existingSocio) {
+      setEditingSocio(existingSocio);
+      setIsEditLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsEditLoading(true);
+
+    sociosService.getSocio(socioIdNumber).then((response) => {
+      if (cancelled) return;
+
+      if (response.success && response.data) {
+        setEditingSocio(response.data);
+      } else {
+        setEditingSocio(null);
+        setError(response.error || 'No se pudo cargar la información del socio.');
+        closeEditModal();
+      }
+
+      setIsEditLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditRoute, socioId, socios, closeEditModal]);
 
   const loadSocios = async () => {
     try {
@@ -133,7 +202,7 @@ export default function AdminSocios() {
             </button>
             
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={openCreateModalRoute}
               className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               <UserPlus className="h-5 w-5 mr-2" />
@@ -295,7 +364,7 @@ export default function AdminSocios() {
                       <button
                         onClick={() => {
                           setEditingSocio(socio);
-                          setShowEditModal(true);
+                          openEditModalRoute(socio.id);
                         }}
                         className="text-blue-600 hover:text-blue-900 mr-3"
                         title="Editar socio"
@@ -330,28 +399,32 @@ export default function AdminSocios() {
       )}
 
       {/* Modal Crear Socio */}
-      {showCreateModal && (
+      {isCreateRoute && (
         <CreateSocioModal
-          onClose={() => setShowCreateModal(false)}
+          onClose={closeCreateModal}
           onSocioCreated={() => {
-            setShowCreateModal(false);
             loadSocios();
+            closeCreateModal();
           }}
         />
       )}
 
       {/* Modal Editar Socio */}
-      {showEditModal && editingSocio && (
+      {isEditRoute && isEditLoading && !editingSocio && (
+        <ModalLoading message="Cargando información del socio..." onClose={closeEditModal} />
+      )}
+
+      {isEditRoute && editingSocio && (
         <EditSocioModal
           socio={editingSocio}
           onClose={() => {
-            setShowEditModal(false);
             setEditingSocio(null);
+            closeEditModal();
           }}
           onSocioUpdated={() => {
-            setShowEditModal(false);
-            setEditingSocio(null);
             loadSocios();
+            setEditingSocio(null);
+            closeEditModal();
           }}
         />
       )}
@@ -363,6 +436,24 @@ export default function AdminSocios() {
           onClose={() => setSelectedSocio(null)}
         />
       )}
+    </div>
+  );
+}
+
+function ModalLoading({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center">
+        <Loader2 className="h-8 w-8 text-red-600 animate-spin mx-auto mb-4" />
+        <p className="text-sm text-gray-600 mb-4">{message}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 }
