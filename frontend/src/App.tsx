@@ -35,6 +35,7 @@ import PanelAdminLayout from './components/layout/PanelAdminLayout';
 import AdminUsers from './pages/AdminUsers';
 import AdminSettings from './pages/AdminSettings';
 import AdminMonitoring from './pages/AdminMonitoring';
+import TestUser from './pages/TestUser';
 
 function App() {
   return (
@@ -95,6 +96,10 @@ function App() {
           
           {/* Páginas generales */}
           <Route path="/contacto" element={<ContactPage />} />
+
+          {/* Test Page */}
+          <Route path="/testuser" element={<TestUser />} />
+
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <DebugPanel />
