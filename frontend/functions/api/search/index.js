@@ -373,83 +373,98 @@ async function searchUsuarios(env, searchTerm, limit) {
 
   try {
     const hasPublicColumn = await ensurePrivacyTable(env.DB);
+    // Build a tolerant select and where clause based on existing columns in `usuarios`
+    const infoRes = await env.DB.prepare(`PRAGMA table_info(usuarios)`).all();
+    const cols = (infoRes?.results || []).map((c) => c.name);
 
-    const selectQuery = hasPublicColumn
-      ? `
-        SELECT 
-          u.id,
-          u.nombre,
-          u.apellido,
-          u.email,
-          u.telefono,
-          u.ciudad,
-          u.region,
-          u.direccion,
-          u.rut,
-          u.foto_url,
-          privacy.show_email,
-          privacy.show_phone,
-          privacy.show_rut,
-          privacy.show_address,
-          privacy.show_birthdate,
-          privacy.show_public_profile
-        FROM usuarios u
-        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
-        WHERE u.activo = 1
-          AND (
-            LOWER(u.nombre) LIKE ?
-            OR LOWER(u.apellido) LIKE ?
-            OR LOWER(u.email) LIKE ?
-            OR LOWER(u.ciudad) LIKE ?
-            OR LOWER(u.region) LIKE ?
-            OR LOWER(u.nombre || ' ' || IFNULL(u.apellido, '')) LIKE ?
-            OR LOWER(u.apellido || ' ' || IFNULL(u.nombre, '')) LIKE ?
-            OR LOWER(REPLACE(u.nombre || u.apellido, ' ', '')) LIKE REPLACE(?, ' ', '')
-          )
-        ORDER BY u.nombre ASC
-        LIMIT ?
-      `
-      : `
-        SELECT 
-          u.id,
-          u.nombre,
-          u.apellido,
-          u.email,
-          u.telefono,
-          u.ciudad,
-          u.region,
-          u.direccion,
-          u.rut,
-          u.foto_url,
-          privacy.show_email,
-          privacy.show_phone,
-          privacy.show_rut,
-          privacy.show_address,
-          privacy.show_birthdate,
-          1 AS show_public_profile
-        FROM usuarios u
-        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
-        WHERE u.activo = 1
-          AND (
-            LOWER(u.nombre) LIKE ?
-            OR LOWER(u.apellido) LIKE ?
-            OR LOWER(u.email) LIKE ?
-            OR LOWER(u.ciudad) LIKE ?
-            OR LOWER(u.region) LIKE ?
-            OR LOWER(u.nombre || ' ' || IFNULL(u.apellido, '')) LIKE ?
-            OR LOWER(u.apellido || ' ' || IFNULL(u.nombre, '')) LIKE ?
-            OR LOWER(REPLACE(u.nombre || u.apellido, ' ', '')) LIKE REPLACE(?, ' ', '')
-          )
-        ORDER BY u.nombre ASC
-        LIMIT ?
-      `;
+    const wants = [
+      'id',
+      'nombre',
+      'apellido',
+      'email',
+      'telefono',
+      'ciudad',
+      'region',
+      'direccion',
+      'rut',
+      'foto_url'
+    ];
+
+    const selectCols = wants.map((col) => (cols.includes(col) ? `u.${col}` : `NULL AS ${col}`));
+
+    // privacy columns come from LEFT JOIN; map existence to select list
+    const privacySelect = [
+      'privacy.show_email',
+      'privacy.show_phone',
+      'privacy.show_rut',
+      'privacy.show_address',
+      'privacy.show_birthdate',
+      hasPublicColumn ? 'privacy.show_public_profile' : '1 AS show_public_profile'
+    ];
+
+    const selectClause = `SELECT ${selectCols.join(', ')}, ${privacySelect.join(', ')} FROM usuarios u LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id`;
+
+    // Build WHERE filters only for columns that exist to avoid SQL errors
+    const baseWhere = 'u.activo = 1';
+    const searchWhereParts = [];
+    const bindings = [];
 
     const likeParam = `%${searchTerm}%`;
-    const usuariosResult = await env.DB.prepare(selectQuery)
-      .bind(likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, likeParam, limit)
-      .all();
 
-    return (usuariosResult?.results || [])
+    if (cols.includes('nombre')) {
+      searchWhereParts.push('LOWER(u.nombre) LIKE ?');
+      bindings.push(likeParam);
+    }
+    if (cols.includes('apellido')) {
+      searchWhereParts.push('LOWER(u.apellido) LIKE ?');
+      bindings.push(likeParam);
+    }
+    if (cols.includes('email')) {
+      searchWhereParts.push('LOWER(u.email) LIKE ?');
+      bindings.push(likeParam);
+    }
+    if (cols.includes('ciudad')) {
+      searchWhereParts.push('LOWER(u.ciudad) LIKE ?');
+      bindings.push(likeParam);
+    }
+    if (cols.includes('region')) {
+      searchWhereParts.push('LOWER(u.region) LIKE ?');
+      bindings.push(likeParam);
+    }
+
+    // Full name combos only if both columns exist (use IFNULL to avoid null concat)
+    if (cols.includes('nombre') && cols.includes('apellido')) {
+      searchWhereParts.push("LOWER(IFNULL(u.nombre,'') || ' ' || IFNULL(u.apellido, '')) LIKE ?");
+      bindings.push(likeParam);
+      searchWhereParts.push("LOWER(IFNULL(u.apellido,'') || ' ' || IFNULL(u.nombre, '')) LIKE ?");
+      bindings.push(likeParam);
+      // Also add the no-space concat match
+      searchWhereParts.push("LOWER(REPLACE(IFNULL(u.nombre,'') || IFNULL(u.apellido,''), ' ', '')) LIKE REPLACE(?, ' ', '')");
+      bindings.push(likeParam);
+    } else if (cols.includes('nombre') || cols.includes('apellido')) {
+      // if only one of the name columns exists, try matching the combined search term against it
+      const singleNameCol = cols.includes('nombre') ? 'nombre' : 'apellido';
+      searchWhereParts.push(`LOWER(u.${singleNameCol}) LIKE ?`);
+      bindings.push(likeParam);
+    }
+
+    const whereClause = searchWhereParts.length ? `WHERE ${baseWhere} AND (${searchWhereParts.join(' OR ')})` : `WHERE ${baseWhere}`;
+
+    const orderLimit = ` ORDER BY u.nombre ASC LIMIT ?`;
+
+    const finalQuery = `${selectClause} ${whereClause} ${orderLimit}`;
+
+    const usuariosResult = await env.DB.prepare(finalQuery).bind(...bindings, limit).all();
+
+    const rows = usuariosResult?.results || [];
+    try {
+      const names = rows.map((r) => `${r.nombre || ''} ${r.apellido || ''}`.trim()).slice(0, 10);
+      console.log('[SEARCH] usuarios rows fetched:', rows.length, 'sample:', names);
+    } catch (e) {
+      console.log('[SEARCH] usuarios rows fetched:', rows.length);
+    }
+
+    return rows
       .map((row) => {
         const fullName = [row.nombre, row.apellido].filter(Boolean).join(' ').trim() || row.email;
         const city = row.ciudad || '';
