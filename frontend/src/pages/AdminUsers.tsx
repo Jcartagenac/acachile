@@ -577,12 +577,12 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     // Validar RUT si está presente
     if (formData.rut.trim()) {
       try {
-        console.log('🔍 Validando RUT:', formData.rut);
+        console.log('🔍 Validando RUT en submit:', formData.rut);
         const normalizedRut = normalizeRut(formData.rut);
-        console.log('✅ RUT normalizado:', normalizedRut);
+        console.log('✅ RUT normalizado en submit:', normalizedRut);
         setFormData(prev => ({ ...prev, rut: normalizedRut }));
       } catch (err) {
-        console.error('❌ Error validando RUT:', err);
+        console.error('❌ Error validando RUT en submit:', err);
         errors.rut = err instanceof Error ? err.message : 'RUT inválido';
       }
     }
@@ -590,12 +590,12 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     // Validar teléfono si está presente
     if (formData.telefono.trim()) {
       try {
-        console.log('🔍 Validando teléfono:', formData.telefono);
+        console.log('🔍 Validando teléfono en submit:', formData.telefono);
         const normalizedPhone = normalizePhone(formData.telefono);
-        console.log('✅ Teléfono normalizado:', normalizedPhone);
+        console.log('✅ Teléfono normalizado en submit:', normalizedPhone);
         setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
       } catch (err) {
-        console.error('❌ Error validando teléfono:', err);
+        console.error('❌ Error validando teléfono en submit:', err);
         errors.telefono = err instanceof Error ? err.message : 'Teléfono inválido';
       }
     }
@@ -714,7 +714,32 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
               <input
                 type="text"
                 value={formData.rut}
-                onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Limpiar errores previos
+                  if (validationErrors.rut) {
+                    setValidationErrors(prev => ({ ...prev, rut: '' }));
+                  }
+                  setFormData({ ...formData, rut: value });
+                }}
+                onBlur={() => {
+                  // Validar y normalizar al perder foco
+                  if (formData.rut.trim()) {
+                    try {
+                      console.log('🔍 Validando RUT al perder foco:', formData.rut);
+                      const normalizedRut = normalizeRut(formData.rut);
+                      console.log('✅ RUT normalizado:', normalizedRut);
+                      setFormData(prev => ({ ...prev, rut: normalizedRut }));
+                      setValidationErrors(prev => ({ ...prev, rut: '' }));
+                    } catch (err) {
+                      console.error('❌ Error validando RUT:', err);
+                      setValidationErrors(prev => ({
+                        ...prev,
+                        rut: err instanceof Error ? err.message : 'RUT inválido'
+                      }));
+                    }
+                  }
+                }}
                 placeholder="12.345.678-9"
                 className={`mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.rut ? 'border-red-500' : 'border-gray-300'}`}
               />
@@ -730,7 +755,32 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
               <input
                 type="text"
                 value={formData.telefono}
-                onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Limpiar errores previos
+                  if (validationErrors.telefono) {
+                    setValidationErrors(prev => ({ ...prev, telefono: '' }));
+                  }
+                  setFormData({ ...formData, telefono: value });
+                }}
+                onBlur={() => {
+                  // Validar y normalizar al perder foco
+                  if (formData.telefono.trim()) {
+                    try {
+                      console.log('🔍 Validando teléfono al perder foco:', formData.telefono);
+                      const normalizedPhone = normalizePhone(formData.telefono);
+                      console.log('✅ Teléfono normalizado:', normalizedPhone);
+                      setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
+                      setValidationErrors(prev => ({ ...prev, telefono: '' }));
+                    } catch (err) {
+                      console.error('❌ Error validando teléfono:', err);
+                      setValidationErrors(prev => ({
+                        ...prev,
+                        telefono: err instanceof Error ? err.message : 'Teléfono inválido'
+                      }));
+                    }
+                  }
+                }}
                 placeholder="+56912345678"
                 className={`mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.telefono ? 'border-red-500' : 'border-gray-300'}`}
               />
