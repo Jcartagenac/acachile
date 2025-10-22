@@ -126,7 +126,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       title: 'Visítanos',
       content:
         'Estamos ubicados en Viña del Mar, Región de Valparaíso. Agenda una visita para conocer nuestra sede y actividades.',
-      image_url: 'https://maps.googleapis.com/maps/api/staticmap?center=Vi%C3%B1a+del+Mar,+Chile&zoom=14&size=600x400&markers=Vi%C3%B1a+del+Mar,+Chile',
+      image_url: 'https://maps.googleapis.com/maps/api/staticmap?center=Vi%C3%B1a+del+Mar,+Chile&zoom=14&size=600x400&markers=Vi%C3%B1a+del+Mar,+Chile&key=AIzaSyCMPIC1xI_--M5zIXJtL18-b2UVnkCNMLY',
       sort_order: 2,
       cta_label: 'Abrir en Google Maps',
       cta_url: 'https://maps.google.com/?q=Sporting+Club,+Vi%C3%B1a+del+Mar'

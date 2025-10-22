@@ -1,4 +1,5 @@
 import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
 
 // Endpoint de gestión individual de usuarios
 // GET /api/admin/users/[id] - Obtener usuario específico
@@ -122,7 +123,7 @@ function validateStatus(status) {
 
 // Helper: Construir actualizaciones dinámicas
 function buildUpdateFields(body) {
-  const { name, role, status, email_verified } = body;
+  const { name, role, status, rut, telefono, ciudad, direccion } = body;
   const updates = [];
   const params = [];
   const errors = [];
@@ -154,6 +155,58 @@ function buildUpdateFields(body) {
     } else {
       updates.push('activo = ?');
       params.push(status === 'active' ? 1 : 0);
+    }
+  }
+
+  // Normalizar RUT
+  if (rut !== undefined) {
+    if (rut) {
+      try {
+        const normalizedRut = normalizeRut(rut);
+        updates.push('rut = ?');
+        params.push(normalizedRut);
+      } catch (error) {
+        errors.push(error.message);
+      }
+    } else {
+      updates.push('rut = ?');
+      params.push(null);
+    }
+  }
+
+  // Normalizar teléfono
+  if (telefono !== undefined) {
+    if (telefono) {
+      try {
+        const normalizedTelefono = normalizePhone(telefono);
+        updates.push('telefono = ?');
+        params.push(normalizedTelefono);
+      } catch (error) {
+        errors.push(error.message);
+      }
+    } else {
+      updates.push('telefono = ?');
+      params.push(null);
+    }
+  }
+
+  // Normalizar ciudad
+  if (ciudad !== undefined) {
+    updates.push('ciudad = ?');
+    params.push(ciudad ? ciudad.trim() : null);
+  }
+
+  // Normalizar dirección
+  if (direccion !== undefined) {
+    if (direccion) {
+      // Nota: normalizeAddress es async, pero buildUpdateFields no es async.
+      // Por simplicidad, usar trim por ahora, o hacer la función async.
+      // Para mantener compatibilidad, usar trim y normalizar después si es necesario.
+      updates.push('direccion = ?');
+      params.push(direccion.trim());
+    } else {
+      updates.push('direccion = ?');
+      params.push(null);
     }
   }
 

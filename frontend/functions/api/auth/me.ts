@@ -1,5 +1,6 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse, requireAuth } from '../../_middleware';
+import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../shared/utils/validators';
 
 /**
  * Handler de perfil de usuario (me)
@@ -97,7 +98,7 @@ function validateProfileFields(body: {
   ciudad?: string;
   direccion?: string;
 }): { valid: boolean; error?: string } {
-  const { nombre, apellido } = body;
+  const { nombre, apellido, telefono, rut } = body;
   
   if (nombre !== undefined && (!nombre || nombre.trim().length < 2)) {
     return { valid: false, error: 'El nombre debe tener al menos 2 caracteres' };
@@ -107,13 +108,29 @@ function validateProfileFields(body: {
     return { valid: false, error: 'El apellido debe tener al menos 2 caracteres' };
   }
 
+  if (telefono !== undefined && telefono) {
+    try {
+      normalizePhone(telefono);
+    } catch (error) {
+      return { valid: false, error: error.message };
+    }
+  }
+
+  if (rut !== undefined && rut) {
+    try {
+      normalizeRut(rut);
+    } catch (error) {
+      return { valid: false, error: error.message };
+    }
+  }
+
   return { valid: true };
 }
 
 /**
  * Construye los campos y valores para el UPDATE
  */
-function buildUpdateFields(body: {
+async function buildUpdateFields(body: {
   nombre?: string;
   apellido?: string;
   telefono?: string;
@@ -121,7 +138,7 @@ function buildUpdateFields(body: {
   ciudad?: string;
   direccion?: string;
   foto_url?: string;
-}): { fields: string[]; values: any[] } {
+}): Promise<{ fields: string[]; values: any[] }> {
   const updateFields: string[] = [];
   const updateValues: any[] = [];
   const { nombre, apellido, telefono, rut, ciudad, direccion, foto_url } = body;
@@ -138,12 +155,28 @@ function buildUpdateFields(body: {
 
   if (telefono !== undefined) {
     updateFields.push('telefono = ?');
-    updateValues.push(telefono && telefono.trim() !== '' ? telefono.trim() : null);
+    if (telefono && telefono.trim() !== '') {
+      try {
+        updateValues.push(normalizePhone(telefono.trim()));
+      } catch (error) {
+        updateValues.push(telefono.trim()); // Fallback
+      }
+    } else {
+      updateValues.push(null);
+    }
   }
 
   if (rut !== undefined) {
     updateFields.push('rut = ?');
-    updateValues.push(rut && rut.trim() !== '' ? rut.trim() : null);
+    if (rut && rut.trim() !== '') {
+      try {
+        updateValues.push(normalizeRut(rut.trim()));
+      } catch (error) {
+        updateValues.push(rut.trim()); // Fallback
+      }
+    } else {
+      updateValues.push(null);
+    }
   }
 
   if (ciudad !== undefined) {
@@ -153,7 +186,16 @@ function buildUpdateFields(body: {
 
   if (direccion !== undefined) {
     updateFields.push('direccion = ?');
-    updateValues.push(direccion && direccion.trim() !== '' ? direccion.trim() : null);
+    if (direccion && direccion.trim() !== '') {
+      try {
+        const normalized = await normalizeAddress(direccion.trim());
+        updateValues.push(normalized);
+      } catch (error) {
+        updateValues.push(direccion.trim()); // Fallback
+      }
+    } else {
+      updateValues.push(null);
+    }
   }
 
   if (foto_url !== undefined) {
@@ -230,7 +272,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     }
 
     // Construir campos de actualización
-    const { fields: updateFields, values: updateValues } = buildUpdateFields(body);
+    const { fields: updateFields, values: updateValues } = await buildUpdateFields(body);
     console.log('[AUTH/ME] Update fields:', updateFields);
     console.log('[AUTH/ME] Update values:', updateValues);
 

@@ -1,4 +1,5 @@
 import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
 
 // Endpoint de gestión de usuarios para administradores
 // GET /api/admin/users - Listar usuarios
@@ -212,7 +213,7 @@ export async function onRequestPost(context) {
     }
 
     const body = await request.json();
-    const { email, name, password, role = 'usuario', send_welcome_email = false } = body;
+    const { email, name, password, role = 'usuario', send_welcome_email = false, rut, telefono, ciudad, direccion } = body;
 
     // Dividir name en nombre y apellido
     const nameParts = (name || '').trim().split(' ');
@@ -250,9 +251,9 @@ export async function onRequestPost(context) {
         
         const updateResult = await env.DB.prepare(`
           UPDATE usuarios 
-          SET nombre = ?, apellido = ?, password_hash = ?, role = ?, activo = 1, updated_at = ?
+          SET nombre = ?, apellido = ?, password_hash = ?, role = ?, rut = ?, telefono = ?, ciudad = ?, direccion = ?, activo = 1, updated_at = ?
           WHERE id = ?
-        `).bind(nombre, apellido, hashedPassword, role, now, existingUser.id).run();
+        `).bind(nombre, apellido, hashedPassword, role, normalizedRut, normalizedTelefono, normalizedCiudad, normalizedDireccion, now, existingUser.id).run();
 
         if (!updateResult.success) {
           throw new Error('Error reactivando usuario en la base de datos');
@@ -267,9 +268,9 @@ export async function onRequestPost(context) {
     } else {
       // Usuario no existe - CREAR NUEVO
       const result = await env.DB.prepare(`
-        INSERT INTO usuarios (email, nombre, apellido, password_hash, role, activo, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, 1, ?, ?)
-      `).bind(email, nombre, apellido, hashedPassword, role, now, now).run();
+        INSERT INTO usuarios (email, nombre, apellido, password_hash, role, rut, telefono, ciudad, direccion, activo, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+      `).bind(email, nombre, apellido, hashedPassword, role, normalizedRut, normalizedTelefono, normalizedCiudad, normalizedDireccion, now, now).run();
 
       if (!result.success) {
         throw new Error('Error creando usuario en la base de datos');
