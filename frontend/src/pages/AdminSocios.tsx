@@ -451,6 +451,7 @@ export default function AdminSocios() {
             loadSocios();
             closeCreateModal();
           }}
+          roleOptions={roleOptions}
         />
       )}
 
@@ -831,9 +832,10 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
 }
 
 // Modal para crear socio
-function CreateSocioModal({ onClose, onSocioCreated }: {
+function CreateSocioModal({ onClose, onSocioCreated, roleOptions }: {
   onClose: () => void;
   onSocioCreated: () => void;
+  roleOptions: Array<{ key: string; label: string; description?: string; priority?: number }>;
 }) {
   const [formData, setFormData] = useState<CreateSocioData>({
     nombre: '',
