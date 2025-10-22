@@ -1,0 +1,283 @@
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.30"
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Provider configuration
+# ---------------------------------------------------------------------------
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
+# ---------------------------------------------------------------------------
+# Variables
+# ---------------------------------------------------------------------------
+
+variable "cloudflare_api_token" {
+  description = "API token with permissions for Pages, KV, R2, D1 and Workers"
+  type        = string
+  sensitive   = true
+}
+
+variable "account_id" {
+  description = "Cloudflare account ID where the resources will be created"
+  type        = string
+}
+
+variable "zone_id" {
+  description = "Optional DNS zone ID for custom domains (leave empty if not binding)"
+  type        = string
+  default     = ""
+}
+
+variable "project_name" {
+  description = "Cloudflare Pages project slug (must be globally unique in the account)"
+  type        = string
+  default     = "aca-chile-platform"
+}
+
+variable "github_owner" {
+  description = "GitHub organization or user that hosts the repository"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name that contains the project"
+  type        = string
+}
+
+variable "production_branch" {
+  description = "Default branch used for production deployments"
+  type        = string
+  default     = "main"
+}
+
+variable "preview_branch_includes" {
+  description = "Branches that will trigger preview deployments"
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "r2_bucket_name" {
+  description = "Name for the Cloudflare R2 bucket (global namespace)"
+  type        = string
+  default     = "aca-media-bucket"
+}
+
+variable "kv_namespace_title" {
+  description = "Friendly title for the KV namespace used by the project"
+  type        = string
+  default     = "ACA_KV"
+}
+
+variable "d1_database_name" {
+  description = "Name of the D1 database"
+  type        = string
+  default     = "aca-chile-db"
+}
+
+variable "production_domain" {
+  description = "Primary production domain (without protocol). Example: ejemplo.com"
+  type        = string
+  default     = ""
+}
+
+variable "preview_domain" {
+  description = "Optional preview domain (without protocol). Example: preview.ejemplo.com"
+  type        = string
+  default     = ""
+}
+
+variable "from_email" {
+  description = "Email address used as sender for transactional emails"
+  type        = string
+}
+
+variable "admin_email" {
+  description = "Administrative contact email"
+  type        = string
+}
+
+variable "jwt_secret" {
+  description = "JWT secret for token signing (hexadecimal 32 bytes recommended)"
+  type        = string
+  sensitive   = true
+}
+
+variable "resend_api_key" {
+  description = "Resend API key for transactional email delivery"
+  type        = string
+  sensitive   = true
+}
+
+variable "preview_jwt_secret" {
+  description = "Optional override secret for preview deployments"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "preview_resend_api_key" {
+  description = "Optional override Resend API key for preview deployments"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "compatibility_date" {
+  description = "Cloudflare compatibility date for Pages Functions"
+  type        = string
+  default     = "2023-10-30"
+}
+
+# ---------------------------------------------------------------------------
+# Core resources (R2, KV, D1)
+# ---------------------------------------------------------------------------
+
+resource "cloudflare_r2_bucket" "media" {
+  account_id = var.account_id
+  name       = var.r2_bucket_name
+}
+
+resource "cloudflare_kv_namespace" "cache" {
+  account_id = var.account_id
+  title      = var.kv_namespace_title
+}
+
+resource "cloudflare_d1_database" "primary" {
+  account_id = var.account_id
+  name       = var.d1_database_name
+}
+
+# ---------------------------------------------------------------------------
+# Cloudflare Pages project (frontend + functions)
+# ---------------------------------------------------------------------------
+
+resource "cloudflare_pages_project" "app" {
+  account_id        = var.account_id
+  name              = var.project_name
+  production_branch = var.production_branch
+
+  source {
+    type = "github"
+
+    config {
+      owner             = var.github_owner
+      repo_name         = var.github_repo
+      production_branch = var.production_branch
+      preview_branches  = var.preview_branch_includes
+      deployments_enabled = true
+    }
+  }
+
+  build_config {
+    build_command    = "npm run build"
+    destination_dir  = "frontend/dist"
+    build_output_dir = "frontend/dist"
+    root_dir         = "frontend"
+    package_manager  = "npm"
+  }
+
+  deployment_configs {
+    production {
+      compatibility_date = var.compatibility_date
+
+      env_vars = {
+        ENVIRONMENT  = "production"
+        FRONTEND_URL = var.production_domain != "" ? "https://${var.production_domain}" : ""
+        CORS_ORIGIN  = var.production_domain != "" ? "https://${var.production_domain}" : "*"
+        FROM_EMAIL   = var.from_email
+        ADMIN_EMAIL  = var.admin_email
+      }
+
+      secrets = {
+        JWT_SECRET     = var.jwt_secret
+        RESEND_API_KEY = var.resend_api_key
+      }
+
+      d1_databases = {
+        DB = cloudflare_d1_database.primary.id
+      }
+
+      kv_namespaces = {
+        ACA_KV = cloudflare_kv_namespace.cache.id
+      }
+
+      r2_buckets = {
+        ACA_MEDIA = cloudflare_r2_bucket.media.name
+      }
+    }
+
+    preview {
+      compatibility_date = var.compatibility_date
+
+      env_vars = {
+        ENVIRONMENT  = "preview"
+        FRONTEND_URL = var.preview_domain != "" ? "https://${var.preview_domain}" : ""
+        CORS_ORIGIN  = var.preview_domain != "" ? "https://${var.preview_domain}" : "*"
+        FROM_EMAIL   = var.from_email
+        ADMIN_EMAIL  = var.admin_email
+      }
+
+      secrets = {
+        JWT_SECRET     = var.preview_jwt_secret != "" ? var.preview_jwt_secret : var.jwt_secret
+        RESEND_API_KEY = var.preview_resend_api_key != "" ? var.preview_resend_api_key : var.resend_api_key
+      }
+
+      d1_databases = {
+        DB = cloudflare_d1_database.primary.id
+      }
+
+      kv_namespaces = {
+        ACA_KV = cloudflare_kv_namespace.cache.id
+      }
+
+      r2_buckets = {
+        ACA_MEDIA = cloudflare_r2_bucket.media.name
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Optional: Custom domain binding (requires zone ID)
+# ---------------------------------------------------------------------------
+
+resource "cloudflare_pages_domain" "production" {
+  count       = var.production_domain != "" && var.zone_id != "" ? 1 : 0
+  account_id  = var.account_id
+  project_name = cloudflare_pages_project.app.name
+  domain      = var.production_domain
+}
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+
+output "pages_project_name" {
+  description = "Cloudflare Pages project name"
+  value       = cloudflare_pages_project.app.name
+}
+
+output "r2_bucket" {
+  description = "Name of the created R2 bucket"
+  value       = cloudflare_r2_bucket.media.name
+}
+
+output "kv_namespace_id" {
+  description = "ID of the KV namespace bound to the project"
+  value       = cloudflare_kv_namespace.cache.id
+}
+
+output "d1_database_id" {
+  description = "ID of the D1 database created for the project"
+  value       = cloudflare_d1_database.primary.id
+}
