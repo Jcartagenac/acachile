@@ -13,80 +13,90 @@ export default function TestUser() {
 
   const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log('🔄 RUT onChange - Input value:', value);
+    console.log('🔄 RUT onChange - Input value:', `"${value}"`);
 
     // Limpiar errores previos
     if (validationErrors.rut) {
       setValidationErrors(prev => ({ ...prev, rut: '' }));
     }
 
-    // Formatear en tiempo real mientras escribe
-    let formattedValue = value;
-    if (value.trim()) {
-      try {
-        // Normalizar completamente en vivo
-        const cleanValue = value.replace(/[^0-9kK]/g, '');
-        console.log('🧹 RUT cleaned value:', cleanValue);
+    // Permitir números, K/k, puntos y guiones
+    const allowedChars = value.replace(/[^0-9kK.\-]/g, '');
+    console.log('🔤 RUT allowed chars:', `"${allowedChars}"`);
 
-        if (cleanValue.length >= 8) {
+    // Formatear en tiempo real mientras escribe
+    let formattedValue = allowedChars;
+    if (allowedChars.trim()) {
+      try {
+        // Limpiar para validación
+        const cleanValue = allowedChars.replace(/[^0-9kK]/g, '').toUpperCase();
+        console.log('🧹 RUT cleaned for validation:', `"${cleanValue}"`);
+
+        if (cleanValue.length >= 9) {
+          // Tiene dígito verificador completo, validar y formatear
           formattedValue = normalizeRut(cleanValue);
-          console.log('✅ RUT normalized live:', formattedValue);
+          console.log('✅ RUT normalized complete:', `"${formattedValue}"`);
+        } else if (cleanValue.length >= 8) {
+          // Tiene cuerpo completo pero falta DV, formatear cuerpo + DV parcial
+          const body = cleanValue.slice(0, 8);
+          const partialDv = cleanValue.slice(8);
+          const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          formattedValue = `${formattedBody}-${partialDv}`;
+          console.log('📝 RUT formatted with partial DV:', `"${formattedValue}"`);
         } else {
-          // Formateo básico mientras escribe
+          // Solo formatear puntos en el cuerpo
           formattedValue = cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          if (cleanValue.length > 7) {
-            const body = cleanValue.slice(0, -1);
-            const dv = cleanValue.slice(-1);
-            formattedValue = `${body.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}-${dv}`;
-          }
-          console.log('📝 RUT formatted basic:', formattedValue);
+          console.log('📝 RUT formatted body only:', `"${formattedValue}"`);
         }
       } catch (err) {
         console.error('❌ Error formatting RUT live:', err);
         // Si hay error, mantener el valor limpio
-        formattedValue = value.replace(/[^0-9kK.\-]/g, '');
+        formattedValue = allowedChars;
       }
     }
 
-    console.log('💾 RUT setting formData to:', formattedValue);
+    console.log('💾 RUT final value:', `"${formattedValue}"`);
     setFormData({ ...formData, rut: formattedValue });
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log('🔄 Phone onChange - Input value:', value);
+    console.log('🔄 Phone onChange - Input value:', `"${value}"`);
 
     // Limpiar errores previos
     if (validationErrors.telefono) {
       setValidationErrors(prev => ({ ...prev, telefono: '' }));
     }
 
+    // Permitir números y +
+    const allowedChars = value.replace(/[^0-9+]/g, '');
+    console.log('🔤 Phone allowed chars:', `"${allowedChars}"`);
+
     // Formatear en tiempo real mientras escribe
-    let formattedValue = value;
-    if (value.trim()) {
+    let formattedValue = allowedChars;
+    if (allowedChars.trim()) {
       try {
-        // Normalizar completamente en vivo
-        const cleanValue = value.replace(/[^0-9]/g, '');
-        console.log('🧹 Phone cleaned value:', cleanValue);
+        // Limpiar para validación (quitar +56 si existe)
+        const cleanValue = allowedChars.replace(/^\+?56/, '');
+        console.log('🧹 Phone cleaned for validation:', `"${cleanValue}"`);
 
         if (cleanValue.length >= 9) {
+          // Tiene número completo, normalizar
           formattedValue = normalizePhone(cleanValue);
-          console.log('✅ Phone normalized live:', formattedValue);
-        } else if (cleanValue.length >= 8) {
-          // Formateo básico mientras escribe
+          console.log('✅ Phone normalized complete:', `"${formattedValue}"`);
+        } else if (cleanValue.length >= 1) {
+          // Formateo parcial
           formattedValue = `+56${cleanValue}`;
-          console.log('📝 Phone formatted basic:', formattedValue);
-        } else {
-          formattedValue = cleanValue;
+          console.log('📝 Phone formatted partial:', `"${formattedValue}"`);
         }
       } catch (err) {
         console.error('❌ Error formatting phone live:', err);
         // Si hay error, mantener el valor limpio
-        formattedValue = value.replace(/[^0-9+]/g, '');
+        formattedValue = allowedChars;
       }
     }
 
-    console.log('💾 Phone setting formData to:', formattedValue);
+    console.log('💾 Phone final value:', `"${formattedValue}"`);
     setFormData({ ...formData, telefono: formattedValue });
   };
 
@@ -155,7 +165,7 @@ export default function TestUser() {
               <p className="mt-1 text-sm text-red-600">{validationErrors.rut}</p>
             )}
             <p className="mt-1 text-xs text-gray-500">
-              Should format to: 12.345.678-9
+              Should format to: 12.345.678-9 (type 123456789)
             </p>
           </div>
 
