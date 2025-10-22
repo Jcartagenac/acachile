@@ -544,9 +544,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const selectedRole = roleOptions.find((option) => option.key === formData.role);
-
-  const selectedRole = roleOptions.find((option) => option.key === formData.role);
+  const selectedRoleOption = roleOptions.find((option) => option.key === formData.role);
 
   useEffect(() => {
     setFormData((prev) => {
@@ -665,9 +663,9 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                   </option>
                 ))}
               </select>
-              {selectedRole?.description && (
+              {selectedRoleOption?.description && (
                 <p className="mt-1 text-xs text-gray-500">
-                  {selectedRole.description}
+                  {selectedRoleOption.description}
                 </p>
               )}
             </div>
@@ -730,6 +728,7 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const selectedRoleOption = roleOptions.find((option) => option.key === formData.role);
 
   useEffect(() => {
     setFormData({
@@ -845,9 +844,9 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
                   </option>
                 ))}
               </select>
-              {selectedRole?.description && (
+              {selectedRoleOption?.description && (
                 <p className="mt-1 text-xs text-gray-500">
-                  {selectedRole.description}
+                  {selectedRoleOption.description}
                 </p>
               )}
             </div>
