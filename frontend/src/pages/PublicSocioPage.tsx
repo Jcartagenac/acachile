@@ -210,7 +210,7 @@ const PublicSocioPage: React.FC = () => {
 
   return (
     <LocalErrorBoundary>
-      <div className="bg-soft-gradient-light min-h-[60vh] py-8 px-4">
+      <div className="bg-soft-gradient-light min-h-[48vh] py-6 px-4">
         <div className="max-w-4xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
           <Link to="/buscar" className="inline-flex items-center text-sm text-red-600 hover:text-red-700 font-medium">
@@ -219,8 +219,8 @@ const PublicSocioPage: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-          <div className="relative h-24 bg-gradient-to-r from-red-600/80 via-orange-500/80 to-amber-400/80">
-            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 transform">
+          <div className="relative h-20 md:h-24 bg-gradient-to-r from-red-600/80 via-orange-500/80 to-amber-400/80">
+            <div className="absolute -bottom-12 md:-bottom-16 left-1/2 -translate-x-1/2 transform">
               {socio.avatar ? (
                 <img
                   src={socio.avatar}
@@ -235,7 +235,7 @@ const PublicSocioPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-12 pb-8 px-6 sm:px-10 space-y-6">
+          <div className="pt-10 pb-8 px-6 sm:px-10 space-y-6">
             <header className="text-center space-y-3">
               <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-red-600 bg-red-50 rounded-full px-3 py-1">
                 <UserCircle className="h-4 w-4" />
