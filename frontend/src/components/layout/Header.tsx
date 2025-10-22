@@ -60,7 +60,7 @@ export const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 ${
+                  className={`px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center ${
                     location.pathname === item.href
                       ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
                       : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 hover:shadow-soft-sm border border-transparent hover:border-white/30'
@@ -141,7 +141,7 @@ export const Header: React.FC = () => {
                     key={item.name}
                     to={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`block px-4 py-3 text-base font-semibold rounded-2xl transition-all duration-300 ${
+                    className={`block px-4 py-3 text-base font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center ${
                       location.pathname === item.href
                         ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
                         : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 hover:shadow-soft-sm border border-transparent hover:border-white/30'
