@@ -12,3 +12,7 @@ FRONTEND_URL = "http://localhost:5173"
 binding = "DB"
 database_name = "acachile-db"
 database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
+
+# Environment variables (secrets)
+[vars]
+GOOGLE_MAPS_API_KEY = "AIzaSyCMPIC1xI_--M5zIXJtL18-b2UVnkCNMLY"

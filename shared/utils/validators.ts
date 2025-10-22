@@ -99,7 +99,7 @@ export function normalizePhone(phone: string): string {
  * @param apiKey - API key de Google Maps
  * @returns Dirección normalizada o la original si falla
  */
-export async function normalizeAddress(address: string, apiKey: string = 'AIzaSyCMPIC1xI_--M5zIXJtL18-b2UVnkCNMLY'): Promise<string> {
+export async function normalizeAddress(address: string, apiKey: string = process.env.GOOGLE_MAPS_API_KEY || ''): Promise<string> {
   if (!address || address.trim().length === 0) {
     return address;
   }
