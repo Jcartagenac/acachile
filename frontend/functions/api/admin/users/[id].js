@@ -76,16 +76,18 @@ export async function onRequestGet(context) {
     const userDetails = {
       id: user.id,
       email: user.email,
-      name: user.name,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      name: `${user.nombre} ${user.apellido}`.trim(),
       role: user.role,
-      status: user.status,
+      status: user.activo ? 'active' : 'inactive',
       email_verified: !!user.email_verified_at,
       last_login: user.last_login,
       created_at: user.created_at,
       updated_at: user.updated_at,
       stats: {
-        eventos_creados: user.eventos_creados || 0,
-        inscripciones_count: user.inscripciones_count || 0
+        eventos_creados: user.events_created || 0,
+        inscripciones_count: user.inscriptions || 0
       },
       eventos_recientes: eventos || [],
       inscripciones_recientes: inscripciones || []
@@ -122,7 +124,7 @@ function validateStatus(status) {
 }
 
 // Helper: Construir actualizaciones dinámicas
-function buildUpdateFields(body) {
+async function buildUpdateFields(body, env) {
   const { name, role, status, rut, telefono, ciudad, direccion } = body;
   const updates = [];
   const params = [];
@@ -133,7 +135,7 @@ function buildUpdateFields(body) {
     const nameParts = (name || '').trim().split(' ');
     const nombre = nameParts[0] || '';
     const apellido = nameParts.slice(1).join(' ') || '';
-    
+
     updates.push('nombre = ?');
     params.push(nombre);
     updates.push('apellido = ?');
@@ -199,11 +201,16 @@ function buildUpdateFields(body) {
   // Normalizar dirección
   if (direccion !== undefined) {
     if (direccion) {
-      // Nota: normalizeAddress es async, pero buildUpdateFields no es async.
-      // Por simplicidad, usar trim por ahora, o hacer la función async.
-      // Para mantener compatibilidad, usar trim y normalizar después si es necesario.
-      updates.push('direccion = ?');
-      params.push(direccion.trim());
+      try {
+        const normalizedDireccion = await normalizeAddress(direccion, env.GOOGLE_MAPS_API_KEY);
+        updates.push('direccion = ?');
+        params.push(normalizedDireccion);
+      } catch (error) {
+        console.warn('[buildUpdateFields] Error normalizando dirección:', error);
+        // Usar dirección original si falla la normalización
+        updates.push('direccion = ?');
+        params.push(direccion.trim());
+      }
     } else {
       updates.push('direccion = ?');
       params.push(null);
@@ -222,7 +229,7 @@ function formatUserResponse(user) {
     apellido: user.apellido,
     name: `${user.nombre} ${user.apellido}`.trim(),
     role: user.role,
-    status: user.status ? 'active' : 'inactive',
+    status: user.activo ? 'active' : 'inactive',
     email_verified: true,
     last_login: user.last_login,
     created_at: user.created_at,
@@ -239,7 +246,7 @@ export async function onRequestPut(context) {
 
     let adminUser;
     try {
-      adminUser = requireAuth(request, env);
+      adminUser = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',
@@ -268,7 +275,7 @@ export async function onRequestPut(context) {
     }
 
     // Construir query de actualización dinámicamente
-    const { updates, params: updateParams, errors } = buildUpdateFields(body);
+    const { updates, params: updateParams, errors } = await buildUpdateFields(body, env);
 
     if (errors.length > 0) {
       return errorResponse(errors.join(', '), 400);
@@ -325,7 +332,7 @@ export async function onRequestDelete(context) {
 
     let adminUser;
     try {
-      adminUser = requireAuth(request, env);
+      adminUser = await requireAuth(request, env);
     } catch (error) {
       return errorResponse(
         error instanceof Error ? error.message : 'Token inválido',

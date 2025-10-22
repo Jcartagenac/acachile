@@ -153,7 +153,7 @@ export async function onRequestGet(context) {
       apellido: user.apellido,
       name: `${user.nombre} ${user.apellido}`.trim(), // Para compatibilidad con frontend
       role: user.role,
-      status: user.status ? 'active' : 'inactive',
+      status: user.activo ? 'active' : 'inactive',
       email_verified: true, // La tabla usuarios no tiene este campo
       last_login: user.last_login,
       created_at: user.created_at,
