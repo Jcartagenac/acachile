@@ -725,7 +725,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                   let formattedValue = value;
                   if (value.trim()) {
                     try {
-                      // Intentar normalizar en tiempo real
+                      // Normalizar completamente en vivo
                       const cleanValue = value.replace(/[^0-9kK]/g, '');
                       if (cleanValue.length >= 8) {
                         formattedValue = normalizeRut(cleanValue);
@@ -790,7 +790,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                   let formattedValue = value;
                   if (value.trim()) {
                     try {
-                      // Intentar normalizar en tiempo real
+                      // Normalizar completamente en vivo
                       const cleanValue = value.replace(/[^0-9]/g, '');
                       if (cleanValue.length >= 9) {
                         formattedValue = normalizePhone(cleanValue);
