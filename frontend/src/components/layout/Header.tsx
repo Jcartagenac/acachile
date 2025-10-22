@@ -4,6 +4,7 @@ import { Container } from './Container';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserMenu, AuthModal } from '../auth';
 import SearchBar from '../SearchBar';
+import logoFallback from '@/assets/aca-logo.svg';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,8 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
+  const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || logoFallback);
 
   const navigation = [
     { name: 'Inicio', href: '/' },
@@ -31,10 +34,11 @@ export const Header: React.FC = () => {
               <Link to="/" className="flex items-center space-x-3 sm:space-x-4 group">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 transform group-hover:scale-105 border border-white/30 p-2">
                   <img
-                    src="https://pub-172194a6569df504cbb8a638a94d3d2c.r2.dev/logos/aca-logo.png"
+                    src={logoSrc}
                     alt="ACA Chile"
                     className="w-full h-full object-contain"
                     loading="lazy"
+                    onError={() => setLogoSrc(logoFallback)}
                   />
                 </div>
                 <div className="hidden sm:block">

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-labelledby="title desc">
+  <title id="title">ACA Chile Logo Placeholder</title>
+  <desc id="desc">Circular emblem with the letters ACA in the centre.</desc>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d9463b"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <circle cx="90" cy="90" r="86" fill="#1f2937"/>
+  <circle cx="90" cy="90" r="76" fill="url(#grad)"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+        font-family="Montserrat, 'Segoe UI', sans-serif" font-size="64"
+        font-weight="700" fill="#fff">ACA</text>
+  <text x="50%" y="124" text-anchor="middle"
+        font-family="Montserrat, 'Segoe UI', sans-serif" font-size="20"
+        font-weight="500" letter-spacing="3" fill="#fff">CHILE</text>
+</svg>
