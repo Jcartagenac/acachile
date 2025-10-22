@@ -108,9 +108,10 @@ export async function onRequestGet(context) {
 }
 
 // Helper: Validar rol de usuario
+const VALID_ROLES = ['usuario', 'director', 'director_editor', 'admin'];
+
 function validateRole(role) {
-  const validRoles = ['user', 'admin', 'editor'];
-  return validRoles.includes(role);
+  return VALID_ROLES.includes(role);
 }
 
 // Helper: Validar estado de usuario
@@ -140,7 +141,7 @@ function buildUpdateFields(body) {
 
   if (role !== undefined) {
     if (!validateRole(role)) {
-      errors.push('Rol inválido. Debe ser: user, admin o editor');
+      errors.push('Rol inválido. Debe ser: usuario, director, director_editor o admin');
     } else {
       updates.push('role = ?');
       params.push(role);

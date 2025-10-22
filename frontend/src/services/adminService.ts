@@ -3,6 +3,14 @@ import { authService } from './authService';
 
 const API_BASE_URL = '/api';
 
+const ROLE_KEYS = ['usuario', 'director', 'director_editor', 'admin'] as const;
+type RoleKey = typeof ROLE_KEYS[number];
+
+const isRoleKey = (value: unknown): value is RoleKey =>
+  typeof value === 'string' && ROLE_KEYS.includes(value as RoleKey);
+
+export type UserRole = RoleKey;
+
 export interface DashboardStats {
   users: {
     total: number;
@@ -51,11 +59,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'director' | 'director_editor' | 'usuario';
+  role: UserRole;
   created_at: string;
   updated_at: string;
   last_login?: string;
   is_active: boolean;
+  status?: 'active' | 'inactive';
+  email_verified?: boolean;
   stats?: {
     events_created: number;
     inscriptions: number;
@@ -136,6 +146,8 @@ class AdminService {
     const joinedName = `${raw?.nombre ?? ''} ${raw?.apellido ?? ''}`.trim();
     const name = (raw?.name ?? (joinedName || fallbackName)).trim();
 
+    const role: UserRole = isRoleKey(raw?.role) ? raw.role : 'usuario';
+
     const statsSource = raw?.stats ?? raw?.statistics ?? null;
     let normalizedStats: User['stats'] | undefined;
 
@@ -182,15 +194,33 @@ class AdminService {
       return true;
     })();
 
+    const status =
+      typeof raw?.status === 'string'
+        ? raw.status.toLowerCase() === 'inactive'
+          ? 'inactive'
+          : 'active'
+        : isActive ? 'active' : 'inactive';
+
+    const emailVerifiedValue =
+      raw?.email_verified ??
+      raw?.emailVerified ??
+      raw?.email_verificado ??
+      raw?.emailVerificado;
+
+    const emailVerified =
+      typeof emailVerifiedValue === 'boolean' ? emailVerifiedValue : undefined;
+
     return {
       id,
       name: name || fallbackName,
       email: raw?.email ?? '',
-      role: raw?.role ?? 'usuario',
+      role,
       created_at: raw?.created_at ?? '',
       updated_at: raw?.updated_at ?? '',
       last_login: raw?.last_login || raw?.lastLogin || undefined,
       is_active: isActive,
+      status,
+      email_verified: emailVerified,
       stats: normalizedStats
     };
   }
@@ -377,10 +407,25 @@ class AdminService {
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User> {
     try {
+      const payload: Record<string, any> = { ...updates };
+
+      if ('is_active' in payload) {
+        payload.status = payload.is_active ? 'active' : 'inactive';
+        delete payload.is_active;
+      }
+
+      if ('stats' in payload) {
+        delete payload.stats;
+      }
+
+      const sanitisedPayload = Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined)
+      );
+
       const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(updates)
+        body: JSON.stringify(sanitisedPayload)
       });
 
       if (!response.ok) {
@@ -425,13 +470,18 @@ class AdminService {
     name: string;
     email: string;
     password: string;
-    role: 'admin' | 'director' | 'director_editor' | 'usuario';
+    role: UserRole;
+    send_welcome_email?: boolean;
   }): Promise<User> {
     try {
+      const payload = Object.fromEntries(
+        Object.entries(userData).filter(([, value]) => value !== undefined)
+      );
+
       const response = await fetch(`${API_BASE_URL}/admin/users`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(userData)
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -451,7 +501,7 @@ class AdminService {
     }
   }
 
-  async getRoleCatalog(): Promise<Array<{ key: string; label: string; description: string }>> {
+  async getRoleCatalog(): Promise<Array<{ key: string; label: string; description: string; priority?: number }>> {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/roles`, {
         headers: this.getAuthHeaders()

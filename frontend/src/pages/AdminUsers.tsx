@@ -2,6 +2,45 @@ import React, { useEffect, useState } from 'react';
 import { adminService, type User } from '../services/adminService';
 import { authService } from '../services/authService';
 
+type RoleKey = User['role'];
+
+type RoleOption = {
+  key: RoleKey;
+  label: string;
+  description?: string;
+  priority?: number;
+};
+
+const DEFAULT_ROLE_OPTIONS: RoleOption[] = [
+  {
+    key: 'usuario',
+    label: 'Usuario / Socio',
+    description: 'Acceso básico al portal de socios.',
+    priority: 100
+  },
+  {
+    key: 'director',
+    label: 'Director',
+    description: 'Gestión avanzada de socios y cuotas.',
+    priority: 60
+  },
+  {
+    key: 'director_editor',
+    label: 'Director Editor',
+    description: 'Puede administrar contenido y revisar postulaciones.',
+    priority: 80
+  },
+  {
+    key: 'admin',
+    label: 'Administrador',
+    description: 'Acceso total al sistema.',
+    priority: 40
+  }
+];
+
+const isRoleKey = (value: string): value is RoleKey =>
+  ['usuario', 'director', 'director_editor', 'admin'].includes(value);
+
 type Pagination = {
   page: number;
   limit: number;
@@ -21,6 +60,66 @@ export default function AdminUsers() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>(DEFAULT_ROLE_OPTIONS);
+  const roleLabelMap = React.useMemo(() => {
+    return roleOptions.reduce<Record<string, string>>((accumulator, option) => {
+      accumulator[option.key] = option.label;
+      return accumulator;
+    }, {});
+  }, [roleOptions]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRoleCatalog = async () => {
+      try {
+        const catalog = await adminService.getRoleCatalog();
+        if (!catalog || catalog.length === 0 || cancelled) {
+          return;
+        }
+
+        const mappedRoles: RoleOption[] = [...catalog]
+          .sort((a, b) => (b.priority ?? 100) - (a.priority ?? 100))
+          .filter((item) => isRoleKey(item.key))
+          .map((item) => ({
+            key: item.key as RoleKey,
+            label: item.label ?? item.key,
+            description: item.description,
+            priority: item.priority
+          }));
+
+        if (mappedRoles.length === 0 || cancelled) {
+          return;
+        }
+
+        setRoleOptions((current) => {
+          const merged = [...current];
+          const existingKeys = new Set(current.map((option) => option.key));
+
+          mappedRoles.forEach((option) => {
+            if (existingKeys.has(option.key)) {
+              const index = merged.findIndex((item) => item.key === option.key);
+              if (index !== -1) {
+                merged[index] = option;
+              }
+            } else {
+              merged.push(option);
+            }
+          });
+
+          return [...merged].sort((a, b) => (b.priority ?? 100) - (a.priority ?? 100));
+        });
+      } catch (error) {
+        console.error('Error cargando catálogo de roles:', error);
+      }
+    };
+
+    loadRoleCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!authService.isAdmin()) {
@@ -43,6 +142,38 @@ export default function AdminUsers() {
       });
 
       setUsers(response.users ?? []);
+      if (response.users && response.users.length > 0) {
+        setRoleOptions((current) => {
+          const existingKeys = new Set(current.map((option) => option.key));
+          let updated = current;
+
+          response.users.forEach((user) => {
+            if (!existingKeys.has(user.role)) {
+              const fallback = DEFAULT_ROLE_OPTIONS.find((option) => option.key === user.role);
+              const option: RoleOption = fallback
+                ? { ...fallback }
+                : {
+                    key: user.role,
+                    label: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+                    description: undefined,
+                    priority: -10
+                  };
+              if (updated === current) {
+                updated = [...current, option];
+              } else {
+                updated.push(option);
+              }
+              existingKeys.add(user.role);
+            }
+          });
+
+          if (updated === current) {
+            return current;
+          }
+
+          return [...updated].sort((a, b) => (b.priority ?? 100) - (a.priority ?? 100));
+        });
+      }
       setPagination(response.pagination ?? null);
       setError(null);
     } catch (err) {
@@ -67,7 +198,7 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUpdateUserRole = async (userId: string, newRole: 'admin' | 'director' | 'director_editor' | 'usuario') => {
+  const handleUpdateUserRole = async (userId: string, newRole: RoleKey) => {
     try {
       await adminService.updateUser(userId, { role: newRole });
       await loadUsers(); // Recargar lista
@@ -99,18 +230,12 @@ export default function AdminUsers() {
   const getRoleBadgeColor = (role: string): string => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800';
+      case 'super_admin': return 'bg-red-200 text-red-900';
       case 'director': return 'bg-purple-100 text-purple-800';
       case 'director_editor': return 'bg-blue-100 text-blue-800';
       case 'usuario': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const roleLabels: Record<string, string> = {
-    admin: 'Administrador',
-    director: 'Director',
-    director_editor: 'Director Editor',
-    usuario: 'Usuario'
   };
 
   if (loading && users.length === 0) {
@@ -197,10 +322,11 @@ export default function AdminUsers() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Todos los roles</option>
-                <option value="admin">Administradores</option>
-                <option value="director">Directores</option>
-                <option value="director_editor">Directores Editores</option>
-                <option value="usuario">Usuarios</option>
+                {roleOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -249,7 +375,7 @@ export default function AdminUsers() {
                               {user.name || 'Usuario sin nombre'}
                             </div>
                             <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                              {roleLabels[user.role] ?? user.role}
+                              {roleLabelMap[user.role] ?? user.role}
                             </span>
                           </div>
                           <div className="text-sm text-gray-500">
@@ -263,6 +389,9 @@ export default function AdminUsers() {
                               </span>
                             )}
                           </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            Estado: {user.status === 'inactive' ? 'Inactivo' : 'Activo'}
+                          </div>
                         </div>
                       </div>
                       
@@ -270,13 +399,14 @@ export default function AdminUsers() {
                         {/* Cambiar rol */}
                         <select
                           value={user.role}
-                          onChange={(e) => handleUpdateUserRole(user.id, e.target.value as 'admin' | 'director' | 'director_editor' | 'usuario')}
+                          onChange={(e) => handleUpdateUserRole(user.id, e.target.value as RoleKey)}
                           className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="usuario">Usuario</option>
-                          <option value="director">Director</option>
-                          <option value="director_editor">Director Editor</option>
-                          <option value="admin">Admin</option>
+                          {roleOptions.map((option) => (
+                            <option key={option.key} value={option.key}>
+                              {option.label}
+                            </option>
+                          ))}
                         </select>
 
                         {/* Botón de editar */}
@@ -372,6 +502,7 @@ export default function AdminUsers() {
             setShowCreateModal(false);
             loadUsers();
           }}
+          roleOptions={roleOptions}
         />
       )}
 
@@ -384,6 +515,7 @@ export default function AdminUsers() {
             setEditingUser(null);
             loadUsers();
           }}
+          roleOptions={roleOptions}
         />
       )}
     </div>
@@ -391,18 +523,44 @@ export default function AdminUsers() {
 }
 
 // Componente para crear usuario
-function CreateUserModal({ onClose, onUserCreated }: {
+function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
   onClose: () => void;
   onUserCreated: () => void;
+  roleOptions: RoleOption[];
 }) {
-  const [formData, setFormData] = useState({
+  const defaultRole: RoleKey = roleOptions[0]?.key ?? 'usuario';
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    password: string;
+    role: RoleKey;
+    send_welcome_email: boolean;
+  }>(() => ({
     name: '',
     email: '',
     password: '',
-    role: 'usuario' as 'admin' | 'director' | 'director_editor' | 'usuario'
-  });
+    role: defaultRole,
+    send_welcome_email: false
+  }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const selectedRole = roleOptions.find((option) => option.key === formData.role);
+
+  const selectedRole = roleOptions.find((option) => option.key === formData.role);
+
+  useEffect(() => {
+    setFormData((prev) => {
+      const available = new Set(roleOptions.map((option) => option.key));
+      if (available.has(prev.role)) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        role: roleOptions[0]?.key ?? 'usuario'
+      };
+    });
+  }, [roleOptions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -415,12 +573,19 @@ function CreateUserModal({ onClose, onUserCreated }: {
     try {
       setLoading(true);
       setError(null);
-      await adminService.createUser(formData);
+      await adminService.createUser({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        role: formData.role,
+        send_welcome_email: formData.send_welcome_email
+      });
       setFormData({
         name: '',
         email: '',
         password: '',
-        role: 'usuario'
+        role: roleOptions[0]?.key ?? 'usuario',
+        send_welcome_email: false
       });
       onUserCreated();
     } catch (err) {
@@ -491,14 +656,33 @@ function CreateUserModal({ onClose, onUserCreated }: {
               </label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'director' | 'director_editor' | 'usuario' })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as RoleKey })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="usuario">Usuario</option>
-                <option value="director">Director</option>
-                <option value="director_editor">Director Editor</option>
-                <option value="admin">Administrador</option>
+                {roleOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
+              {selectedRole?.description && (
+                <p className="mt-1 text-xs text-gray-500">
+                  {selectedRole.description}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="send-welcome" className="text-sm font-medium text-gray-700">
+                Enviar email de bienvenida
+              </label>
+              <input
+                id="send-welcome"
+                type="checkbox"
+                checked={formData.send_welcome_email}
+                onChange={(e) => setFormData({ ...formData, send_welcome_email: e.target.checked })}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">
@@ -525,18 +709,37 @@ function CreateUserModal({ onClose, onUserCreated }: {
 }
 
 // Componente para editar usuario
-function EditUserModal({ user, onClose, onUserUpdated }: {
+function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
   user: User;
   onClose: () => void;
   onUserUpdated: () => void;
+  roleOptions: RoleOption[];
 }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    role: RoleKey;
+    status: 'active' | 'inactive';
+    email_verified: boolean;
+  }>(() => ({
     name: user.name,
     email: user.email,
-    role: user.role
-  });
+    role: user.role,
+    status: user.status ?? (user.is_active ? 'active' : 'inactive'),
+    email_verified: user.email_verified ?? true
+  }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status ?? (user.is_active ? 'active' : 'inactive'),
+      email_verified: user.email_verified ?? true
+    });
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -544,18 +747,28 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
     try {
       setLoading(true);
       setError(null);
-      const payload: Partial<User> = {};
+      const payload: Partial<User> & {
+        status?: 'active' | 'inactive';
+        email_verified?: boolean;
+      } = {};
 
-      if (formData.name && formData.name.trim() !== user.name.trim()) {
-        payload.name = formData.name.trim();
-      }
-
-      if (formData.email && formData.email.trim() !== user.email.trim()) {
-        payload.email = formData.email.trim();
+      const trimmedName = formData.name.trim();
+      if (trimmedName && trimmedName !== user.name.trim()) {
+        payload.name = trimmedName;
       }
 
       if (formData.role !== user.role) {
         payload.role = formData.role;
+      }
+
+      const currentStatus = user.status ?? (user.is_active ? 'active' : 'inactive');
+      if (formData.status !== currentStatus) {
+        payload.status = formData.status;
+      }
+
+      const currentEmailVerified = user.email_verified ?? true;
+      if (formData.email_verified !== currentEmailVerified) {
+        payload.email_verified = formData.email_verified;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -608,10 +821,13 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+                readOnly
+                disabled
+                className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
               />
+              <p className="mt-1 text-xs text-gray-400">
+                El email no se puede actualizar desde este panel.
+              </p>
             </div>
 
             <div>
@@ -620,14 +836,47 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
               </label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'director' | 'director_editor' | 'usuario' })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as RoleKey })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="usuario">Usuario</option>
-                <option value="director">Director</option>
-                <option value="director_editor">Director Editor</option>
-                <option value="admin">Administrador</option>
+                {roleOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
+              {selectedRole?.description && (
+                <p className="mt-1 text-xs text-gray-500">
+                  {selectedRole.description}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Estado
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="email-verified" className="text-sm font-medium text-gray-700">
+                Email verificado
+              </label>
+              <input
+                id="email-verified"
+                type="checkbox"
+                checked={formData.email_verified}
+                onChange={(e) => setFormData({ ...formData, email_verified: e.target.checked })}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">
