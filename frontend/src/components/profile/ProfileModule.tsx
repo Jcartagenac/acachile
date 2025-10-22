@@ -4,11 +4,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../services/userService';
 import { useUserService } from '../../hooks/useUserService';
 import { useImageService } from '../../hooks/useImageService';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import { normalizeRut, normalizePhone } from '../../../shared/utils/validators';
+import { AddressInput } from '../ui/AddressInput';
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   Camera,
   Edit2,
@@ -56,6 +58,7 @@ export const ProfileModule: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -119,10 +122,44 @@ export const ProfileModule: React.FC = () => {
     }
   };
 
+  const validateAndNormalizeFields = () => {
+    const errors: Record<string, string> = {};
+
+    // Validar RUT si está presente
+    if (formData.rut.trim()) {
+      try {
+        const normalizedRut = normalizeRut(formData.rut);
+        setFormData(prev => ({ ...prev, rut: normalizedRut }));
+      } catch (err) {
+        errors.rut = err instanceof Error ? err.message : 'RUT inválido';
+      }
+    }
+
+    // Validar teléfono si está presente
+    if (formData.phone.trim()) {
+      try {
+        const normalizedPhone = normalizePhone(formData.phone);
+        setFormData(prev => ({ ...prev, phone: normalizedPhone }));
+      } catch (err) {
+        errors.phone = err instanceof Error ? err.message : 'Teléfono inválido';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setMessage(null);
-    
+
+    // Validar y normalizar campos
+    if (!validateAndNormalizeFields()) {
+      setMessage({ type: 'error', text: 'Por favor corrige los errores en el formulario' });
+      setIsSaving(false);
+      return;
+    }
+
     try {
       // Limpiar y preparar los datos antes de enviar
       const cleanedData = {
@@ -133,17 +170,18 @@ export const ProfileModule: React.FC = () => {
         direccion: cleanFormValue(formData.direccion),
         region: cleanFormValue(formData.region),
       };
-      
+
       console.log('💾 ProfileModule: Saving profile data:', cleanedData);
       const response = await userService.updateProfile(cleanedData);
       console.log('📊 ProfileModule: Update response:', response);
-      
+
       if (response.success && response.data) {
         setProfile(response.data);
         setMessage({ type: 'success', text: response.message || 'Perfil actualizado exitosamente' });
         setIsEditing(false);
+        setValidationErrors({});
         console.log('✅ ProfileModule: Profile updated successfully');
-        
+
         // Reload profile to ensure we have the latest data from AuthContext
         setTimeout(() => {
           loadProfile();
@@ -219,6 +257,19 @@ export const ProfileModule: React.FC = () => {
     // Formatear automáticamente mientras escribe
     const formatted = formatRUT(cleanValue);
     setFormData({ ...formData, rut: formatted });
+    // Limpiar error de validación cuando el usuario escribe
+    if (validationErrors.rut) {
+      setValidationErrors(prev => ({ ...prev, rut: '' }));
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData({ ...formData, phone: value });
+    // Limpiar error de validación cuando el usuario escribe
+    if (validationErrors.phone) {
+      setValidationErrors(prev => ({ ...prev, phone: '' }));
+    }
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -498,15 +549,18 @@ export const ProfileModule: React.FC = () => {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={handlePhoneChange}
                     disabled={!isEditing}
-                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
-                      isEditing 
-                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
                         : 'cursor-not-allowed opacity-75'
-                    }`}
+                    } ${validationErrors.phone ? 'border-red-500' : 'border-white/30'}`}
                     placeholder="+56 9 1234 5678"
                   />
+                  {validationErrors.phone && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>
+                  )}
                 </div>
               </div>
 
@@ -522,13 +576,16 @@ export const ProfileModule: React.FC = () => {
                     value={formData.rut}
                     onChange={handleRutChange}
                     disabled={!isEditing}
-                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
-                      isEditing 
-                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
                         : 'cursor-not-allowed opacity-75'
-                    }`}
+                    } ${validationErrors.rut ? 'border-red-500' : 'border-white/30'}`}
                     placeholder="12.345.678-9"
                   />
+                  {validationErrors.rut && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.rut}</p>
+                  )}
                 </div>
               </div>
 
@@ -560,21 +617,12 @@ export const ProfileModule: React.FC = () => {
               <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Dirección
               </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 w-5 h-5 text-neutral-400" />
-                <textarea
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                  disabled={!isEditing}
-                  rows={3}
-                  className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 resize-none ${
-                    isEditing 
-                      ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
-                      : 'cursor-not-allowed opacity-75'
-                  }`}
-                  placeholder="Tu dirección completa"
-                />
-              </div>
+              <AddressInput
+                value={formData.direccion}
+                onChange={(value) => setFormData({ ...formData, direccion: value })}
+                placeholder="Tu dirección completa"
+                disabled={!isEditing}
+              />
             </div>
 
             {/* Botones de acción cuando está editando */}

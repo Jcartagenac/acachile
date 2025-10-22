@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { adminService, type User } from '../services/adminService';
 import { authService } from '../services/authService';
+import { normalizeRut, normalizePhone } from '../../../shared/utils/validators';
+import { AddressInput } from '../components/ui/AddressInput';
 
 type RoleKey = User['role'];
 
@@ -552,6 +554,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const selectedRoleOption = roleOptions.find((option) => option.key === formData.role);
 
   useEffect(() => {
@@ -568,11 +571,44 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     });
   }, [roleOptions]);
 
+  const validateAndNormalizeFields = () => {
+    const errors: Record<string, string> = {};
+
+    // Validar RUT si está presente
+    if (formData.rut.trim()) {
+      try {
+        const normalizedRut = normalizeRut(formData.rut);
+        setFormData(prev => ({ ...prev, rut: normalizedRut }));
+      } catch (err) {
+        errors.rut = err instanceof Error ? err.message : 'RUT inválido';
+      }
+    }
+
+    // Validar teléfono si está presente
+    if (formData.telefono.trim()) {
+      try {
+        const normalizedPhone = normalizePhone(formData.telefono);
+        setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
+      } catch (err) {
+        errors.telefono = err instanceof Error ? err.message : 'Teléfono inválido';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.email || !formData.password) {
-      setError('Todos los campos son requeridos');
+      setError('Nombre, email y contraseña son requeridos');
+      return;
+    }
+
+    // Validar y normalizar campos
+    if (!validateAndNormalizeFields()) {
+      setError('Por favor corrige los errores en el formulario');
       return;
     }
 
@@ -601,6 +637,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
         ciudad: '',
         direccion: ''
       });
+      setValidationErrors({});
       onUserCreated();
     } catch (err) {
       console.error('Error creando usuario:', err);
@@ -673,8 +710,11 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                 value={formData.rut}
                 onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
                 placeholder="12.345.678-9"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.rut ? 'border-red-500' : 'border-gray-300'}`}
               />
+              {validationErrors.rut && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.rut}</p>
+              )}
             </div>
 
             <div>
@@ -686,8 +726,11 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                 value={formData.telefono}
                 onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                 placeholder="+56912345678"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.telefono ? 'border-red-500' : 'border-gray-300'}`}
               />
+              {validationErrors.telefono && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.telefono}</p>
+              )}
             </div>
 
             <div>
@@ -706,11 +749,10 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
               <label className="block text-sm font-medium text-gray-700">
                 Dirección (opcional)
               </label>
-              <input
-                type="text"
+              <AddressInput
                 value={formData.direccion}
-                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(value) => setFormData({ ...formData, direccion: value })}
+                placeholder="Ingresa tu dirección completa"
               />
             </div>
 
@@ -800,6 +842,7 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const selectedRoleOption = roleOptions.find((option) => option.key === formData.role);
 
   useEffect(() => {
@@ -815,9 +858,42 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
     });
   }, [user]);
 
+  const validateAndNormalizeFields = () => {
+    const errors: Record<string, string> = {};
+
+    // Validar RUT si está presente
+    if (formData.rut.trim()) {
+      try {
+        const normalizedRut = normalizeRut(formData.rut);
+        setFormData(prev => ({ ...prev, rut: normalizedRut }));
+      } catch (err) {
+        errors.rut = err instanceof Error ? err.message : 'RUT inválido';
+      }
+    }
+
+    // Validar teléfono si está presente
+    if (formData.telefono.trim()) {
+      try {
+        const normalizedPhone = normalizePhone(formData.telefono);
+        setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
+      } catch (err) {
+        errors.telefono = err instanceof Error ? err.message : 'Teléfono inválido';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Validar y normalizar campos
+    if (!validateAndNormalizeFields()) {
+      setError('Por favor corrige los errores en el formulario');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -863,6 +939,7 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
       }
 
       await adminService.updateUser(user.id, payload);
+      setValidationErrors({});
       onUserUpdated();
     } catch (err) {
       console.error('Error actualizando usuario:', err);
@@ -960,9 +1037,12 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
                 type="text"
                 value={formData.rut}
                 onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.rut ? 'border-red-500' : 'border-gray-300'}`}
                 placeholder="12345678-9"
               />
+              {validationErrors.rut && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.rut}</p>
+              )}
             </div>
 
             <div>
@@ -973,9 +1053,12 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
                 type="text"
                 value={formData.telefono}
                 onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`mt-1 block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.telefono ? 'border-red-500' : 'border-gray-300'}`}
                 placeholder="912345678"
               />
+              {validationErrors.telefono && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.telefono}</p>
+              )}
             </div>
 
             <div>
@@ -994,11 +1077,10 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
               <label className="block text-sm font-medium text-gray-700">
                 Dirección (opcional)
               </label>
-              <input
-                type="text"
+              <AddressInput
                 value={formData.direccion}
-                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(value) => setFormData({ ...formData, direccion: value })}
+                placeholder="Ingresa tu dirección completa"
               />
             </div>
 
