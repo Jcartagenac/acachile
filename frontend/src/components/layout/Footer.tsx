@@ -147,6 +147,18 @@ export const Footer: React.FC = () => {
                 <p className="text-neutral-500 text-xs mt-1">
                   Todos los derechos reservados. Hecho con ❤️ para la comunidad asadora.
                 </p>
+                <p className="text-neutral-500 text-xs mt-2">
+                  Desarrollado por{' '}
+                  <a
+                    href="https://juancartagenac.cl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-300 hover:underline"
+                  >
+                    Juan Cartagena
+                  </a>
+                  {' '}• Stack tecnológico principal: React, TypeScript, Cloudflare Pages • Hosteado en Cloudflare
+                </p>
               </div>
               
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 text-sm">
@@ -170,24 +182,6 @@ export const Footer: React.FC = () => {
                 >
                   WBQA 2025
                 </a>
-              </div>
-              
-              {/* Información del desarrollador */}
-              <div className="mt-8 pt-6 border-t border-white/20">
-                <div className="text-center md:text-left">
-                  <p className="text-neutral-500 text-sm leading-relaxed">
-                    Desarrollado por{' '}
-                    <a
-                      href="https://juancartagenac.cl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-300 hover:underline"
-                    >
-                      Juan Cartagena
-                    </a>
-                    {' '}• Stack tecnológico principal: React, TypeScript, Cloudflare Pages • Hosteado en Cloudflare
-                  </p>
-                </div>
               </div>
             </div>
           </div>
