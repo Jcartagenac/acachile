@@ -1,5 +1,5 @@
 import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
-import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../../shared/utils/validators';
+import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
 
 // Endpoint de gestión individual de usuarios
 // GET /api/admin/users/[id] - Obtener usuario específico

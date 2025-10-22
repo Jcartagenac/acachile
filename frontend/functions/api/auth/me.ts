@@ -1,6 +1,6 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse, requireAuth } from '../../_middleware';
-import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
+import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../shared/utils/validators';
 
 /**
  * Handler de perfil de usuario (me)
