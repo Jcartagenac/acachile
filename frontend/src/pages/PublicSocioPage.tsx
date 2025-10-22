@@ -81,6 +81,41 @@ const computeYearsActive = (joinedAt: string | null) => {
   return years >= 0 ? years : 0;
 };
 
+// Local Error Boundary to catch render errors and show a friendly message
+class LocalErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, info: any) {
+    console.error('[LocalErrorBoundary] Error caught:', error, info);
+  }
+
+  render() {
+    if ((this.state as any).hasError) {
+      return (
+        <div className="min-h-[60vh] bg-soft-gradient-light flex items-center justify-center px-4">
+          <div className="max-w-lg bg-white rounded-2xl shadow-lg p-8 text-center">
+            <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Ocurrió un error</h1>
+            <p className="text-gray-600 mb-6">Estamos trabajando para resolverlo. Intenta recargar la página.</p>
+            <Link to="/buscar" className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver a la búsqueda
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children as any;
+  }
+}
+
 const PublicSocioPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
@@ -159,21 +194,23 @@ const PublicSocioPage: React.FC = () => {
     );
   }
 
-  const contactVisible = Boolean(socio.contact.email || socio.contact.phone);
-  const locationVisible = Boolean(socio.location.city || socio.location.region || socio.location.address);
-  const formattedJoinDate = formatDate(socio.joinedAt);
-  const formattedBirthdate = formatDate(socio.birthdate);
+  const contactVisible = Boolean(socio?.contact?.email || socio?.contact?.phone);
+  const locationVisible = Boolean(socio?.location?.city || socio?.location?.region || socio?.location?.address);
+  const formattedJoinDate = formatDate(socio?.joinedAt ?? null);
+  const formattedBirthdate = formatDate(socio?.birthdate ?? null);
 
   const initials = useMemo(() => {
+    if (!socio?.fullName) return 'A';
     const parts = socio.fullName.split(' ').filter(Boolean);
     if (parts.length === 0) return 'A';
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
-  }, [socio.fullName]);
+  }, [socio?.fullName]);
 
   return (
-    <div className="bg-soft-gradient-light min-h-[60vh] py-10 px-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <LocalErrorBoundary>
+      <div className="bg-soft-gradient-light min-h-[60vh] py-10 px-4">
+        <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Link to="/buscar" className="inline-flex items-center text-sm text-red-600 hover:text-red-700 font-medium">
             <ArrowLeft className="h-4 w-4 mr-2" /> Volver a resultados
@@ -203,10 +240,10 @@ const PublicSocioPage: React.FC = () => {
                 <UserCircle className="h-4 w-4" />
                 Perfil público de socio
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">{socio.fullName}</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">{socio?.fullName}</h1>
 
               <div className="flex flex-wrap justify-center gap-3 text-sm text-gray-600">
-                {socio.status && (
+                {socio?.status && (
                   <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
                     Estado: <span className="font-semibold capitalize">{socio.status}</span>
                   </span>
@@ -229,19 +266,19 @@ const PublicSocioPage: React.FC = () => {
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Contacto</h2>
                 {contactVisible ? (
                   <ul className="space-y-3 text-sm text-gray-700">
-                    {socio.contact.email && (
+                      {socio?.contact?.email && (
                       <li className="flex items-center gap-3">
                         <Mail className="h-4 w-4 text-red-500" />
                         <a href={`mailto:${socio.contact.email}`} className="hover:text-red-600 transition-colors">
-                          {socio.contact.email}
+                            {socio.contact.email}
                         </a>
                       </li>
                     )}
-                    {socio.contact.phone && (
+                      {socio?.contact?.phone && (
                       <li className="flex items-center gap-3">
                         <Phone className="h-4 w-4 text-red-500" />
                         <a href={`tel:${socio.contact.phone}`} className="hover:text-red-600 transition-colors">
-                          {socio.contact.phone}
+                            {socio.contact.phone}
                         </a>
                       </li>
                     )}
@@ -257,27 +294,27 @@ const PublicSocioPage: React.FC = () => {
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ubicación y detalles</h2>
                 {locationVisible ? (
                   <ul className="space-y-3 text-sm text-gray-700">
-                    {(socio.location.city || socio.location.region) && (
+                    {(socio?.location?.city || socio?.location?.region) && (
                       <li className="flex items-center gap-3">
                         <MapPin className="h-4 w-4 text-red-500" />
                         <span>
-                          {[socio.location.city, socio.location.region].filter(Boolean).join(', ')}
+                          {[socio?.location?.city, socio?.location?.region].filter(Boolean).join(', ')}
                         </span>
                       </li>
                     )}
-                    {socio.location.address && (
+                    {socio?.location?.address && (
                       <li className="flex items-center gap-3">
                         <Home className="h-4 w-4 text-red-500" />
                         <span>{socio.location.address}</span>
                       </li>
                     )}
-                    {socio.birthdate && (
+                    {socio?.birthdate && (
                       <li className="flex items-center gap-3">
                         <Cake className="h-4 w-4 text-red-500" />
                         <span>{formattedBirthdate}</span>
                       </li>
                     )}
-                    {socio.rut && (
+                    {socio?.rut && (
                       <li className="flex items-center gap-3">
                         <Fingerprint className="h-4 w-4 text-red-500" />
                         <span>{socio.rut}</span>
@@ -293,7 +330,7 @@ const PublicSocioPage: React.FC = () => {
             </section>
 
             <footer className="pt-4 border-t border-gray-100 text-center text-sm text-gray-500">
-              {socio.privacy.showEmail || socio.privacy.showPhone || socio.privacy.showAddress || socio.privacy.showRut || socio.privacy.showBirthdate ? (
+              {socio?.privacy && (socio.privacy.showEmail || socio.privacy.showPhone || socio.privacy.showAddress || socio.privacy.showRut || socio.privacy.showBirthdate) ? (
                 <p>
                   Los datos mostrados respetan la configuración de privacidad establecida por el socio en su perfil.
                 </p>
@@ -306,7 +343,9 @@ const PublicSocioPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+        </div>
+      </div>
+    </LocalErrorBoundary>
   );
 };
 
