@@ -51,7 +51,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'director' | 'director_editor' | 'usuario';
   created_at: string;
   updated_at: string;
   last_login?: string;
@@ -121,6 +121,77 @@ class AdminService {
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
+    };
+  }
+
+  private normalizeUser(raw: any): User {
+    const id =
+      raw?.id !== undefined && raw?.id !== null
+        ? String(raw.id)
+        : raw?.user_id !== undefined && raw?.user_id !== null
+          ? String(raw.user_id)
+          : '';
+
+    const fallbackName = raw?.email ? raw.email.split('@')[0] : 'Usuario sin nombre';
+    const joinedName = `${raw?.nombre ?? ''} ${raw?.apellido ?? ''}`.trim();
+    const name = (raw?.name ?? joinedName || fallbackName).trim();
+
+    const statsSource = raw?.stats ?? raw?.statistics ?? null;
+    let normalizedStats: User['stats'] | undefined;
+
+    if (statsSource) {
+      const stats = {
+        events_created: Number(
+          statsSource.events_created ??
+          statsSource.eventos_creados ??
+          statsSource.total_eventos ??
+          0
+        ),
+        inscriptions: Number(
+          statsSource.inscriptions ??
+          statsSource.inscripciones ??
+          statsSource.inscripciones_count ??
+          0
+        ),
+        comments: Number(
+          statsSource.comments ??
+          statsSource.comentarios ??
+          statsSource.comments_count ??
+          0
+        )
+      };
+
+      normalizedStats = stats;
+    }
+
+    const isActive = (() => {
+      if (typeof raw?.is_active === 'boolean') {
+        return raw.is_active;
+      }
+      if (raw?.status !== undefined && raw?.status !== null) {
+        if (typeof raw.status === 'string') {
+          return raw.status === 'active' || raw.status === 'ACTIVO';
+        }
+        if (typeof raw.status === 'number') {
+          return raw.status === 1;
+        }
+      }
+      if (raw?.activo !== undefined) {
+        return raw.activo === 1 || raw.activo === true;
+      }
+      return true;
+    })();
+
+    return {
+      id,
+      name: name || fallbackName,
+      email: raw?.email ?? '',
+      role: raw?.role ?? 'usuario',
+      created_at: raw?.created_at ?? '',
+      updated_at: raw?.updated_at ?? '',
+      last_login: raw?.last_login || raw?.lastLogin || undefined,
+      is_active: isActive,
+      stats: normalizedStats
     };
   }
 
@@ -230,9 +301,50 @@ class AdminService {
       }
 
       const data = await response.json();
+      if (data?.success === false) {
+        throw new Error(data?.error || 'Error obteniendo usuarios');
+      }
+
+      const rawUsers: any[] = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.users)
+          ? data.users
+          : [];
+
+      const users = rawUsers.map((user) => this.normalizeUser(user));
+
+      const rawPagination = data?.pagination ?? data?.meta?.pagination ?? null;
+      let pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext?: boolean;
+        hasPrev?: boolean;
+      } | null = null;
+
+      if (rawPagination) {
+        const page = Number(rawPagination.page ?? rawPagination.currentPage ?? 1) || 1;
+        const limit = Number(rawPagination.limit ?? rawPagination.perPage ?? 20) || 20;
+        const total = Number(rawPagination.total ?? rawPagination.totalItems ?? rawPagination.count ?? users.length) || users.length;
+        const computedTotalPages =
+          Number(rawPagination.totalPages ?? rawPagination.total_pages ?? rawPagination.pages ?? Math.ceil(total / limit)) ||
+          Math.ceil(total / limit);
+        const totalPages = Math.max(1, computedTotalPages || 1);
+
+        pagination = {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: rawPagination.hasNext ?? rawPagination.has_next ?? page < totalPages,
+          hasPrev: rawPagination.hasPrev ?? rawPagination.has_prev ?? page > 1
+        };
+      }
+
       return {
-        users: data.users,
-        pagination: data.pagination
+        users,
+        pagination
       };
     } catch (error) {
       console.error('Error en getUsers:', error);
@@ -251,7 +363,12 @@ class AdminService {
       }
 
       const data = await response.json();
-      return data.user;
+      if (data?.success === false) {
+        throw new Error(data?.error || 'Error obteniendo usuario');
+      }
+
+      const rawUser = data?.data ?? data?.user;
+      return this.normalizeUser(rawUser);
     } catch (error) {
       console.error('Error en getUser:', error);
       throw error;
@@ -271,7 +388,12 @@ class AdminService {
       }
 
       const data = await response.json();
-      return data.user;
+      if (data?.success === false) {
+        throw new Error(data?.error || 'Error actualizando usuario');
+      }
+
+      const rawUser = data?.data ?? data?.user;
+      return this.normalizeUser(rawUser);
     } catch (error) {
       console.error('Error en updateUser:', error);
       throw error;
@@ -288,6 +410,11 @@ class AdminService {
       if (!response.ok) {
         throw new Error('Error eliminando usuario');
       }
+
+      const data = await response.json().catch(() => null);
+      if (data && data.success === false) {
+        throw new Error(data?.error || 'Error eliminando usuario');
+      }
     } catch (error) {
       console.error('Error en deleteUser:', error);
       throw error;
@@ -298,7 +425,7 @@ class AdminService {
     name: string;
     email: string;
     password: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'director' | 'director_editor' | 'usuario';
   }): Promise<User> {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/users`, {
@@ -312,10 +439,37 @@ class AdminService {
       }
 
       const data = await response.json();
-      return data.user;
+      if (data?.success === false) {
+        throw new Error(data?.error || 'Error creando usuario');
+      }
+
+      const rawUser = data?.data ?? data?.user;
+      return this.normalizeUser(rawUser);
     } catch (error) {
       console.error('Error en createUser:', error);
       throw error;
+    }
+  }
+
+  async getRoleCatalog(): Promise<Array<{ key: string; label: string; description: string }>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/roles`, {
+        headers: this.getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error('Error obteniendo catálogo de roles');
+      }
+
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        return data.data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error en getRoleCatalog:', error);
+      return [];
     }
   }
 

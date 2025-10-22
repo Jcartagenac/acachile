@@ -15,6 +15,59 @@ async function hashPassword(password) {
   return hashHex;
 }
 
+const DEFAULT_ROLES = [
+  {
+    key: 'usuario',
+    label: 'Usuario / Socio',
+    description: 'Acceso básico al portal de socios.',
+    priority: 100
+  },
+  {
+    key: 'director_editor',
+    label: 'Director Editor',
+    description: 'Puede administrar contenido y revisar postulaciones.',
+    priority: 80
+  },
+  {
+    key: 'director',
+    label: 'Director',
+    description: 'Gestión avanzada de socios y cuotas.',
+    priority: 60
+  },
+  {
+    key: 'admin',
+    label: 'Administrador',
+    description: 'Acceso total al sistema.',
+    priority: 40
+  }
+];
+
+async function ensureRolesCatalog(db) {
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS roles_catalog (
+      key TEXT PRIMARY KEY,
+      label TEXT NOT NULL,
+      description TEXT,
+      priority INTEGER DEFAULT 100,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  for (const role of DEFAULT_ROLES) {
+    await db.prepare(`
+      INSERT INTO roles_catalog (key, label, description, priority)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        label = excluded.label,
+        description = excluded.description,
+        priority = excluded.priority
+    `).bind(role.key, role.label, role.description, role.priority).run();
+  }
+
+  const rolesResult = await db.prepare('SELECT key FROM roles_catalog').all();
+  return new Set((rolesResult?.results || []).map((row) => row.key));
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
 
@@ -159,7 +212,7 @@ export async function onRequestPost(context) {
     }
 
     const body = await request.json();
-    const { email, name, password, role = 'user', send_welcome_email = false } = body;
+    const { email, name, password, role = 'usuario', send_welcome_email = false } = body;
 
     // Dividir name en nombre y apellido
     const nameParts = (name || '').trim().split(' ');
@@ -171,8 +224,9 @@ export async function onRequestPost(context) {
       return errorResponse('Email, nombre y contraseña son requeridos', 400);
     }
 
-    if (!['user', 'admin', 'editor'].includes(role)) {
-      return errorResponse('Rol inválido. Debe ser: user, admin o editor', 400);
+    const rolesValidos = await ensureRolesCatalog(env.DB);
+    if (!rolesValidos.has(role)) {
+      return errorResponse('Rol inválido. Debe ser: usuario, director, director_editor o admin', 400);
     }
 
     // Verificar si el email ya existe (activo o inactivo)

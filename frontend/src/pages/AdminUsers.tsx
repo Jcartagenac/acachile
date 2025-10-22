@@ -2,6 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { adminService, type User } from '../services/adminService';
 import { authService } from '../services/authService';
 
+type Pagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+};
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -9,7 +18,7 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
@@ -32,13 +41,13 @@ export default function AdminUsers() {
         search: searchTerm || undefined,
         role: selectedRole === 'all' ? undefined : selectedRole
       });
-      
-      setUsers(response.users);
-      setPagination(response.pagination);
+
+      setUsers(response.users ?? []);
+      setPagination(response.pagination ?? null);
       setError(null);
     } catch (err) {
       console.error('Error cargando usuarios:', err);
-      setError('Error cargando los usuarios');
+      setError(err instanceof Error ? err.message : 'Error cargando los usuarios');
     } finally {
       setLoading(false);
     }
@@ -51,25 +60,34 @@ export default function AdminUsers() {
 
     try {
       await adminService.deleteUser(userId);
-      loadUsers(); // Recargar lista
+      await loadUsers(); // Recargar lista
     } catch (err) {
       console.error('Error eliminando usuario:', err);
-      alert('Error eliminando el usuario');
+      alert(err instanceof Error ? err.message : 'Error eliminando el usuario');
     }
   };
 
   const handleUpdateUserRole = async (userId: string, newRole: 'admin' | 'director' | 'director_editor' | 'usuario') => {
     try {
       await adminService.updateUser(userId, { role: newRole });
-      loadUsers(); // Recargar lista
+      await loadUsers(); // Recargar lista
     } catch (err) {
       console.error('Error actualizando usuario:', err);
-      alert('Error actualizando el rol del usuario');
+      alert(err instanceof Error ? err.message : 'Error actualizando el rol del usuario');
     }
   };
 
-  const formatDate = (dateStr: string): string => {
-    return new Date(dateStr).toLocaleString('es-ES', {
+  const formatDate = (dateStr?: string | null): string => {
+    if (!dateStr) {
+      return 'Fecha no disponible';
+    }
+
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+      return 'Fecha no disponible';
+    }
+
+    return date.toLocaleString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -86,6 +104,13 @@ export default function AdminUsers() {
       case 'usuario': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const roleLabels: Record<string, string> = {
+    admin: 'Administrador',
+    director: 'Director',
+    director_editor: 'Director Editor',
+    usuario: 'Usuario'
   };
 
   if (loading && users.length === 0) {
@@ -214,21 +239,21 @@ export default function AdminUsers() {
                         <div className="flex-shrink-0 h-10 w-10">
                           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <span className="text-blue-600 font-medium text-sm">
-                              {user.name.charAt(0).toUpperCase()}
+                              {(user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || '?')}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
                           <div className="flex items-center">
                             <div className="text-sm font-medium text-gray-900">
-                              {user.name}
+                              {user.name || 'Usuario sin nombre'}
                             </div>
                             <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                              {user.role}
+                              {roleLabels[user.role] ?? user.role}
                             </span>
                           </div>
                           <div className="text-sm text-gray-500">
-                            {user.email}
+                            {user.email || 'Sin email registrado'}
                           </div>
                           <div className="text-xs text-gray-400">
                             Creado: {formatDate(user.created_at)}
@@ -276,13 +301,13 @@ export default function AdminUsers() {
                     {user.stats && (
                       <div className="mt-3 grid grid-cols-3 gap-4 text-sm text-gray-500">
                         <div>
-                          📅 {user.stats.events_created} eventos creados
+                          📅 {user.stats.events_created ?? 0} eventos creados
                         </div>
                         <div>
-                          📝 {user.stats.inscriptions} inscripciones
+                          📝 {user.stats.inscriptions ?? 0} inscripciones
                         </div>
                         <div>
-                          💬 {user.stats.comments} comentarios
+                          💬 {user.stats.comments ?? 0} comentarios
                         </div>
                       </div>
                     )}
@@ -391,10 +416,16 @@ function CreateUserModal({ onClose, onUserCreated }: {
       setLoading(true);
       setError(null);
       await adminService.createUser(formData);
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        role: 'usuario'
+      });
       onUserCreated();
     } catch (err) {
       console.error('Error creando usuario:', err);
-      setError('Error creando el usuario');
+      setError(err instanceof Error ? err.message : 'Error creando el usuario');
     } finally {
       setLoading(false);
     }
@@ -513,11 +544,30 @@ function EditUserModal({ user, onClose, onUserUpdated }: {
     try {
       setLoading(true);
       setError(null);
-      await adminService.updateUser(user.id, formData);
+      const payload: Partial<User> = {};
+
+      if (formData.name && formData.name.trim() !== user.name.trim()) {
+        payload.name = formData.name.trim();
+      }
+
+      if (formData.email && formData.email.trim() !== user.email.trim()) {
+        payload.email = formData.email.trim();
+      }
+
+      if (formData.role !== user.role) {
+        payload.role = formData.role;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        setError('No hay cambios para guardar');
+        return;
+      }
+
+      await adminService.updateUser(user.id, payload);
       onUserUpdated();
     } catch (err) {
       console.error('Error actualizando usuario:', err);
-      setError('Error actualizando el usuario');
+      setError(err instanceof Error ? err.message : 'Error actualizando el usuario');
     } finally {
       setLoading(false);
     }
