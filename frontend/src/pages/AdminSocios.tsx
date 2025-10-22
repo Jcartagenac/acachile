@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { sociosService, Socio, CreateSocioData } from '../services/sociosService';
+import { adminService } from '../services/adminService';
 import { 
   Users,
   UserPlus,
@@ -33,6 +34,12 @@ export default function AdminSocios() {
   const [editingSocio, setEditingSocio] = useState<Socio | null>(null);
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null);
   const [isEditLoading, setIsEditLoading] = useState(false);
+  const [roleOptions, setRoleOptions] = useState<Array<{ key: string; label: string; description?: string; priority?: number }>>([
+    { key: 'usuario', label: 'Usuario', description: 'Acceso básico', priority: 100 },
+    { key: 'director', label: 'Director', description: 'Gestión avanzada', priority: 60 },
+    { key: 'director_editor', label: 'Director Editor', description: 'Editar contenidos', priority: 80 },
+    { key: 'admin', label: 'Administrador', description: 'Acceso total', priority: 40 }
+  ]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,6 +51,44 @@ export default function AdminSocios() {
   useEffect(() => {
     loadSocios();
   }, [searchTerm, estadoFilter]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRoleCatalog = async () => {
+      try {
+        const catalog = await adminService.getRoleCatalog();
+        if (!catalog || cancelled) return;
+
+        const mapped = catalog
+          .filter((r) => typeof r.key === 'string')
+          .map((r) => ({ key: r.key, label: r.label ?? r.key, description: r.description, priority: r.priority }));
+
+        if (mapped.length === 0) return;
+
+        setRoleOptions((current) => {
+          const existing = new Set(current.map((c) => c.key));
+          const merged = [...current];
+          mapped.forEach((opt) => {
+            if (existing.has(opt.key)) {
+              const idx = merged.findIndex((m) => m.key === opt.key);
+              if (idx !== -1) merged[idx] = opt;
+            } else {
+              merged.push(opt);
+            }
+          });
+
+          return merged.sort((a, b) => (b.priority ?? 100) - (a.priority ?? 100));
+        });
+      } catch (err) {
+        console.warn('[AdminSocios] No se pudo obtener catálogo de roles, usando defaults.', err);
+      }
+    };
+
+    loadRoleCatalog();
+
+    return () => { cancelled = true; };
+  }, []);
 
   const closeCreateModal = useCallback(() => {
     navigate('/panel-admin/users', { replace: true });
@@ -803,6 +848,7 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
     listaNegra: false,
     motivoListaNegra: '',
     password: '',
+    // role will be appended dynamically when submitting
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -828,7 +874,11 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
 
     try {
       // Crear socio
-      const response = await sociosService.createSocio(formData);
+      // Include role if available
+      const payload: any = { ...formData };
+      if (formData && (formData as any).role) payload.role = (formData as any).role;
+
+      const response = await sociosService.createSocio(payload);
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Error al crear socio');
