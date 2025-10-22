@@ -150,7 +150,7 @@ export const Footer: React.FC = () => {
                 <p className="text-neutral-500 text-xs mt-2">
                   Desarrollado por{' '}
                   <a
-                    href="https://juancartagenac.cl"
+                    href="https://juancartagena.cl"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-300 hover:underline"
