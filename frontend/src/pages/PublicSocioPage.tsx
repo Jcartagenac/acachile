@@ -343,8 +343,6 @@ const PublicSocioPage: React.FC = () => {
           </div>
         </div>
       </div>
-        </div>
-      </div>
     </LocalErrorBoundary>
   );
 };
