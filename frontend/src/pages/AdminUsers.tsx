@@ -720,10 +720,34 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                   if (validationErrors.rut) {
                     setValidationErrors(prev => ({ ...prev, rut: '' }));
                   }
-                  setFormData({ ...formData, rut: value });
+
+                  // Formatear en tiempo real mientras escribe
+                  let formattedValue = value;
+                  if (value.trim()) {
+                    try {
+                      // Intentar normalizar en tiempo real
+                      const cleanValue = value.replace(/[^0-9kK]/g, '');
+                      if (cleanValue.length >= 8) {
+                        formattedValue = normalizeRut(cleanValue);
+                      } else {
+                        // Formateo básico mientras escribe
+                        formattedValue = cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        if (cleanValue.length > 7) {
+                          const body = cleanValue.slice(0, -1);
+                          const dv = cleanValue.slice(-1);
+                          formattedValue = `${body.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}-${dv}`;
+                        }
+                      }
+                    } catch (err) {
+                      // Si hay error, mantener el valor limpio
+                      formattedValue = value.replace(/[^0-9kK.\-]/g, '');
+                    }
+                  }
+
+                  setFormData({ ...formData, rut: formattedValue });
                 }}
                 onBlur={() => {
-                  // Validar y normalizar al perder foco
+                  // Validar completamente al perder foco
                   if (formData.rut.trim()) {
                     try {
                       console.log('🔍 Validando RUT al perder foco:', formData.rut);
@@ -761,10 +785,31 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                   if (validationErrors.telefono) {
                     setValidationErrors(prev => ({ ...prev, telefono: '' }));
                   }
-                  setFormData({ ...formData, telefono: value });
+
+                  // Formatear en tiempo real mientras escribe
+                  let formattedValue = value;
+                  if (value.trim()) {
+                    try {
+                      // Intentar normalizar en tiempo real
+                      const cleanValue = value.replace(/[^0-9]/g, '');
+                      if (cleanValue.length >= 9) {
+                        formattedValue = normalizePhone(cleanValue);
+                      } else if (cleanValue.length >= 8) {
+                        // Formateo básico mientras escribe
+                        formattedValue = `+56${cleanValue}`;
+                      } else {
+                        formattedValue = cleanValue;
+                      }
+                    } catch (err) {
+                      // Si hay error, mantener el valor limpio
+                      formattedValue = value.replace(/[^0-9+]/g, '');
+                    }
+                  }
+
+                  setFormData({ ...formData, telefono: formattedValue });
                 }}
                 onBlur={() => {
-                  // Validar y normalizar al perder foco
+                  // Validar completamente al perder foco
                   if (formData.telefono.trim()) {
                     try {
                       console.log('🔍 Validando teléfono al perder foco:', formData.telefono);
