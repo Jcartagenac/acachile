@@ -1,12 +1,629 @@
 # ACA Chile Platform
 
-> Plataforma full‑stack para la Asociación Chilena de Asadores (ACA Chile): inscripción y gestión de socios, cobro de cuotas, publicación de noticias/eventos y administración operativa.
+> Plataforma full‑stack para la Asociación Chilena de Asadores (ACA Chile): inscripción y gestión de socios, cobro de cuotas, publicación de noticias/eventos y administración operativa con validación avanzada de datos chilenos.
 
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-orange)](https://developers.cloudflare.com/pages/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020)](https://developers.cloudflare.com/workers/)
 [![React 18](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8)](https://tailwindcss.com/)
+[![Google Maps API](https://img.shields.io/badge/Google%20Maps-API-green)](https://developers.google.com/maps)
+
+---
+
+## Índice (rápido)
+
+- [Visión general](#1-visión-general)
+- [Funcionalidades principales](#2-funcionalidades-principales)
+- [Requisitos y herramientas](#3-requisitos-y-herramientas)
+- [Estructura del repo](#4-estructura-del-repositorio)
+- [Cómo ejecutar en desarrollo](#5-ejecutar-en-desarrollo-rápido)
+- [Build y despliegue](#6-build-y-despliegue)
+- [Variables de entorno y bindings](#7-variables-de-entorno-y-bindings-importantes)
+- [D1 — migraciones y operaciones](#8-d1-migraciones-y-operaciones-comunes)
+- [Validadores y normalización de datos](#9-validadores-y-normalización-de-datos)
+- [Cambio seguro de contraseña](#10-cambio-seguro-de-contraseña-para-un-usuario-operación-manual)
+- [Debugging y observabilidad](#11-debugging-y-observabilidad-tips-operativos)
+- [Problemas comunes y soluciones](#12-problemas-comunes-y-soluciones-rápidas)
+- [Comandos útiles](#13-comandos-útiles)
+- [Health checks y endpoints](#14-health-checks-y-endpoints-importantes)
+- [Superficie de API completa](#15-superficie-de-api)
+- [Front-End routing y componentes](#16-front-end-routing-y-componentes)
+- [Testing y calidad](#17-testing-y-calidad)
+- [Despliegue y operaciones](#18-despliegue-y-operaciones)
+- [Tareas de mantenimiento](#19-tareas-de-mantenimiento)
+- [Troubleshooting](#20-troubleshooting)
+- [Documentación complementaria](#21-documentación-complementaria)
+- [Checklist de primer día](#22-checklist-de-primer-día)
+- [Glosario](#23-glosario-rápido)
+- [Contribuir](#24-contribuir-y-buenas-prácticas)
+- [Información del desarrollador](#25-información-del-desarrollador)
+
+---
+
+## 1. Visión general
+
+Este repositorio contiene la aplicación frontend (React + Vite) y las Pages Functions (endpoints serverless) que actúan como backend usando Cloudflare Workers + D1 + KV + R2.
+
+El objetivo es permitir administrar socios, cuotas, eventos y contenido público, con controles de privacidad por socio y **validación avanzada de datos chilenos** (RUT, teléfonos, direcciones).
+
+### Arquitectura técnica
+
+- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS
+- **Backend**: Cloudflare Pages Functions (serverless)
+- **Base de datos**: Cloudflare D1 (SQLite distribuido)
+- **Almacenamiento**: Cloudflare R2 (imágenes, comprobantes)
+- **Cache**: Cloudflare KV (búsqueda, sesiones)
+- **APIs externas**: Google Maps (geocoding, mapas estáticos)
+- **Email**: Resend API (opcional)
+- **Autenticación**: JWT con hash SHA-256 + salt
+- **Validación**: Normalizadores chilenos (RUT módulo 11, teléfonos +569XXXXXXXX, direcciones geocodificadas)
+
+---
+
+## 2. Funcionalidades principales
+
+### 👥 Gestión de Socios y Usuarios
+- **Registro y autenticación** con validación chilena
+- **Perfiles de usuario** con RUT, teléfono y dirección normalizados
+- **Sistema de roles** (usuario, director, director_editor, admin)
+- **Control de privacidad** por usuario
+- **Panel administrativo** completo
+
+### 💰 Sistema de Cuotas
+- **Generación automática** de cuotas mensuales
+- **Seguimiento de pagos** con comprobantes en R2
+- **Recordatorios automáticos** (en desarrollo)
+- **Reportes financieros**
+
+### 📅 Eventos y Contenido
+- **CRUD completo** de eventos y noticias
+- **Sistema de inscripciones** a eventos
+- **Editor visual** de contenido público
+- **Búsqueda global** con filtros de privacidad
+
+### 🔍 Búsqueda y Navegación
+- **Motor de búsqueda** inteligente
+- **Sugerencias en tiempo real**
+- **Filtros por tipo** (usuarios, eventos, noticias)
+- **Respeta configuraciones de privacidad**
+
+### 🛡️ Validación Chilena Avanzada
+- **RUT**: Validación algoritmo módulo 11 chileno
+- **Teléfonos**: Normalización automática a formato +569XXXXXXXX
+- **Direcciones**: Geocodificación con Google Maps API
+- **Integración completa**: Creación/edición de usuarios y perfiles
+
+### ☁️ Infraestructura Cloudflare
+- **Despliegue automático** desde Git
+- **CDN global** con Pages
+- **Base de datos serverless** con D1
+- **Almacenamiento de objetos** con R2
+- **Cache distribuido** con KV
+- **Variables de entorno seguras**
+
+---
+
+## 3. Requisitos y herramientas
+
+- **Node.js LTS** (v18+ recomendado)
+- **npm** (o yarn)
+- **wrangler v3+** (para interactuar con Pages/D1/R2)
+- **Cuenta de Cloudflare** con Pages/D1/R2 habilitados
+- **API Key de Google Maps** (para geocodificación y mapas)
+
+### Instalación rápida
+
+```bash
+# Instala dependencias (desde la raíz del repo)
+npm install
+
+# Instala wrangler globalmente si aún no lo tienes
+npm i -g wrangler
+
+# Configura credenciales de Cloudflare
+wrangler login
+```
+
+---
+
+## 4. Estructura del repositorio
+
+```
+├── frontend/                 # Aplicación React + Vite
+│   ├── src/
+│   │   ├── components/       # Componentes reutilizables
+│   │   ├── pages/           # Páginas principales
+│   │   ├── services/        # Servicios API
+│   │   ├── types/           # Definiciones TypeScript
+│   │   └── utils/           # Utilidades
+│   ├── functions/           # Pages Functions (backend)
+│   │   └── api/             # Endpoints serverless
+│   ├── _headers             # Headers HTTP personalizados
+│   └── wrangler.toml        # Configuración Cloudflare
+├── shared/                   # Código compartido
+│   ├── siteSections.ts      # Configuración de secciones
+│   └── utils/
+│       └── validators.ts    # Validadores chilenos
+├── migrations/              # Migraciones D1
+├── scripts/                 # Scripts de automatización
+├── docs/                    # Documentación adicional
+└── README.md               # Este archivo
+```
+
+---
+
+## 5. Ejecutar en desarrollo (rápido)
+
+### Opción A (recomendada — wrangler proxy para funciones)
+
+```bash
+cd frontend
+# Levanta Vite y permite a Pages Functions responder a /api/*
+wrangler pages dev dist -- npm run dev -- --host --port 5173
+
+# Abre http://localhost:8787
+```
+
+### Opción B (desarrollo separado)
+
+```bash
+# Terminal A: frontend dev
+cd frontend
+npm run dev -- --port 5173
+
+# Terminal B: emular funciones con wrangler
+cd frontend
+wrangler pages dev dist --local
+
+# Ver assets en http://localhost:5173 y proxear /api/ con wrangler
+```
+
+### Verificación inicial
+
+```bash
+# Verificar health del backend
+curl http://localhost:8787/api/health
+
+# Verificar frontend
+open http://localhost:5173
+```
+
+---
+
+## 6. Build y despliegue
+
+### Build local
+
+```bash
+cd frontend
+npm run build
+```
+
+### Deploy a Cloudflare Pages
+
+```bash
+# Deploy manual con wrangler
+cd frontend
+npm run deploy
+
+# O desde GitHub Actions (automático)
+git push origin main
+```
+
+### Configuración de Pages
+
+- **Build command**: `npm run build`
+- **Build output directory**: `dist`
+- **Root directory**: `frontend`
+- **Environment variables**: Configuradas en dashboard de Pages
+
+---
+
+## 7. Variables de entorno y bindings importantes
+
+### Bindings requeridos (Cloudflare)
+
+- `DB` — Cloudflare D1 database (obligatorio)
+- `ACA_KV` — Cloudflare KV namespace (cache)
+- `R2` — Cloudflare R2 bucket (imágenes, comprobantes)
+
+### Variables de entorno
+
+| Variable | Descripción | Requerido |
+|----------|-------------|-----------|
+| `JWT_SECRET` | Secreto para JWT | ✅ |
+| `GOOGLE_MAPS_API_KEY` | API key de Google Maps | ✅ |
+| `RESEND_API_KEY` | API key de Resend (emails) | ❌ |
+| `FRONTEND_URL` | URL pública del frontend | ✅ |
+| `CORS_ORIGIN` | Orígenes CORS permitidos | ✅ |
+| `ENVIRONMENT` | Entorno (development/production) | ✅ |
+
+### Configuración local
+
+Crear `frontend/.env.local`:
+
+```bash
+# Base URLs
+FRONTEND_URL=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173
+
+# Secrets (no commitear)
+JWT_SECRET=tu_jwt_secret_seguro
+GOOGLE_MAPS_API_KEY=tu_api_key_google_maps
+
+# Environment
+ENVIRONMENT=development
+```
+
+### Secretos en producción
+
+```bash
+# Configurar secretos en Cloudflare Pages
+echo "tu_jwt_secret" | wrangler pages secret put JWT_SECRET --project-name acachile
+echo "tu_google_maps_key" | wrangler pages secret put GOOGLE_MAPS_API_KEY --project-name acachile
+```
+
+---
+
+## 8. D1 — migraciones y operaciones comunes
+
+### Crear base de datos
+
+```bash
+wrangler d1 create acachile-db
+```
+
+### Aplicar migraciones
+
+```bash
+# Local
+wrangler d1 migrations apply acachile-db --local
+
+# Producción
+wrangler d1 migrations apply acachile-db --remote
+```
+
+### Queries útiles
+
+```bash
+# Contar usuarios
+wrangler d1 execute acachile-db --command "SELECT COUNT(*) FROM usuarios;"
+
+# Ver estructura de tabla
+wrangler d1 execute acachile-db --command "PRAGMA table_info(usuarios);"
+
+# Backup (export)
+wrangler d1 execute acachile-db --command ".dump" > backup.sql
+```
+
+---
+
+## 9. Validadores y normalización de datos
+
+El sistema incluye validadores avanzados para datos chilenos:
+
+### RUT (Rol Único Tributario)
+- **Validación**: Algoritmo módulo 11 chileno
+- **Normalización**: Formato `XXXXXXXX-X`
+- **Uso**: Creación/edición de usuarios y perfiles
+
+### Teléfonos
+- **Validación**: Formato chileno móvil
+- **Normalización**: `+569XXXXXXXX`
+- **Soporte**: Números locales e internacionales
+
+### Direcciones
+- **Validación**: Geocodificación con Google Maps API
+- **Normalización**: Dirección estandarizada
+- **Fallback**: Mantiene dirección original si geocodificación falla
+
+### Integración automática
+
+Los validadores se ejecutan automáticamente en:
+- `POST /api/admin/users` (creación de usuarios)
+- `PUT /api/admin/users/:id` (edición de usuarios)
+- `PUT /api/auth/me` (actualización de perfil)
+
+### Configuración de Google Maps API
+
+```bash
+# Configurar API key como secreto
+echo "AIzaSy..." | wrangler pages secret put GOOGLE_MAPS_API_KEY --project-name acachile
+```
+
+---
+
+## 10. Cambio seguro de contraseña para un usuario (operación manual)
+
+El proyecto usa hash SHA-256 con salt conocido.
+
+### Generar hash
+
+```javascript
+import crypto from 'crypto';
+const salt = 'salt_aca_chile_2024';
+
+function hashPassword(password) {
+  return crypto.createHash('sha256')
+    .update(password + salt, 'utf8')
+    .digest('hex');
+}
+
+console.log(hashPassword('NuevaPassword123!'));
+```
+
+### Actualizar en base de datos
+
+```sql
+UPDATE usuarios
+SET password_hash = 'hash_generado_arriba'
+WHERE email = 'usuario@email.com';
+```
+
+---
+
+## 11. Debugging y observabilidad (tips operativos)
+
+### Logs y monitoreo
+
+```bash
+# Logs de Pages Functions
+wrangler pages deployment tail --project-name acachile
+
+# Logs de build
+# Ver en dashboard de Cloudflare Pages
+```
+
+### Debug panel
+
+- **Componente**: `DebugPanel` (icono 🐛 en desarrollo)
+- **Logger**: `window.logger` disponible en consola
+- **Namespaces**: `auth`, `api`, `search`, `events`, `ui`
+
+### React Error #310
+
+Causas comunes del error "Minified React error #310":
+- Hooks condicionales o en bucles
+- Cambios en orden de hooks entre renders
+
+**Solución**: Mover todos los hooks al inicio del componente.
+
+---
+
+## 12. Problemas comunes y soluciones rápidas
+
+| Problema | Solución |
+|----------|----------|
+| `Failed to fetch` | Verificar `VITE_API_BASE_URL` y CORS |
+| Login falla | Crear usuario admin y verificar `JWT_SECRET` |
+| Fotos no suben | Revisar binding R2 y permisos |
+| Búsqueda vacía | Verificar configuración de privacidad |
+| Build falla | Ejecutar `npm install` y verificar `_headers` |
+| Google Maps no carga | Verificar `GOOGLE_MAPS_API_KEY` secreto |
+
+---
+
+## 13. Comandos útiles
+
+### Desarrollo
+```bash
+npm run dev        # Frontend con Vite
+npm run build      # Build de producción
+npm run preview    # Vista previa del build
+npm run lint       # ESLint + TypeScript
+```
+
+### Despliegue
+```bash
+npm run deploy     # Build + deploy a Pages
+```
+
+### Base de datos
+```bash
+wrangler d1 migrations apply acachile-db --local
+wrangler d1 execute acachile-db --command "SELECT * FROM usuarios LIMIT 5;"
+```
+
+### Secretos
+```bash
+wrangler pages secret list --project-name acachile
+wrangler pages secret put VARIABLE_NAME --project-name acachile
+```
+
+---
+
+## 14. Health checks y endpoints importantes
+
+- `GET /api/health` — Estado del sistema
+- `GET /api/search?q=...&type=usuarios` — Búsqueda global
+- `GET /api/socios/:id` — Perfil público de socio
+- `POST /api/admin/users` — Crear usuario (con validadores)
+- `PUT /api/auth/me` — Actualizar perfil (con validadores)
+
+---
+
+## 15. Superficie de API completa
+
+### Autenticación
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `GET /api/auth/profile`
+- `PUT /api/auth/profile` ⭐ **Incluye validadores**
+- `GET/PUT /api/auth/privacy`
+
+### Administración de usuarios
+- `GET /api/admin/users`
+- `POST /api/admin/users` ⭐ **Incluye validadores**
+- `PUT /api/admin/users/:id` ⭐ **Incluye validadores**
+- `DELETE /api/admin/users/:id`
+
+### Socios y cuotas
+- `GET /api/admin/socios`
+- `POST /api/admin/socios`
+- `GET/PUT/DELETE /api/admin/socios/:id`
+- `GET /api/admin/cuotas`
+- `POST /api/admin/cuotas/generar`
+
+### Eventos y contenido
+- `GET /api/eventos`
+- `POST /api/eventos`
+- `GET /api/eventos/:id`
+- `PUT /api/eventos/:id`
+- `GET /api/noticias`
+- `POST /api/noticias`
+
+### Sistema
+- `GET /api/search`
+- `GET /api/health`
+- `GET /api/system/maintenance`
+
+---
+
+## 16. Front-End routing y componentes
+
+### Rutas principales
+- `/` — Home público
+- `/eventos` — Listado de eventos
+- `/noticias` — Blog institucional
+- `/unete` — Formulario de postulación
+- `/perfil` — Perfil de usuario
+- `/panel-admin/*` — Panel administrativo
+
+### Componentes clave
+- `AdminUsers` — Gestión de usuarios con validadores
+- `UserProfile` — Perfil con campos normalizados
+- `Footer` — Incluye información del desarrollador
+- `DebugPanel` — Herramientas de desarrollo
+
+---
+
+## 17. Testing y calidad
+
+### Pruebas manuales recomendadas
+
+1. **Validadores chilenos**
+   - Crear usuario con RUT inválido → debe mostrar error
+   - Ingresar teléfono `912345678` → debe normalizarse a `+56912345678`
+   - Ingresar dirección → debe geocodificarse
+
+2. **Funcionalidades críticas**
+   - Login/logout y recuperación de sesión
+   - CRUD de usuarios y socios
+   - Subida de imágenes a R2
+   - Búsqueda respetando privacidad
+
+### Calidad de código
+```bash
+npm run lint    # ESLint + TypeScript
+npm run build   # Verifica compilación
+```
+
+---
+
+## 18. Despliegue y operaciones
+
+### Deploy automático
+Cada push a `main` activa deploy automático en Cloudflare Pages.
+
+### Rollback
+- Usar historial de deployments en dashboard de Pages
+- Para D1: mantener backups antes de migraciones críticas
+
+### Monitoreo
+- Dashboard de Cloudflare Pages
+- Logs de Functions: `wrangler pages deployment tail`
+- Endpoint `/api/health` para verificaciones
+
+---
+
+## 19. Tareas de mantenimiento
+
+| Tarea | Frecuencia | Comando |
+|-------|------------|---------|
+| Revisar cuotas pendientes | Semanal | Panel admin |
+| Limpiar cache KV | Mensual | `wrangler kv:key delete` |
+| Verificar R2 | Mensual | Scripts R2 |
+| Auditar usuarios | Trimestral | `/api/admin/users` |
+| Actualizar secretos | Semestral | Dashboard Pages |
+
+---
+
+## 20. Troubleshooting
+
+### Errores comunes
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `Failed to fetch` | API URL incorrecta | Ver `FIX_FAILED_TO_FETCH.md` |
+| Login falla | Usuario no existe | Crear usuario admin |
+| RUT inválido | Error de validación | Verificar algoritmo módulo 11 |
+| Google Maps no carga | API key faltante | Configurar secreto `GOOGLE_MAPS_API_KEY` |
+
+---
+
+## 21. Documentación complementaria
+
+- `VALIDADORES_CHILENOS.md` — Documentación detallada de validadores
+- `R2_SETUP.md` — Configuración de almacenamiento
+- `ENV_CONFIG.md` — Variables de entorno
+- `FIX_FAILED_TO_FETCH.md` — Solución a problemas de API
+
+---
+
+## 22. Checklist de primer día
+
+1. ✅ Instalar dependencias y configurar wrangler
+2. ✅ Configurar variables de entorno locales
+3. ✅ Crear base de datos D1 y aplicar migraciones
+4. ✅ Configurar secretos en Cloudflare Pages
+5. ✅ Crear usuario administrador
+6. ✅ Probar validadores chilenos (RUT, teléfono, dirección)
+7. ✅ Verificar subida de imágenes a R2
+8. ✅ Explorar panel administrativo completo
+
+---
+
+## 23. Glosario rápido
+
+- **ACA**: Asociación Chilena de Asadores
+- **D1**: Base de datos SQLite serverless de Cloudflare
+- **R2**: Almacenamiento de objetos S3-like
+- **KV**: Cache clave-valor ultrarrápido
+- **Pages Functions**: Backend serverless
+- **Validadores**: Sistema de normalización chilena (RUT, teléfonos, direcciones)
+
+---
+
+## 24. Contribuir y buenas prácticas
+
+- Usar feature branches (`feature/...`, `fix/...`)
+- Ejecutar `npm run lint` antes de PR
+- Documentar cambios en este README
+- Mantener validadores actualizados
+- No commitear datos sensibles
+
+---
+
+## 25. Información del desarrollador
+
+**Desarrollado por:** [Juan Cartagena](https://juancartagena.cl)
+
+**Stack tecnológico principal:**
+- Frontend: React 18 + TypeScript + Vite + Tailwind CSS
+- Backend: Cloudflare Pages Functions
+- Base de datos: Cloudflare D1
+- Almacenamiento: Cloudflare R2
+- Cache: Cloudflare KV
+- APIs: Google Maps Geocoding/Static Maps
+
+**Hosteado en:** Cloudflare Pages
+
+---
+
+**Última actualización:** Octubre 2025
+
+Este README es la fuente de verdad completa del proyecto ACA Chile. Incluye todas las funcionalidades implementadas, incluyendo el sistema avanzado de validación chilena y la infraestructura Cloudflare optimizada.
 
 ---
 
