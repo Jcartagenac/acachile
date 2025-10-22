@@ -128,9 +128,12 @@ export const ProfileModule: React.FC = () => {
     // Validar RUT si está presente
     if (formData.rut.trim()) {
       try {
+        console.log('🔍 Validando RUT:', formData.rut);
         const normalizedRut = normalizeRut(formData.rut);
+        console.log('✅ RUT normalizado:', normalizedRut);
         setFormData(prev => ({ ...prev, rut: normalizedRut }));
       } catch (err) {
+        console.error('❌ Error validando RUT:', err);
         errors.rut = err instanceof Error ? err.message : 'RUT inválido';
       }
     }
@@ -138,9 +141,12 @@ export const ProfileModule: React.FC = () => {
     // Validar teléfono si está presente
     if (formData.phone.trim()) {
       try {
+        console.log('🔍 Validando teléfono:', formData.phone);
         const normalizedPhone = normalizePhone(formData.phone);
+        console.log('✅ Teléfono normalizado:', normalizedPhone);
         setFormData(prev => ({ ...prev, phone: normalizedPhone }));
       } catch (err) {
+        console.error('❌ Error validando teléfono:', err);
         errors.phone = err instanceof Error ? err.message : 'Teléfono inválido';
       }
     }

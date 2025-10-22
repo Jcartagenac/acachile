@@ -99,14 +99,22 @@ export function normalizePhone(phone: string): string {
  * @param apiKey - API key de Google Maps
  * @returns Dirección normalizada o la original si falla
  */
-export async function normalizeAddress(address: string, apiKey: string = process.env.GOOGLE_MAPS_API_KEY || ''): Promise<string> {
+export async function normalizeAddress(address: string, apiKey?: string): Promise<string> {
   if (!address || address.trim().length === 0) {
+    return address;
+  }
+
+  // Use provided API key or get from environment
+  const key = apiKey || (typeof process !== 'undefined' && process.env ? process.env.GOOGLE_MAPS_API_KEY : '') || '';
+
+  if (!key) {
+    console.warn('[normalizeAddress] No Google Maps API key available');
     return address;
   }
 
   try {
     const encodedAddress = encodeURIComponent(address);
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}&region=cl`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${key}&region=cl`;
 
     const response = await fetch(url);
     const data = await response.json();

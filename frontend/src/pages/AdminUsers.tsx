@@ -577,9 +577,12 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     // Validar RUT si está presente
     if (formData.rut.trim()) {
       try {
+        console.log('🔍 Validando RUT:', formData.rut);
         const normalizedRut = normalizeRut(formData.rut);
+        console.log('✅ RUT normalizado:', normalizedRut);
         setFormData(prev => ({ ...prev, rut: normalizedRut }));
       } catch (err) {
+        console.error('❌ Error validando RUT:', err);
         errors.rut = err instanceof Error ? err.message : 'RUT inválido';
       }
     }
@@ -587,9 +590,12 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     // Validar teléfono si está presente
     if (formData.telefono.trim()) {
       try {
+        console.log('🔍 Validando teléfono:', formData.telefono);
         const normalizedPhone = normalizePhone(formData.telefono);
+        console.log('✅ Teléfono normalizado:', normalizedPhone);
         setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
       } catch (err) {
+        console.error('❌ Error validando teléfono:', err);
         errors.telefono = err instanceof Error ? err.message : 'Teléfono inválido';
       }
     }
@@ -864,9 +870,12 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
     // Validar RUT si está presente
     if (formData.rut.trim()) {
       try {
+        console.log('🔍 Validando RUT:', formData.rut);
         const normalizedRut = normalizeRut(formData.rut);
+        console.log('✅ RUT normalizado:', normalizedRut);
         setFormData(prev => ({ ...prev, rut: normalizedRut }));
       } catch (err) {
+        console.error('❌ Error validando RUT:', err);
         errors.rut = err instanceof Error ? err.message : 'RUT inválido';
       }
     }
@@ -874,9 +883,12 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
     // Validar teléfono si está presente
     if (formData.telefono.trim()) {
       try {
+        console.log('🔍 Validando teléfono:', formData.telefono);
         const normalizedPhone = normalizePhone(formData.telefono);
+        console.log('✅ Teléfono normalizado:', normalizedPhone);
         setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
       } catch (err) {
+        console.error('❌ Error validando teléfono:', err);
         errors.telefono = err instanceof Error ? err.message : 'Teléfono inválido';
       }
     }

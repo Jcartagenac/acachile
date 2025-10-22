@@ -38,12 +38,14 @@ export const AddressInput: React.FC<AddressInputProps> = ({
       clearTimeout(timeoutRef.current);
     }
 
-    // Si hay texto, programar normalización después de 1 segundo de inactividad
-    if (newValue.trim().length > 0) {
+    // Si hay texto, programar normalización después de 2 segundos de inactividad
+    if (newValue.trim().length > 3) { // Solo normalizar si hay al menos 3 caracteres
       timeoutRef.current = setTimeout(async () => {
         setIsNormalizing(true);
         try {
+          console.log('🔄 Normalizando dirección:', newValue);
           const normalized = await normalizeAddress(newValue);
+          console.log('✅ Dirección normalizada:', normalized);
           if (normalized !== newValue) {
             setInputValue(normalized);
             onChange(normalized);
@@ -52,12 +54,12 @@ export const AddressInput: React.FC<AddressInputProps> = ({
             }
           }
         } catch (err) {
-          console.error('Error normalizing address:', err);
+          console.error('❌ Error normalizing address:', err);
           setError('Error al normalizar dirección');
         } finally {
           setIsNormalizing(false);
         }
-      }, 1000);
+      }, 2000); // Aumentar a 2 segundos para dar más tiempo
     }
   };
 
