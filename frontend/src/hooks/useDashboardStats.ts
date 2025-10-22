@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardStats {
   totalSocios: number;
@@ -23,17 +24,24 @@ export function useDashboardStats(): DashboardStats {
     error: null,
   });
 
+  const auth = useAuth();
+
   useEffect(() => {
-    loadDashboardStats();
-  }, []);
+    // Only load admin stats when authenticated
+    if (auth.isAuthenticated) {
+      loadDashboardStats();
+    } else {
+      // If not authenticated, ensure loading is false
+      setStats(prev => ({ ...prev, loading: false }));
+    }
+    // Re-run when auth changes
+  }, [auth.isAuthenticated]);
 
   const loadDashboardStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : '',
-      };
+      const token = auth.token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       // Obtener total de socios
       const sociosResponse = await fetch('/api/admin/socios?limit=1', { headers });

@@ -71,9 +71,14 @@ async function updatePasswordInDB(env: Env, userId: number, newPasswordHash: str
   }
 
   // Limpiar tokens de reset de contraseña existentes (por seguridad)
-  await env.DB.prepare(`
-    DELETE FROM password_resets WHERE user_id = ?
-  `).bind(userId).run();
+  try {
+    await env.DB.prepare(`
+      DELETE FROM password_resets WHERE user_id = ?
+    `).bind(userId).run();
+  } catch (err) {
+    // If the table doesn't exist or delete fails, log a warning but don't fail the password change
+    console.warn('[AUTH/CHANGE-PASSWORD] Could not delete password_resets (possibly missing):', err);
+  }
 
   return true;
 }
@@ -88,7 +93,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Verificar autenticación
     let authUser;
     try {
-      authUser = requireAuth(request, env);
+      authUser = await requireAuth(request, env);
     } catch (error) {
       console.log('[AUTH/CHANGE-PASSWORD] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
       return errorResponse('Autenticación requerida', 401);

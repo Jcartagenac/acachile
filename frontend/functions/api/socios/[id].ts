@@ -93,67 +93,76 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
   }
 
   try {
+    // Diagnostic: check existing tables to help debug schema mismatches on preview
+    try {
+      const master = await env.DB.prepare("SELECT name, type FROM sqlite_master WHERE type IN ('table','view') ORDER BY name LIMIT 100").all();
+      console.log('[PUBLIC SOCIO] sqlite_master:', JSON.stringify(master?.results || master));
+    } catch (err) {
+      console.warn('[PUBLIC SOCIO] Failed to read sqlite_master:', err);
+    }
+
     const hasPublicColumn = await ensurePrivacyTable(env.DB);
 
-    const selectQuery = hasPublicColumn
-      ? `
-        SELECT 
-          u.id,
-          u.nombre,
-          u.apellido,
-          u.email,
-          u.telefono,
-          u.rut,
-          u.ciudad,
-          u.region,
-          u.direccion,
-          u.fecha_nacimiento,
-          u.fecha_ingreso,
-          u.foto_url,
-          u.role,
-          u.estado_socio,
-          u.activo,
-          privacy.show_email,
-          privacy.show_phone,
-          privacy.show_rut,
-          privacy.show_address,
-          privacy.show_birthdate,
-          privacy.show_public_profile
-        FROM usuarios u
-        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
-        WHERE u.id = ? AND (u.activo = 1 OR u.activo IS NULL)
-      `
-      : `
-        SELECT 
-          u.id,
-          u.nombre,
-          u.apellido,
-          u.email,
-          u.telefono,
-          u.rut,
-          u.ciudad,
-          u.region,
-          u.direccion,
-          u.fecha_nacimiento,
-          u.fecha_ingreso,
-          u.foto_url,
-          u.role,
-          u.estado_socio,
-          u.activo,
-          privacy.show_email,
-          privacy.show_phone,
-          privacy.show_rut,
-          privacy.show_address,
-          privacy.show_birthdate,
-          1 AS show_public_profile
-        FROM usuarios u
-        LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id
-        WHERE u.id = ? AND (u.activo = 1 OR u.activo IS NULL)
-      `;
+    // Inspect available columns in `usuarios` to avoid selecting missing columns
+    let usuarioColumns: string[] = [];
+    try {
+      const pragma = await env.DB.prepare("PRAGMA table_info(usuarios)").all();
+      usuarioColumns = (pragma?.results || pragma || []).map((c: any) => c.name).filter(Boolean);
+      console.log('[PUBLIC SOCIO] usuarios columns:', usuarioColumns);
+    } catch (err) {
+      console.warn('[PUBLIC SOCIO] PRAGMA table_info(usuarios) failed:', err);
+    }
 
-    const socioRow = await env.DB.prepare(selectQuery)
-      .bind(socioId)
-      .first();
+    if (!usuarioColumns || usuarioColumns.length === 0) {
+      console.warn('[PUBLIC SOCIO] usuarios table appears missing or has no columns');
+      return new Response(
+        JSON.stringify({ success: false, error: 'No encontramos este socio.' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Choose columns that exist (use aliases for privacy fields)
+    const pick = (name: string) => (usuarioColumns.includes(name) ? `u.${name}` : 'NULL AS ' + name);
+
+    const baseSelectParts = [
+      'u.id',
+      pick('nombre'),
+      pick('apellido'),
+      pick('email'),
+      pick('telefono'),
+      pick('rut'),
+      pick('ciudad'),
+      pick('region'),
+      pick('direccion'),
+      pick('fecha_nacimiento'),
+      pick('fecha_ingreso'),
+      pick('foto_url'),
+      pick('role'),
+      pick('estado_socio'),
+      pick('activo')
+    ];
+
+    const privacySelect = hasPublicColumn
+      ? [
+          'privacy.show_email',
+          'privacy.show_phone',
+          'privacy.show_rut',
+          'privacy.show_address',
+          'privacy.show_birthdate',
+          'privacy.show_public_profile'
+        ]
+      : [
+          'privacy.show_email',
+          'privacy.show_phone',
+          'privacy.show_rut',
+          'privacy.show_address',
+          'privacy.show_birthdate',
+          '1 AS show_public_profile'
+        ];
+
+    const selectQuery = `SELECT ${[...baseSelectParts, ...privacySelect].join(', ')} FROM usuarios u LEFT JOIN user_privacy_settings privacy ON privacy.user_id = u.id WHERE u.id = ? AND (u.activo = 1 OR u.activo IS NULL)`;
+
+    const socioRow = await env.DB.prepare(selectQuery).bind(socioId).first();
 
     if (!socioRow) {
       return new Response(
@@ -223,10 +232,13 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
     );
   } catch (error) {
     console.error('[PUBLIC SOCIO] Error obteniendo perfil:', error);
+    // Provide additional error detail when not in production to speed up debugging on preview deployments
+    const detail = (error instanceof Error ? error.stack || error.message : String(error));
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'No pudimos obtener el perfil público de este socio.'
+        error: 'No pudimos obtener el perfil público de este socio.',
+        detail
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );

@@ -439,29 +439,36 @@ class UserService {
   // Cambiar contraseña
   async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<void>> {
     try {
-      // Mock implementation - replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Validate password strength
-      if (newPassword.length < 8) {
-        return { 
-          success: false, 
-          error: 'La nueva contraseña debe tener al menos 8 caracteres' 
+      // Basic client-side validation
+      if (newPassword.length < 6) {
+        return {
+          success: false,
+          error: 'La nueva contraseña debe tener al menos 6 caracteres'
         };
       }
 
-      // Simulate password validation
-      if (currentPassword === 'wrongpassword') {
-        return { 
-          success: false, 
-          error: 'Contraseña actual incorrecta' 
-        };
+      const token = this.getAuthToken();
+      if (!token) {
+        return { success: false, error: 'No hay token de autenticación' };
       }
 
-      return { 
-        success: true, 
-        message: 'Contraseña cambiada exitosamente' 
-      };
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword: newPassword })
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const errorMsg = result?.error || result?.message || 'Error cambiando contraseña';
+        return { success: false, error: errorMsg };
+      }
+
+      return { success: true, message: result?.message || 'Contraseña cambiada exitosamente' };
     } catch (error) {
       console.error('Error changing password:', error);
       return { success: false, error: 'Error cambiando contraseña' };
