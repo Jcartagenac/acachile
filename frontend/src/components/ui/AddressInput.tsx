@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { normalizeAddress } from '@shared/utils/validators';
 
 interface AddressInputProps {
   value: string;
@@ -19,56 +18,128 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   disabled = false
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [isNormalizing, setIsNormalizing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
+  // Initialize Google Places Autocomplete service
+  useEffect(() => {
+    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+      autocompleteService.current = new google.maps.places.AutocompleteService();
+    }
+  }, []);
+
+  const fetchSuggestions = async (query: string) => {
+    if (!autocompleteService.current || query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const request = {
+        input: query,
+        componentRestrictions: { country: 'cl' },
+        fields: ['place_id', 'description', 'structured_formatting'],
+        types: ['address']
+      };
+
+      console.log('🔍 Fetching Google Places suggestions for:', query);
+      autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+          console.log('✅ Found suggestions:', predictions.length);
+          setSuggestions(predictions);
+          setShowSuggestions(true);
+        } else {
+          console.warn('⚠️ Google Places failed:', status);
+          setSuggestions([]);
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.error('❌ Error fetching suggestions:', error);
+      setSuggestions([]);
+      setIsLoading(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    console.log('🔄 Address input change:', `"${newValue}"`);
     setInputValue(newValue);
     onChange(newValue);
-    setError(null);
+    setSelectedIndex(-1);
 
-    // Limpiar timeout anterior
+    // Clear previous timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Normalizar en vivo cada caracter (sin delay)
-    if (newValue.trim().length > 0) {
-      setIsNormalizing(true);
-      // Ejecutar normalización inmediatamente
-      setTimeout(async () => {
-        try {
-          console.log('🔄 Normalizando dirección en vivo:', newValue);
-          const normalized = await normalizeAddress(newValue);
-          console.log('✅ Dirección normalizada:', normalized);
-          if (normalized !== newValue) {
-            setInputValue(normalized);
-            onChange(normalized);
-            if (onNormalizedChange) {
-              onNormalizedChange(normalized);
-            }
-          }
-        } catch (err) {
-          console.error('❌ Error normalizing address:', err);
-          setError('Error al normalizar dirección');
-        } finally {
-          setIsNormalizing(false);
-        }
-      }, 100); // Pequeño delay para evitar llamadas excesivas
+    // Fetch suggestions after user stops typing
+    if (newValue.trim().length >= 3) {
+      timeoutRef.current = setTimeout(() => {
+        fetchSuggestions(newValue);
+      }, 300);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
     }
+  };
 
-    // Mantener el foco en el input después de actualizar el estado
+  const handleSuggestionClick = (suggestion: google.maps.places.AutocompletePrediction) => {
+    console.log('🎯 Selected suggestion:', `"${suggestion.description}"`);
+    setInputValue(suggestion.description);
+    onChange(suggestion.description);
+    if (onNormalizedChange) {
+      onNormalizedChange(suggestion.description);
+    }
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    inputRef.current?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+          handleSuggestionClick(suggestions[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
+    }
+  };
+
+  const handleBlur = () => {
+    // Delay hiding suggestions to allow clicks
     setTimeout(() => {
-      const input = e.target as HTMLInputElement;
-      const len = newValue.length;
-      input.setSelectionRange(len, len);
-    }, 0);
+      setShowSuggestions(false);
+      setSelectedIndex(-1);
+    }, 150);
   };
 
   useEffect(() => {
@@ -82,20 +153,45 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   return (
     <div className="relative">
       <input
+        ref={inputRef}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className} ${error ? 'border-red-500' : ''}`}
-        disabled={disabled || isNormalizing}
+        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+        disabled={disabled}
+        autoComplete="off"
       />
-      {isNormalizing && (
+
+      {/* Loading indicator */}
+      {isLoading && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
         </div>
       )}
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+
+      {/* Suggestions dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+        >
+          {suggestions.map((suggestion, index) => (
+            <div
+              key={suggestion.place_id}
+              className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${
+                index === selectedIndex ? 'bg-blue-50' : ''
+              }`}
+              onClick={() => handleSuggestionClick(suggestion)}
+              onMouseEnter={() => setSelectedIndex(index)}
+            >
+              <div className="flex items-center">
+                <span className="text-gray-700">{suggestion.description}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

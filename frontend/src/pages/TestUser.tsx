@@ -217,7 +217,7 @@ export default function TestUser() {
               placeholder="Type an address"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Should normalize with Google Maps API
+              Type 3+ characters to see Google Maps suggestions (e.g., "Providencia")
             </p>
           </div>
 
