@@ -535,12 +535,20 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
     password: string;
     role: RoleKey;
     send_welcome_email: boolean;
+    rut: string;
+    telefono: string;
+    ciudad: string;
+    direccion: string;
   }>(() => ({
     name: '',
     email: '',
     password: '',
     role: defaultRole,
-    send_welcome_email: false
+    send_welcome_email: false,
+    rut: '',
+    telefono: '',
+    ciudad: '',
+    direccion: ''
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -576,14 +584,22 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
         email: formData.email.trim(),
         password: formData.password,
         role: formData.role,
-        send_welcome_email: formData.send_welcome_email
+        send_welcome_email: formData.send_welcome_email,
+        rut: formData.rut.trim() || undefined,
+        telefono: formData.telefono.trim() || undefined,
+        ciudad: formData.ciudad.trim() || undefined,
+        direccion: formData.direccion.trim() || undefined
       });
       setFormData({
         name: '',
         email: '',
         password: '',
         role: roleOptions[0]?.key ?? 'usuario',
-        send_welcome_email: false
+        send_welcome_email: false,
+        rut: '',
+        telefono: '',
+        ciudad: '',
+        direccion: ''
       });
       onUserCreated();
     } catch (err) {
@@ -645,6 +661,56 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                RUT (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.rut}
+                onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                placeholder="12.345.678-9"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Teléfono (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.telefono}
+                onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                placeholder="+56912345678"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Ciudad (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.ciudad}
+                onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Dirección (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.direccion}
+                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -718,11 +784,19 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
     email: string;
     role: RoleKey;
     status: 'active' | 'inactive';
+    rut: string;
+    telefono: string;
+    ciudad: string;
+    direccion: string;
   }>(() => ({
     name: user.name,
     email: user.email,
     role: user.role,
-    status: user.status ?? (user.is_active ? 'active' : 'inactive')
+    status: user.status ?? (user.is_active ? 'active' : 'inactive'),
+    rut: user.rut || '',
+    telefono: user.telefono || '',
+    ciudad: user.ciudad || '',
+    direccion: user.direccion || ''
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -733,7 +807,11 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
       name: user.name,
       email: user.email,
       role: user.role,
-      status: user.status ?? (user.is_active ? 'active' : 'inactive')
+      status: user.status ?? (user.is_active ? 'active' : 'inactive'),
+      rut: user.rut || '',
+      telefono: user.telefono || '',
+      ciudad: user.ciudad || '',
+      direccion: user.direccion || ''
     });
   }, [user]);
 
@@ -757,6 +835,26 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
       const currentStatus = user.status ?? (user.is_active ? 'active' : 'inactive');
       if (formData.status !== currentStatus) {
         payload.status = formData.status;
+      }
+
+      const trimmedRut = formData.rut.trim();
+      if (trimmedRut !== (user.rut || '')) {
+        payload.rut = trimmedRut || undefined;
+      }
+
+      const trimmedTelefono = formData.telefono.trim();
+      if (trimmedTelefono !== (user.telefono || '')) {
+        payload.telefono = trimmedTelefono || undefined;
+      }
+
+      const trimmedCiudad = formData.ciudad.trim();
+      if (trimmedCiudad !== (user.ciudad || '')) {
+        payload.ciudad = trimmedCiudad || undefined;
+      }
+
+      const trimmedDireccion = formData.direccion.trim();
+      if (trimmedDireccion !== (user.direccion || '')) {
+        payload.direccion = trimmedDireccion || undefined;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -852,6 +950,56 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                RUT (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.rut}
+                onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="12345678-9"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Teléfono (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.telefono}
+                onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="912345678"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Ciudad (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.ciudad}
+                onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Dirección (opcional)
+              </label>
+              <input
+                type="text"
+                value={formData.direccion}
+                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

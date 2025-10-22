@@ -215,6 +215,12 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const { email, name, password, role = 'usuario', send_welcome_email = false, rut, telefono, ciudad, direccion } = body;
 
+    // Aplicar normalizadores
+    const normalizedRut = rut ? normalizeRut(rut) : null;
+    const normalizedTelefono = telefono ? normalizePhone(telefono) : null;
+    const normalizedCiudad = ciudad || null;
+    const normalizedDireccion = direccion ? await normalizeAddress(direccion) : null;
+
     // Dividir name en nombre y apellido
     const nameParts = (name || '').trim().split(' ');
     const nombre = nameParts[0] || '';

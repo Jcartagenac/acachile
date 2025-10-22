@@ -62,10 +62,15 @@ export interface User {
   role: UserRole;
   created_at: string;
   updated_at: string;
+  updated_by?: string;
   last_login?: string;
   is_active: boolean;
   status?: 'active' | 'inactive';
   email_verified?: boolean;
+  rut?: string;
+  telefono?: string;
+  ciudad?: string;
+  direccion?: string;
   stats?: {
     events_created: number;
     inscriptions: number;
@@ -472,6 +477,10 @@ class AdminService {
     password: string;
     role: UserRole;
     send_welcome_email?: boolean;
+    rut?: string;
+    telefono?: string;
+    ciudad?: string;
+    direccion?: string;
   }): Promise<User> {
     try {
       const payload = Object.fromEntries(
