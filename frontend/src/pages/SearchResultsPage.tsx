@@ -449,8 +449,7 @@ const SearchResultsPage: React.FC = () => {
                         ? 'Contenido destacado del sitio.'
                         : 'Sin descripción disponible.');
 
-                  const hrefIsExternal = result.url?.startsWith('http');
-                  const titleNode = hrefIsExternal ? (
+                  const titleNode = result.url?.startsWith('http') ? (
                     <a
                       href={result.url}
                       target="_blank"
@@ -468,8 +467,8 @@ const SearchResultsPage: React.FC = () => {
                     </Link>
                   );
 
-                  return (
-                    <div key={`${result.type}-${result.id}-${index}`} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                  const cardContent = (
+                    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                       <div className="flex items-start gap-4">
                         {result.type === 'usuario' && result.avatar && (
                           <img
@@ -526,6 +525,22 @@ const SearchResultsPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
+                  );
+
+                  // If the result points to an external URL, use a regular anchor
+                  if (result.url?.startsWith('http')) {
+                    return (
+                      <a key={`${result.type}-${result.id}-${index}`} href={result.url} target="_blank" rel="noreferrer">
+                        {cardContent}
+                      </a>
+                    );
+                  }
+
+                  // Internal link: wrap the whole card so clicks anywhere navigate
+                  return (
+                    <Link key={`${result.type}-${result.id}-${index}`} to={result.url} className="block">
+                      {cardContent}
+                    </Link>
                   );
                 })}
               </div>
