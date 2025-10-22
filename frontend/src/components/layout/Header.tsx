@@ -30,7 +30,7 @@ export const Header: React.FC = () => {
       {/* Header - Soft UI 2.0 */}
       <header className="relative bg-white/80 backdrop-blur-soft sticky top-0 z-50 border-b border-white/20 shadow-soft-sm">
         <Container>
-          <div className="flex justify-between items-center py-3 sm:py-4">
+          <div className="flex justify-between items-center py-3 sm:py-4 relative">
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-3 sm:space-x-4 group">
@@ -54,8 +54,8 @@ export const Header: React.FC = () => {
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-2">
+            {/* Desktop Navigation (centered) */}
+            <nav className="hidden md:flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
