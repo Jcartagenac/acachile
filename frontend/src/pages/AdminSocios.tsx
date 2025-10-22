@@ -1119,6 +1119,24 @@ function CreateSocioModal({ onClose, onSocioCreated }: {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Contraseña <span className="text-red-500">*</span>
               </label>
+              {/* Rol */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                <select
+                  value={(formData as any).role || roleOptions[0]?.key}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value } as any)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-2"
+                >
+                  {roleOptions.map((opt) => (
+                    <option key={opt.key} value={opt.key}>{opt.label}</option>
+                  ))}
+                </select>
+                {roleOptions.find((r) => r.key === ((formData as any).role || roleOptions[0]?.key))?.description && (
+                  <p className="text-xs text-gray-500">
+                    {roleOptions.find((r) => r.key === ((formData as any).role || roleOptions[0]?.key))?.description}
+                  </p>
+                )}
+              </div>
               <input
                 type="password"
                 required
