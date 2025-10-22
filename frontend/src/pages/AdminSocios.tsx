@@ -140,9 +140,32 @@ export default function AdminSocios() {
       if (response.success && response.data) {
         setEditingSocio(response.data);
       } else {
-        setEditingSocio(null);
-        setError(response.error || 'No se pudo cargar la información del socio.');
-        closeEditModal();
+        // If fetching the socio failed (500 or similar), we still open the edit modal
+        // with a minimal fallback object so the admin can at least set the role.
+        console.warn('[AdminSocios] getSocio failed, opening fallback edit modal:', response.error);
+        setError(response.error || 'No se pudo cargar la información del socio. Usando datos mínimos.');
+
+        const fallback: Socio = {
+          id: socioIdNumber,
+          nombre: '',
+          apellido: '',
+          email: '',
+          telefono: '',
+          rut: '',
+          direccion: '',
+          ciudad: '',
+          valorCuota: 6500,
+          estadoSocio: 'activo',
+          fechaIngreso: new Date().toISOString().split('T')[0],
+          listaNegra: false,
+          motivoListaNegra: '',
+          fotoUrl: undefined,
+          estadisticasCuotas: undefined,
+          // attach a role if available
+          role: roleOptions[0]?.key || 'usuario',
+        } as any;
+
+        setEditingSocio(fallback);
       }
 
       setIsEditLoading(false);
