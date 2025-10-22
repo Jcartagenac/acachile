@@ -25,7 +25,6 @@ CORS_ORIGIN = "https://acachile.pages.dev"
 FRONTEND_URL = "https://acachile.pages.dev"
 FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
-GOOGLE_MAPS_API_KEY = "AIzaSyABYyFZ6UR6rVMe30pXs4eN_epWjdw4blo"
 
 [env.preview.vars]
 ENVIRONMENT = "preview"
@@ -33,7 +32,6 @@ CORS_ORIGIN = "*"
 FRONTEND_URL = "https://acachile.pages.dev"
 FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
-GOOGLE_MAPS_API_KEY = "AIzaSyABYyFZ6UR6rVMe30pXs4eN_epWjdw4blo"
 
 # Bindings específicas para producción
 [[env.production.kv_namespaces]]
