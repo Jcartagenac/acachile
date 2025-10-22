@@ -1,402 +1,280 @@
 # ACA Chile Platform
 
-> Plataforma full‑stack para la Asociación Chilena de Asadores (ACA Chile): inscripción y gestión de socios, cobro de cuotas, publicación de noticias/eventos y administración operativa, todo sobre la plataforma serverless de Cloudflare.
+> Plataforma full‑stack para la Asociación Chilena de Asadores (ACA Chile): inscripción y gestión de socios, cobro de cuotas, publicación de noticias/eventos y administración operativa.
 
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-orange)](https://developers.cloudflare.com/pages/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020)](https://developers.cloudflare.com/workers/)
-[![React 18](https://img.shields.io/badge/React-18.3.1-61dafb)](https://react.dev/)
+[![React 18](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8)](https://tailwindcss.com/)
 
 ---
 
-## 📚 Tabla de Contenidos
+## Índice (rápido)
 
-1. [Visión General](#1--visión-general)
-2. [Stack Tecnológico Detallado](#2--stack-tecnológico-detallado)
-3. [Arquitectura y Flujo de Datos](#3--arquitectura-y-flujo-de-datos)
-4. [Estructura de Directorios](#4--estructura-de-directorios)
-5. [Roles y Permisos](#5--roles-y-permisos)
-6. [Módulos y Funcionalidades](#6--módulos-y-funcionalidades)
-7. [Modelado de Datos](#7--modelado-de-datos)
-8. [Entornos y Configuración](#8--entornos-y-configuración)
-9. [Puesta en Marcha Local](#9--puesta-en-marcha-local)
-10. [Comandos y Scripts Clave](#10--comandos-y-scripts-clave)
-11. [Datos Iniciales y Usuarios Admin](#11--datos-iniciales-y-usuarios-admin)
-12. [Superficie de API](#12--superficie-de-api)
-13. [Front‑End Routing y Componentes](#13--front-end-routing-y-componentes)
-14. [Observabilidad y Debug](#14--observabilidad-y-debug)
-15. [Testing y Calidad](#15--testing-y-calidad)
-16. [Despliegue y Operaciones](#16--despliegue-y-operaciones)
-17. [Tareas de Mantenimiento](#17--tareas-de-mantenimiento)
-18. [Troubleshooting](#18--troubleshooting)
-19. [Documentación Complementaria](#19--documentación-complementaria)
-20. [Checklist de Primer Día](#20--checklist-de-primer-día)
-21. [Glosario Rápido](#21--glosario-rápido)
-22. [Contribuir y Buenas Prácticas](#22--contribuir-y-buenas-prácticas)
+- Visión general
+- Requisitos y herramientas
+- Estructura del repo
+- Cómo ejecutar en desarrollo
+- Cómo construir y desplegar
+- Bindings y variables de entorno
+- D1 (migraciones y operaciones comunes)
+- Sugerencias de debugging (incluye React error #310)
+- Cambio de contraseña para un usuario (instrucciones seguras)
+- Troubleshooting y logs
+- Contribuir
 
 ---
 
-## 1. 🎯 Visión General
+## 1. Visión general
 
-ACA Chile centraliza la administración de la asociación:
+Este repositorio contiene la aplicación frontend (React + Vite) y las Pages Functions (endpoints serverless) que actúan como backend usando Cloudflare Workers + D1 + KV + R2.
 
-- Gestión de socios (altas, bajas, actualización de perfil, privacidad, foto, estado).
-- Cobranza de cuotas con seguimiento mensual, recibos y estadísticas.
-- Panel administrativo para usuarios internos con roles diferenciados.
-- Publicación de eventos, noticias y contenido institucional.
-- Formularios de postulación con flujo de revisión/aprobación.
-- Buscador global con privacidad configurable.
-
-El objetivo de este README es permitir que cualquier persona (desde un pasante junior hasta otra IA) pueda levantar el entorno, comprender la arquitectura y continuar el desarrollo sin depender de conocimiento tácito.
+El objetivo es permitir administrar socios, cuotas, eventos y contenido público, con controles de privacidad por socio.
 
 ---
 
-## 2. 🧠 Stack Tecnológico Detallado
+## 2. Requisitos y herramientas
 
-### Frontend
-- **React 18 + TypeScript** (SPA).
-- **Vite 5** como bundler y dev server.
-- **Tailwind CSS** para estilos y diseño responsivo.
-- **React Router 6** para la navegación.
-- **Context API + hooks** (`AuthContext`, `EventContext`) para estado global.
-- **Servicios HTTP propios** con logging estructurado (`src/services`).
-- **Lucide React** para iconografía y `clsx` / `tailwind-merge` para utilidades CSS.
+- Node.js LTS (v18+ recomendado)
+- npm (o yarn)
+- wrangler v2+ (para interactuar con Pages / D1 / R2)
+- Una cuenta de Cloudflare con Pages/D1/R2 habilitados
 
-### Backend (Cloudflare)
-- **Cloudflare Pages Functions** (basadas en Workers) bajo `frontend/functions`.
-- **D1 (SQLite serverless)** como base de datos principal.
-- **Cloudflare KV** para datos cacheados y catálogos ligeros.
-- **Cloudflare R2** (S3 compatible) para almacenamiento de medios (fotos, comprobantes).
-- **Resend** para correos transaccionales (bienvenida, recuperación, avisos).
-- **JWT** para autenticación con middleware propio.
+Instalación rápida:
 
-### Tooling / Dev Experience
-- **ESLint 9 + TypeScript ESLint** (modo flat) para linting.
-- **Tailwind CLI** integrado en Vite.
-- **Wrangler CLI** para emulación local, despliegues y gestión de bindings.
-- **Scripts auxiliares** (`R2_*`, guías en `docs/`) para tareas de infraestructura.
+```bash
+# Instala dependencias (desde la raíz del repo)
+npm install
 
----
-
-## 3. 🏗️ Arquitectura y Flujo de Datos
-
-```
-┌───────────────┐        ┌────────────────────────┐
-│ Navegador SPA │  HTTPS │ Cloudflare Pages (Vite) │
-└──────┬────────┘        └────────────┬───────────┘
-       │                              │
-       │  fetch /api/*                │ Serverless render (static assets)
-       ▼                              ▼
-┌──────────────────────────────┐   ┌─────────────────────────┐
-│ Cloudflare Pages Functions   │   │ Static Assets (React)   │
-│ (frontend/functions/api)     │   │ dist/ -> CDN global     │
-└──────────┬──────┬────────────┘
-           │      │
-           │      │ calls (via bindings)
-           │      ▼
-           │    ┌───────────────────────────┐
-           │    │ Cloudflare D1 (SQLite)    │ ← datos estructurados
-           │    └───────────────────────────┘
-           │
-           │    ┌───────────────────────────┐
-           │    │ Cloudflare KV (ACA_KV)    │ ← cache, catálogos, contenido
-           │    └───────────────────────────┘
-           │
-           │    ┌───────────────────────────┐
-           └──▶ │ Cloudflare R2             │ ← fotos, comprobantes, adjuntos
-                └───────────────────────────┘
+# Instala wrangler globalmente si aún no lo tienes
+npm i -g wrangler
 ```
 
-- Autenticación: JWT firmado, validado por middleware compartido (`frontend/functions/api/_middleware`).
-- Autorización: roles + permisos (ver [sección 5](#5--roles-y-permisos)).
-- Comunicación interna: servicios en `frontend/src/services/*` abstraen endpoints y normalizan respuestas.
-- Logging: consola estructurada en frontend (window.logger) y logs de Workers disponibles en Cloudflare (`wrangler pages deployment tail`).
+---
+
+## 3. Estructura del repositorio
+
+- `frontend/` — React + Vite app (contiene `src/` y `functions/` para Pages Functions).
+- `frontend/functions/` — Pages Functions (cada `api/*` es un endpoint).
+- `shared/` — tipos y utilidades compartidas.
+- `migrations/` — scripts SQL históricos y utilitarios.
+- `docs/` — guías operacionales (R2, DNS, Pages, etc.).
 
 ---
 
-## 4. 🗂️ Estructura de Directorios
+## 4. Ejecutar en desarrollo (rápido)
 
-| Ruta | Contenido |
-|------|-----------|
-| `frontend/` | Proyecto React + Vite. Contiene `src/`, `public/`, config de Tailwind, Vite, ESLint. |
-| `frontend/functions/` | Cloudflare Pages Functions (cada archivo o carpeta expone un endpoint). |
-| `frontend/functions/api/_middleware/` | Autenticación, helpers comunes (`requireAuth`, `jsonResponse`). |
-| `frontend/functions/api/admin/` | Endpoints administrativos (usuarios, socios, cuotas, roles, migraciones). |
-| `frontend/functions/api/auth/` | Login, perfil, privacidad. |
-| `frontend/functions/api/search/` | Búsqueda global y sugerencias. |
-| `shared/` | Tipos TypeScript compartidos (roles, permisos, tipos de eventos, utilidades). |
-| `migrations/` | Scripts SQL (histórico) aplicables sobre D1. |
-| `docs/*.md` | Guías operativas (DNS, R2, Pages, debugging, etc.). |
-| `scripts/`, `*.sh` | Utilidades para deploy, configuración y mantenimiento (leer cada doc antes de usar). |
-| `clone/`, `clone-repo/` | Snapshot legacy (no forman parte del build actual; mantener por referencia). |
-| `public/`, `dist/` | Assets estáticos y salida de build respectivamente. |
+Hay dos modos comunes para trabajar localmente.
 
----
+Opción A (recomendada — wrangler proxy para funciones):
 
-## 5. 🔐 Roles y Permisos
+```bash
+cd frontend
+# Levanta Vite y permite a Pages Functions responder a /api/*
+wrangler pages dev dist -- npm run dev -- --host --port 5173
 
-Roles vigentes (tabla `roles_catalog` + `shared/index.ts`):
+# Abre http://localhost:8787
+```
 
-| Rol | Descripción | Permisos principales |
-|-----|-------------|----------------------|
-| `usuario` | Socio estándar, acceso a portal público y su perfil. | Ver eventos/noticias, gestionar perfil, ver/descargar cuotas propias. |
-| `director_editor` | Director con capacidad editorial. | Todo lo anterior + administrar contenido (eventos, noticias, postulaciones). |
-| `director` | Director operativo. | Gestión de socios, cuotas, comunicados, estadísticas avanzadas. |
-| `admin` | Administrador general. | Acceso total: configuración, usuarios internos, seguridad. |
+Opción B (dev separados):
 
-> También existe `super_admin` en código heredado para compatibilidad, pero la UI actual se alinea con los cuatro roles anteriores.
+```bash
+# Terminal A: frontend dev
+cd frontend
+npm run dev -- --port 5173
 
-Los permisos específicos se definen en `shared/index.ts` (`ROLE_PERMISSIONS`), y la UI condicional utiliza estos valores para mostrar/ocultar acciones.
+# Terminal B: si quieres emular funciones con wrangler
+cd frontend
+wrangler pages dev dist --local
+
+# Ver assets en http://localhost:5173 y proxear /api/ con wrangler si lo configuras
+```
+
+Notas:
+- Los endpoints se encuentran bajo `frontend/functions/api/*`.
+- Para ejecutar funciones unitarias puedes usar `wrangler pages dev` o `wrangler dev` (ver docs de wrangler según versión).
 
 ---
 
-## 6. ✨ Módulos y Funcionalidades
+## 5. Build y despliegue
 
-### Frontend (principales vistas)
-- **Landing / Sitio público**: Home, eventos, noticias, formulario “Únete”.
-- **Autenticación**: Login, recuperación, refresco de sesión (JWT en localStorage + cookies).
-- **Perfil de socio**: Datos personales, preferencias de privacidad, historial de pago.
-- **Panel Admin**:
-  - **Dashboard**: métricas rápidas (usuarios activos, cuotas, eventos).
-  - **Socios** (`AdminSocios`): CRUD completo, importación CSV, subida de foto a R2, estado y listas.
-  - **Usuarios internos** (`AdminUsers`): creación/edición de credenciales + roles.
-  - **Cuotas**: resumen anual, detalle por socio, actualización de estado.
-  - **Comunicados**: redacción, publicación, filtrado por destinatarios.
-  - **Eventos & Noticias**: gestión con soporte multimedia (imágenes en R2, caché en KV).
-  - **Postulaciones**: revisión multi-aprobador, seguimiento de candidatos.
-  - **Contenido institucional**: editor por secciones (home, about, contacto) con fallback en KV.
+Build local (produce `dist/`):
 
-### Backend (funciones destacadas)
-- **`/api/admin/socios`**: CRUD + reactivación de socios, valida roles, normaliza payloads (incluye `rol`).
-- **`/api/admin/users`**: altas/bajas de usuarios staff, cambio de roles, catálogo de roles (`/api/admin/roles`).
-- **`/api/admin/migrate-socios-schema`**: script idempotente para preparar tablas de cuotas/configuración.
-- **`/api/auth/privacy`**: preferencias de visibilidad (email, teléfono, RUT, etc.).
-- **`/api/search/*`**: búsqueda global y sugerencias con respeto de flags de privacidad.
-- **`/api/admin/content`**: editor de secciones del sitio, cacheado en KV.
-- **`/api/unete`**: recepción de postulaciones con foto (subida a R2 + registro en D1).
-- **`/api/system/maintenance`**: health check ampliado (bindings, conexiones).
+```bash
+cd frontend
+npm run build
+```
+
+Deploy to Cloudflare Pages (si tienes `wrangler` configurado o via GitHub Actions/Pages):
+
+```bash
+# despliegue manual con wrangler (requiere credenciales configuradas)
+cd frontend
+npm run deploy
+```
+
+Por defecto el build ejecuta `tsc --noEmit && vite build`.
+
+Cloudflare Pages: el repositorio está configurado para desplegar desde `frontend/dist` (ver `wrangler.toml` y settings de Pages). Si el deploy falla por problemas con submódulos/comandos de copia (ej. `_headers`), revisa que `frontend/_headers` exista o actualiza la configuración de build.
 
 ---
 
-## 7. 🗃️ Modelado de Datos
+## 6. Variables de entorno y bindings importantes
 
-### 7.1 Tablas principales en D1
+Configurar los bindings y secrets en Pages/Workers: los nombres abajo deben existir en el entorno de Pages.
 
-> Las columnas listadas provienen de migraciones y consultas activas. La base histórica (`usuarios`, `inscripciones`, `comentarios`) se mantiene de versiones anteriores.
+- `DB` — binding para Cloudflare D1 (obligatorio)
+- `ACA_KV` — binding para Cloudflare KV (opcional pero usado en caching)
+- `R2` bindings — para R2 bucket (fotos, comprobantes)
+- `JWT_SECRET` — secreto para firmar tokens JWT
+- `RESEND_API_KEY` — (opcional) para enviar emails
+- `FRONTEND_URL` — URL pública del frontend
+- `CORS_ORIGIN` — orígenes permitidos
 
-#### `usuarios`
-- `id` (INTEGER, PK)
-- `email` (TEXT, único)
-- `password_hash` (TEXT)
-- `nombre`, `apellido` (TEXT)
-- `telefono`, `rut`, `ciudad`, `direccion` (TEXT, opcional)
-- `foto_url` (TEXT, opcional)
-- `valor_cuota` (INTEGER, default 6500)
-- `fecha_ingreso` (DATETIME)
-- `estado_socio` (TEXT, default `'activo'`)
-- `lista_negra` (BOOLEAN numérico)
-- `motivo_lista_negra` (TEXT)
-- `role` (TEXT, valores en roles_catalog)
-- `activo` (BOOLEAN numérico)
-- `last_login`, `created_at`, `updated_at` (DATETIME)
-
-#### `roles_catalog`
-- `key` (PK) – `usuario`, `director_editor`, `director`, `admin`
-- `label`, `description` (TEXT)
-- `priority` (INTEGER)
-- `created_at` (DATETIME)
-
-#### `configuracion_global`
-- `id` (PK autoincremental)
-- `clave`, `valor`, `descripcion`
-- `tipo` (string, number, json…)
-- `created_at`, `updated_at`
-
-#### `cuotas`
-- `id` (PK)
-- `usuario_id` (FK → usuarios.id)
-- `año`, `mes`
-- `valor`
-- `pagado` (BOOLEAN)
-- `fecha_pago`, `metodo_pago`
-- `comprobante_url`
-- `notas`
-- `created_at`, `updated_at`
-- Índices: por `usuario_id/año`, `año/mes`, `pagado`, `fecha_pago`.
-
-#### `pagos`
-- `id` (PK)
-- `cuota_id`, `usuario_id`, `procesado_por` (FK a usuarios)
-- `monto`, `metodo_pago`, `comprobante_url`, `estado`
-- `fecha_pago`
-- `notas_admin`
-- `created_at`, `updated_at`
-
-#### `generacion_cuotas`
-- `id` (PK)
-- `año`, `mes` (único)
-- `valor_default`
-- `generadas` (INTEGER)
-- `generado_por` (FK)
-- `fecha_generacion`
-
-#### `comunicados`
-- `id` (PK)
-- `titulo`, `contenido`, `tipo` (`importante`, `corriente`, `urgente`)
-- `destinatarios` (JSON string)
-- `fecha_envio`
-- `estado` (`borrador`, `enviado`)
-- `created_by` (FK → usuarios)
-- `created_at`, `updated_at`
-
-#### `eventos`
-- `id` (PK)
-- `title`, `description`, `location`, `image`
-- `date`, `time`
-- `type` (`campeonato`, `taller`, `encuentro`, `competencia`, `masterclass`)
-- `status` (`draft`, `published`, `completed`, `cancelled`)
-- `registration_open` (BOOLEAN)
-- `max_participants`, `current_participants`
-- `price`
-- `organizer_id` (FK → usuarios)
-- `created_at`, `updated_at`
-
-#### `evento_inscripciones`
-- `id` (TEXT PK)
-- `evento_id`, `user_id` (FK → eventos / usuarios)
-- `status` (`confirmed`, `waitlist`, `cancelled`)
-- `created_at`, `updated_at`
-- Índices: por evento y por usuario.
-
-#### `postulaciones`
-- `id` (PK)
-- `full_name`, `email`, `phone`, `rut`
-- `birthdate`, `region`, `city`, `occupation`
-- `experience_level`, `specialties`
-- `motivation`, `contribution`
-- `availability` (JSON string)
-- `has_competition_experience` (BOOLEAN numérico)
-- `competition_details`
-- `instagram`, `other_networks`
-- `references_info`
-- `photo_url`
-- `status` (`pendiente`, `en_revision`, `aprobada`, `rechazada`)
-- `approvals_required`, `approvals_count`
-- `rejection_reason`
-- `approved_at`, `rejected_at`
-- `socio_id` (FK opcional → usuarios)
-- `created_at`, `updated_at`
-
-#### `postulacion_aprobaciones`
-- `id` (PK)
-- `postulacion_id` (FK → postulaciones, delete cascade)
-- `approver_id` (FK → usuarios)
-- `approver_role`
-- `comment`
-- `created_at`
-- Constraint: `UNIQUE(postulacion_id, approver_id)`
-
-#### `site_sections`
-- PK compuesto (`page`, `key`)
-- `title`, `content`, `image_url`
-- `sort_order`
-- `source_type` (`custom`, `event`, `news`)
-- `source_id`
-- `cta_label`, `cta_url`
-- `created_at`, `updated_at`
-
-#### `user_privacy_settings`
-- `user_id` (PK / FK → usuarios)
-- `show_email`, `show_phone`, `show_rut`, `show_address`, `show_birthdate`, `show_public_profile` (INTEGER 0/1)
-- `updated_at`
-
-#### Tablas legacy relevantes
-- `inscripciones`, `comentarios`: usadas para métricas históricas en algunos endpoints de usuarios.
-
-### 7.2 Cloudflare KV (`ACA_KV`)
-- `noticias:all`: listado cacheado de noticias.
-- `search:suggestions:*`: cache de sugerencias de búsqueda.
-- `content:sections:<page>` (`SECTION_CACHE_KEY`): contenido institucional por página.
-- Otros valores temporales para catálogos (roles, configuraciones rápidas).
-
-### 7.3 Cloudflare R2
-- Bucket principal (consultar `R2_*` docs) con estructura sugerida:
-  - `socios/<userId>/foto.{jpg|png|webp}` – foto de perfil procesada.
-  - `comprobantes/<año>/<mes>/<socioId>/<uuid>.pdf|jpg` – comprobantes de pago.
-  - `postulaciones/<id>/<filename>` – fotos/documentos de postulantes.
-  - `contenido/<slug>/media.*` – assets institucionales.
-- Política de CORS y acceso público configurada via scripts en `docs/R2_*`.
-
-### 7.4 Configuración y metadatos
-- `ENVIRONMENT`, `FRONTEND_URL`, `CORS_ORIGIN`, `FROM_EMAIL`, `ADMIN_EMAIL`: definidos en `wrangler.toml` y Panel de Pages.
-- Secretos: `JWT_SECRET`, `RESEND_API_KEY` (ver `ENV_CONFIG.md`, `SECRETS_CONFIG.md`).
+Localmente se usan archivos de ejemplo: `frontend/.env.development` y `frontend/.env.production` (no commitear secretos reales).
 
 ---
 
-## 8. ⚙️ Entornos y Configuración
+## 7. D1 — migraciones y operaciones comunes
 
-| Variable | Descripción | Notas |
-|----------|-------------|-------|
-| `VITE_API_BASE_URL` | Base URL para fetch desde el frontend | Development: `http://localhost:8787` |
-| `VITE_ENVIRONMENT` | `development` / `production` | Usado para toggles de logging. |
-| `FRONTEND_URL` | URL base del frontend | Debe coincidir con dominio. |
-| `CORS_ORIGIN` | Lista de orígenes permitidos (string o CSV) | Necesario para Workers. |
-| `JWT_SECRET` | Hex string 32 bytes | Configurar en Pages (secret). |
-| `RESEND_API_KEY` | API key para Resend | Solo requerido para enviar correos. |
-| `DB` (binding) | Cloudflare D1 | Configurado en Pages + wrangler. |
-| `ACA_KV` (binding) | Cloudflare KV | Para cache/sugerencias. |
-| `R2` bindings | (según scripts) | Requiere bucket + token. |
+Aplicar migraciones locales con wrangler:
 
-Archivos `.env` disponibles en `frontend/` (`.env.development`, `.env.production`) sirven de referencia. _No se deben commitear datos sensibles_.
+```bash
+# Crear DB (si procede)
+wrangler d1 create acachile-db
+
+# Aplicar migraciones (según tu configuración wrangler)
+wrangler d1 migrations apply acachile-db --local
+```
+
+Acceso y queries rápidos (ejemplo):
+
+```bash
+# Ejecutar un query con wrangler (o usar la consola D1 en Cloudflare)
+wrangler d1 execute acachile-db --file ./migrations/sql/query.sql
+```
+
+Nota sobre esquemas: el proyecto ha sufrido evoluciones; algunas funciones (por ejemplo `/api/search`) ya contienen protecciones para esquemas con columnas faltantes (usando PRAGMA table_info y `NULL AS col` como fallback). Si añades columnas, agrega migraciones idempotentes.
 
 ---
 
-## 9. 🚀 Puesta en Marcha Local
+## 8. Cambio seguro de contraseña para un usuario (operación manual)
 
-1. **Clonar e instalar dependencias**
-   ```bash
-   git clone https://github.com/Jcartagenac/acachile.git
-   cd acachile
-   npm install
-   ```
+Si necesitas cambiar la contraseña de un usuario (ej. `jcartagenac@gmail.com`) el repo usa un esquema de hash basado en SHA-256 con un salt conocido en el proyecto.
 
-2. **Configurar variables locales**
-   ```bash
-   cp frontend/.env.development frontend/.env.local
-   # Ajustar valores si deseas otro puerto o base URL.
-   ```
+Ejemplo (no ejecutes esto en producción sin confirmar):
 
-3. **Iniciar sesión en Cloudflare (una vez)**
-   ```bash
-   wrangler login
-   ```
+1. El hash usado en este proyecto es: SHA-256(password + 'salt_aca_chile_2024')
 
-4. **Preparar D1**
-   - Crear base si no existe: `wrangler d1 create acachile-db`
-   - Aplicar migraciones básicas (local):  
-     ```bash
-     wrangler d1 migrations apply acachile-db --local
-     ```
-   - Opcional: ejecutar `frontend/functions/api/admin/migrate-socios-schema` vía curl para asegurar columnas extendidas.
+2. Para actualizar la contraseña por SQL:
 
-5. **Levantar entorno local**
+```sql
+UPDATE usuarios
+SET password_hash = '<nuevo_hash_sha256>'
+WHERE email = 'jcartagenac@gmail.com';
+```
 
-   **Opción A: Wrangler + Vite en una sola terminal**
-   ```bash
-   cd frontend
-   wrangler pages dev dist -- npm run dev -- --host --port 5173
-   ```
-   - Wrangler proxea `/api/*` a las funciones.
-   - Accede a `http://localhost:8787` (sirve assets + API).
+3. Si prefieres que lo haga por ti, explícame destino (local/test/production) y confirmas que doy el paso.
 
-   **Opción B: Servicios separados**
-   ```bash
-   # Terminal 1
-   cd frontend
-   npm run dev -- --port 5173
+Generación local de hash (ejemplo en node):
 
-   # Terminal 2
+```js
+import crypto from 'crypto';
+const salt = 'salt_aca_chile_2024';
+function hashPassword(password){
+   return crypto.createHash('sha256').update(password + salt, 'utf8').digest('hex');
+}
+console.log(hashPassword('supersecret123'));
+```
+
+---
+
+## 9. Debugging y observabilidad (tips operativos)
+
+- Ver logs de Pages build: en la UI de Cloudflare Pages o con `wrangler pages deployments tail`.
+- Ver logs de Functions / Workers en Cloudflare (Logs -> Deployments -> Tail).
+- Para debug local de funciones: `wrangler pages dev` (proxy) o `wrangler dev` según versión.
+
+React error #310 (Minified React error) — causas comunes
+- Este error ocurre en producción cuando el orden de hooks cambia entre renders (hooks condicionales o hooks añadidos/quitados por un render). Diagnóstico y fixes:
+   - Revisa componentes que usan hooks (`useMemo`, `useEffect`, `useState`) y asegúrate de no llamarlos condicionalmente (si usas `if (loading) return ...` está bien siempre que los hooks se declaren antes de cualquier `return` condicional temprana).
+   - Evita usar hooks dentro de ramas (por ejemplo dentro de `if (socio) { useMemo(...) }`).
+   - En `PublicSocioPage.tsx` se introdujeron defensas (guards, error boundary) y se aseguraron hooks en la parte superior del componente.
+
+Problemas de build relacionados con `_headers` o ficheros estáticos
+- Vite puede intentar copiar `frontend/_headers` a `dist/_headers`. Si no existe y el plugin intenta copiarlo, la build puede fallar en algunos entornos. Soluciones:
+   - Añadir un archivo `frontend/_headers` (incluso vacío o con reglas mínimas) y commitearlo.
+   - O modificar el plugin/copy task del build para que ignore la ausencia del archivo.
+
+---
+
+## 10. Problemas comunes y soluciones rápidas
+
+- Pages no termina la clonación: revisa si hay submódulos/gitlinks (`160000` entries). Solución: eliminar el gitlink del índice y reemplazar con un directorio normal.
+- Search no devuelve usuarios: revisar `frontend/functions/api/search/index.js` — el handler ahora se protege contra columnas faltantes en D1.
+- Privacy guard devuelve "Token inválido": asegurarse de que `requireAuth()` es `await`ed en handlers y que el token se envía en `Authorization: Bearer <token>`.
+
+---
+
+## 11. Comandos útiles
+
+Desde `frontend/`:
+
+```bash
+npm run dev        # dev con Vite
+npm run build      # tsc + vite build
+npm run preview    # vite preview (local dist)
+npm run lint       # eslint
+npm run deploy     # build + wrangler pages deploy (requiere wrangler credenciales)
+```
+
+Git / PR flow
+
+```bash
+git checkout -b feat/mi-cambio
+# trabajar, commit
+git push origin feat/mi-cambio
+# abrir PR en GitHub -> revisión -> merge
+```
+
+---
+
+## 12. Health checks y endpoints importantes
+
+- `/api/health` — estado básico (bindings, DB reachable)
+- `/api/search?q=...&type=usuarios` — búsqueda de usuarios (respeta privacy)
+- `/api/socios/:id` — perfil público de socio (usa fallback seguro si faltan campos)
+
+---
+
+## 13. Contribuir
+
+- Sigue el flujo de ramas: `main` (producción), PRs para features/fixes.
+- Añade tests o una nota de verificación cuando cambies comportamiento crítico (auth, DB schema, search).
+- Documenta migraciones en `migrations/` y añade instrucciones para apply en README cuando sean breaking.
+
+---
+
+## 14. Contacto y responsabilidades
+
+Si necesitas que aplique cambios en producción (migraciones, update de contraseña, modificación de bindings), indícalo explícitamente y confirma el entorno (staging / production). Algunas operaciones son destructivas y requieren backup.
+
+---
+
+## 15. Resumen final y próximos pasos recomendados
+
+- Tengo cambios recientes que corrigieron problemas de hooks y el espaciado del hero. Empujé esas correcciones a `main`.
+- Recomendación inmediata: después de cada cambio crítico en `frontend/functions` ejecutar `npm run build` localmente y revisar `wrangler pages deployments tail` hasta que Pages muestre `deployed`.
+- Próximo mantenimiento recomendado: hardening de `/api/socios/:id` para siempre devolver shape por defecto (`contact`, `location`, `privacy`) y añadir tests básicos de integración para endpoints clave.
+
+---
+
+Gracias por trabajar en este proyecto. Si quieres, puedo:
+
+- Crear un checklist de pre-merge que incluya build local, tsc, tests y una revisión rápida de endpoints. 
+- Preparar un pequeño script SQL migración para aplicar cambios de password o shape en D1 (lo dejo a tu confirmación antes de ejecutar).
+
    cd frontend
    wrangler pages dev dist --port 8787
    ```
