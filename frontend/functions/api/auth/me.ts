@@ -102,14 +102,14 @@ function validateProfileFields(body: {
 
   console.log('[AUTH/ME] Validating fields:', { nombre, apellido, telefono, rut });
 
-  // Solo validar nombre si está presente en el body
-  if (body.hasOwnProperty('nombre') && (nombre === null || nombre === undefined || nombre.trim().length < 2)) {
+  // Solo validar nombre si está presente en el body y no es null/undefined
+  if (body.hasOwnProperty('nombre') && nombre !== null && nombre !== undefined && nombre.trim().length < 2) {
     console.log('[AUTH/ME] Nombre validation failed:', nombre);
     return { valid: false, error: 'El nombre debe tener al menos 2 caracteres' };
   }
 
-  // Solo validar apellido si está presente en el body
-  if (body.hasOwnProperty('apellido') && (apellido === null || apellido === undefined || apellido.trim().length < 2)) {
+  // Solo validar apellido si está presente en el body y no es null/undefined
+  if (body.hasOwnProperty('apellido') && apellido !== null && apellido !== undefined && apellido.trim().length < 2) {
     console.log('[AUTH/ME] Apellido validation failed:', apellido);
     return { valid: false, error: 'El apellido debe tener al menos 2 caracteres' };
   }
@@ -151,12 +151,12 @@ async function buildUpdateFields(body: {
 
   if (nombre !== undefined) {
     updateFields.push('nombre = ?');
-    updateValues.push(nombre.trim());
+    updateValues.push(nombre && nombre.trim() !== '' ? nombre.trim() : null);
   }
 
   if (apellido !== undefined) {
     updateFields.push('apellido = ?');
-    updateValues.push(apellido.trim());
+    updateValues.push(apellido && apellido.trim() !== '' ? apellido.trim() : null);
   }
 
   if (telefono !== undefined) {
