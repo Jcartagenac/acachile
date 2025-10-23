@@ -108,37 +108,52 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 
     setIsLoading(true);
     try {
-      const request = {
-        input: query,
-        componentRestrictions: { country: 'cl' },
-        types: ['address']
-      };
-
-      console.log('🔍 Fetching Google Places suggestions for:', `"${query}"`);
-      console.log('📡 Request:', request);
-
-      autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
-        console.log('📊 Google Places response status:', status);
-        console.log('📋 Predictions received:', predictions);
-
-        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-          console.log('✅ Found suggestions:', predictions.length);
-          console.log('📝 First suggestion:', predictions[0]?.description);
-          setSuggestions(predictions);
-          setShowSuggestions(true);
-        } else {
-          console.warn('⚠️ Google Places failed:', status);
-          if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            console.log('📭 No results found for query');
-          } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-            console.error('🚫 Query limit exceeded');
-          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-            console.error('🚫 Request denied - check API key');
-          }
+      console.log('🔍 Fetching places suggestions for:', `"${query}"`);
+      // Prefer client-side AutocompleteService if available
+      if (autocompleteService.current) {
+        const request = { input: query, componentRestrictions: { country: 'cl' }, types: ['address'] };
+        try {
+          autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
+            console.log('📊 Google Places response status:', status);
+            console.log('📋 Predictions received:', predictions);
+            if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && predictions) {
+              setSuggestions(predictions);
+              setShowSuggestions(true);
+            } else {
+              console.warn('⚠️ Google Places client failed:', status);
+              setSuggestions([]);
+            }
+            setIsLoading(false);
+          });
+        } catch (err) {
+          console.error('❌ AutocompleteService error:', err);
+          setIsLoading(false);
           setSuggestions([]);
         }
-        setIsLoading(false);
-      });
+        return;
+      }
+
+      // Fallback to server-side Places Autocomplete
+      try {
+        const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(query)}`);
+        const json = await res.json();
+        if (json && json.predictions) {
+          // Map predictions to a shape similar to google.maps.places.AutocompletePrediction
+          const mapped = (json.predictions || []).map((p: any) => ({
+            description: p.description,
+            place_id: p.place_id,
+            structured_formatting: p.structured_formatting
+          }));
+          setSuggestions(mapped);
+          setShowSuggestions(true);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.error('❌ Server-side autocomplete error:', err);
+        setSuggestions([]);
+      }
+      setIsLoading(false);
     } catch (error) {
       console.error('❌ Error fetching suggestions:', error);
       setSuggestions([]);
@@ -190,8 +205,29 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     console.log('🏷️ Full suggestion object:', suggestion);
     setInputValue(suggestion.description);
     onChange(suggestion.description);
-    if (onNormalizedChange) {
-      onNormalizedChange(suggestion.description);
+    // If we have a place_id, try to fetch detailed place info (formatted address, geometry)
+    const placeId = (suggestion as any).place_id;
+    if (placeId) {
+      (async () => {
+        try {
+          const res = await fetch(`/api/places/details?place_id=${encodeURIComponent(placeId)}`);
+          const json = await res.json();
+          if (json && json.success && json.result) {
+            const formatted = json.result.formatted_address || suggestion.description;
+            if (onNormalizedChange) onNormalizedChange(formatted);
+            console.log('📌 Place details fetched:', json.result.geometry || {});
+          } else {
+            if (onNormalizedChange) onNormalizedChange(suggestion.description);
+          }
+        } catch (err) {
+          console.error('❌ Error fetching place details:', err);
+          if (onNormalizedChange) onNormalizedChange(suggestion.description);
+        }
+      })();
+    } else {
+      if (onNormalizedChange) {
+        onNormalizedChange(suggestion.description);
+      }
     }
     setSuggestions([]);
     setShowSuggestions(false);
