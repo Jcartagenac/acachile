@@ -144,10 +144,10 @@ export const ProfileModule: React.FC = () => {
         console.log('🔍 Validando teléfono:', formData.phone);
         const normalizedPhone = normalizePhone(formData.phone);
         console.log('✅ Teléfono normalizado:', normalizedPhone);
-        setFormData(prev => ({ ...prev, phone: normalizedPhone }));
+        setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
       } catch (err) {
         console.error('❌ Error validando teléfono:', err);
-        errors.phone = err instanceof Error ? err.message : 'Teléfono inválido';
+        errors.telefono = err instanceof Error ? err.message : 'Teléfono inválido';
       }
     }
 
@@ -179,7 +179,19 @@ export const ProfileModule: React.FC = () => {
 
       console.log('💾 ProfileModule: Saving profile data:', cleanedData);
       console.log('💾 ProfileModule: Sending cleaned data to API:', cleanedData);
-      const response = await userService.updateProfile(cleanedData);
+
+      // Preparar datos para la API (usar nombres de campos correctos)
+      const apiData = {
+        nombre: cleanedData.firstName,
+        apellido: cleanedData.lastName,
+        telefono: cleanedData.phone,
+        rut: cleanedData.rut,
+        ciudad: cleanedData.ciudad,
+        direccion: cleanedData.direccion
+      };
+
+      console.log('📡 ProfileModule: API payload:', apiData);
+      const response = await userService.updateProfile(apiData);
       console.log('📊 ProfileModule: Update response:', response);
 
       if (response.success && response.data) {
