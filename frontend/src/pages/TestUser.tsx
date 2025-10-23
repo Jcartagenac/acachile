@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { normalizeRut, normalizePhone } from '@shared/utils/validators';
+import { normalizeRut, normalizePhone, formatRut } from '@shared/utils/validators';
 import { AddressInput } from '../components/ui/AddressInput';
 
 export default function TestUser() {
@@ -24,30 +24,17 @@ export default function TestUser() {
     const allowedChars = value.replace(/[^0-9kK.\-]/g, '');
     console.log('🔤 RUT allowed chars:', `"${allowedChars}"`);
 
-    // Formatear en tiempo real mientras escribe
+    // Formatear en tiempo real mientras escribe (sin validar)
     let formattedValue = allowedChars;
     if (allowedChars.trim()) {
       try {
-        // Limpiar para validación
+        // Limpiar para formateo
         const cleanValue = allowedChars.replace(/[^0-9kK]/g, '').toUpperCase();
-        console.log('🧹 RUT cleaned for validation:', `"${cleanValue}"`);
+        console.log('🧹 RUT cleaned for formatting:', `"${cleanValue}"`);
 
-        if (cleanValue.length >= 9) {
-          // Tiene dígito verificador completo, validar y formatear
-          formattedValue = normalizeRut(cleanValue);
-          console.log('✅ RUT normalized complete:', `"${formattedValue}"`);
-        } else if (cleanValue.length >= 8) {
-          // Tiene cuerpo completo pero falta DV, formatear cuerpo + DV parcial
-          const body = cleanValue.slice(0, 8);
-          const partialDv = cleanValue.slice(8);
-          const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          formattedValue = `${formattedBody}-${partialDv}`;
-          console.log('📝 RUT formatted with partial DV:', `"${formattedValue}"`);
-        } else {
-          // Solo formatear puntos en el cuerpo
-          formattedValue = cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          console.log('📝 RUT formatted body only:', `"${formattedValue}"`);
-        }
+        // Siempre formatear, sin validar hasta el blur
+        formattedValue = formatRut(cleanValue);
+        console.log('📝 RUT formatted:', `"${formattedValue}"`);
       } catch (err) {
         console.error('❌ Error formatting RUT live:', err);
         // Si hay error, mantener el valor limpio
@@ -129,6 +116,8 @@ export default function TestUser() {
           ...prev,
           rut: err instanceof Error ? err.message : 'RUT inválido'
         }));
+        // Si es inválido, limpiar el campo
+        setFormData(prev => ({ ...prev, rut: '' }));
       }
     }
   };

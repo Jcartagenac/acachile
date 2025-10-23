@@ -43,16 +43,14 @@ export function validateRut(rut: string): boolean {
 }
 
 /**
- * Normaliza un RUT chileno: quita puntos/espacios, valida, y formatea con puntos y guion.
- * @param rut - RUT a normalizar
- * @returns RUT normalizado (ej: "12.345.678-9") o lanza error si inválido
+ * Formatea un RUT chileno con puntos y guion sin validar.
+ * @param rut - RUT limpio sin puntos ni guion
+ * @returns RUT formateado (ej: "12.345.678-9")
  */
-export function normalizeRut(rut: string): string {
+export function formatRut(rut: string): string {
   const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').trim().toUpperCase();
 
-  if (!validateRut(cleanRut)) {
-    throw new Error('RUT inválido');
-  }
+  if (!cleanRut) return '';
 
   const rutDigits = cleanRut.slice(0, -1);
   const dv = cleanRut.slice(-1);
@@ -68,6 +66,21 @@ export function normalizeRut(rut: string): string {
   }
 
   return `${formatted}-${dv}`;
+}
+
+/**
+ * Normaliza un RUT chileno: quita puntos/espacios, valida, y formatea con puntos y guion.
+ * @param rut - RUT a normalizar
+ * @returns RUT normalizado (ej: "12.345.678-9") o lanza error si inválido
+ */
+export function normalizeRut(rut: string): string {
+  const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').trim().toUpperCase();
+
+  if (!validateRut(cleanRut)) {
+    throw new Error('RUT inválido');
+  }
+
+  return formatRut(cleanRut);
 }
 
 /**
