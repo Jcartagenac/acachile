@@ -133,17 +133,25 @@ class UserService {
    * Valida los datos del perfil
    */
   private validateProfileData(profileData: UpdateProfileRequest): { valid: boolean; error?: string } {
-    if (!profileData.firstName || !profileData.lastName) {
-      return { 
-        valid: false, 
-        error: 'Nombre y apellido son obligatorios' 
+    // Solo validar si los campos están presentes en la solicitud
+    if (profileData.hasOwnProperty('firstName') && (!profileData.firstName || profileData.firstName.trim().length < 2)) {
+      return {
+        valid: false,
+        error: 'El nombre debe tener al menos 2 caracteres'
+      };
+    }
+
+    if (profileData.hasOwnProperty('lastName') && (!profileData.lastName || profileData.lastName.trim().length < 2)) {
+      return {
+        valid: false,
+        error: 'El apellido debe tener al menos 2 caracteres'
       };
     }
 
     if (profileData.email && !this.isValidEmail(profileData.email)) {
-      return { 
-        valid: false, 
-        error: 'Email no es válido' 
+      return {
+        valid: false,
+        error: 'Email no es válido'
       };
     }
 
@@ -202,8 +210,8 @@ class UserService {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          nombre: profileData.firstName,
-          apellido: profileData.lastName,
+          nombre: profileData.firstName || null,
+          apellido: profileData.lastName || null,
           telefono: profileData.phone || null,
           rut: profileData.rut || null,
           ciudad: profileData.ciudad || null,

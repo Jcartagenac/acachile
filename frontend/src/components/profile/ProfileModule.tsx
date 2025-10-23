@@ -181,17 +181,17 @@ export const ProfileModule: React.FC = () => {
       console.log('💾 ProfileModule: Cleaned data:', JSON.stringify(cleanedData, null, 2));
       console.log('💾 ProfileModule: Sending cleaned data to API:', cleanedData);
 
-      // Preparar datos para la API (usar nombres de campos correctos)
-      const apiData = {
-        nombre: cleanedData.firstName,
-        apellido: cleanedData.lastName,
-        telefono: cleanedData.phone,
+      // Preparar datos para el servicio (usar nombres de campos del servicio)
+      const serviceData = {
+        firstName: cleanedData.firstName,
+        lastName: cleanedData.lastName,
+        phone: cleanedData.phone,
         rut: cleanedData.rut,
         ciudad: cleanedData.ciudad,
         direccion: cleanedData.direccion
       };
 
-      console.log('📡 ProfileModule: API payload:', JSON.stringify(apiData, null, 2));
+      console.log('📡 ProfileModule: Service payload:', JSON.stringify(serviceData, null, 2));
       console.log('📡 ProfileModule: Field values:', {
         firstName: `"${cleanedData.firstName}"`,
         lastName: `"${cleanedData.lastName}"`,
@@ -200,7 +200,7 @@ export const ProfileModule: React.FC = () => {
         ciudad: `"${cleanedData.ciudad}"`,
         direccion: `"${cleanedData.direccion}"`
       });
-      const response = await userService.updateProfile(apiData);
+      const response = await userService.updateProfile(serviceData);
       console.log('📊 ProfileModule: Update response:', response);
 
       if (response.success && response.data) {
