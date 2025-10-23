@@ -70,7 +70,6 @@ export const ProfileModule: React.FC = () => {
     rut: '',
     ciudad: ''
   });
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Cargar perfil al montar el componente
   useEffect(() => {
