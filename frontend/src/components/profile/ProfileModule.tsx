@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../services/userService';
 import { useUserService } from '../../hooks/useUserService';
 import { useImageService } from '../../hooks/useImageService';
-import { normalizeRut, normalizePhone } from '@shared/utils/validators';
+import { normalizeRut, normalizePhone, formatRut, formatPhone } from '@shared/utils/validators';
 import { AddressInput } from '../ui/AddressInput';
 import {
   User,
@@ -70,6 +70,7 @@ export const ProfileModule: React.FC = () => {
     rut: '',
     ciudad: ''
   });
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Cargar perfil al montar el componente
   useEffect(() => {
@@ -258,23 +259,117 @@ export const ProfileModule: React.FC = () => {
 
   const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Solo permitir números, puntos, guiones y la letra K
-    const cleanValue = value.replace(/[^0-9kK.\-]/g, '');
-    // Formatear automáticamente mientras escribe
-    const formatted = formatRUT(cleanValue);
-    setFormData({ ...formData, rut: formatted });
-    // Limpiar error de validación cuando el usuario escribe
+    console.log('🔄 Profile RUT onChange - Input value:', `"${value}"`);
+
+    // Limpiar errores previos
     if (validationErrors.rut) {
       setValidationErrors(prev => ({ ...prev, rut: '' }));
+    }
+
+    // Permitir números, K/k, puntos y guiones
+    const allowedChars = value.replace(/[^0-9kK.\-]/g, '');
+    console.log('🔤 Profile RUT allowed chars:', `"${allowedChars}"`);
+
+    // Formatear en tiempo real mientras escribe (sin validar)
+    let formattedValue = allowedChars;
+    if (allowedChars.trim()) {
+      try {
+        formattedValue = formatRut(allowedChars);
+        console.log('📝 Profile RUT formatted:', `"${formattedValue}"`);
+      } catch (err) {
+        console.error('❌ Error formatting RUT live:', err);
+        // Si hay error, mantener el valor limpio
+        formattedValue = allowedChars;
+      }
+    }
+
+    console.log('💾 Profile RUT final value:', `"${formattedValue}"`);
+    setFormData({ ...formData, rut: formattedValue });
+
+    // Mantener el foco en el input después de actualizar el estado
+    setTimeout(() => {
+      const input = e.target as HTMLInputElement;
+      const len = formattedValue.length;
+      input.setSelectionRange(len, len);
+    }, 0);
+  };
+
+  const handleRutBlur = () => {
+    // Validar completamente al perder foco
+    if (formData.rut.trim()) {
+      try {
+        console.log('🔍 Profile validating RUT on blur:', formData.rut);
+        const normalizedRut = normalizeRut(formData.rut);
+        console.log('✅ Profile RUT normalized final:', normalizedRut);
+        setFormData(prev => ({ ...prev, rut: normalizedRut }));
+        setValidationErrors(prev => ({ ...prev, rut: '' }));
+      } catch (err) {
+        console.error('❌ Profile error validating RUT final:', err);
+        setValidationErrors(prev => ({
+          ...prev,
+          rut: err instanceof Error ? err.message : 'RUT inválido'
+        }));
+        // Si es inválido, limpiar el campo
+        setFormData(prev => ({ ...prev, rut: '' }));
+      }
     }
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setFormData({ ...formData, phone: value });
-    // Limpiar error de validación cuando el usuario escribe
-    if (validationErrors.phone) {
-      setValidationErrors(prev => ({ ...prev, phone: '' }));
+    console.log('🔄 Profile Phone onChange - Input value:', `"${value}"`);
+
+    // Limpiar errores previos
+    if (validationErrors.telefono) {
+      setValidationErrors(prev => ({ ...prev, telefono: '' }));
+    }
+
+    // Permitir números y +
+    const allowedChars = value.replace(/[^0-9+]/g, '');
+    console.log('🔤 Profile Phone allowed chars:', `"${allowedChars}"`);
+
+    // Formatear en tiempo real mientras escribe (sin validar)
+    let formattedValue = allowedChars;
+    if (allowedChars.trim()) {
+      try {
+        formattedValue = formatPhone(allowedChars);
+        console.log('📝 Profile Phone formatted:', `"${formattedValue}"`);
+      } catch (err) {
+        console.error('❌ Error formatting phone live:', err);
+        // Si hay error, mantener el valor limpio
+        formattedValue = allowedChars;
+      }
+    }
+
+    console.log('💾 Profile Phone final value:', `"${formattedValue}"`);
+    setFormData({ ...formData, telefono: formattedValue });
+
+    // Mantener el foco en el input después de actualizar el estado
+    setTimeout(() => {
+      const input = e.target as HTMLInputElement;
+      const len = formattedValue.length;
+      input.setSelectionRange(len, len);
+    }, 0);
+  };
+
+  const handlePhoneBlur = () => {
+    // Validar completamente al perder foco
+    if (formData.telefono.trim()) {
+      try {
+        console.log('🔍 Profile validating phone on blur:', formData.telefono);
+        const normalizedPhone = normalizePhone(formData.telefono);
+        console.log('✅ Profile phone normalized final:', normalizedPhone);
+        setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
+        setValidationErrors(prev => ({ ...prev, telefono: '' }));
+      } catch (err) {
+        console.error('❌ Profile error validating phone final:', err);
+        setValidationErrors(prev => ({
+          ...prev,
+          telefono: err instanceof Error ? err.message : 'Teléfono inválido'
+        }));
+        // Si es inválido, limpiar el campo
+        setFormData(prev => ({ ...prev, telefono: '' }));
+      }
     }
   };
 
@@ -556,16 +651,17 @@ export const ProfileModule: React.FC = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={handlePhoneChange}
+                    onBlur={handlePhoneBlur}
                     disabled={!isEditing}
                     className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
                       isEditing
                         ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
                         : 'cursor-not-allowed opacity-75'
-                    } ${validationErrors.phone ? 'border-red-500' : 'border-white/30'}`}
+                    } ${validationErrors.telefono ? 'border-red-500' : 'border-white/30'}`}
                     placeholder="+56 9 1234 5678"
                   />
-                  {validationErrors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{validationErrors.phone}</p>
+                  {validationErrors.telefono && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.telefono}</p>
                   )}
                 </div>
               </div>
@@ -581,6 +677,7 @@ export const ProfileModule: React.FC = () => {
                     type="text"
                     value={formData.rut}
                     onChange={handleRutChange}
+                    onBlur={handleRutBlur}
                     disabled={!isEditing}
                     className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
                       isEditing
