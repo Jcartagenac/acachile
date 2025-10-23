@@ -32,19 +32,72 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 
   // Initialize Google Places Autocomplete service
   useEffect(() => {
-    // Check if Google Maps is loaded
-    const checkGoogleMaps = () => {
-      if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-        console.log('✅ Google Maps API loaded, initializing AutocompleteService');
-        autocompleteService.current = new google.maps.places.AutocompleteService();
-      } else {
-        console.log('⏳ Waiting for Google Maps API to load...');
-        // Retry after a short delay
-        setTimeout(checkGoogleMaps, 500);
-      }
-    };
+    let cancelled = false;
 
-    checkGoogleMaps();
+    async function loadGoogleMaps() {
+      // If already present, just init
+      if (typeof (window as any).google !== 'undefined' && (window as any).google.maps && (window as any).google.maps.places) {
+        console.log('✅ Google Maps already loaded');
+        autocompleteService.current = new (window as any).google.maps.places.AutocompleteService();
+        return;
+      }
+
+      try {
+        // Fetch public config to get the API key
+        const res = await fetch('/api/config/public');
+        const json = await res.json();
+        const key = json?.data?.googleMapsKey;
+
+        if (!key) {
+          console.warn('⚠️ Google Maps API key not available from /api/config/public');
+          return;
+        }
+
+        // Create script tag to load Google Maps JS with Places
+        const scriptId = 'google-maps-js';
+        if (!document.getElementById(scriptId)) {
+          const script = document.createElement('script');
+          script.id = scriptId;
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=es&region=CL`;
+          script.async = true;
+          script.defer = true;
+          document.head.appendChild(script);
+
+          await new Promise<void>((resolve, reject) => {
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Google Maps script'));
+          });
+        } else {
+          // Wait until google is defined
+          await new Promise<void>((resolve, reject) => {
+            const start = Date.now();
+            const check = () => {
+              if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
+                resolve();
+              } else if (Date.now() - start > 10000) {
+                reject(new Error('Timed out waiting for Google Maps'));
+              } else {
+                setTimeout(check, 200);
+              }
+            };
+            check();
+          });
+        }
+
+        if (cancelled) return;
+
+        if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
+          console.log('✅ Google Maps API loaded, initializing AutocompleteService');
+          autocompleteService.current = new (window as any).google.maps.places.AutocompleteService();
+        }
+      } catch (err) {
+        console.error('❌ Error loading Google Maps API:', err);
+      }
+    }
+
+    loadGoogleMaps();
+
+    return () => { cancelled = true; };
   }, []);
 
   const fetchSuggestions = async (query: string) => {
