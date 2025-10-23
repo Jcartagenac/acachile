@@ -99,12 +99,16 @@ function validateProfileFields(body: {
   direccion?: string;
 }): { valid: boolean; error?: string } {
   const { nombre, apellido, telefono, rut } = body;
-  
+
+  console.log('[AUTH/ME] Validating fields:', { nombre, apellido, telefono, rut });
+
   if (nombre !== undefined && (!nombre || nombre.trim().length < 2)) {
+    console.log('[AUTH/ME] Nombre validation failed:', nombre);
     return { valid: false, error: 'El nombre debe tener al menos 2 caracteres' };
   }
 
   if (apellido !== undefined && (!apellido || apellido.trim().length < 2)) {
+    console.log('[AUTH/ME] Apellido validation failed:', apellido);
     return { valid: false, error: 'El apellido debe tener al menos 2 caracteres' };
   }
 
@@ -267,7 +271,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     // Validar campos
     const validation = validateProfileFields(body);
+    console.log('[AUTH/ME] Validation result:', validation);
     if (!validation.valid) {
+      console.log('[AUTH/ME] Validation failed:', validation.error);
       return errorResponse(validation.error || 'Error de validación');
     }
 

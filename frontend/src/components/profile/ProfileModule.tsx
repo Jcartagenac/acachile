@@ -190,7 +190,7 @@ export const ProfileModule: React.FC = () => {
         direccion: cleanedData.direccion
       };
 
-      console.log('📡 ProfileModule: API payload:', apiData);
+      console.log('📡 ProfileModule: API payload:', JSON.stringify(apiData, null, 2));
       const response = await userService.updateProfile(apiData);
       console.log('📊 ProfileModule: Update response:', response);
 
