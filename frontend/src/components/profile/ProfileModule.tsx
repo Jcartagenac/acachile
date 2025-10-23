@@ -178,6 +178,7 @@ export const ProfileModule: React.FC = () => {
       };
 
       console.log('💾 ProfileModule: Saving profile data:', cleanedData);
+      console.log('💾 ProfileModule: Sending cleaned data to API:', cleanedData);
       const response = await userService.updateProfile(cleanedData);
       console.log('📊 ProfileModule: Update response:', response);
 
