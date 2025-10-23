@@ -31,13 +31,17 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     // Verificar autenticación
     let authUser;
     try {
-      authUser = requireAuth(request, env);
+      authUser = await requireAuth(request, env);
     } catch (error) {
       console.log('[AUTH/ME] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
       return errorResponse('Autenticación requerida', 401);
     }
 
-    const userId = authUser.userId;
+    const userId = authUser && authUser.userId;
+    if (!userId || typeof userId !== 'number') {
+      console.log('[AUTH/ME] Invalid auth user id:', userId);
+      return errorResponse('Autenticación inválida', 401);
+    }
     console.log('[AUTH/ME] Getting profile for user:', userId);
 
     // Obtener datos del usuario
@@ -160,8 +164,9 @@ async function buildUpdateFields(body: {
   }
   if (typeof telefono === 'string' && telefono.trim() !== '') {
     try {
+      const normalizedPhone = normalizePhone(telefono.trim());
       updateFields.push('telefono = ?');
-      updateValues.push(normalizePhone(telefono.trim()));
+      updateValues.push(normalizedPhone);
     } catch (error) {
       // Si el teléfono no es válido, no lo actualices
       console.warn('[AUTH/ME] Teléfono inválido, ignorando:', telefono);
@@ -169,8 +174,9 @@ async function buildUpdateFields(body: {
   }
   if (typeof rut === 'string' && rut.trim() !== '') {
     try {
+      const normalizedRut = normalizeRut(rut.trim());
       updateFields.push('rut = ?');
-      updateValues.push(normalizeRut(rut.trim()));
+      updateValues.push(normalizedRut);
     } catch (error) {
       // Si el RUT no es válido, no lo actualices
       console.warn('[AUTH/ME] RUT inválido, ignorando:', rut);
@@ -182,9 +188,11 @@ async function buildUpdateFields(body: {
   }
   if (typeof direccion === 'string' && direccion.trim() !== '') {
     try {
+      const normalizedAddress = await normalizeAddress(direccion.trim());
       updateFields.push('direccion = ?');
-      updateValues.push(await normalizeAddress(direccion.trim()));
+      updateValues.push(normalizedAddress);
     } catch (error) {
+      // Si la normalización falla, usar el valor original
       updateFields.push('direccion = ?');
       updateValues.push(direccion.trim());
     }
@@ -247,7 +255,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     // Verificar autenticación
     let authUser;
     try {
-      authUser = requireAuth(request, env);
+      authUser = await requireAuth(request, env);
     } catch (error) {
       console.log('[AUTH/ME] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
       return errorResponse('Autenticación requerida', 401);
@@ -264,7 +272,12 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       foto_url?: string;
     };
 
-    const userId = authUser.userId;
+    const userId = authUser && authUser.userId;
+    if (!userId || typeof userId !== 'number') {
+      console.log('[AUTH/ME] Invalid auth user id for update:', userId);
+      return errorResponse('Autenticación inválida', 401);
+    }
+
     console.log('[AUTH/ME] Updating profile for user:', userId);
     console.log('[AUTH/ME] Body received:', JSON.stringify(body, null, 2));
     console.log('[AUTH/ME] Body keys:', Object.keys(body));

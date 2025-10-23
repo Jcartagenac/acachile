@@ -126,23 +126,46 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 };
 
 // Utilidad para verificar autenticación en rutas protegidas
-export async function requireAuth(request: Request, env: Env): Promise<any> {
+export async function requireAuth(request: Request, env: Env): Promise<{ userId: number; payload: any }> {
   const authorization = request.headers.get('Authorization');
-  
+
   if (!authorization) {
     throw new Error('Authorization header required');
   }
-  
+
   const token = authorization.replace(/^Bearer\s+/i, '').trim();
   if (!token) {
     throw new Error('Valid token required');
   }
-  
+
   if (!env.JWT_SECRET) {
     throw new Error('JWT_SECRET not configured');
   }
-  
-  return verifyToken(token, env.JWT_SECRET);
+
+  const payload = await verifyToken(token, env.JWT_SECRET);
+
+  // Extract user id from common JWT fields
+  const idCandidate = payload && (payload.userId || payload.user_id || payload.sub || payload.id);
+
+  if (!idCandidate) {
+    throw new Error('Invalid token payload: missing user id');
+  }
+
+  const userId = Number(idCandidate);
+  if (!Number.isFinite(userId) || userId <= 0) {
+    throw new Error('Invalid token payload: user id is not a valid number');
+  }
+
+  // Attach normalized userId to payload for backward compatibility
+  try {
+    payload.userId = userId;
+  } catch (e) {
+    // If payload is not an object, ignore
+  }
+
+  // Return payload (augmented) to keep compatibility with existing code that
+  // expects token payload fields such as `role`, `email`, etc.
+  return payload;
 }
 
 // Utilidad para crear respuestas JSON
