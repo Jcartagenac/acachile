@@ -270,6 +270,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     const userId = authUser.userId;
     console.log('[AUTH/ME] Updating profile for user:', userId);
     console.log('[AUTH/ME] Body received:', JSON.stringify(body, null, 2));
+    console.log('[AUTH/ME] Body keys:', Object.keys(body));
+    console.log('[AUTH/ME] Has nombre:', body.hasOwnProperty('nombre'));
+    console.log('[AUTH/ME] Has apellido:', body.hasOwnProperty('apellido'));
 
     // Validar campos - SOLO si están presentes en el body
     const validation = validateProfileFields(body);
