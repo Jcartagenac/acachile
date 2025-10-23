@@ -203,6 +203,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
       {showSuggestions && suggestions.length > 0 && (
         <div
           className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          style={{ zIndex: 9999 }}
         >
           {suggestions.map((suggestion, index) => (
             <div
