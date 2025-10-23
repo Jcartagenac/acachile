@@ -191,13 +191,20 @@ export const ContactPage: React.FC = () => {
 
     (async () => {
       try {
+        console.log('[ContactPage] Fetching contact sections...');
         const res = await fetch('/api/admin/content?page=contact', { cache: 'no-store' });
+        console.log('[ContactPage] Response status:', res.status);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
         const json = await res.json();
+        console.log('[ContactPage] Response JSON:', JSON.stringify(json, null, 2));
         if (active && json?.success) {
-          setSections(normalizeSections(json.sections));
+          const normalized = normalizeSections(json.sections);
+          console.log('[ContactPage] Normalized sections:', JSON.stringify(normalized, null, 2));
+          setSections(normalized);
+        } else {
+          console.warn('[ContactPage] Response not successful or missing data');
         }
       } catch (error) {
         console.warn('[ContactPage] No se pudo obtener contenido dinámico, usando valores por defecto.', error);
