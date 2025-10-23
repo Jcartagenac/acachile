@@ -877,6 +877,7 @@ function CreateUserModal({ onClose, onUserCreated, roleOptions }: {
                 value={formData.direccion}
                 onChange={(value) => setFormData({ ...formData, direccion: value })}
                 placeholder="Ingresa tu dirección completa"
+                className="mt-1"
               />
             </div>
 
@@ -1211,6 +1212,7 @@ function EditUserModal({ user, onClose, onUserUpdated, roleOptions }: {
                 value={formData.direccion}
                 onChange={(value) => setFormData({ ...formData, direccion: value })}
                 placeholder="Ingresa tu dirección completa"
+                className="mt-1"
               />
             </div>
 

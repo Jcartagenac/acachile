@@ -742,19 +742,20 @@ export const ProfileModule: React.FC = () => {
                 Dirección
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 w-5 h-5 text-neutral-400" />
-                <textarea
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                  disabled={!isEditing}
-                  rows={3}
-                  className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 resize-none ${
-                    isEditing
-                      ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
-                      : 'cursor-not-allowed opacity-75'
-                  }`}
-                  placeholder="Tu dirección completa"
-                />
+                <MapPin className="absolute left-3 top-3 w-5 h-5 text-neutral-400 z-10" />
+                <div className="pl-10">
+                  <AddressInput
+                    value={formData.direccion}
+                    onChange={(value) => setFormData({ ...formData, direccion: value })}
+                    disabled={!isEditing}
+                    placeholder="Tu dirección completa"
+                    className={`bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
+                        : 'cursor-not-allowed opacity-75'
+                    }`}
+                  />
+                </div>
               </div>
             </div>
 
