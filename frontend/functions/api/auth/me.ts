@@ -214,17 +214,25 @@ async function executeProfileUpdate(
   updateValues.push(userId);
 
   try {
-    const updateResult = await env.DB.prepare(`
-      UPDATE usuarios SET ${updateFields.join(', ')} WHERE id = ?
-    `).bind(...updateValues).run();
+    const sql = `UPDATE usuarios SET ${updateFields.join(', ')} WHERE id = ?`;
+    console.log('[AUTH/ME] Executing SQL:', sql);
+    console.log('[AUTH/ME] Bind values:', updateValues);
 
-    if (!updateResult.success) {
-      console.error('[AUTH/ME] Failed to update user:', userId);
+    const updateResult = await env.DB.prepare(sql).bind(...updateValues).run();
+    console.log('[AUTH/ME] Update result:', updateResult);
+
+    if (!updateResult || updateResult.success === false) {
+      console.error('[AUTH/ME] Failed to update user (result indicates failure):', userId, updateResult);
       return { success: false, error: 'Error actualizando perfil' };
     }
+
     return { success: true };
   } catch (error) {
-    console.error('[AUTH/ME] SQL error:', error);
+    console.error('[AUTH/ME] SQL exception:', error instanceof Error ? error.message : error);
+    // Expose error details in development for faster debugging
+    if (env.ENVIRONMENT === 'development') {
+      return { success: false, error: `SQL exception: ${error instanceof Error ? error.message : String(error)}` };
+    }
     return { success: false, error: 'Error interno al actualizar perfil' };
   }
 }
