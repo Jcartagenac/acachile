@@ -7,7 +7,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { sociosService, Socio, CreateSocioData } from '../services/sociosService';
 import { adminService } from '../services/adminService';
-import { 
+import { AddressInput } from '../components/ui/AddressInput';
+import {
   Users,
   UserPlus,
   Search,
