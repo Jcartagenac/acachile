@@ -1059,12 +1059,11 @@ function CreateSocioModal({ onClose, onSocioCreated, roleOptions }: {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Dirección <span className="text-red-500">*</span>
               </label>
-              <textarea
-                required
+              <AddressInput
                 value={formData.direccion}
-                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                onChange={(value) => setFormData({ ...formData, direccion: value })}
+                placeholder="Ingresa tu dirección completa"
+                className="mt-1"
               />
             </div>
 
@@ -1438,11 +1437,11 @@ function EditSocioModal({ socio, onClose, onSocioUpdated, roleOptions }: {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Dirección
               </label>
-              <textarea
+              <AddressInput
                 value={formData.direccion}
-                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                onChange={(value) => setFormData({ ...formData, direccion: value })}
+                placeholder="Ingresa tu dirección completa"
+                className="mt-1"
               />
             </div>
 
