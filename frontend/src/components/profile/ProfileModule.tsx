@@ -177,7 +177,8 @@ export const ProfileModule: React.FC = () => {
         region: cleanFormValue(formData.region),
       };
 
-      console.log('💾 ProfileModule: Saving profile data:', cleanedData);
+      console.log('💾 ProfileModule: Original formData:', JSON.stringify(formData, null, 2));
+      console.log('💾 ProfileModule: Cleaned data:', JSON.stringify(cleanedData, null, 2));
       console.log('💾 ProfileModule: Sending cleaned data to API:', cleanedData);
 
       // Preparar datos para la API (usar nombres de campos correctos)
@@ -191,6 +192,14 @@ export const ProfileModule: React.FC = () => {
       };
 
       console.log('📡 ProfileModule: API payload:', JSON.stringify(apiData, null, 2));
+      console.log('📡 ProfileModule: Field values:', {
+        firstName: `"${cleanedData.firstName}"`,
+        lastName: `"${cleanedData.lastName}"`,
+        phone: `"${cleanedData.phone}"`,
+        rut: `"${cleanedData.rut}"`,
+        ciudad: `"${cleanedData.ciudad}"`,
+        direccion: `"${cleanedData.direccion}"`
+      });
       const response = await userService.updateProfile(apiData);
       console.log('📊 ProfileModule: Update response:', response);
 
