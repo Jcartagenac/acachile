@@ -102,12 +102,14 @@ function validateProfileFields(body: {
 
   console.log('[AUTH/ME] Validating fields:', { nombre, apellido, telefono, rut });
 
-  if (nombre !== undefined && (!nombre || nombre.trim().length < 2)) {
+  // Solo validar nombre si está presente en el body
+  if (body.hasOwnProperty('nombre') && (!nombre || nombre.trim().length < 2)) {
     console.log('[AUTH/ME] Nombre validation failed:', nombre);
     return { valid: false, error: 'El nombre debe tener al menos 2 caracteres' };
   }
 
-  if (apellido !== undefined && (!apellido || apellido.trim().length < 2)) {
+  // Solo validar apellido si está presente en el body
+  if (body.hasOwnProperty('apellido') && (!apellido || apellido.trim().length < 2)) {
     console.log('[AUTH/ME] Apellido validation failed:', apellido);
     return { valid: false, error: 'El apellido debe tener al menos 2 caracteres' };
   }
@@ -269,7 +271,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     console.log('[AUTH/ME] Updating profile for user:', userId);
     console.log('[AUTH/ME] Body received:', JSON.stringify(body, null, 2));
 
-    // Validar campos
+    // Validar campos - SOLO si están presentes en el body
     const validation = validateProfileFields(body);
     console.log('[AUTH/ME] Validation result:', validation);
     if (!validation.valid) {
