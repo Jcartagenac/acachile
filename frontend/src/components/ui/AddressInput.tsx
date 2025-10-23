@@ -19,6 +19,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const autocompleteService = useRef<any>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   }, [value]);
 
   const fetchSuggestions = async (query: string) => {
-    if (!autocompleteService.current || query.length < 3) {
+    if (query.length < 3) {
       setSuggestions([]);
       return;
     }
@@ -38,28 +39,23 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     setIsLoading(true);
     try {
       console.log('🔍 Fetching places suggestions for:', `"${query}"`);
-      try {
-        const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(query)}`);
-        const json = await res.json();
-        if (json && json.predictions) {
-          const mapped = (json.predictions || []).map((p: any) => ({
-            description: p.description,
-            place_id: p.place_id,
-            structured_formatting: p.structured_formatting
-          }));
-          setSuggestions(mapped);
-          setShowSuggestions(true);
-        } else {
-          setSuggestions([]);
-        }
-      } catch (err) {
-        console.error('❌ Server-side autocomplete error:', err);
+      const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(query)}`);
+      const json = await res.json();
+      if (json && json.predictions) {
+        const mapped = (json.predictions || []).map((p: any) => ({
+          description: p.description,
+          place_id: p.place_id,
+          structured_formatting: p.structured_formatting
+        }));
+        setSuggestions(mapped);
+        setShowSuggestions(true);
+      } else {
         setSuggestions([]);
       }
-      setIsLoading(false);
     } catch (error) {
       console.error('❌ Error fetching suggestions:', error);
       setSuggestions([]);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -103,7 +99,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     }
   };
 
-  const handleSuggestionClick = (suggestion: google.maps.places.AutocompletePrediction) => {
+  const handleSuggestionClick = (suggestion: any) => {
     console.log('🎯 Selected suggestion:', `"${suggestion.description}"`);
     console.log('🏷️ Full suggestion object:', suggestion);
     setInputValue(suggestion.description);
