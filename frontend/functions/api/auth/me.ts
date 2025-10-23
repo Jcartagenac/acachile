@@ -149,64 +149,49 @@ async function buildUpdateFields(body: {
   const updateValues: any[] = [];
   const { nombre, apellido, telefono, rut, ciudad, direccion, foto_url } = body;
 
-  if (nombre !== undefined) {
+  // Solo actualizar campos que realmente cambian y no son nulos/undefined
+  if (typeof nombre === 'string' && nombre.trim() !== '') {
     updateFields.push('nombre = ?');
-    updateValues.push(nombre && nombre.trim() !== '' ? nombre.trim() : null);
+    updateValues.push(nombre.trim());
   }
-
-  if (apellido !== undefined) {
+  if (typeof apellido === 'string' && apellido.trim() !== '') {
     updateFields.push('apellido = ?');
-    updateValues.push(apellido && apellido.trim() !== '' ? apellido.trim() : null);
+    updateValues.push(apellido.trim());
   }
-
-  if (telefono !== undefined) {
-    updateFields.push('telefono = ?');
-    if (telefono && telefono.trim() !== '') {
-      try {
-        updateValues.push(normalizePhone(telefono.trim()));
-      } catch (error) {
-        updateValues.push(telefono.trim()); // Fallback
-      }
-    } else {
-      updateValues.push(null);
+  if (typeof telefono === 'string' && telefono.trim() !== '') {
+    try {
+      updateFields.push('telefono = ?');
+      updateValues.push(normalizePhone(telefono.trim()));
+    } catch (error) {
+      // Si el teléfono no es válido, no lo actualices
+      console.warn('[AUTH/ME] Teléfono inválido, ignorando:', telefono);
     }
   }
-
-  if (rut !== undefined) {
-    updateFields.push('rut = ?');
-    if (rut && rut.trim() !== '') {
-      try {
-        updateValues.push(normalizeRut(rut.trim()));
-      } catch (error) {
-        updateValues.push(rut.trim()); // Fallback
-      }
-    } else {
-      updateValues.push(null);
+  if (typeof rut === 'string' && rut.trim() !== '') {
+    try {
+      updateFields.push('rut = ?');
+      updateValues.push(normalizeRut(rut.trim()));
+    } catch (error) {
+      // Si el RUT no es válido, no lo actualices
+      console.warn('[AUTH/ME] RUT inválido, ignorando:', rut);
     }
   }
-
-  if (ciudad !== undefined) {
+  if (typeof ciudad === 'string' && ciudad.trim() !== '') {
     updateFields.push('ciudad = ?');
-    updateValues.push(ciudad && ciudad.trim() !== '' ? ciudad.trim() : null);
+    updateValues.push(ciudad.trim());
   }
-
-  if (direccion !== undefined) {
-    updateFields.push('direccion = ?');
-    if (direccion && direccion.trim() !== '') {
-      try {
-        const normalized = await normalizeAddress(direccion.trim());
-        updateValues.push(normalized);
-      } catch (error) {
-        updateValues.push(direccion.trim()); // Fallback
-      }
-    } else {
-      updateValues.push(null);
+  if (typeof direccion === 'string' && direccion.trim() !== '') {
+    try {
+      updateFields.push('direccion = ?');
+      updateValues.push(await normalizeAddress(direccion.trim()));
+    } catch (error) {
+      updateFields.push('direccion = ?');
+      updateValues.push(direccion.trim());
     }
   }
-
-  if (foto_url !== undefined) {
+  if (typeof foto_url === 'string' && foto_url.trim() !== '') {
     updateFields.push('foto_url = ?');
-    updateValues.push(foto_url || null);
+    updateValues.push(foto_url.trim());
   }
 
   return { fields: updateFields, values: updateValues };
@@ -222,22 +207,26 @@ async function executeProfileUpdate(
   updateValues: any[]
 ): Promise<{ success: boolean; error?: string }> {
   if (updateFields.length === 0) {
-    return { success: false, error: 'No hay campos para actualizar' };
+    return { success: false, error: 'No hay campos válidos para actualizar' };
   }
 
   updateFields.push('updated_at = datetime(\'now\')');
   updateValues.push(userId);
 
-  const updateResult = await env.DB.prepare(`
-    UPDATE usuarios SET ${updateFields.join(', ')} WHERE id = ?
-  `).bind(...updateValues).run();
+  try {
+    const updateResult = await env.DB.prepare(`
+      UPDATE usuarios SET ${updateFields.join(', ')} WHERE id = ?
+    `).bind(...updateValues).run();
 
-  if (!updateResult.success) {
-    console.error('[AUTH/ME] Failed to update user:', userId);
-    return { success: false, error: 'Error actualizando perfil' };
+    if (!updateResult.success) {
+      console.error('[AUTH/ME] Failed to update user:', userId);
+      return { success: false, error: 'Error actualizando perfil' };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('[AUTH/ME] SQL error:', error);
+    return { success: false, error: 'Error interno al actualizar perfil' };
   }
-
-  return { success: true };
 }
 
 // Handler PUT para actualizar perfil
