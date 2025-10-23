@@ -18,87 +18,16 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   disabled = false
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<any>();
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
-
-  // Initialize Google Places Autocomplete service
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadGoogleMaps() {
-      // If already present, just init
-      if (typeof (window as any).google !== 'undefined' && (window as any).google.maps && (window as any).google.maps.places) {
-        console.log('✅ Google Maps already loaded');
-        autocompleteService.current = new (window as any).google.maps.places.AutocompleteService();
-        return;
-      }
-
-      try {
-        // Fetch public config to get the API key
-        const res = await fetch('/api/config/public');
-        const json = await res.json();
-        const key = json?.data?.googleMapsKey;
-
-        if (!key) {
-          console.warn('⚠️ Google Maps API key not available from /api/config/public');
-          return;
-        }
-
-        // Create script tag to load Google Maps JS with Places
-        const scriptId = 'google-maps-js';
-        if (!document.getElementById(scriptId)) {
-          const script = document.createElement('script');
-          script.id = scriptId;
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=es&region=CL`;
-          script.async = true;
-          script.defer = true;
-          document.head.appendChild(script);
-
-          await new Promise<void>((resolve, reject) => {
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load Google Maps script'));
-          });
-        } else {
-          // Wait until google is defined
-          await new Promise<void>((resolve, reject) => {
-            const start = Date.now();
-            const check = () => {
-              if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
-                resolve();
-              } else if (Date.now() - start > 10000) {
-                reject(new Error('Timed out waiting for Google Maps'));
-              } else {
-                setTimeout(check, 200);
-              }
-            };
-            check();
-          });
-        }
-
-        if (cancelled) return;
-
-        if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
-          console.log('✅ Google Maps API loaded, initializing AutocompleteService');
-          autocompleteService.current = new (window as any).google.maps.places.AutocompleteService();
-        }
-      } catch (err) {
-        console.error('❌ Error loading Google Maps API:', err);
-      }
-    }
-
-    loadGoogleMaps();
-
-    return () => { cancelled = true; };
-  }, []);
 
   const fetchSuggestions = async (query: string) => {
     if (!autocompleteService.current || query.length < 3) {
@@ -109,36 +38,10 @@ export const AddressInput: React.FC<AddressInputProps> = ({
     setIsLoading(true);
     try {
       console.log('🔍 Fetching places suggestions for:', `"${query}"`);
-      // Prefer client-side AutocompleteService if available
-      if (autocompleteService.current) {
-        const request = { input: query, componentRestrictions: { country: 'cl' }, types: ['address'] };
-        try {
-          autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
-            console.log('📊 Google Places response status:', status);
-            console.log('📋 Predictions received:', predictions);
-            if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && predictions) {
-              setSuggestions(predictions);
-              setShowSuggestions(true);
-            } else {
-              console.warn('⚠️ Google Places client failed:', status);
-              setSuggestions([]);
-            }
-            setIsLoading(false);
-          });
-        } catch (err) {
-          console.error('❌ AutocompleteService error:', err);
-          setIsLoading(false);
-          setSuggestions([]);
-        }
-        return;
-      }
-
-      // Fallback to server-side Places Autocomplete
       try {
         const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(query)}`);
         const json = await res.json();
         if (json && json.predictions) {
-          // Map predictions to a shape similar to google.maps.places.AutocompletePrediction
           const mapped = (json.predictions || []).map((p: any) => ({
             description: p.description,
             place_id: p.place_id,
