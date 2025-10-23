@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { normalizeRut, normalizePhone, formatRut } from '@shared/utils/validators';
+import { normalizeRut, normalizePhone, formatRut, formatPhone } from '@shared/utils/validators';
 import { AddressInput } from '../components/ui/AddressInput';
 
 export default function TestUser() {
@@ -66,23 +66,12 @@ export default function TestUser() {
     const allowedChars = value.replace(/[^0-9+]/g, '');
     console.log('🔤 Phone allowed chars:', `"${allowedChars}"`);
 
-    // Formatear en tiempo real mientras escribe
+    // Formatear en tiempo real mientras escribe (sin validar)
     let formattedValue = allowedChars;
     if (allowedChars.trim()) {
       try {
-        // Limpiar para validación (quitar +56 si existe)
-        const cleanValue = allowedChars.replace(/^\+?56/, '');
-        console.log('🧹 Phone cleaned for validation:', `"${cleanValue}"`);
-
-        if (cleanValue.length >= 9) {
-          // Tiene número completo, normalizar
-          formattedValue = normalizePhone(cleanValue);
-          console.log('✅ Phone normalized complete:', `"${formattedValue}"`);
-        } else if (cleanValue.length >= 1) {
-          // Formateo parcial
-          formattedValue = `+56${cleanValue}`;
-          console.log('📝 Phone formatted partial:', `"${formattedValue}"`);
-        }
+        formattedValue = formatPhone(allowedChars);
+        console.log('📝 Phone formatted:', `"${formattedValue}"`);
       } catch (err) {
         console.error('❌ Error formatting phone live:', err);
         // Si hay error, mantener el valor limpio
@@ -137,6 +126,8 @@ export default function TestUser() {
           ...prev,
           telefono: err instanceof Error ? err.message : 'Teléfono inválido'
         }));
+        // Si es inválido, limpiar el campo
+        setFormData(prev => ({ ...prev, telefono: '' }));
       }
     }
   };

@@ -84,6 +84,35 @@ export function normalizeRut(rut: string): string {
 }
 
 /**
+ * Formatea un número de teléfono chileno sin validar.
+ * @param phone - Teléfono a formatear
+ * @returns Teléfono formateado (ej: "+56 9 1234 5678")
+ */
+export function formatPhone(phone: string): string {
+  // Limpiar: quitar espacios, guiones, paréntesis, +
+  const cleanPhone = phone.replace(/[\s\-\(\)\+]/g, '');
+
+  if (!cleanPhone) return '';
+
+  // Si ya tiene 56 al inicio, quitarlo
+  let number = cleanPhone;
+  if (cleanPhone.startsWith('56')) {
+    number = cleanPhone.slice(2);
+  }
+
+  // Formatear según la longitud
+  if (number.length <= 1) {
+    return `+56 ${number}`;
+  } else if (number.length <= 4) {
+    return `+56 ${number.slice(0, 1)} ${number.slice(1)}`;
+  } else if (number.length <= 8) {
+    return `+56 ${number.slice(0, 1)} ${number.slice(1, 5)} ${number.slice(5)}`;
+  } else {
+    return `+56 ${number.slice(0, 1)} ${number.slice(1, 5)} ${number.slice(5, 9)}`;
+  }
+}
+
+/**
  * Normaliza un número de teléfono chileno al formato +569XXXXXXXX (9 dígitos).
  * @param phone - Teléfono a normalizar (ej: "912345678", "+56912345678", "9 1234 5678")
  * @returns Teléfono normalizado o lanza error si inválido
