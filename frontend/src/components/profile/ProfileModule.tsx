@@ -720,12 +720,21 @@ export const ProfileModule: React.FC = () => {
               <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Dirección
               </label>
-              <AddressInput
-                value={formData.direccion}
-                onChange={(value) => setFormData({ ...formData, direccion: value })}
-                placeholder="Tu dirección completa"
-                disabled={!isEditing}
-              />
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 w-5 h-5 text-neutral-400" />
+                <textarea
+                  value={formData.direccion}
+                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                  disabled={!isEditing}
+                  rows={3}
+                  className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 resize-none ${
+                    isEditing
+                      ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
+                      : 'cursor-not-allowed opacity-75'
+                  }`}
+                  placeholder="Tu dirección completa"
+                />
+              </div>
             </div>
 
             {/* Botones de acción cuando está editando */}
