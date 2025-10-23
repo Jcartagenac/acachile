@@ -191,10 +191,14 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const page = parsePage(new URL(request.url).searchParams.get('page'));
     const cacheKey = cacheKeyFor(page);
 
+    console.log('[CONTENT POST] Starting save operation for page:', page);
+
     let authUser;
     try {
       authUser = await requireAuth(request, env);
+      console.log('[CONTENT POST] Auth successful, user role:', authUser.role);
     } catch (err) {
+      console.error('[CONTENT POST] Auth failed:', err);
       return errorResponse(
         err instanceof Error ? err.message : 'Token inválido',
         401,
@@ -203,23 +207,33 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     if (authUser.role !== 'admin' && authUser.role !== 'super_admin') {
+      console.error('[CONTENT POST] Access denied for role:', authUser.role);
       return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
     }
 
     const body = await request.json().catch(() => ({}));
+    console.log('[CONTENT POST] Raw request body:', JSON.stringify(body, null, 2));
+
     const incoming = Array.isArray(body?.sections) ? (body.sections as RawSection[]) : [];
+    console.log('[CONTENT POST] Incoming sections count:', incoming.length);
+
     const normalized = normalizeSections(incoming, page).map((section, index) => ({
       ...section,
       sort_order: typeof section.sort_order === 'number' ? section.sort_order : index
     }));
 
+    console.log('[CONTENT POST] Normalized sections:', JSON.stringify(normalized, null, 2));
+
     if (env.DB) {
+      console.log('[CONTENT POST] DB available, ensuring table exists');
       await ensureTable(env.DB);
 
       const keys = normalized.map((section) => section.key);
+      console.log('[CONTENT POST] Section keys to save:', keys);
 
       for (const section of normalized) {
-        await env.DB
+        console.log('[CONTENT POST] Saving section:', section.key, 'with data:', JSON.stringify(section, null, 2));
+        const result = await env.DB
           .prepare(
             `
               INSERT INTO site_sections (page, key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url, updated_at)
@@ -249,23 +263,43 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
             section.cta_url ?? null
           )
           .run();
+
+        console.log('[CONTENT POST] DB insert/update result for', section.key, ':', result);
       }
 
       if (keys.length > 0) {
         const placeholders = keys.map(() => '?').join(', ');
-        await env.DB
+        console.log('[CONTENT POST] Deleting old sections not in keys:', keys);
+        const deleteResult = await env.DB
           .prepare(`DELETE FROM site_sections WHERE page = ? AND key NOT IN (${placeholders})`)
           .bind(page, ...keys)
           .run();
+        console.log('[CONTENT POST] Delete result:', deleteResult);
       } else {
-        await env.DB.prepare('DELETE FROM site_sections WHERE page = ?').bind(page).run();
+        console.log('[CONTENT POST] No keys, deleting all sections for page');
+        const deleteResult = await env.DB.prepare('DELETE FROM site_sections WHERE page = ?').bind(page).run();
+        console.log('[CONTENT POST] Delete all result:', deleteResult);
       }
+
+      // Verify what was saved
+      const verifyResult = await env.DB
+        .prepare('SELECT page, key, title, content FROM site_sections WHERE page = ? ORDER BY sort_order ASC')
+        .bind(page)
+        .all();
+      console.log('[CONTENT POST] Verification - sections in DB after save:', JSON.stringify(verifyResult.results, null, 2));
+    } else {
+      console.warn('[CONTENT POST] No DB configured, skipping database operations');
     }
 
     if (env.ACA_KV) {
+      console.log('[CONTENT POST] Saving to KV cache with key:', cacheKey);
       await env.ACA_KV.put(cacheKey, JSON.stringify(normalized));
+      console.log('[CONTENT POST] KV cache saved successfully');
+    } else {
+      console.warn('[CONTENT POST] No ACA_KV configured, skipping cache');
     }
 
+    console.log('[CONTENT POST] Save operation completed successfully');
     return jsonResponse({ success: true, sections: normalized });
   } catch (error) {
     console.error('[CONTENT POST] Error:', error);

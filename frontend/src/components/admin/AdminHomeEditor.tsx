@@ -298,6 +298,9 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
       const token = getAuthToken();
       const payload = sanitizeSectionsForSave(activePage, sections);
 
+      console.log('[AdminHomeEditor] Starting save operation for page:', activePage);
+      console.log('[AdminHomeEditor] Payload to save:', JSON.stringify(payload, null, 2));
+
       const res = await fetch(`/api/admin/content?page=${activePage}`, {
         method: 'POST',
         headers: {
@@ -306,11 +309,17 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
         },
         body: JSON.stringify({ sections: payload })
       });
+
+      console.log('[AdminHomeEditor] Response status:', res.status);
       const json = await res.json();
+      console.log('[AdminHomeEditor] Response JSON:', JSON.stringify(json, null, 2));
+
       if (json.success) {
         alert('Secciones guardadas correctamente');
         setSections(mergeWithDefaults(activePage, json.sections));
+        console.log('[AdminHomeEditor] Save successful, sections updated');
       } else {
+        console.error('[AdminHomeEditor] Save failed with error:', json.error);
         alert(json.error || 'No se pudo guardar la información');
       }
     } catch (error) {
