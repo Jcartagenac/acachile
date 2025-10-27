@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../_middleware';
 
 /**
  * API para gestión de comunicados (admin)

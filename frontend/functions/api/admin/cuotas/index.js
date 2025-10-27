@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../_middleware';
 
 // Endpoint para gestión de cuotas
 // GET /api/admin/cuotas - Obtener cuotas con filtros

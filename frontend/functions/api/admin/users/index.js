@@ -1,4 +1,4 @@
-import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../_middleware';
 import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
 
 // Endpoint de gestión de usuarios para administradores

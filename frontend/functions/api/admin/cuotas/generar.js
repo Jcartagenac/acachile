@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../_middleware';
 
 // Endpoint para generar cuotas masivamente
 // POST /api/admin/cuotas/generar

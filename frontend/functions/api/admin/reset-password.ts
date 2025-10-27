@@ -4,7 +4,7 @@
  */
 
 import type { PagesFunction, Env } from '../../types';
-import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from '../../_middleware';
+import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from './_middleware';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();

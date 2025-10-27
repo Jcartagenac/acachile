@@ -153,7 +153,7 @@ async function crearIndices(env, results) {
   results.push('✅ Índices creados');
 }
 
-import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from './_middleware';
 
 export async function onRequestPost(context) {
   const { request, env } = context;

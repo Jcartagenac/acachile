@@ -1,4 +1,4 @@
-import { jsonResponse, errorResponse, requireAdminOrDirector, authErrorResponse } from '../../../../_middleware';
+import { jsonResponse, errorResponse, requireAdminOrDirector, authErrorResponse } from '../../_middleware';
 import { ensurePostulacionesSchema, isDirectorRole, mapPostulacionRow } from '../../../_utils/postulaciones';
 
 const randomPassword = (length = 12) => {

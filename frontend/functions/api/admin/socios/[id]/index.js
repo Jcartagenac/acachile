@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../_middleware';
 
 // Endpoint para gestión individual de socios
 // GET /api/admin/socios/[id] - Obtener un socio

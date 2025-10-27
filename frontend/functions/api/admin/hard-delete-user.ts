@@ -1,4 +1,4 @@
-import { requireAdmin, authErrorResponse } from '../../_middleware';
+import { requireAdmin, authErrorResponse } from './_middleware';
 
 /**
  * Admin endpoint para HARD DELETE de usuarios inactivos

@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse } from '../../../_middleware';
+import { requireAdminOrDirector, authErrorResponse } from '../_middleware';
 
 // Endpoint para operaciones sobre cuota individual
 // PUT /api/admin/cuotas/:id - Actualizar cuota (desmarcar pago)

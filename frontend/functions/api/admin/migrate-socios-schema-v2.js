@@ -1,7 +1,7 @@
 // Endpoint para aplicar migraciones de schema v2 (estados de socio y lista negra)
 // POST /api/admin/migrate-socios-schema-v2
 
-import { requireAdmin, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+import { requireAdmin, authErrorResponse, jsonResponse, errorResponse } from './_middleware';
 
 /**
  * Agrega una columna a la tabla usuarios, manejando errores de duplicados

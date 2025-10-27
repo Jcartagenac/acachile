@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from './_middleware';
 
 // Endpoint de estadísticas avanzadas para administración
 // GET /api/admin/stats - Obtener estadísticas detalladas del sistema

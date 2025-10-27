@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from './_middleware';
 
 // Endpoint del dashboard de administración
 // GET /api/admin/dashboard - Obtener estadísticas del dashboard

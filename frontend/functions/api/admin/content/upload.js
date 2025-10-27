@@ -1,4 +1,4 @@
-import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../_middleware';
 
 // Admin-only upload to R2 for homepage images
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];

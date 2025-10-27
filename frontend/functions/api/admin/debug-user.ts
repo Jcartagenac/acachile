@@ -1,4 +1,4 @@
-import { requireAdmin, authErrorResponse } from '../../_middleware';
+import { requireAdmin, authErrorResponse } from './_middleware';
 
 /**
  * Endpoint temporal para debugging - ver datos exactos del usuario

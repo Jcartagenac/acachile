@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../_middleware';
 
 // Endpoint para subir foto de perfil de socio
 // POST /api/admin/socios/[id]/foto

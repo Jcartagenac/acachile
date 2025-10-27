@@ -4,7 +4,7 @@
  */
 
 import type { PagesFunction, Env } from '../../types';
-import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from '../../_middleware';
+import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from './_middleware';
 
 export const onRequestDelete: PagesFunction<Env> = async (context) => {
   const { request, env } = context;

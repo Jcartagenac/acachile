@@ -1,4 +1,4 @@
-import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../_middleware';
 
 // Endpoint para marcar cuota como pagada
 // POST /api/admin/cuotas/marcar-pago

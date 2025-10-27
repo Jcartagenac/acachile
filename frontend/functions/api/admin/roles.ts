@@ -1,5 +1,5 @@
 import type { PagesFunction } from '../../types';
-import { requireAdmin, authErrorResponse } from '../../_middleware';
+import { requireAdmin, authErrorResponse } from './_middleware';
 
 interface RoleRecord {
   key: string;

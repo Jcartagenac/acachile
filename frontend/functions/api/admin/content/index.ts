@@ -1,4 +1,4 @@
-import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../_middleware';
 import type { Env } from '../../../types';
 import {
   SECTION_CACHE_KEY,

@@ -1,4 +1,4 @@
-import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../_middleware';
 import { SECTION_CACHE_KEY } from '../../../../../shared/siteSections';
 
 const DEFAULT_PAGE = 'home';
