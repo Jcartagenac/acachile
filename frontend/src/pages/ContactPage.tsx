@@ -192,7 +192,7 @@ export const ContactPage: React.FC = () => {
     (async () => {
       try {
         console.log('[ContactPage] Fetching contact sections...');
-        const res = await fetch('/api/admin/content?page=contact', { cache: 'no-store' });
+        const res = await fetch('/api/content?page=contact', { cache: 'no-store' });
         console.log('[ContactPage] Response status:', res.status);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
@@ -258,4 +258,3 @@ export const ContactPage: React.FC = () => {
     </div>
   );
 };
-

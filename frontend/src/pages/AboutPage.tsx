@@ -195,7 +195,7 @@ export const AboutPage: React.FC = () => {
 
     (async () => {
       try {
-        const res = await fetch('/api/admin/content?page=about', { cache: 'no-store' });
+        const res = await fetch('/api/content?page=about', { cache: 'no-store' });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -248,4 +248,3 @@ export const AboutPage: React.FC = () => {
     </div>
   );
 };
-

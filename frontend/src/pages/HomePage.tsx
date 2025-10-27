@@ -225,7 +225,7 @@ const HomePage: React.FC = () => {
 
     (async () => {
       try {
-        const res = await fetch('/api/admin/content?page=home', { cache: 'no-store' });
+        const res = await fetch('/api/content?page=home', { cache: 'no-store' });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
