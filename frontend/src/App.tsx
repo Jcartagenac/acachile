@@ -1,47 +1,64 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { Layout } from './components/layout';
 import { DebugPanel } from './components/debug';
-import { 
-  HomePage, 
-  AboutPage, 
-  JoinPage, 
-  EventsPage, 
-  EventDetailPage,
-  CreateEventPage,
-  MyEventsPage,
-  AuthPage,
-  ForgotPasswordPage,
-  ResetPasswordPage,
-  BlogPage,
-  PostDetailPage,
-  ContactPage,
-  NotFoundPage,
-  NewsPage,
-  NewsDetailPage,
-  SearchResultsPage,
-  AdminDashboard,
-  ProfilePage,
-  PerfilSocio,
-  PublicSocioPage,
-  PanelAdminDashboard,
-  AdminContent,
-  AdminNews,
-  AdminPostulantes,
-  AdminSocios,
-  AdminCuotas
-} from './pages';
-import AdminLayout from './components/layout/AdminLayout';
-import PanelAdminLayout from './components/layout/PanelAdminLayout';
-import AdminUsers from './pages/AdminUsers';
-import AdminSettings from './pages/AdminSettings';
-import AdminMonitoring from './pages/AdminMonitoring';
-import TestUser from './pages/TestUser';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const JoinPage = lazy(() => import('./pages/JoinPage'));
+const EventsPage = lazy(() => import('./pages/EventsPage'));
+const EventDetailPage = lazy(() => import('./pages/EventDetailPage'));
+const CreateEventPage = lazy(() => import('./pages/CreateEventPage'));
+const MyEventsPage = lazy(() => import('./pages/MyEventsPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const lazyWithNamedExport = <T extends Record<string, any>>(
+  factory: () => Promise<T>,
+  exportName: keyof T,
+) =>
+  lazy(() =>
+    factory().then((module) => ({
+      default: module[exportName] as T[keyof T],
+    })),
+  );
+
+const BlogPage = lazyWithNamedExport(() => import('./pages/BlogPage'), 'BlogPage');
+const PostDetailPage = lazyWithNamedExport(() => import('./pages/BlogPage'), 'PostDetailPage');
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const NewsDetailPage = lazy(() => import('./pages/NewsDetailPage'));
+const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const PerfilSocio = lazy(() => import('./pages/PerfilSocio'));
+const PublicSocioPage = lazy(() => import('./pages/PublicSocioPage'));
+const PanelAdminDashboard = lazy(() => import('./pages/PanelAdminDashboard'));
+const AdminContent = lazy(() => import('./pages/AdminContent'));
+const AdminNews = lazy(() => import('./pages/AdminNews'));
+const AdminPostulantes = lazy(() => import('./pages/AdminPostulantes'));
+const AdminSocios = lazy(() => import('./pages/AdminSocios'));
+const AdminCuotas = lazy(() => import('./pages/AdminCuotas'));
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const PanelAdminLayout = lazy(() => import('./components/layout/PanelAdminLayout'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
+const AdminSettings = lazy(() => import('./pages/AdminSettings'));
+const AdminMonitoring = lazy(() => import('./pages/AdminMonitoring'));
+const TestUser = lazy(() => import('./pages/TestUser'));
+
+const LoadingScreen = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="text-sm text-gray-500">Cargando contenido…</div>
+  </div>
+);
 
 function App() {
   return (
     <Router>
       <Layout>
-        <Routes>
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
@@ -102,6 +119,7 @@ function App() {
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </Suspense>
         <DebugPanel />
       </Layout>
     </Router>
