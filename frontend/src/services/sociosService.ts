@@ -81,8 +81,20 @@ export interface CreateSocioData {
 }
 
 class SociosService {
+  private getAuthToken(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return (
+      window.localStorage.getItem('auth_token') ||
+      window.localStorage.getItem('authToken') ||
+      window.localStorage.getItem('token') ||
+      null
+    );
+  }
+
   private getAuthHeaders() {
-    const token = localStorage.getItem('token');
+    const token = this.getAuthToken();
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : '',
@@ -399,7 +411,7 @@ class SociosService {
       formData.append('file', file);
       formData.append('cuotaId', cuotaId.toString());
 
-      const token = localStorage.getItem('token');
+      const token = this.getAuthToken();
       const response = await fetch(`${API_BASE_URL}/cuotas/subir-comprobante`, {
         method: 'POST',
         headers: {
@@ -428,7 +440,7 @@ class SociosService {
       formData.append('socioId', socioId.toString());
       formData.append('tipo', 'foto-socio');
 
-      const token = localStorage.getItem('token');
+      const token = this.getAuthToken();
       const response = await fetch(`${API_BASE_URL}/upload/imagen`, {
         method: 'POST',
         headers: {
