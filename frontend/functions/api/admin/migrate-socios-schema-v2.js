@@ -1,6 +1,8 @@
 // Endpoint para aplicar migraciones de schema v2 (estados de socio y lista negra)
 // POST /api/admin/migrate-socios-schema-v2
 
+import { requireAdmin, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+
 /**
  * Agrega una columna a la tabla usuarios, manejando errores de duplicados
  */
@@ -74,12 +76,15 @@ export async function onRequestPost(context) {
   };
 
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ success: false, error: 'Token de autorización requerido' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+    try {
+      await requireAdmin(request, env);
+    } catch (error) {
+      return authErrorResponse(
+        error,
+        env,
+        'Autenticación requerida',
+        { 'Content-Type': 'application/json', ...corsHeaders }
+      );
     }
 
     const results = [];
@@ -88,24 +93,24 @@ export async function onRequestPost(context) {
     await actualizarEsquemaSociosV2(env, results);
     await actualizarEsquemaEventos(env, results);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Migración v2 completada',
-      results: results
-    }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+    return jsonResponse(
+      {
+        success: true,
+        message: 'Migración v2 completada',
+        results
+      },
+      200,
+      { 'Content-Type': 'application/json', ...corsHeaders }
+    );
 
   } catch (error) {
     console.error('Error in migrate-socios-schema-v2:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      { details: error instanceof Error ? error.message : String(error) },
+      { 'Content-Type': 'application/json', ...corsHeaders }
+    );
   }
 }
 

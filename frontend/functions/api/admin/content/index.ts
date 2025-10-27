@@ -1,4 +1,4 @@
-import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
 import type { Env } from '../../../types';
 import {
   SECTION_CACHE_KEY,
@@ -136,6 +136,12 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
   try {
+    try {
+      await requireAdmin(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
+
     const page = parsePage(new URL(request.url).searchParams.get('page'));
     const cacheKey = cacheKeyFor(page);
     const defaults = getDefaultSections(page);
@@ -193,22 +199,13 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     console.log('[CONTENT POST] Starting save operation for page:', page);
 
-    let authUser;
+    let adminUser;
     try {
-      authUser = await requireAuth(request, env);
-      console.log('[CONTENT POST] Auth successful, user role:', authUser.role);
+      adminUser = await requireAdmin(request, env);
+      console.log('[CONTENT POST] Auth successful, user role:', adminUser.role);
     } catch (err) {
       console.error('[CONTENT POST] Auth failed:', err);
-      return errorResponse(
-        err instanceof Error ? err.message : 'Token inválido',
-        401,
-        env.ENVIRONMENT === 'development' ? { details: err } : undefined
-      );
-    }
-
-    if (authUser.role !== 'admin' && authUser.role !== 'super_admin') {
-      console.error('[CONTENT POST] Access denied for role:', authUser.role);
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(err, env);
     }
 
     const body = await request.json().catch(() => ({}));
@@ -310,4 +307,3 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     );
   }
 }
-

@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+
 // Endpoint para marcar cuota como pagada
 // POST /api/admin/cuotas/marcar-pago
 
@@ -7,14 +9,20 @@ export async function onRequestPost(context) {
   try {
     console.log('[ADMIN CUOTAS] Marcando pago de cuota');
 
+    let adminUser;
+    try {
+      adminUser = await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
+
     const body = await request.json();
     const { 
       cuotaId, 
       metodoPago = 'transferencia', 
       fechaPago, 
       comprobanteUrl, 
-      notas,
-      procesadoPor = 1 // TODO: obtener del usuario autenticado
+      notas
     } = body;
 
     // Convertir undefined a null para D1
@@ -105,7 +113,7 @@ export async function onRequestPost(context) {
       metodoPago,
       comprobanteUrlFinal,
       fechaPagoFinal,
-      procesadoPor,
+      Number(adminUser.userId) || cuota.usuario_id,
       notasFinal
     ).run();
 
@@ -156,13 +164,13 @@ export async function onRequestPost(context) {
 
   } catch (error) {
     console.error('[ADMIN CUOTAS] Error marcando pago:', error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: `Error marcando pago: ${error.message}`
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+
+    return errorResponse(
+      error instanceof Error ? `Error marcando pago: ${error.message}` : 'Error marcando pago',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }

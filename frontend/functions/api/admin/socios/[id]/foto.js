@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../../_middleware';
+
 // Endpoint para subir foto de perfil de socio
 // POST /api/admin/socios/[id]/foto
 
@@ -5,6 +7,12 @@ export async function onRequestPost(context) {
   const { request, env, params } = context;
 
   try {
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
+
     const socioId = Number.parseInt(params.id, 10);
     
     if (!socioId || Number.isNaN(socioId)) {
@@ -147,13 +155,13 @@ export async function onRequestPost(context) {
 
   } catch (error) {
     console.error('[ADMIN SOCIOS FOTO] Error:', error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error al procesar la foto: ' + (error instanceof Error ? error.message : 'Error desconocido')
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+
+    return errorResponse(
+      'Error al procesar la foto',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }

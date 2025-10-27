@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+
 // Endpoint del dashboard de administración
 // GET /api/admin/dashboard - Obtener estadísticas del dashboard
 
@@ -7,37 +9,29 @@ export async function onRequestGet(context) {
   try {
     console.log('[ADMIN DASHBOARD] Obteniendo estadísticas del dashboard');
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (user.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     // Obtener estadísticas generales
     const stats = await getGeneralStats(env);
 
     console.log('[ADMIN DASHBOARD] Estadísticas obtenidas exitosamente');
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: stats
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN DASHBOARD] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 

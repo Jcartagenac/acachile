@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+
 // Endpoint para gestión de socios
 // GET /api/admin/socios - Obtener lista de socios
 // POST /api/admin/socios - Crear nuevo socio
@@ -72,11 +74,11 @@ export async function onRequestGet(context) {
   try {
     console.log('[ADMIN SOCIOS] Obteniendo lista de socios');
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || user.role !== 'admin') {
-    //   return errorResponse('Acceso denegado', 403);
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page')) || 1;
@@ -221,14 +223,14 @@ export async function onRequestGet(context) {
 
   } catch (error) {
     console.error('[ADMIN SOCIOS] Error obteniendo socios:', error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: `Error obteniendo socios: ${error.message}`
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+
+    return errorResponse(
+      error instanceof Error ? `Error obteniendo socios: ${error.message}` : 'Error obteniendo socios',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }
 
@@ -238,11 +240,11 @@ export async function onRequestPost(context) {
   try {
     console.log('[ADMIN SOCIOS] Creando nuevo socio');
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || user.role !== 'admin') {
-    //   return errorResponse('Acceso denegado', 403);
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     const body = await request.json();
     console.log('[ADMIN SOCIOS] Datos recibidos:', JSON.stringify(body, null, 2));

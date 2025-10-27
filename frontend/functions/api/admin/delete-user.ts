@@ -4,13 +4,19 @@
  */
 
 import type { PagesFunction, Env } from '../../types';
-import { jsonResponse, errorResponse } from '../../_middleware';
+import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from '../../_middleware';
 
 export const onRequestDelete: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   
   try {
     console.log('[ADMIN/DELETE-USER] Processing user deletion request');
+
+    try {
+      await requireAdmin(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
     
     const url = new URL(request.url);
     const email = url.searchParams.get('email');

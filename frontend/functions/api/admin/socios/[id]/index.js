@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../../_middleware';
+
 // Endpoint para gestión individual de socios
 // GET /api/admin/socios/[id] - Obtener un socio
 // PUT /api/admin/socios/[id] - Actualizar un socio
@@ -7,20 +9,17 @@
  * GET - Obtener información de un socio específico
  */
 export async function onRequestGet(context) {
-  const { params, env } = context;
+  const { request, params, env } = context;
   const socioId = params.id;
 
   try {
     console.log(`[ADMIN SOCIOS] Obteniendo socio ID: ${socioId}`);
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || !['admin', 'director'].includes(user.role)) {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado'
-    //   }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     const query = `
       SELECT 
@@ -81,10 +80,13 @@ export async function onRequestGet(context) {
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('[ADMIN SOCIOS] Error obteniendo socio:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error obteniendo información del socio'
-    }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return errorResponse(
+      'Error obteniendo información del socio',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }
 
@@ -98,14 +100,11 @@ export async function onRequestPut(context) {
   try {
     console.log(`[ADMIN SOCIOS] Actualizando socio ID: ${socioId}`);
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || !['admin', 'director'].includes(user.role)) {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado'
-    //   }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     // Verificar que el socio existe
     const existingSocio = await env.DB.prepare(
@@ -223,10 +222,13 @@ export async function onRequestPut(context) {
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('[ADMIN SOCIOS] Error actualizando socio:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error actualizando el socio'
-    }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return errorResponse(
+      'Error actualizando el socio',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }
 
@@ -234,20 +236,17 @@ export async function onRequestPut(context) {
  * DELETE - Eliminar (desactivar) un socio
  */
 export async function onRequestDelete(context) {
-  const { params, env } = context;
+  const { request, params, env } = context;
   const socioId = params.id;
 
   try {
     console.log(`[ADMIN SOCIOS] Eliminando socio ID: ${socioId}`);
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (!user || !['admin', 'director'].includes(user.role)) {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado'
-    //   }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     // Verificar que el socio existe
     const existingSocio = await env.DB.prepare(
@@ -279,9 +278,12 @@ export async function onRequestDelete(context) {
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('[ADMIN SOCIOS] Error eliminando socio:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error eliminando el socio'
-    }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return errorResponse(
+      'Error eliminando el socio',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }

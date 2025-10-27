@@ -1,3 +1,5 @@
+import { requireAdmin, authErrorResponse } from '../../_middleware';
+
 /**
  * Endpoint temporal para debugging - ver datos exactos del usuario
  */
@@ -25,6 +27,18 @@ export async function onRequestPost(context: {
   }
 
   try {
+    let adminUser;
+    try {
+      adminUser = await requireAdmin(context.request, context.env);
+    } catch (error) {
+      return authErrorResponse(
+        error,
+        context.env,
+        'Autenticación requerida',
+        { ...corsHeaders, 'Content-Type': 'application/json' }
+      );
+    }
+
     const { email } = await context.request.json();
 
     if (!email) {

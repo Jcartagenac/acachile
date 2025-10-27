@@ -153,20 +153,19 @@ async function crearIndices(env, results) {
   results.push('✅ Índices creados');
 }
 
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../_middleware';
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
     console.log('[ADMIN MIGRATE] Iniciando migración de esquema de socios');
 
-    // TODO: Verificar permisos de administrador
-    // const user = requireAuth(request, env);
-    // if (!user || user.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-    // }
+    try {
+      await requireAdmin(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     const results = [];
 
@@ -179,24 +178,18 @@ export async function onRequestPost(context) {
 
     console.log('[ADMIN MIGRATE] Migración completada exitosamente');
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       message: 'Migración de esquema de socios completada exitosamente',
       results
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN MIGRATE] Error en migración:', error);
     
-    return new Response(JSON.stringify({
-      success: false,
-      error: `Error aplicando migración: ${error.message}`
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      `Error aplicando migración: ${error instanceof Error ? error.message : String(error)}`,
+      500
+    );
   }
 }

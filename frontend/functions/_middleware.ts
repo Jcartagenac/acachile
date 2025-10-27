@@ -168,6 +168,95 @@ export async function requireAuth(request: Request, env: Env): Promise<{ userId:
   return payload;
 }
 
+function normalizeRole(role: unknown): string | null {
+  if (!role || typeof role !== 'string') {
+    return null;
+  }
+  return role.toLowerCase();
+}
+
+export function getUserRole(payload: any): string | null {
+  const directRole = normalizeRole(payload?.role);
+  if (directRole) {
+    return directRole;
+  }
+
+  if (Array.isArray(payload?.roles) && payload.roles.length > 0) {
+    const primaryRole = normalizeRole(payload.roles[0]);
+    if (primaryRole) {
+      return primaryRole;
+    }
+  }
+
+  const legacyRole = normalizeRole(payload?.userRole);
+  return legacyRole;
+}
+
+function buildUnauthorizedError(message: string, status: number = 403): Error {
+  const error = new Error(message);
+  (error as any).status = status;
+  return error;
+}
+
+export async function requireRole(
+  request: Request,
+  env: Env,
+  allowedRoles: string[] = ['admin']
+): Promise<{ userId: number; payload: any }> {
+  const authPayload = await requireAuth(request, env);
+  const role = getUserRole(authPayload);
+
+  if (!role) {
+    throw buildUnauthorizedError('User role missing', 403);
+  }
+
+  const normalizedAllowed = new Set(allowedRoles.map(r => r.toLowerCase()));
+
+  if (role === 'super_admin' || normalizedAllowed.has(role)) {
+    try {
+      authPayload.role = role;
+      if (!Array.isArray(authPayload.roles) || authPayload.roles.length === 0) {
+        authPayload.roles = [role];
+      }
+    } catch (error) {
+      // ignore immutable payload
+    }
+    return authPayload;
+  }
+
+  throw buildUnauthorizedError('Permission denied', 403);
+}
+
+export async function requireAdmin(request: Request, env: Env) {
+  return requireRole(request, env, ['admin']);
+}
+
+export async function requireAdminOrDirector(request: Request, env: Env) {
+  return requireRole(request, env, ['admin', 'director', 'director_editor']);
+}
+
+export function authErrorResponse(
+  error: unknown,
+  env: Env,
+  defaultMessage: string = 'Autenticación requerida',
+  headers?: Record<string, string>
+): Response {
+  const status =
+    typeof (error as any)?.status === 'number'
+      ? (error as any).status
+      : 401;
+  const message = error instanceof Error ? error.message : defaultMessage;
+
+  return errorResponse(
+    message,
+    status,
+    env.ENVIRONMENT === 'development'
+      ? { details: error instanceof Error ? error.stack || error.message : String(error) }
+      : undefined,
+    headers
+  );
+}
+
 // Utilidad para crear respuestas JSON
 export function jsonResponse(
   data: any, 
@@ -187,11 +276,12 @@ export function jsonResponse(
 export function errorResponse(
   message: string, 
   status: number = 400, 
-  details?: any
+  details?: any,
+  headers?: Record<string, string>
 ): Response {
   return jsonResponse({
     success: false,
     error: message,
     ...(details && { details })
-  }, status);
+  }, status, headers);
 }

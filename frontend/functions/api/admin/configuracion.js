@@ -1,4 +1,4 @@
-import { requireAuth, errorResponse, jsonResponse } from '../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../_middleware';
 
 // Endpoint para obtener configuraciones globales
 // GET /api/admin/configuracion
@@ -9,19 +9,10 @@ export async function onRequestGet(context) {
   try {
     console.log('[ADMIN CONFIG] Obteniendo configuraciones globales');
 
-    let authUser;
     try {
-      authUser = await requireAuth(request, env);
+      await requireAdmin(request, env);
     } catch (error) {
-      return errorResponse(
-        error instanceof Error ? error.message : 'Token inválido',
-        401,
-        env.ENVIRONMENT === 'development' ? { details: error } : undefined
-      );
-    }
-
-    if (!['admin', 'super_admin'].includes(authUser.role)) {
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(error, env);
     }
 
     // Obtener todas las configuraciones
@@ -80,19 +71,10 @@ export async function onRequestPut(context) {
   try {
     console.log('[ADMIN CONFIG] Actualizando configuración');
 
-    let authUser;
     try {
-      authUser = await requireAuth(request, env);
+      await requireAdmin(request, env);
     } catch (error) {
-      return errorResponse(
-        error instanceof Error ? error.message : 'Token inválido',
-        401,
-        env.ENVIRONMENT === 'development' ? { details: error } : undefined
-      );
-    }
-
-    if (!['admin', 'super_admin'].includes(authUser.role)) {
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(error, env);
     }
 
     const body = await request.json();

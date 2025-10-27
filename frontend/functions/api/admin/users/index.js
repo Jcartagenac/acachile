@@ -1,4 +1,4 @@
-import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
 import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
 
 // Endpoint de gestión de usuarios para administradores
@@ -75,19 +75,10 @@ export async function onRequestGet(context) {
   try {
     console.log('[ADMIN USERS] Obteniendo lista de usuarios');
 
-    let authUser;
     try {
-      authUser = await requireAuth(request, env);
+      await requireAdmin(request, env);
     } catch (error) {
-      return errorResponse(
-        error instanceof Error ? error.message : 'Token inválido',
-        401,
-        env.ENVIRONMENT === 'development' ? { details: error } : undefined
-      );
-    }
-
-    if (authUser.role !== 'admin' && authUser.role !== 'super_admin') {
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(error, env);
     }
 
     const url = new URL(request.url);
@@ -96,15 +87,6 @@ export async function onRequestGet(context) {
     const search = url.searchParams.get('search') || '';
     const role = url.searchParams.get('role') || '';
     const status = url.searchParams.get('status') || '';
-
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (user.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
 
     let query = `
       SELECT 
@@ -197,19 +179,10 @@ export async function onRequestPost(context) {
   try {
     console.log('[ADMIN USERS] Creando nuevo usuario');
 
-    let adminUser;
     try {
-      adminUser = await requireAuth(request, env);
+      await requireAdmin(request, env);
     } catch (error) {
-      return errorResponse(
-        error instanceof Error ? error.message : 'Token inválido',
-        401,
-        env.ENVIRONMENT === 'development' ? { details: error } : undefined
-      );
-    }
-
-    if (adminUser.role !== 'admin' && adminUser.role !== 'super_admin') {
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(error, env);
     }
 
     const body = await request.json();

@@ -1,4 +1,4 @@
-import { jsonResponse, errorResponse, requireAuth } from '../../../../_middleware';
+import { jsonResponse, errorResponse, requireAdminOrDirector, authErrorResponse } from '../../../../_middleware';
 import {
   ensurePostulacionesSchema,
   isDirectorRole,
@@ -7,7 +7,12 @@ import {
 
 export const onRequestPost = async ({ request, env, params }) => {
   try {
-    const auth = await requireAuth(request, env);
+    let auth;
+    try {
+      auth = await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
     const approver = await env.DB.prepare(
       `SELECT id, role FROM usuarios WHERE id = ?`,
     )

@@ -1,4 +1,4 @@
-import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
 import { SECTION_CACHE_KEY } from '../../../../../shared/siteSections';
 
 const DEFAULT_PAGE = 'home';
@@ -13,15 +13,10 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
-    let authUser;
     try {
-      authUser = await requireAuth(request, env);
+      await requireAdmin(request, env);
     } catch (err) {
-      return errorResponse(err instanceof Error ? err.message : 'Token inválido', 401, env.ENVIRONMENT === 'development' ? { details: err } : undefined);
-    }
-
-    if (authUser.role !== 'admin' && authUser.role !== 'super_admin') {
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(err, env);
     }
 
     if (env.ACA_KV) {

@@ -1,4 +1,4 @@
-import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
+import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../../../_middleware';
 
 // Admin-only upload to R2 for homepage images
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -10,15 +10,11 @@ export async function onRequestPost(context) {
 
   try {
     // Auth
-    let authUser;
+    let adminUser;
     try {
-      authUser = await requireAuth(request, env);
+      adminUser = await requireAdmin(request, env);
     } catch (err) {
-      return errorResponse(err instanceof Error ? err.message : 'Token inválido', 401, env.ENVIRONMENT === 'development' ? { details: err } : undefined);
-    }
-
-    if (authUser.role !== 'admin' && authUser.role !== 'super_admin') {
-      return errorResponse('Acceso denegado. Se requieren permisos de administrador.', 403);
+      return authErrorResponse(err, env);
     }
 
     if (!env.IMAGES) {
@@ -54,7 +50,7 @@ export async function onRequestPost(context) {
     const arrayBuffer = await file.arrayBuffer();
     await env.IMAGES.put(key, arrayBuffer, {
       httpMetadata: { contentType: file.type, cacheControl: 'public, max-age=31536000' },
-      customMetadata: { uploadedBy: authUser.userId?.toString?.() || String(authUser.userId || authUser.email), uploadedAt: new Date().toISOString() }
+      customMetadata: { uploadedBy: adminUser.userId?.toString?.() || String(adminUser.userId || adminUser.email), uploadedAt: new Date().toISOString() }
     });
 
     const publicUrl = (env.R2_PUBLIC_URL || '').replace(/\/$/, '');

@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+
 // Endpoint de estadísticas avanzadas para administración
 // GET /api/admin/stats - Obtener estadísticas detalladas del sistema
 
@@ -7,40 +9,35 @@ export async function onRequestGet(context) {
   try {
     console.log('[ADMIN STATS] Obteniendo estadísticas avanzadas');
 
-    const url = new URL(request.url);
-    const period = url.searchParams.get('period') || '30days'; // 7days, 30days, 90days, 1year
-    const type = url.searchParams.get('type') || 'all'; // users, events, news, comments, all
+    let period = '30days';
+    let type = 'all';
 
-    // TODO: Validar que el usuario es administrador
-    // const user = requireAuth(request, env);
-    // if (user.role !== 'admin') {
-    //   return new Response(JSON.stringify({
-    //     success: false,
-    //     error: 'Acceso denegado. Se requieren permisos de administrador.'
-    //   }), { status: 403 });
-    // }
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
+
+    const url = new URL(request.url);
+    period = url.searchParams.get('period') || '30days'; // 7days, 30days, 90days, 1year
+    type = url.searchParams.get('type') || 'all'; // users, events, news, comments, all
 
     const stats = await getAdvancedStats(env, period, type);
 
     console.log('[ADMIN STATS] Estadísticas avanzadas obtenidas exitosamente');
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       data: stats
-    }), {
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('[ADMIN STATS] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error interno del servidor',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 

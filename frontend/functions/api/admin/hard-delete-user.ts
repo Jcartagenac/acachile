@@ -1,3 +1,5 @@
+import { requireAdmin, authErrorResponse } from '../../_middleware';
+
 /**
  * Admin endpoint para HARD DELETE de usuarios inactivos
  * USAR SOLO PARA LIMPIAR USUARIOS CON activo=0
@@ -28,6 +30,18 @@ export async function onRequestPost(context: {
   }
 
   try {
+    let adminUser;
+    try {
+      adminUser = await requireAdmin(context.request, context.env);
+    } catch (error) {
+      return authErrorResponse(
+        error,
+        context.env,
+        'Autenticación requerida',
+        { ...corsHeaders, 'Content-Type': 'application/json' }
+      );
+    }
+
     const { email } = await context.request.json();
 
     if (!email) {

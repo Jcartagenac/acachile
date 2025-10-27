@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse } from '../../../_middleware';
+
 // Endpoint para operaciones sobre cuota individual
 // PUT /api/admin/cuotas/:id - Actualizar cuota (desmarcar pago)
 // DELETE /api/admin/cuotas/:id - Eliminar cuota
@@ -29,6 +31,12 @@ export async function onRequestPut(context) {
   try {
     const cuotaId = params.id;
     console.log('[ADMIN CUOTAS] Actualizando cuota:', cuotaId);
+
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env, 'Autenticación requerida', corsHeaders);
+    }
 
     const body = await request.json();
     const { pagado, fechaPago, metodoPago } = body;
@@ -94,7 +102,7 @@ export async function onRequestPut(context) {
 
 // DELETE - Eliminar cuota
 export async function onRequestDelete(context) {
-  const { env, params } = context;
+  const { request, env, params } = context;
   
   // Headers CORS comunes
   const corsHeaders = {
@@ -107,6 +115,12 @@ export async function onRequestDelete(context) {
   try {
     const cuotaId = params.id;
     console.log('[ADMIN CUOTAS] Eliminando cuota:', cuotaId);
+
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env, 'Autenticación requerida', corsHeaders);
+    }
 
     // Verificar que la cuota existe
     const cuota = await env.DB.prepare(`

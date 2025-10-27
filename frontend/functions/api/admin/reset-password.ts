@@ -4,7 +4,7 @@
  */
 
 import type { PagesFunction, Env } from '../../types';
-import { jsonResponse, errorResponse } from '../../_middleware';
+import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from '../../_middleware';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -20,6 +20,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   
   try {
     console.log('[ADMIN/RESET-PASSWORD] Processing admin password reset request');
+
+    try {
+      await requireAdmin(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
     
     const body = await request.json() as {
       email: string;

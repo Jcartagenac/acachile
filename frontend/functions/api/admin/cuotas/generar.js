@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+
 // Endpoint para generar cuotas masivamente
 // POST /api/admin/cuotas/generar
 
@@ -104,6 +106,12 @@ export async function onRequestPost(context) {
   try {
     console.log('[ADMIN CUOTAS] Generando cuotas');
 
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
+
     const body = await request.json();
     const { año, mes, valorDefault, sobreescribir = false } = body;
 
@@ -186,13 +194,13 @@ export async function onRequestPost(context) {
 
   } catch (error) {
     console.error('[ADMIN CUOTAS] Error generando cuotas:', error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: `Error generando cuotas: ${error.message}`
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+
+    return errorResponse(
+      error instanceof Error ? `Error generando cuotas: ${error.message}` : 'Error generando cuotas',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }

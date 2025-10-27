@@ -1,4 +1,4 @@
-import { jsonResponse, errorResponse, requireAuth } from '../../../_middleware';
+import { jsonResponse, errorResponse, requireAdminOrDirector, authErrorResponse } from '../../../_middleware';
 import {
   ensurePostulacionesSchema,
   mapPostulacionRow,
@@ -10,7 +10,12 @@ const STATUS_WHITELIST: PostulacionStatus[] = ['pendiente', 'en_revision', 'apro
 
 export const onRequestGet = async ({ request, env }) => {
   try {
-    const auth = await requireAuth(request, env);
+    let auth;
+    try {
+      auth = await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
     const user = await env.DB.prepare(
       `
       SELECT id, role, email, nombre, apellido

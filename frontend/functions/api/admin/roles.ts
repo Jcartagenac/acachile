@@ -1,4 +1,5 @@
 import type { PagesFunction } from '../../types';
+import { requireAdmin, authErrorResponse } from '../../_middleware';
 
 interface RoleRecord {
   key: string;
@@ -73,7 +74,7 @@ const mapRoleRecord = (record: RoleRecord) => ({
   priority: record.priority ?? 100
 });
 
-export const onRequestGet: PagesFunction = async ({ env }) => {
+export const onRequestGet: PagesFunction = async ({ request, env }) => {
   if (!env.DB) {
     return new Response(
       JSON.stringify({
@@ -85,6 +86,12 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
   }
 
   try {
+    try {
+      await requireAdmin(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
+
     await ensureRolesTable(env.DB);
 
     const result = await env.DB.prepare<RoleRecord>(

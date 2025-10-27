@@ -1,3 +1,5 @@
+import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../../_middleware';
+
 // Endpoint para gestión de cuotas
 // GET /api/admin/cuotas - Obtener cuotas con filtros
 // POST /api/admin/cuotas/generar - Generar cuotas para un mes/año
@@ -70,6 +72,12 @@ export async function onRequestGet(context) {
 
   try {
     console.log('[ADMIN CUOTAS] Obteniendo cuotas');
+
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     const url = new URL(request.url);
     const año = Number.parseInt(url.searchParams.get('año'), 10) || new Date().getFullYear();
@@ -192,14 +200,14 @@ export async function onRequestGet(context) {
 
   } catch (error) {
     console.error('[ADMIN CUOTAS] Error obteniendo cuotas:', error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: `Error obteniendo cuotas: ${error.message}`
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+
+    return errorResponse(
+      error instanceof Error ? `Error obteniendo cuotas: ${error.message}` : 'Error obteniendo cuotas',
+      500,
+      env.ENVIRONMENT === 'development'
+        ? { details: error instanceof Error ? error.stack || error.message : error }
+        : undefined
+    );
   }
 }
 
@@ -216,6 +224,12 @@ export async function onRequestPost(context) {
 
   try {
     console.log('[ADMIN CUOTAS] Creando cuota individual');
+
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
+    }
 
     const body = await request.json();
     const { usuarioId, año, mes, valor } = body;

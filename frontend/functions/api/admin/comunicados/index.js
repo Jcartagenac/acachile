@@ -1,37 +1,19 @@
+import { requireAdminOrDirector, authErrorResponse, jsonResponse, errorResponse } from '../../_middleware';
+
 /**
  * API para gestión de comunicados (admin)
  * GET: Listar todos los comunicados
  * POST: Crear nuevo comunicado
  */
 
-// Verificar si el usuario es administrador
-function isAdmin(user) {
-  return user && (user.rol === 'administrador' || user.rol === 'admin');
-}
-
 // GET: Listar comunicados
 export async function onRequestGet(context) {
   try {
     const { env, request } = context;
-    const authHeader = request.headers.get('Authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'No autorizado' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const user = await env.DB.prepare(
-      'SELECT id, email, rol FROM usuarios WHERE id = ?'
-    ).bind(token).first();
-
-    if (!user || !isAdmin(user)) {
-      return new Response(JSON.stringify({ error: 'No tienes permisos de administrador' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
     }
 
     // Obtener parámetros de consulta
@@ -73,24 +55,19 @@ export async function onRequestGet(context) {
       destinatarios: JSON.parse(c.destinatarios || '[]')
     }));
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
       comunicados,
       total: comunicados.length
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('Error al obtener comunicados:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Error al obtener comunicados',
-      details: error.message 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error al obtener comunicados',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
 
@@ -98,76 +75,53 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   try {
     const { env, request } = context;
-    const authHeader = request.headers.get('Authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'No autorizado' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    let adminUser;
+    try {
+      adminUser = await requireAdminOrDirector(request, env);
+    } catch (error) {
+      return authErrorResponse(error, env);
     }
 
-    const token = authHeader.split(' ')[1];
-    const user = await env.DB.prepare(
-      'SELECT id, email, rol FROM usuarios WHERE id = ?'
-    ).bind(token).first();
+    const actorId = Number(adminUser.userId);
+    const actor = await env.DB.prepare(
+      'SELECT id FROM usuarios WHERE id = ? AND activo = 1'
+    ).bind(actorId).first();
 
-    if (!user || !isAdmin(user)) {
-      return new Response(JSON.stringify({ error: 'No tienes permisos de administrador' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (!actor) {
+      return errorResponse('Usuario administrador no válido', 403);
     }
 
     const data = await request.json();
     const { titulo, contenido, tipo, destinatarios, enviar } = data;
 
-    // Validaciones
     if (!titulo || titulo.trim().length === 0) {
-      return new Response(JSON.stringify({ error: 'El título es requerido' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('El título es requerido', 400);
     }
 
     if (!contenido || contenido.trim().length === 0) {
-      return new Response(JSON.stringify({ error: 'El contenido es requerido' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('El contenido es requerido', 400);
     }
 
     if (!tipo || !['importante', 'corriente', 'urgente'].includes(tipo)) {
-      return new Response(JSON.stringify({ error: 'Tipo inválido' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Tipo inválido', 400);
     }
 
     if (!destinatarios || !Array.isArray(destinatarios) || destinatarios.length === 0) {
-      return new Response(JSON.stringify({ error: 'Destinatarios son requeridos' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse('Destinatarios son requeridos', 400);
     }
 
-    // Validar destinatarios permitidos (usando Set para mejor performance)
     const destinatariosPermitidos = new Set(['todos', 'morosos', 'activos', 'administradores']);
     const destinatariosInvalidos = destinatarios.filter(d => !destinatariosPermitidos.has(d));
     if (destinatariosInvalidos.length > 0) {
-      return new Response(JSON.stringify({ 
-        error: `Destinatarios inválidos: ${destinatariosInvalidos.join(', ')}` 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return errorResponse(
+        `Destinatarios inválidos: ${destinatariosInvalidos.join(', ')}`,
+        400
+      );
     }
 
-    // Determinar estado y fecha de envío
     const estado = enviar ? 'enviado' : 'borrador';
     const fechaEnvio = enviar ? new Date().toISOString() : null;
 
-    // Insertar comunicado
     const result = await env.DB.prepare(`
       INSERT INTO comunicados (
         titulo, 
@@ -187,38 +141,32 @@ export async function onRequestPost(context) {
       JSON.stringify(destinatarios),
       fechaEnvio,
       estado,
-      user.id
+      actorId
     ).run();
 
     if (!result.success) {
       throw new Error('Error al insertar comunicado en la base de datos');
     }
 
-    // Obtener el comunicado creado
     const comunicado = await env.DB.prepare(
       'SELECT * FROM comunicados WHERE id = ?'
     ).bind(result.meta.last_row_id).first();
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
-      message: `Comunicado ${estado === 'enviado' ? 'enviado' : 'guardado como borrador'} exitosamente`,
+      message: enviar ? 'Comunicado enviado exitosamente' : 'Comunicado guardado como borrador',
       comunicado: {
         ...comunicado,
-        destinatarios: JSON.parse(comunicado.destinatarios)
+        destinatarios: JSON.parse(comunicado.destinatarios || '[]')
       }
-    }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, 201);
 
   } catch (error) {
     console.error('Error al crear comunicado:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Error al crear comunicado',
-      details: error.message 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(
+      'Error al crear comunicado',
+      500,
+      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+    );
   }
 }
