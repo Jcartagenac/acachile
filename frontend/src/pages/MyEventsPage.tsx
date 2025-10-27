@@ -284,3 +284,5 @@ export const MyEventsPage: React.FC = () => {
     </div>
   );
 };
+
+export default MyEventsPage;

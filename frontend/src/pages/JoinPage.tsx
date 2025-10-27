@@ -60,3 +60,5 @@ export const JoinPage: React.FC = () => {
     </div>
   );
 };
+
+export default JoinPage;

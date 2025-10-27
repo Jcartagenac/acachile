@@ -232,3 +232,5 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
     </div>
   );
 };
+
+export default ProfilePage;

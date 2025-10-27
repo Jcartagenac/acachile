@@ -522,3 +522,5 @@ export const CreateEventPage: React.FC = () => {
     </div>
   );
 };
+
+export default CreateEventPage;
