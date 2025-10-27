@@ -38,6 +38,10 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array {
   return bytes;
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.slice().buffer;
+}
+
 // Verificar JWT token
 async function verifyToken(token: string, jwtSecret: string): Promise<any> {
   const parts = token.split('.');
@@ -50,18 +54,21 @@ async function verifyToken(token: string, jwtSecret: string): Promise<any> {
   try {
     const encoder = new TextEncoder();
     const keyData = encoder.encode(jwtSecret);
+    const keyBuffer = toArrayBuffer(keyData);
     const key = await crypto.subtle.importKey(
       'raw',
-      keyData,
+      keyBuffer,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['verify']
     );
 
     const signatureBytes = base64UrlToUint8Array(encodedSignature);
+    const signatureBuffer = toArrayBuffer(signatureBytes);
     const dataBytes = encoder.encode(`${encodedHeader}.${encodedPayload}`);
+    const dataBuffer = toArrayBuffer(dataBytes);
 
-    const isValid = await crypto.subtle.verify('HMAC', key, signatureBytes, dataBytes);
+    const isValid = await crypto.subtle.verify('HMAC', key, signatureBuffer, dataBuffer);
     if (!isValid) {
       throw new Error('Invalid token signature');
     }
@@ -126,7 +133,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 };
 
 // Utilidad para verificar autenticación en rutas protegidas
-export async function requireAuth(request: Request, env: Env): Promise<{ userId: number; payload: any }> {
+export async function requireAuth(request: Request, env: Env): Promise<{ userId: number } & Record<string, unknown>> {
   const authorization = request.headers.get('Authorization');
 
   if (!authorization) {
@@ -165,7 +172,7 @@ export async function requireAuth(request: Request, env: Env): Promise<{ userId:
 
   // Return payload (augmented) to keep compatibility with existing code that
   // expects token payload fields such as `role`, `email`, etc.
-  return payload;
+  return payload as { userId: number } & Record<string, unknown>;
 }
 
 function normalizeRole(role: unknown): string | null {
@@ -202,7 +209,7 @@ export async function requireRole(
   request: Request,
   env: Env,
   allowedRoles: string[] = ['admin']
-): Promise<{ userId: number; payload: any }> {
+): Promise<{ userId: number } & Record<string, unknown>> {
   const authPayload = await requireAuth(request, env);
   const role = getUserRole(authPayload);
 

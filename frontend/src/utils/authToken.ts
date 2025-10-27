@@ -11,7 +11,8 @@ const readCookie = (name: string): string | null => {
   const match = document.cookie.match(
     new RegExp(`(?:^|; )${escapeCookieName(name)}=([^;]*)`)
   );
-  return match ? decodeURIComponent(match[1]) : null;
+  const value = match?.[1];
+  return value ? decodeURIComponent(value) : null;
 };
 
 export const getStoredToken = (): string | null => {

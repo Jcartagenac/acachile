@@ -7,6 +7,13 @@
   "workspaces": [
     "frontend"
   ],
+  "scripts": {
+    "lint": "npm run lint -w frontend",
+    "typecheck": "npm run typecheck -w frontend",
+    "test": "npm run test -w frontend",
+    "test:watch": "npm run test:watch -w frontend",
+    "verify": "npm run verify -w frontend"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0"
   },

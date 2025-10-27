@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/utils/**/*",
+    "src/types/**/*",
+    "../shared/utils/**/*",
+    "../shared/types/**/*"
+  ]
+}

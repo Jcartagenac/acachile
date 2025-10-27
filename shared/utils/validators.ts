@@ -3,6 +3,21 @@
  * Incluye validadores para RUT chileno, teléfonos y direcciones con Google Maps API
  */
 
+const resolveGoogleMapsKey = (apiKey?: string): string => {
+  if (apiKey) {
+    return apiKey;
+  }
+
+  if (typeof globalThis !== 'undefined') {
+    const envKey = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GOOGLE_MAPS_API_KEY;
+    if (typeof envKey === 'string') {
+      return envKey;
+    }
+  }
+
+  return '';
+};
+
 /**
  * Valida el dígito verificador de un RUT chileno usando el algoritmo módulo 11.
  * @param rut - RUT con o sin puntos/guion (ej: "12345678-9" o "12.345.678-9")
@@ -24,7 +39,9 @@ export function validateRut(rut: string): boolean {
   let multiplier = 2;
 
   for (let i = rutDigits.length - 1; i >= 0; i--) {
-    sum += parseInt(rutDigits[i]) * multiplier;
+    const digit = rutDigits[i];
+    if (digit === undefined) continue;
+    sum += parseInt(digit, 10) * multiplier;
     multiplier = multiplier === 7 ? 2 : multiplier + 1;
   }
 
@@ -147,7 +164,7 @@ export async function normalizeAddress(address: string, apiKey?: string): Promis
   }
 
   // Use provided API key or get from environment
-  const key = apiKey || (typeof process !== 'undefined' && process.env ? process.env.GOOGLE_MAPS_API_KEY : '') || '';
+  const key = resolveGoogleMapsKey(apiKey);
 
   if (!key) {
     console.warn('[normalizeAddress] No Google Maps API key available');

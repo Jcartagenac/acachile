@@ -6,14 +6,18 @@ import hooksPlugin from "eslint-plugin-react-hooks";
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", "frontend/dist/**"],
   },
   ...tseslint.configs.recommended,
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
-        project: true,
+        project: [
+          "./frontend/tsconfig.typecheck.json",
+          "./frontend/functions/tsconfig.typecheck.json",
+        ],
+        tsconfigRootDir: import.meta.dirname,
       },
       globals: { ...globals.browser, ...globals.node },
     },

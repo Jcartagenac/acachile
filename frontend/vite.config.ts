@@ -25,4 +25,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'functions/**/*.test.{ts,tsx,js}',
+      '../shared/**/*.test.{ts,tsx}',
+    ],
+    coverage: {
+      reporter: ['text', 'lcov'],
+    },
+  },
 })

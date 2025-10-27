@@ -253,3 +253,5 @@ async function getSystemStats(env) {
 
   return stats;
 }
+
+export { determineOverallStatus, getStatusCode };

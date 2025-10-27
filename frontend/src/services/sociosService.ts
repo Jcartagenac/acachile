@@ -100,15 +100,9 @@ class SociosService {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.search) queryParams.append('search', params.search);
       if (params?.estado) queryParams.append('estado', params.estado);
-
-      console.log('[sociosService] Llamando a:', `${API_BASE_URL}/admin/socios?${queryParams}`);
-
       const response = await fetch(`${API_BASE_URL}/admin/socios?${queryParams}`, {
         headers: this.getAuthHeaders(),
       });
-
-      console.log('[sociosService] Response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[sociosService] Error response:', errorText);
@@ -116,8 +110,6 @@ class SociosService {
       }
 
       const json = await response.json();
-      console.log('[sociosService] Response JSON:', json);
-      
       // El API devuelve { success: true, data: { socios: [], pagination: {} } }
       // Necesitamos devolver solo el data
       if (json.success && json.data) {
@@ -228,24 +220,16 @@ class SociosService {
       if (params?.estado) queryParams.append('estado', params.estado);
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.limit) queryParams.append('limit', params.limit.toString());
-
-      console.log('[sociosService] Llamando a cuotas:', `${API_BASE_URL}/admin/cuotas?${queryParams}`);
-
       const response = await fetch(`${API_BASE_URL}/admin/cuotas?${queryParams}`, {
         headers: this.getAuthHeaders(),
       });
-
-      console.log('[sociosService] Cuotas response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[sociosService] Error response cuotas:', errorText);
         throw new Error(`Error al obtener cuotas: ${response.status}`);
       }
 
-      const json = await response.json();
-      console.log('[sociosService] Cuotas response JSON:', json);
-      
+      const json = await response.json();      
       // El API devuelve { success: true, data: { cuotas: [], pagination: {} } }
       if (json.success && json.data) {
         return { success: true, data: json.data };
@@ -260,8 +244,6 @@ class SociosService {
 
   async crearCuotaIndividual(usuarioId: number, año: number, mes: number, valor?: number): Promise<{ success: boolean; data?: { cuota: Cuota }; error?: string }> {
     try {
-      console.log('[sociosService] Creando cuota individual:', { usuarioId, año, mes, valor });
-      
       // Filtrar valores undefined para evitar errores en D1
       const payload: any = { usuarioId, año, mes };
       if (valor !== undefined) payload.valor = valor;
@@ -271,9 +253,6 @@ class SociosService {
         headers: this.getAuthHeaders(),
         body: JSON.stringify(payload),
       });
-
-      console.log('[sociosService] Respuesta crear cuota status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
         console.error('[sociosService] Error response crear cuota:', errorData);
@@ -281,7 +260,6 @@ class SociosService {
       }
 
       const data = await response.json();
-      console.log('[sociosService] Cuota creada exitosamente:', data);
       return { success: true, data: data.data };
     } catch (error) {
       console.error('[sociosService] Error creando cuota individual:', error);
@@ -326,17 +304,11 @@ class SociosService {
       if (datos.fechaPago) payload.fechaPago = datos.fechaPago;
       if (datos.comprobanteUrl) payload.comprobanteUrl = datos.comprobanteUrl;
       if (datos.notas) payload.notas = datos.notas;
-      
-      console.log('[sociosService] Marcando cuota como pagada:', cuotaId, payload);
-      
       const response = await fetch(`${API_BASE_URL}/admin/cuotas/marcar-pago`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(payload),
       });
-
-      console.log('[sociosService] Respuesta status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[sociosService] Error response:', errorText);
@@ -350,7 +322,6 @@ class SociosService {
       }
 
       const data = await response.json();
-      console.log('[sociosService] Cuota marcada exitosamente:', data);
       return { success: true, data: data.data };
     } catch (error) {
       console.error('[sociosService] Error marking cuota as paid:', error);
@@ -360,15 +331,10 @@ class SociosService {
 
   async eliminarCuota(cuotaId: number): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('[sociosService] Eliminando cuota:', cuotaId);
-      
       const response = await fetch(`${API_BASE_URL}/admin/cuotas/${cuotaId}`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
       });
-
-      console.log('[sociosService] Respuesta eliminar status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[sociosService] Error response:', errorText);
@@ -381,8 +347,7 @@ class SociosService {
         }
       }
 
-      const data = await response.json();
-      console.log('[sociosService] Cuota eliminada exitosamente:', data);
+      await response.json();
       return { success: true };
     } catch (error) {
       console.error('[sociosService] Error eliminando cuota:', error);

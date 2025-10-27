@@ -32,5 +32,8 @@
   "include": [
     "src",
     "../shared"
+  ],
+  "exclude": [
+    "src/pages/HomePage_backup.tsx"
   ]
 }
