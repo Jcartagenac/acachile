@@ -1,6 +1,8 @@
 // Endpoint para que los usuarios vean sus propias inscripciones
 // GET /api/inscripciones/mis-inscripciones - Listar inscripciones del usuario autenticado
 
+import { requireAuth } from '../_middleware';
+
 export async function onRequest(context) {
   const { request, env } = context;
   const method = request.method;
@@ -34,11 +36,13 @@ export async function onRequest(context) {
 
   try {
     // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Token de autorización requerido'
+        error: 'Autenticación requerida'
       }), {
         status: 401,
         headers: {
@@ -48,8 +52,7 @@ export async function onRequest(context) {
       });
     }
 
-    // TODO: Decodificar JWT para obtener userId real
-    const userId = 1; // Por ahora usamos ID fijo
+    const userId = authUser.userId;
 
     const result = await getMisInscripciones(env, userId);
 

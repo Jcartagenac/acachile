@@ -23,7 +23,7 @@ export async function onRequest(context) {
 
   try {
     if (method === 'GET') {
-      return await handleGetInscripcionById(inscripcionId, env, corsHeaders);
+      return await handleGetInscripcionById(request, inscripcionId, env, corsHeaders);
     }
     
     if (method === 'DELETE') {
@@ -57,11 +57,26 @@ export async function onRequest(context) {
 }
 
 // GET /api/inscripciones/[id] - Obtener inscripción específica
-async function handleGetInscripcionById(inscripcionId, env, corsHeaders) {
+async function handleGetInscripcionById(request, inscripcionId, env, corsHeaders) {
   try {
-    // Verificar autenticación
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Autenticación requerida'
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
+
     const inscripcionData = await env.ACA_KV.get(`inscripcion:${inscripcionId}`);
-    
+
     if (!inscripcionData) {
       return new Response(JSON.stringify({
         success: false,
@@ -76,6 +91,19 @@ async function handleGetInscripcionById(inscripcionId, env, corsHeaders) {
     }
 
     const inscripcion = JSON.parse(inscripcionData);
+
+    if (authUser.userId !== inscripcion.userId) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No autorizado'
+      }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,
@@ -105,12 +133,13 @@ async function handleGetInscripcionById(inscripcionId, env, corsHeaders) {
 // DELETE /api/inscripciones/[id] - Cancelar inscripción específica
 async function handleCancelarInscripcion(request, inscripcionId, env, corsHeaders) {
   try {
-    // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Token de autorización requerido'
+        error: 'Autenticación requerida'
       }), {
         status: 401,
         headers: {
@@ -120,8 +149,9 @@ async function handleCancelarInscripcion(request, inscripcionId, env, corsHeader
       });
     }
 
-    // TODO: Verificar JWT y que el usuario puede cancelar esta inscripción
-    const result = await cancelarInscripcion(env, inscripcionId);
+    const currentUserId = authUser.userId;
+
+    const result = await cancelarInscripcion(env, inscripcionId, currentUserId);
 
     if (!result.success) {
       return new Response(JSON.stringify({
@@ -162,7 +192,7 @@ async function handleCancelarInscripcion(request, inscripcionId, env, corsHeader
 }
 
 // Función de servicio para cancelar inscripción
-async function cancelarInscripcion(env, inscripcionId) {
+async function cancelarInscripcion(env, inscripcionId, currentUserId) {
   try {
     // Verificar que la inscripción existe
     const inscripcionData = await env.ACA_KV.get(`inscripcion:${inscripcionId}`);
@@ -176,6 +206,13 @@ async function cancelarInscripcion(env, inscripcionId) {
 
     const inscripcion = JSON.parse(inscripcionData);
     const { userId, eventoId } = inscripcion;
+
+    if (currentUserId !== userId) {
+      return {
+        success: false,
+        error: 'No autorizado para cancelar esta inscripción'
+      };
+    }
 
     // Eliminar inscripción individual
     await env.ACA_KV.delete(`inscripcion:${inscripcionId}`);

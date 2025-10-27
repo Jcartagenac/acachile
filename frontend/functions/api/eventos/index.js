@@ -1,3 +1,5 @@
+import { requireAuth } from '../_middleware';
+
 // Endpoint principal para gestión de eventos
 // GET /api/eventos - Listar eventos con filtros
 // POST /api/eventos - Crear nuevo evento
@@ -94,16 +96,17 @@ async function handleGetEventos(url, env, corsHeaders) {
 // POST /api/eventos - Crear nuevo evento
 async function handleCreateEvento(request, env, corsHeaders) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ success: false, error: 'Token de autorización requerido' }), {
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
+      return new Response(JSON.stringify({ success: false, error: 'Autenticación requerida' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
-    // TODO: Verificar y decodificar JWT para obtener userId
-    const userId = 1; // Usamos un ID fijo por ahora
+    const userId = authUser.userId;
 
     const body = await request.json();
     const result = await createEvento(env.DB, body, userId);

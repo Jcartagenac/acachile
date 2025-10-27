@@ -1,3 +1,5 @@
+import { requireAuth } from '../../_middleware';
+
 // Endpoint para que usuarios suban comprobantes de pago de sus cuotas
 // POST /api/cuotas/subir-comprobante
 
@@ -7,10 +9,8 @@ export async function onRequestPost(context) {
   try {
     console.log('[CUOTAS] Usuario subiendo comprobante de pago');
 
-    // TODO: Obtener usuario autenticado
-    // const user = requireAuth(request, env);
-    // const usuarioId = user.id;
-    const usuarioId = 1; // TEMPORAL - usar ID real del usuario autenticado
+    const authUser = await requireAuth(request, env);
+    const usuarioId = authUser.userId;
 
     const formData = await request.formData();
     const file = formData.get('comprobante');

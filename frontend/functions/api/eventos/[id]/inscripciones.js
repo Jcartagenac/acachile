@@ -48,12 +48,13 @@ export async function onRequest(context) {
   }
 
   try {
-    // Verificar autenticación (para admin o organizador)
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Token de autorización requerido'
+        error: 'Autenticación requerida'
       }), {
         status: 401,
         headers: {
@@ -62,8 +63,6 @@ export async function onRequest(context) {
         },
       });
     }
-
-    // TODO: Verificar permisos de admin/organizador mediante JWT
 
     const result = await getInscripcionesEventoCompletas(env, eventId);
 

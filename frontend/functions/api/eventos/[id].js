@@ -1,3 +1,5 @@
+import { requireAuth, requireAdminOrDirector } from '../../_middleware';
+
 // Endpoint para gestión de eventos individuales por ID
 // GET /api/eventos/[id] - Obtener evento específico
 // PUT /api/eventos/[id] - Actualizar evento específico  
@@ -121,12 +123,13 @@ async function handleGetEventoById(eventId, env, corsHeaders) {
 // PUT /api/eventos/[id] - Actualizar evento específico
 async function handleUpdateEvento(request, eventId, env, corsHeaders) {
   try {
-    // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Token de autorización requerido'
+        error: 'Autenticación requerida'
       }), {
         status: 401,
         headers: {
@@ -136,7 +139,19 @@ async function handleUpdateEvento(request, eventId, env, corsHeaders) {
       });
     }
 
-    // TODO: Verificar JWT y permisos
+    // Opcional: validar que el usuario tenga permisos adecuados (admin/director)
+    if (authUser.role && !['admin', 'director', 'director_editor'].includes(authUser.role)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Permisos insuficientes'
+      }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
     const body = await request.json();
     
     const result = await updateEvento(env, eventId, body);
@@ -183,14 +198,14 @@ async function handleUpdateEvento(request, eventId, env, corsHeaders) {
 // DELETE /api/eventos/[id] - Eliminar evento específico
 async function handleDeleteEvento(request, eventId, env, corsHeaders) {
   try {
-    // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    try {
+      await requireAdminOrDirector(request, env);
+    } catch (error) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Token de autorización requerido'
+        error: 'Permisos insuficientes'
       }), {
-        status: 401,
+        status: 403,
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders,
