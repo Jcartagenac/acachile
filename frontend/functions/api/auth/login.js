@@ -1,3 +1,5 @@
+import { hashPassword, verifyPassword } from '../../utils/password.js';
+
 // Login endpoint - JavaScript version
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -51,15 +53,9 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Hash de la contraseña para verificar
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + 'salt_aca_chile_2024');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const passwordHash = Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    const verification = await verifyPassword(password, user.password_hash);
 
-    if (passwordHash !== user.password_hash) {
+    if (!verification.valid) {
       console.log('[AUTH/LOGIN] Invalid password for user:', email);
       return new Response(JSON.stringify({
         success: false,
@@ -68,6 +64,18 @@ export async function onRequestPost(context) {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
+    }
+
+    if (verification.needsUpgrade) {
+      try {
+        const upgradedHash = await hashPassword(password);
+        await env.DB.prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?')
+          .bind(upgradedHash, user.id)
+          .run();
+        console.log('[AUTH/LOGIN] Upgraded password hash for user:', user.id);
+      } catch (upgradeError) {
+        console.warn('[AUTH/LOGIN] Failed to upgrade password hash:', upgradeError);
+      }
     }
 
     console.log('[AUTH/LOGIN] Password valid, creating token for user:', user.id);

@@ -336,18 +336,21 @@ echo "AIzaSy..." | wrangler pages secret put GOOGLE_MAPS_API_KEY --project-name 
 
 ## 10. Cambio seguro de contraseña para un usuario (operación manual)
 
-El proyecto usa hash SHA-256 con salt conocido.
+Las contraseñas se almacenan con **PBKDF2 (SHA-256, 150k iteraciones y sal aleatoria de 16 bytes)**. Cualquier hash legado en SHA-256 se migra automáticamente la próxima vez que el usuario inicie sesión con éxito.
 
-### Generar hash
+### Generar hash compatible (Node.js)
 
 ```javascript
 import crypto from 'crypto';
-const salt = 'salt_aca_chile_2024';
+
+const ITERATIONS = 150_000;
+const SALT_BYTES = 16;
 
 function hashPassword(password) {
-  return crypto.createHash('sha256')
-    .update(password + salt, 'utf8')
-    .digest('hex');
+  const salt = crypto.randomBytes(SALT_BYTES);
+  const derived = crypto.pbkdf2Sync(password, salt, ITERATIONS, 32, 'sha256');
+  const encode = (buffer) => buffer.toString('base64');
+  return `pbkdf2$${ITERATIONS}$${encode(salt)}$${encode(derived)}`;
 }
 
 console.log(hashPassword('NuevaPassword123!'));

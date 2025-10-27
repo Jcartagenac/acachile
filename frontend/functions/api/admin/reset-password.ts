@@ -5,15 +5,7 @@
 
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse, requireAdmin, authErrorResponse } from './_middleware';
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'salt_aca_chile_2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
+import { hashPassword } from '../../utils/password';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;

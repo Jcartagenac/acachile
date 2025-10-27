@@ -1,5 +1,6 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse } from '../../_middleware';
+import { hashPassword } from '../../utils/password';
 
 /**
  * Handler de registro de usuarios
@@ -18,15 +19,6 @@ interface User {
   activo: boolean;
   created_at: string;
   last_login?: string;
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'salt_aca_chile_2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
 }
 
 // Handler principal de registro
@@ -89,7 +81,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return errorResponse('El usuario ya existe', 409);
     }
 
-    // Hash de la contraseña
     const passwordHash = await hashPassword(password);
 
     console.log('[AUTH/REGISTER] Creating new user:', email);

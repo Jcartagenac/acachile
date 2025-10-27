@@ -1,19 +1,11 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse } from '../../_middleware';
+import { hashPassword } from '../../utils/password';
 
 /**
  * Handler de reset password
  * Migrado desde worker/src/auth-system.ts
  */
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'salt_aca_chile_2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 // Handler principal de reset password
 export const onRequestPost: PagesFunction<Env> = async (context) => {

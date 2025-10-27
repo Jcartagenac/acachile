@@ -1,20 +1,10 @@
 import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../_middleware';
 import { validateRut, normalizeRut, normalizePhone, normalizeAddress } from '../../../../../shared/utils/validators';
+import { hashPassword } from '../../../utils/password.js';
 
 // Endpoint de gestión de usuarios para administradores
 // GET /api/admin/users - Listar usuarios
 // POST /api/admin/users - Crear usuario (admin)
-
-// Función para hashear contraseñas (SHA-256 + salt)
-async function hashPassword(password) {
-  const salt = 'salt_aca_chile_2024';
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + salt);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
 
 const DEFAULT_ROLES = [
   {

@@ -1,19 +1,11 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse, requireAuth } from '../../_middleware';
+import { hashPassword, verifyPassword } from '../../utils/password';
 
 /**
  * Handler de change password para usuarios autenticados
  * Migrado desde worker/src/auth-system.ts
  */
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'salt_aca_chile_2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 // Helper: Validar que todos los campos requeridos estén presentes
 function validateRequiredPasswordFields(currentPassword: string, newPassword: string, confirmPassword: string): string | null {
@@ -127,8 +119,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Verificar contraseña actual
-    const currentPasswordHash = await hashPassword(currentPassword);
-    if (currentPasswordHash !== user.password_hash) {
+    const verification = await verifyPassword(currentPassword, user.password_hash as string);
+    if (!verification.valid) {
       console.log('[AUTH/CHANGE-PASSWORD] Invalid current password for user:', userId);
       return errorResponse('Contraseña actual incorrecta', 400);
     }

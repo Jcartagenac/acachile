@@ -1,5 +1,6 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse } from '../../_middleware';
+import { hashPassword, verifyPassword } from '../../utils/password';
 
 /**
  * Funciones de autenticación JWT para Pages Functions
@@ -74,15 +75,6 @@ async function createJWT(payload: any, secret: string): Promise<string> {
   return `${data}.${encodedSignature}`;
 }
 
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'salt_aca_chile_2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 // Handler principal de login
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
@@ -119,10 +111,23 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Verificar contraseña
-    const passwordHash = await hashPassword(password);
-    if (passwordHash !== user.password_hash) {
+    const verification = await verifyPassword(password, user.password_hash as string);
+    if (!verification.valid) {
       console.log('[AUTH/LOGIN] Invalid password for user:', email);
       return errorResponse('Credenciales inválidas', 401);
+    }
+
+    if (verification.needsUpgrade) {
+      try {
+        const upgradedHash = await hashPassword(password);
+        await env.DB.prepare(`
+          UPDATE usuarios SET password_hash = ? WHERE id = ?
+        `).bind(upgradedHash, user.id).run();
+        user.password_hash = upgradedHash;
+        console.log('[AUTH/LOGIN] Upgraded password hash for user:', user.id);
+      } catch (upgradeError) {
+        console.warn('[AUTH/LOGIN] Failed to upgrade password hash:', upgradeError);
+      }
     }
 
     console.log('[AUTH/LOGIN] Password valid, creating token for user:', user.id);
