@@ -1,27 +1,7 @@
 import { REGIONES_CHILE } from '@shared/index';
+import { buildAuthHeaders } from '../utils/authToken';
 
 const API_BASE_URL = '/api';
-
-const buildAuthHeaders = (): Record<string, string> => {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  if (typeof window === 'undefined') {
-    return headers;
-  }
-
-  const token =
-    window.localStorage.getItem('auth_token') ||
-    window.localStorage.getItem('token') ||
-    undefined;
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  return headers;
-};
 
 export type AvailabilityOption =
   | 'eventos_publicos'
@@ -208,7 +188,7 @@ export const postulacionesService = {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/postulantes/${id}/approve`, {
         method: 'POST',
-        headers: buildAuthHeaders(),
+        headers: buildAuthHeaders(undefined, 'application/json'),
         body: JSON.stringify({ comment }),
       });
 
@@ -228,7 +208,7 @@ export const postulacionesService = {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/postulantes/${id}/reject`, {
         method: 'POST',
-        headers: buildAuthHeaders(),
+        headers: buildAuthHeaders(undefined, 'application/json'),
         body: JSON.stringify({ reason }),
       });
 

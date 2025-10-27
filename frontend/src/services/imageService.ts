@@ -1,5 +1,6 @@
 // Servicio para gestión de imágenes en Cloudflare R2
 import { AppUser } from '../../../shared';
+import { buildAuthHeaders } from '../utils/authToken';
 
 export interface ImageUploadOptions {
   folder: 'avatars' | 'home' | 'eventos' | 'noticias' | 'gallery' | 'postulaciones';
@@ -195,6 +196,7 @@ class ImageService {
       // Llamada real a la API de R2
       const response = await fetch('/api/upload-image', {
         method: 'POST',
+        headers: buildAuthHeaders(),
         body: formData,
       });
 
@@ -255,13 +257,9 @@ class ImageService {
 
       // Actualizar en base de datos (persistencia)
       try {
-        const token = localStorage.getItem('auth_token');
         const updateResponse = await fetch('/api/auth/me', {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: buildAuthHeaders(undefined, 'application/json'),
           body: JSON.stringify({
             foto_url: fotoUrl
           })

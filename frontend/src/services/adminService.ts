@@ -1,5 +1,5 @@
 // Servicio para APIs de administración
-import { authService } from './authService';
+import { buildAuthHeaders } from '../utils/authToken';
 
 const API_BASE_URL = '/api';
 
@@ -132,11 +132,7 @@ export interface AdvancedStats {
 
 class AdminService {
   private getAuthHeaders() {
-    const token = authService.getToken();
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
+    return buildAuthHeaders(undefined, 'application/json');
   }
 
   private normalizeUser(raw: any): User {

@@ -3,6 +3,8 @@
  * ACA Chile Frontend
  */
 
+import { buildAuthHeaders } from '../utils/authToken';
+
 const API_BASE_URL = '/api';
 
 export interface Socio {
@@ -81,24 +83,8 @@ export interface CreateSocioData {
 }
 
 class SociosService {
-  private getAuthToken(): string | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    return (
-      window.localStorage.getItem('auth_token') ||
-      window.localStorage.getItem('authToken') ||
-      window.localStorage.getItem('token') ||
-      null
-    );
-  }
-
-  private getAuthHeaders() {
-    const token = this.getAuthToken();
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
+  private getAuthHeaders(): Headers {
+    return buildAuthHeaders({ 'Content-Type': 'application/json' });
   }
 
   // Gestión de socios
@@ -411,12 +397,9 @@ class SociosService {
       formData.append('file', file);
       formData.append('cuotaId', cuotaId.toString());
 
-      const token = this.getAuthToken();
       const response = await fetch(`${API_BASE_URL}/cuotas/subir-comprobante`, {
         method: 'POST',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
+        headers: buildAuthHeaders(),
         body: formData,
       });
 
@@ -440,12 +423,9 @@ class SociosService {
       formData.append('socioId', socioId.toString());
       formData.append('tipo', 'foto-socio');
 
-      const token = this.getAuthToken();
       const response = await fetch(`${API_BASE_URL}/upload/imagen`, {
         method: 'POST',
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
+        headers: buildAuthHeaders(),
         body: formData,
       });
 

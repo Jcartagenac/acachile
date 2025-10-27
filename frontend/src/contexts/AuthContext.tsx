@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import {
   AppUser,
@@ -12,6 +12,7 @@ import {
   roleUtils,
 } from '@shared/index';
 import { logger } from '../utils/logger';
+import { getStoredToken } from '../utils/authToken';
 
 const TOKEN_COOKIE_KEY = 'auth_token';
 const USER_COOKIE_KEY = 'auth_user';
@@ -282,7 +283,23 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const handleAuthSuccess = (
+  const readStoredUser = useCallback((): string | undefined => {
+    const cookieValue = Cookies.get(USER_COOKIE_KEY);
+    if (cookieValue) {
+      return cookieValue;
+    }
+
+    if (typeof window !== 'undefined') {
+      const localValue = window.localStorage.getItem(USER_COOKIE_KEY);
+      if (localValue) {
+        return localValue;
+      }
+    }
+
+    return undefined;
+  }, []);
+
+  const handleAuthSuccess = useCallback((
     token: string,
     apiUser: AuthApiUser,
     overrides?: Partial<AppUser>,
@@ -293,7 +310,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       type: 'AUTH_SUCCESS',
       payload: { user: mappedUser, token },
     });
-  };
+  }, [dispatch]);
+
+  const performLogout = useCallback(() => {
+    clearPersistedAuth();
+    dispatch({ type: 'LOGOUT' });
+  }, [dispatch]);
+
+  const verifyAndRefresh = useCallback(async (token: string) => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data?.success || !data?.data) {
+        throw new Error(data?.error || 'Sesión inválida');
+      }
+
+      handleAuthSuccess(token, data.data);
+    } catch (error) {
+      logger.auth.warn('⚠️ AuthContext: Sesión inválida al verificar token', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      performLogout();
+    }
+  }, [handleAuthSuccess, performLogout]);
 
   const login = async (credentials: LoginRequest) => {
     logger.auth.info('🔄 AuthContext: Iniciando login', { email: credentials.email });
@@ -397,8 +446,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    const token = Cookies.get(TOKEN_COOKIE_KEY);
-    const userStr = Cookies.get(USER_COOKIE_KEY);
+    const token = getStoredToken();
+    const userStr = readStoredUser();
 
     if (token && userStr) {
       const storedUser = parseStoredUser(userStr);
@@ -407,19 +456,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           type: 'AUTH_SUCCESS',
           payload: { user: storedUser, token },
         });
-      } else {
-        clearPersistedAuth();
+        verifyAndRefresh(token);
+        return;
       }
     }
-  }, []);
+
+    performLogout();
+  }, [performLogout, readStoredUser, verifyAndRefresh]);
 
   const logout = () => {
     logger.auth.info('🚪 AuthContext: Logout solicitado', {
       userId: state.user?.id,
       userEmail: state.user?.email,
     });
-    clearPersistedAuth();
-    dispatch({ type: 'LOGOUT' });
+    performLogout();
   };
 
   const clearError = () => {

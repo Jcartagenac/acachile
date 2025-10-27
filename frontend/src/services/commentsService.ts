@@ -3,6 +3,8 @@
  * ACA Chile Frontend
  */
 
+import { buildAuthHeaders } from '../utils/authToken';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile.pages.dev';
 
 export interface Comment {
@@ -43,11 +45,7 @@ export interface LikesResponse {
 
 class CommentsService {
   private getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
+    return buildAuthHeaders({ 'Content-Type': 'application/json' });
   }
 
   // Obtener comentarios de un artículo

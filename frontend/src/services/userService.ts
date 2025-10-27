@@ -1,5 +1,6 @@
 // Servicio para gestión de perfil de usuario
 import { AppUser } from '../../../shared';
+import { buildAuthHeaders, getStoredToken } from '../utils/authToken';
 
 export interface PrivacyPreferences {
   showEmail: boolean;
@@ -60,13 +61,11 @@ class UserService {
   }
 
   private getAuthToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return (
-      window.localStorage.getItem('auth_token') ||
-      window.localStorage.getItem('authToken') ||
-      window.localStorage.getItem('token') ||
-      null
-    );
+    return getStoredToken();
+  }
+
+  private getAuthHeaders(contentType?: string): Headers {
+    return buildAuthHeaders(undefined, contentType);
   }
 
   private mapAppUserToProfile(user: AppUser): UserProfile {
@@ -198,17 +197,14 @@ class UserService {
 
     try {
       // Llamar a la API real para actualizar en la base de datos
-      const token = this.getAuthToken();
-      if (!token) {
+      const headers = this.getAuthHeaders('application/json');
+      if (!headers.has('Authorization')) {
         return { success: false, error: 'No hay token de autenticación' };
       }
 
       const response = await fetch('/api/auth/me', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({
           nombre: profileData.firstName || null,
           apellido: profileData.lastName || null,
@@ -331,17 +327,14 @@ class UserService {
 
   async getPrivacyPreferences(): Promise<ApiResponse<PrivacyPreferences>> {
     try {
-      const token = this.getAuthToken();
-      if (!token) {
+      const headers = this.getAuthHeaders('application/json');
+      if (!headers.has('Authorization')) {
         return { success: false, error: 'No hay token de autenticación' };
       }
 
       const response = await fetch('/api/auth/privacy', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        }
+        headers
       });
 
       const result = await response.json();
@@ -370,17 +363,14 @@ class UserService {
 
   async updatePrivacyPreferences(preferences: PrivacyPreferences): Promise<ApiResponse<PrivacyPreferences>> {
     try {
-      const token = this.getAuthToken();
-      if (!token) {
+      const headers = this.getAuthHeaders('application/json');
+      if (!headers.has('Authorization')) {
         return { success: false, error: 'No hay token de autenticación' };
       }
 
       const response = await fetch('/api/auth/privacy', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify(preferences)
       });
 
@@ -455,17 +445,14 @@ class UserService {
         };
       }
 
-      const token = this.getAuthToken();
-      if (!token) {
+      const headers = this.getAuthHeaders('application/json');
+      if (!headers.has('Authorization')) {
         return { success: false, error: 'No hay token de autenticación' };
       }
 
       const response = await fetch('/api/auth/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({ currentPassword, newPassword, confirmPassword: newPassword })
       });
 

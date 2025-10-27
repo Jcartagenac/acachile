@@ -3,6 +3,8 @@
  * ACA Chile Frontend
  */
 
+import { buildAuthHeaders } from '../utils/authToken';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile.pages.dev';
 
 export type SearchResultType = 'evento' | 'noticia' | 'usuario' | 'section';
@@ -84,11 +86,7 @@ export interface AdvancedSearchResponse {
 
 class SearchService {
   private getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
+    return buildAuthHeaders({ 'Content-Type': 'application/json' });
   }
 
   // Utilidades para compartir en redes sociales

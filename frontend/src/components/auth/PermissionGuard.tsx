@@ -85,7 +85,11 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   requireAll = false,
   fallback = null,
 }) => {
-  const { hasPermission, hasRole, isAuthenticated } = useAuth();
+  const { hasPermission, hasRole, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
 
   // Si no está autenticado, no mostrar nada
   if (!isAuthenticated) {
@@ -111,7 +115,11 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
   allowedRoles,
   fallback = null,
 }) => {
-  const { getUserRole, isAuthenticated } = useAuth();
+  const { getUserRole, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <>{fallback}</>;
+  }
 
   if (!isAuthenticated) {
     return <>{fallback}</>;

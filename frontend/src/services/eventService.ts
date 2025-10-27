@@ -7,6 +7,7 @@ import {
   EventParticipantsPayload,
   EventInscriptionStatus,
 } from '@shared/index';
+import { buildAuthHeaders } from '../utils/authToken';
 
 class EventService {
   private baseUrl: string;
@@ -82,15 +83,9 @@ class EventService {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const token = this.getAuthToken();
-    
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options?.headers,
-      },
+      headers: buildAuthHeaders(options?.headers, 'application/json'),
     });
 
     if (!response.ok) {
@@ -99,18 +94,6 @@ class EventService {
     }
 
     return response.json();
-  }
-
-  private getAuthToken(): string | null {
-    // Obtener token de las cookies
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'auth_token') {
-        return value || null;
-      }
-    }
-    return null;
   }
 
   // Obtener todos los eventos con filtros
