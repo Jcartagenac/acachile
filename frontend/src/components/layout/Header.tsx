@@ -6,7 +6,7 @@ import { UserMenu, AuthModal } from '../auth';
 import SearchBar from '../SearchBar';
 import logoFallback from '@/assets/aca-logo.svg';
 
-const DEFAULT_HEADER_LOGO = 'https://images.acachile.com/home/ACAAG-negro.png';
+const DEFAULT_HEADER_LOGO = 'https://images.acachile.com/home/img-1762489301673-11k166.jpg';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
