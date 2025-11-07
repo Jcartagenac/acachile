@@ -53,7 +53,9 @@ export async function onRequestPost(context) {
       customMetadata: { uploadedBy: adminUser.userId?.toString?.() || String(adminUser.userId || adminUser.email), uploadedAt: new Date().toISOString() }
     });
 
-    const publicUrl = (env.R2_PUBLIC_URL || '').replace(/\/$/, '');
+    // Get R2 public URL from environment variable or use default
+    // In production, R2_PUBLIC_URL should be configured in Cloudflare Pages Dashboard
+    const publicUrl = (env.R2_PUBLIC_URL || 'https://images.beta.acachile.com').replace(/\/$/, '');
     const url = publicUrl ? `${publicUrl}/${key}` : key;
 
     return jsonResponse({ success: true, url, key });
