@@ -4,17 +4,30 @@
 // Función para verificar autenticación
 async function requireAuth(request, env) {
   const authHeader = request.headers.get('Authorization');
+  
+  console.log('Authorization header:', authHeader ? 'Present' : 'Missing');
+  
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new Error('Token no proporcionado');
   }
 
   const token = authHeader.substring(7);
   
+  console.log('Token length:', token.length);
+  
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    // Decodificar el token JWT
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Token malformado');
+    }
+    
+    const payload = JSON.parse(atob(parts[1]));
+    console.log('Token payload user:', payload.id, payload.email);
     return payload;
   } catch (e) {
-    throw new Error('Token inválido');
+    console.error('Error parsing token:', e.message);
+    throw new Error('Token inválido: ' + e.message);
   }
 }
 
@@ -68,10 +81,12 @@ export async function onRequest(context) {
     let authUser;
     try {
       authUser = await requireAuth(request, env);
+      console.log('User authenticated:', authUser.id, authUser.email);
     } catch (error) {
+      console.error('Auth error:', error.message);
       return new Response(JSON.stringify({
         success: false,
-        error: 'Autenticación requerida'
+        error: 'Autenticación requerida: ' + error.message
       }), {
         status: 401,
         headers: {
