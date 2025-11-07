@@ -101,9 +101,10 @@ export const EditEventPage: React.FC = () => {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
     reset,
-    setValue
+    setValue,
+    trigger
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     mode: 'all',
@@ -187,6 +188,11 @@ export const EditEventPage: React.FC = () => {
           setValue('contactWebsite', eventoData.contactInfo.website || '', { shouldValidate: true });
         }
 
+        // Forzar validación completa del formulario después de cargar todos los datos
+        setTimeout(() => {
+          trigger();
+        }, 100);
+
         setLoadingEvento(false);
       } catch (err) {
         console.error('Error loading evento:', err);
@@ -196,7 +202,7 @@ export const EditEventPage: React.FC = () => {
     };
 
     loadEvento();
-  }, [id, setValue]);
+  }, [id, setValue, trigger]);
 
   // Verificar permisos
   useEffect(() => {
@@ -559,9 +565,9 @@ export const EditEventPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="submit"
-                  disabled={!isValid || isLoading}
+                  disabled={Object.keys(errors).length > 0 || isLoading}
                   className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-white font-semibold transition shadow-soft-colored-red ${
-                    isValid && !isLoading ? 'bg-primary-500 hover:bg-primary-600' : 'bg-neutral-400 cursor-not-allowed'
+                    Object.keys(errors).length === 0 && !isLoading ? 'bg-primary-500 hover:bg-primary-600' : 'bg-neutral-400 cursor-not-allowed'
                   }`}
                 >
                   <Save className="w-4 h-4" />
