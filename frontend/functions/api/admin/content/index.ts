@@ -1,6 +1,13 @@
 import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '../_middleware';
 import type { Env } from '../../../types';
-import { parsePageParam, getSectionsForPage } from '../../_utils/content';
+import { 
+  parsePageParam, 
+  getSectionsForPage, 
+  normalizeSections, 
+  cacheKeyFor, 
+  ensureTable,
+  type RawSection 
+} from '../../_utils/content';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -26,7 +33,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
   try {
-    const page = parsePage(new URL(request.url).searchParams.get('page'));
+    const page = parsePageParam(new URL(request.url).searchParams.get('page'));
     const cacheKey = cacheKeyFor(page);
 
     console.log('[CONTENT POST] Starting save operation for page:', page);

@@ -7,7 +7,7 @@ import {
   getDefaultSections,
 } from '../../../../shared/siteSections';
 
-type RawSection = Partial<SiteSection> & Record<string, unknown>;
+export type RawSection = Partial<SiteSection> & Record<string, unknown>;
 
 const DEFAULT_PAGE: SitePageKey = 'home';
 
@@ -31,7 +31,7 @@ const coerceSourceType = (value: unknown): SiteSectionSourceType => {
   return 'custom';
 };
 
-const normalizeSections = (rawSections: RawSection[] | undefined, page: SitePageKey): SiteSection[] => {
+export const normalizeSections = (rawSections: RawSection[] | undefined, page: SitePageKey): SiteSection[] => {
   const defaults = new Map(getDefaultSections(page).map((section) => [section.key, section]));
   const collected = new Map<string, SiteSection>();
 
@@ -85,11 +85,11 @@ export const parsePageParam = (value: string | null): SitePageKey => {
   return DEFAULT_PAGE;
 };
 
-const cacheKeyFor = (page: SitePageKey) => `${SECTION_CACHE_KEY}:${page}`;
+export const cacheKeyFor = (page: SitePageKey) => `${SECTION_CACHE_KEY}:${page}`;
 
 type Database = Env['DB'];
 
-const ensureTable = async (db: Database) => {
+export const ensureTable = async (db: Database) => {
   await db
     .prepare(`
       CREATE TABLE IF NOT EXISTS site_sections (
