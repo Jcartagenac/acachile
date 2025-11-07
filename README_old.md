@@ -106,8 +106,8 @@ npm run deploy:worker
 
 ## 🌍 URLs
 
-- **Frontend**: https://acachile.pages.dev
-- **Frontend**: https://acachile.pages.dev
+- **Frontend**: https://beta.acachile.com
+- **Frontend**: https://beta.acachile.com
 - **Worker API**: https://acachile-api-production.juecart.workers.dev
 
 ## 🔗 API Endpoints

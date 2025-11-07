@@ -5,7 +5,7 @@ echo "🔍 Verificando configuración para Cloudflare Pages..."
 
 echo ""
 echo "📋 URLs actualizadas:"
-echo "   🌐 Frontend: https://acachile.pages.dev"
+echo "   🌐 Frontend: https://beta.acachile.com"
 echo "   🔧 API Staging: https://acachile-api-staging.juecart.workers.dev"  
 echo "   🚀 API Production: https://acachile-api-production.juecart.workers.dev"
 

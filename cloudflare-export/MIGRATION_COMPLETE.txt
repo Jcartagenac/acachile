@@ -1,0 +1,40 @@
+═══════════════════════════════════════════════════════════
+MIGRACIÓN COMPLETADA - ACA CHILE
+═══════════════════════════════════════════════════════════
+
+Fecha: 2025-11-04 10:24:17
+
+RECURSOS CREADOS:
+-----------------------------------------------------------
+Database ID:  =
+KV ID:        
+KV Preview:   
+R2 Bucket:    aca-chile-images
+
+DATOS IMPORTADOS:
+-----------------------------------------------------------
+Usuarios:     0 registros
+Total tablas: 20 tablas
+
+PRÓXIMOS PASOS:
+-----------------------------------------------------------
+
+1. Actualizar wrangler.toml:
+   cd frontend
+   cp wrangler.toml wrangler.toml.backup
+   cp wrangler.toml.new wrangler.toml
+
+2. Configurar secrets:
+   wrangler pages secret put RESEND_API_KEY --project-name=acachile
+   wrangler pages secret put GOOGLE_MAPS_API_KEY --project-name=acachile
+
+3. Desplegar aplicación:
+   cd frontend
+   npm install
+   npm run build
+   npm run deploy
+
+4. Verificar:
+   curl https://acachile.pages.dev/api/health | jq .
+
+═══════════════════════════════════════════════════════════

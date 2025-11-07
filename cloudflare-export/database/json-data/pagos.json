@@ -1,0 +1,135 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "cuota_id": 13,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-16T18:34:03.171Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-16 18:34:03",
+        "updated_at": "2025-10-16 18:34:03"
+      },
+      {
+        "id": 2,
+        "cuota_id": 3,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-16T18:34:16.907Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-16 18:34:17",
+        "updated_at": "2025-10-16 18:34:17"
+      },
+      {
+        "id": 3,
+        "cuota_id": 28,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-07-03T00:00:00.000Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-16 19:09:46",
+        "updated_at": "2025-10-16 19:09:46"
+      },
+      {
+        "id": 4,
+        "cuota_id": 50,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-17T00:00:00.000Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-17 00:18:39",
+        "updated_at": "2025-10-17 00:18:39"
+      },
+      {
+        "id": 5,
+        "cuota_id": 51,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-17T00:00:00.000Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-17 00:18:45",
+        "updated_at": "2025-10-17 00:18:45"
+      },
+      {
+        "id": 6,
+        "cuota_id": 96,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-23T00:00:00.000Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-23 01:07:09",
+        "updated_at": "2025-10-23 01:07:09"
+      },
+      {
+        "id": 7,
+        "cuota_id": 29,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-23T00:00:00.000Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-23 01:07:16",
+        "updated_at": "2025-10-23 01:07:16"
+      },
+      {
+        "id": 8,
+        "cuota_id": 108,
+        "usuario_id": 1,
+        "monto": 6500,
+        "metodo_pago": "transferencia",
+        "comprobante_url": null,
+        "estado": "confirmado",
+        "fecha_pago": "2025-10-27T00:00:00.000Z",
+        "procesado_por": 1,
+        "notas_admin": null,
+        "created_at": "2025-10-27 22:51:49",
+        "updated_at": "2025-10-27 22:51:49"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2223
+      },
+      "duration": 0.2223,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 8,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

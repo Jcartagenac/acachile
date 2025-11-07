@@ -1,0 +1,10 @@
+-- ============================================================
+-- Datos para tabla: events
+-- Registros: 2
+-- Generado: 2025-11-04T00:28:28.222Z
+-- ============================================================
+
+INSERT INTO events ("id", "title", "description", "date", "time", "location", "image", "type", "registration_open", "max_participants", "current_participants", "price", "requirements", "tags", "contact_info", "organizer_id", "status", "created_at", "updated_at") VALUES (1, 'Campeonato Nacional de Asadores 2025', 'El evento más importante del año para asadores chilenos. Competencia por categorías con premiación especial y degustación para el público.', '2025-11-15', '09:00', 'Parque O''Higgins, Santiago', 'https://acachile.com/wp-content/uploads/2025/03/64694334-bbdc-4e97-b4a7-ef75e6bbe50d-500x375.jpg', 'campeonato', 1, 50, 0, 15000, '["Parrilla propia", "Implementos de cocina", "Delantal"]', '["campeonato", "nacional", "asadores"]', '{"email": "campeonato@acachile.com", "phone": "+56912345678"}', 1, 'published', '2025-10-14 22:21:15', '2025-10-14 22:55:17');
+INSERT INTO events ("id", "title", "description", "date", "time", "location", "image", "type", "registration_open", "max_participants", "current_participants", "price", "requirements", "tags", "contact_info", "organizer_id", "status", "created_at", "updated_at") VALUES (2, 'Taller de Técnicas de Ahumado', 'Aprende las técnicas tradicionales de ahumado con expertos internacionales. Incluye degustación y certificado.', '2025-11-08', '14:00', 'Centro de Capacitación ACA, Las Condes', 'https://acachile.com/wp-content/uploads/2024/08/post-alemania-500x375.jpg', 'taller', 1, 20, 1, 35000, '["Sin experiencia previa necesaria"]', '["taller", "ahumado", "técnicas"]', '{"email": "talleres@acachile.com", "phone": "+56987654321"}', 1, 'published', '2025-10-14 22:21:15', '2025-10-14 22:24:58');
+
+-- ✓ 2 registros insertados en events

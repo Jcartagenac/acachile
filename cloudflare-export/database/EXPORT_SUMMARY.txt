@@ -1,0 +1,60 @@
+═══════════════════════════════════════════════════════════
+RESUMEN DE EXPORTACIÓN - ACA CHILE
+═══════════════════════════════════════════════════════════
+
+Fecha de exportación: 2025-11-03 19:28:28
+Base de datos: acachile-db
+Directorio: ./cloudflare-export/database
+
+ARCHIVOS GENERADOS:
+-----------------------------------------------------------
+
+📁 json-data/
+   └─ Datos crudos en formato JSON
+   
+📁 sql-dumps/
+   └─ Scripts SQL con INSERT statements
+   
+📄 import-all-data.sh
+   └─ Script automatizado de importación
+   
+📄 full-schema-20251103_192744.json
+   └─ Esquema completo de base de datos
+
+TABLAS EXPORTADAS:
+-----------------------------------------------------------
+usuarios                               10 registros
+comunicados                             0 registros
+configuracion_global                    4 registros
+cuotas                                100 registros
+eventos                                 6 registros
+events                                  2 registros
+generacion_cuotas                      12 registros
+inscriptions                            2 registros
+news_article_tags                       0 registros
+news_articles                           3 registros
+news_categories                         6 registros
+news_comments                           5 registros
+news_tags                              24 registros
+pagos                                   8 registros
+postulacion_aprobaciones                0 registros
+postulaciones                           1 registros
+roles_catalog                           4 registros
+site_sections                           3 registros
+user_privacy_settings                   6 registros
+users                                   3 registros
+
+PRÓXIMOS PASOS:
+-----------------------------------------------------------
+
+1. Revisar archivos exportados en: ./cloudflare-export/database
+
+2. Para importar en nueva cuenta:
+   cd ./cloudflare-export/database
+   ./import-all-data.sh
+
+3. Verificar importación:
+   wrangler d1 execute acachile-db --remote \
+     --command="SELECT COUNT(*) FROM usuarios"
+
+═══════════════════════════════════════════════════════════

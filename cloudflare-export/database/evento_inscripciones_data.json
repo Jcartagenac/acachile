@@ -1,0 +1,15 @@
+
+{
+  "error": {
+    "text": "A request to the Cloudflare API (/accounts/172194a6569df504cbb8a638a94d3d2c/d1/database/086f0530-48b6-41db-95ab-77bce733f0df/query) failed.",
+    "notes": [
+      {
+        "text": "no such table: evento_inscripciones: SQLITE_ERROR [code: 7500]"
+      }
+    ],
+    "kind": "error",
+    "name": "APIError",
+    "code": 7500,
+    "accountTag": "172194a6569df504cbb8a638a94d3d2c"
+  }
+}

@@ -5,7 +5,7 @@
 
 import { buildAuthHeaders } from '../utils/authToken';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://acachile.pages.dev';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://beta.acachile.com';
 
 export interface Comment {
   id: string;

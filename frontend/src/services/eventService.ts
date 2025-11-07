@@ -13,7 +13,7 @@ class EventService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://acachile.pages.dev';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://beta.acachile.com';
   }
 
   private mapInscriptionStatus(status?: string): EventInscriptionStatus {

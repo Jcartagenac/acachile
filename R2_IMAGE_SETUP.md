@@ -8,8 +8,8 @@
 # https://pub-ACCOUNT_ID.r2.dev/aca-chile-images/noticias/...
 
 # Para producción, se puede configurar un custom domain:
-# https://images.acachile.pages.dev/eventos/...
-# https://images.acachile.pages.dev/noticias/...
+# https://images.beta.acachile.com/eventos/...
+# https://images.beta.acachile.com/noticias/...
 
 ## Mapeo de archivos:
 
@@ -30,12 +30,12 @@
 ## Configuración recomendada:
 
 1. Crear bucket R2: aca-chile-images
-2. Configurar custom domain: images.acachile.pages.dev
+2. Configurar custom domain: images.beta.acachile.com
 3. Subir imágenes con estructura de carpetas
 4. Actualizar URLs en código
 
 ## Para configurar custom domain:
 1. Cloudflare R2 → aca-chile-images → Settings
 2. Custom Domains → Connect Domain  
-3. Usar: images.acachile.pages.dev
+3. Usar: images.beta.acachile.com
 4. Configurar DNS record automáticamente

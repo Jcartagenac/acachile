@@ -90,7 +90,7 @@ async function updateToInternalR2() {
     
     console.log('\n💡 Próximo: Configurar dominio personalizado en Cloudflare:');
     console.log('1. R2 → aca-chile-images → Settings → Custom domains');
-    console.log('2. Agregar: images.acachile.pages.dev');
+    console.log('2. Agregar: images.beta.acachile.com');
     
   } catch (error) {
     console.error('❌ Error:', error.message);

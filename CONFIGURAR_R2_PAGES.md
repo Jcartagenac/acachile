@@ -52,10 +52,10 @@ Una vez desplegado, hacer:
 
 ```bash
 # Crear todas las carpetas
-curl -X POST https://acachile.pages.dev/api/init-folders
+curl -X POST https://beta.acachile.com/api/init-folders
 
 # Verificar que se crearon
-curl -X GET https://acachile.pages.dev/api/init-folders
+curl -X GET https://beta.acachile.com/api/init-folders
 ```
 
 ### Opción B: Manual en Cloudflare Dashboard
@@ -103,7 +103,7 @@ aca-chile-images/
 3. **Probar API manualmente:**
    ```bash
    # Después del deploy
-   curl https://acachile.pages.dev/api/init-folders
+   curl https://beta.acachile.com/api/init-folders
    ```
 
 ### Si las imágenes no se suben:

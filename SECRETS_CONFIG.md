@@ -3,7 +3,7 @@
 ## 🔐 Secretos Configurados
 
 ### CORS_ORIGIN
-**Valor**: `https://acachile.pages.dev,http://localhost:5173,http://localhost:5174`
+**Valor**: `https://beta.acachile.com,http://localhost:5173,http://localhost:5174`
 **Propósito**: Define qué dominios pueden hacer requests CORS a la API
 **Status**: ✅ Configurado en staging
 
@@ -22,7 +22,7 @@ wrangler secret put JWT_SECRET --env production
 
 # CORS Origins (solo el dominio de producción)
 wrangler secret put CORS_ORIGIN --env production
-# Valor: https://acachile.pages.dev
+# Valor: https://beta.acachile.com
 ```
 
 ## 🔧 Opcional - Secretos adicionales:

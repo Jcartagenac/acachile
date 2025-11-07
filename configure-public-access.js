@@ -58,8 +58,8 @@ async function configurarAccesoPublico() {
 
     console.log('\n💡 Configurar dominio personalizado en Cloudflare:');
     console.log(`1. Ve a R2 → ${BUCKET_NAME} → Settings → Custom domains`);
-    console.log(`2. Agregar: images.acachile.pages.dev`);
-    console.log(`3. Las URLs serán: https://images.acachile.pages.dev/eventos/...`);
+    console.log(`2. Agregar: images.beta.acachile.com`);
+    console.log(`3. Las URLs serán: https://images.beta.acachile.com/eventos/...`);
 
   } catch (error) {
     console.error('❌ Error:', error.message);

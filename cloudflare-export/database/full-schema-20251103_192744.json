@@ -1,0 +1,103 @@
+[
+  {
+    "results": [
+      {
+        "name": "comunicados",
+        "sql": "CREATE TABLE comunicados (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  titulo TEXT NOT NULL,\n  contenido TEXT NOT NULL,\n  tipo TEXT NOT NULL CHECK(tipo IN ('importante', 'corriente', 'urgente')),\n  destinatarios TEXT NOT NULL, -- JSON array: [\"todos\"] o [\"morosos\"] o [\"activos\"]\n  fecha_envio DATETIME,\n  estado TEXT NOT NULL DEFAULT 'borrador' CHECK(estado IN ('borrador', 'enviado')),\n  created_by INTEGER, -- ID del admin que creó el comunicado\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (created_by) REFERENCES usuarios(id)\n)"
+      },
+      {
+        "name": "configuracion_global",
+        "sql": "CREATE TABLE configuracion_global (\n          id INTEGER PRIMARY KEY AUTOINCREMENT,\n          clave TEXT UNIQUE NOT NULL,\n          valor TEXT NOT NULL,\n          descripcion TEXT,\n          tipo TEXT DEFAULT 'string',\n          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n      )"
+      },
+      {
+        "name": "cuotas",
+        "sql": "CREATE TABLE cuotas (\n          id INTEGER PRIMARY KEY AUTOINCREMENT,\n          usuario_id INTEGER NOT NULL,\n          año INTEGER NOT NULL,\n          mes INTEGER NOT NULL CHECK (mes BETWEEN 1 AND 12),\n          valor INTEGER NOT NULL,\n          pagado BOOLEAN DEFAULT FALSE,\n          fecha_pago DATETIME NULL,\n          metodo_pago TEXT,\n          comprobante_url TEXT NULL,\n          notas TEXT,\n          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n          FOREIGN KEY (usuario_id) REFERENCES usuarios (id),\n          UNIQUE(usuario_id, año, mes)\n      )"
+      },
+      {
+        "name": "eventos",
+        "sql": "CREATE TABLE eventos (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  title TEXT NOT NULL,\n  description TEXT,\n  date TEXT NOT NULL,\n  time TEXT,\n  location TEXT NOT NULL,\n  image TEXT,\n  type TEXT DEFAULT 'encuentro',\n  status TEXT DEFAULT 'draft',\n  registration_open BOOLEAN DEFAULT 1,\n  max_participants INTEGER,\n  price REAL DEFAULT 0,\n  organizer_id INTEGER NOT NULL,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n, end_date TEXT)"
+      },
+      {
+        "name": "events",
+        "sql": "CREATE TABLE events (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  title TEXT NOT NULL,\n  description TEXT NOT NULL,\n  date TEXT NOT NULL,\n  time TEXT,\n  location TEXT NOT NULL,\n  image TEXT,\n  type TEXT NOT NULL CHECK (type IN ('campeonato', 'taller', 'encuentro', 'torneo')),\n  registration_open BOOLEAN DEFAULT TRUE,\n  max_participants INTEGER,\n  current_participants INTEGER DEFAULT 0,\n  price INTEGER DEFAULT 0,\n  requirements TEXT, -- JSON array\n  tags TEXT, -- JSON array\n  contact_info TEXT, -- JSON object\n  organizer_id INTEGER NOT NULL,\n  status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published', 'cancelled', 'completed')),\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (organizer_id) REFERENCES users(id)\n)"
+      },
+      {
+        "name": "generacion_cuotas",
+        "sql": "CREATE TABLE generacion_cuotas (\n          id INTEGER PRIMARY KEY AUTOINCREMENT,\n          año INTEGER NOT NULL,\n          mes INTEGER NOT NULL CHECK (mes BETWEEN 1 AND 12),\n          valor_default INTEGER NOT NULL,\n          generadas INTEGER DEFAULT 0,\n          generado_por INTEGER NOT NULL,\n          fecha_generacion DATETIME DEFAULT CURRENT_TIMESTAMP,\n          FOREIGN KEY (generado_por) REFERENCES usuarios (id),\n          UNIQUE(año, mes)\n      )"
+      },
+      {
+        "name": "inscriptions",
+        "sql": "CREATE TABLE inscriptions (\n  id TEXT PRIMARY KEY, -- formato: insc_{event_id}_{user_id}_{timestamp}\n  user_id INTEGER NOT NULL,\n  event_id INTEGER NOT NULL,\n  status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'pending', 'cancelled', 'waitlist')),\n  inscription_date DATETIME DEFAULT CURRENT_TIMESTAMP,\n  payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),\n  payment_amount INTEGER,\n  notes TEXT,\n  waitlist_position INTEGER,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (user_id) REFERENCES users(id),\n  FOREIGN KEY (event_id) REFERENCES events(id),\n  UNIQUE(user_id, event_id) -- Un usuario solo puede tener una inscripción activa por evento\n)"
+      },
+      {
+        "name": "news_article_tags",
+        "sql": "CREATE TABLE news_article_tags (\n  article_id INTEGER NOT NULL,\n  tag_id INTEGER NOT NULL,\n  PRIMARY KEY (article_id, tag_id),\n  FOREIGN KEY (article_id) REFERENCES news_articles(id) ON DELETE CASCADE,\n  FOREIGN KEY (tag_id) REFERENCES news_tags(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "news_articles",
+        "sql": "CREATE TABLE news_articles (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  title TEXT NOT NULL,\n  slug TEXT NOT NULL UNIQUE,\n  excerpt TEXT NOT NULL,\n  content TEXT NOT NULL,\n  featured_image TEXT,\n  author_id INTEGER NOT NULL,\n  category_id INTEGER,\n  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),\n  is_featured BOOLEAN DEFAULT FALSE,\n  view_count INTEGER DEFAULT 0,\n  published_at TEXT,\n  created_at TEXT DEFAULT CURRENT_TIMESTAMP,\n  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (author_id) REFERENCES users(id),\n  FOREIGN KEY (category_id) REFERENCES news_categories(id)\n)"
+      },
+      {
+        "name": "news_categories",
+        "sql": "CREATE TABLE news_categories (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  name TEXT NOT NULL UNIQUE,\n  slug TEXT NOT NULL UNIQUE,\n  description TEXT,\n  color TEXT DEFAULT '#6B7280',\n  created_at TEXT DEFAULT CURRENT_TIMESTAMP,\n  updated_at TEXT DEFAULT CURRENT_TIMESTAMP\n)"
+      },
+      {
+        "name": "news_comments",
+        "sql": "CREATE TABLE news_comments (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  article_id INTEGER NOT NULL,\n  author_name TEXT NOT NULL,\n  author_email TEXT NOT NULL,\n  content TEXT NOT NULL,\n  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'spam', 'rejected')),\n  parent_id INTEGER, -- Para respuestas a comentarios\n  created_at TEXT DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (article_id) REFERENCES news_articles(id) ON DELETE CASCADE,\n  FOREIGN KEY (parent_id) REFERENCES news_comments(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "news_tags",
+        "sql": "CREATE TABLE news_tags (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  name TEXT NOT NULL UNIQUE,\n  slug TEXT NOT NULL UNIQUE,\n  color TEXT DEFAULT '#6B7280',\n  created_at TEXT DEFAULT CURRENT_TIMESTAMP\n)"
+      },
+      {
+        "name": "pagos",
+        "sql": "CREATE TABLE pagos (\n          id INTEGER PRIMARY KEY AUTOINCREMENT,\n          cuota_id INTEGER NOT NULL,\n          usuario_id INTEGER NOT NULL,\n          monto INTEGER NOT NULL,\n          metodo_pago TEXT NOT NULL,\n          comprobante_url TEXT,\n          estado TEXT DEFAULT 'pendiente',\n          fecha_pago DATETIME NOT NULL,\n          procesado_por INTEGER NULL,\n          notas_admin TEXT,\n          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n          FOREIGN KEY (cuota_id) REFERENCES cuotas (id),\n          FOREIGN KEY (usuario_id) REFERENCES usuarios (id),\n          FOREIGN KEY (procesado_por) REFERENCES usuarios (id)\n      )"
+      },
+      {
+        "name": "postulacion_aprobaciones",
+        "sql": "CREATE TABLE postulacion_aprobaciones (\n      id INTEGER PRIMARY KEY AUTOINCREMENT,\n      postulacion_id INTEGER NOT NULL,\n      approver_id INTEGER NOT NULL,\n      approver_role TEXT NOT NULL,\n      comment TEXT,\n      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n      FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE,\n      FOREIGN KEY (approver_id) REFERENCES usuarios(id),\n      UNIQUE(postulacion_id, approver_id)\n    )"
+      },
+      {
+        "name": "postulaciones",
+        "sql": "CREATE TABLE postulaciones (\n      id INTEGER PRIMARY KEY AUTOINCREMENT,\n      full_name TEXT NOT NULL,\n      email TEXT NOT NULL,\n      phone TEXT NOT NULL,\n      rut TEXT,\n      birthdate TEXT,\n      region TEXT,\n      city TEXT,\n      occupation TEXT,\n      experience_level TEXT NOT NULL,\n      specialties TEXT,\n      motivation TEXT NOT NULL,\n      contribution TEXT NOT NULL,\n      availability TEXT NOT NULL,\n      has_competition_experience INTEGER DEFAULT 0,\n      competition_details TEXT,\n      instagram TEXT,\n      other_networks TEXT,\n      references_info TEXT,\n      photo_url TEXT,\n      status TEXT NOT NULL DEFAULT 'pendiente' CHECK(status IN ('pendiente','en_revision','aprobada','rechazada')),\n      approvals_required INTEGER NOT NULL DEFAULT 2,\n      approvals_count INTEGER NOT NULL DEFAULT 0,\n      rejection_reason TEXT,\n      approved_at DATETIME,\n      rejected_at DATETIME,\n      socio_id INTEGER,\n      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n      FOREIGN KEY (socio_id) REFERENCES usuarios(id)\n    )"
+      },
+      {
+        "name": "roles_catalog",
+        "sql": "CREATE TABLE roles_catalog (\n          key TEXT PRIMARY KEY,\n          label TEXT NOT NULL,\n          description TEXT,\n          priority INTEGER DEFAULT 100,\n          created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n        )"
+      },
+      {
+        "name": "site_sections",
+        "sql": "CREATE TABLE site_sections (\n  page TEXT NOT NULL,\n  key TEXT NOT NULL,\n  title TEXT,\n  image_url TEXT,\n  content TEXT,\n  sort_order INTEGER DEFAULT 0,\n  source_type TEXT DEFAULT 'custom',\n  source_id TEXT,\n  cta_label TEXT,\n  cta_url TEXT,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (page, key)\n)"
+      },
+      {
+        "name": "user_privacy_settings",
+        "sql": "CREATE TABLE user_privacy_settings (\n          user_id INTEGER PRIMARY KEY,\n          show_email INTEGER DEFAULT 0,\n          show_phone INTEGER DEFAULT 0,\n          show_rut INTEGER DEFAULT 0,\n          show_address INTEGER DEFAULT 0,\n          show_birthdate INTEGER DEFAULT 0,\n          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n        , show_public_profile INTEGER DEFAULT 1)"
+      },
+      {
+        "name": "users",
+        "sql": "CREATE TABLE users (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  name TEXT NOT NULL,\n  email TEXT UNIQUE NOT NULL,\n  phone TEXT,\n  region TEXT,\n  password_hash TEXT,\n  is_admin BOOLEAN DEFAULT FALSE,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n)"
+      },
+      {
+        "name": "usuarios",
+        "sql": "CREATE TABLE usuarios (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  email TEXT NOT NULL UNIQUE,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  telefono TEXT,\n  rut TEXT,\n  ciudad TEXT,\n  password_hash TEXT NOT NULL,\n  role TEXT NOT NULL DEFAULT 'user',\n  activo BOOLEAN NOT NULL DEFAULT 1,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  last_login DATETIME\n, direccion TEXT, foto_url TEXT, valor_cuota INTEGER DEFAULT 6500, fecha_ingreso DATETIME, estado_socio TEXT DEFAULT 'activo', lista_negra INTEGER DEFAULT 0, motivo_lista_negra TEXT)"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2867
+      },
+      "duration": 0.2867,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 94,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

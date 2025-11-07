@@ -2,7 +2,7 @@
 // Este archivo centraliza todas las URLs de imágenes para fácil actualización
 
 // URL base para imágenes - cambiar cuando R2 esté configurado
-const IMAGE_BASE_URL = 'https://images.acachile.pages.dev';
+const IMAGE_BASE_URL = 'https://images.beta.acachile.com';
 
 // Mapeo de imágenes
 export const IMAGES = {

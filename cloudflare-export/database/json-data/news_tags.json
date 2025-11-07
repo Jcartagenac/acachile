@@ -1,0 +1,191 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "name": "Asado",
+        "slug": "asado",
+        "color": "#EF4444",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 2,
+        "name": "Parrilla",
+        "slug": "parrilla",
+        "color": "#DC2626",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 3,
+        "name": "Competencia",
+        "slug": "competencia",
+        "color": "#F59E0B",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 4,
+        "name": "Técnicas",
+        "slug": "tecnicas",
+        "color": "#10B981",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 5,
+        "name": "Carbón",
+        "slug": "carbon",
+        "color": "#374151",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 6,
+        "name": "Leña",
+        "slug": "lena",
+        "color": "#92400E",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 7,
+        "name": "Costillar",
+        "slug": "costillar",
+        "color": "#7C2D12",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 8,
+        "name": "Chorizo",
+        "slug": "chorizo",
+        "color": "#B91C1C",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 9,
+        "name": "Entrevista",
+        "slug": "entrevista",
+        "color": "#8B5CF6",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 10,
+        "name": "Regional",
+        "slug": "regional",
+        "color": "#3B82F6",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 11,
+        "name": "Nacional",
+        "slug": "nacional",
+        "color": "#1D4ED8",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 12,
+        "name": "Internacional",
+        "slug": "internacional",
+        "color": "#1E40AF",
+        "created_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 16,
+        "name": "carne",
+        "slug": "carne",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 17,
+        "name": "pollo",
+        "slug": "pollo",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 18,
+        "name": "pescado",
+        "slug": "pescado",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 19,
+        "name": "vegetariano",
+        "slug": "vegetariano",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 20,
+        "name": "principiantes",
+        "slug": "principiantes",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 21,
+        "name": "avanzado",
+        "slug": "avanzado",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 22,
+        "name": "tips",
+        "slug": "tips",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 23,
+        "name": "concurso",
+        "slug": "concurso",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 24,
+        "name": "evento",
+        "slug": "evento",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 25,
+        "name": "técnica",
+        "slug": "tecnica",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 26,
+        "name": "receta",
+        "slug": "receta",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      },
+      {
+        "id": 27,
+        "name": "temporada",
+        "slug": "temporada",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:16:29"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.419
+      },
+      "duration": 0.419,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 24,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

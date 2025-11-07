@@ -1,0 +1,9 @@
+name = "acachile"
+compatibility_date = "2023-10-30"
+
+# Variables for local development
+[vars]
+ENVIRONMENT = "development"
+CORS_ORIGIN = "http://localhost:5173"
+FRONTEND_URL = "http://localhost:5173"
+GOOGLE_MAPS_API_KEY = "AIzaSyCMPIC1xI_--M5zIXJtL18-b2UVnkCNMLY"

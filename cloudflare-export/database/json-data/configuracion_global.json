@@ -1,0 +1,59 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "clave": "cuota_default",
+        "valor": "6500",
+        "descripcion": "Valor de cuota mensual por defecto (CLP)",
+        "tipo": "number",
+        "created_at": "2025-10-16 00:59:28",
+        "updated_at": "2025-10-16 00:59:28"
+      },
+      {
+        "id": 2,
+        "clave": "año_inicio_cuotas",
+        "valor": "2025",
+        "descripcion": "Año de inicio del sistema de cuotas",
+        "tipo": "number",
+        "created_at": "2025-10-16 00:59:28",
+        "updated_at": "2025-10-16 00:59:28"
+      },
+      {
+        "id": 3,
+        "clave": "moneda",
+        "valor": "CLP",
+        "descripcion": "Moneda utilizada en el sistema",
+        "tipo": "string",
+        "created_at": "2025-10-16 00:59:28",
+        "updated_at": "2025-10-16 00:59:28"
+      },
+      {
+        "id": 4,
+        "clave": "metodos_pago",
+        "valor": "[\"transferencia\", \"efectivo\", \"tarjeta\"]",
+        "descripcion": "Métodos de pago aceptados",
+        "tipo": "json",
+        "created_at": "2025-10-16 00:59:29",
+        "updated_at": "2025-10-16 00:59:29"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.4708
+      },
+      "duration": 0.4708,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 4,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

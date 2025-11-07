@@ -2,7 +2,7 @@
 
 ## 🚀 URLs de Producción
 
-- **Frontend**: https://acachile.pages.dev
+- **Frontend**: https://beta.acachile.com
 - **API**: https://acachile-api-production.juecart.workers.dev
 
 ## ⚙️ Variables de Entorno para Pages
@@ -43,7 +43,7 @@ frontend/
 
 ## 🌐 Estructura de URLs
 
-- **Producción**: https://acachile.pages.dev
-- **Preview**: https://[hash].acachile.pages.dev
+- **Producción**: https://beta.acachile.com
+- **Preview**: https://[hash].beta.acachile.com
 - **API Staging**: https://acachile-api-staging.juecart.workers.dev  
 - **API Production**: https://acachile-api-production.juecart.workers.dev

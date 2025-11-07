@@ -1,7 +1,7 @@
 # 🔧 SOLUCIÓN: Error "Failed to fetch" en Cloudflare Pages
 
 ## 🚨 Problema Identificado:
-El frontend en `acachile.pages.dev` muestra "Error al cargar eventos - Failed to fetch"
+El frontend en `beta.acachile.com` muestra "Error al cargar eventos - Failed to fetch"
 
 ## ✅ CAUSA:
 El frontend estaba configurado para usar `acachile-api-production.juecart.workers.dev` pero solo teníamos desplegado `acachile-api-staging.juecart.workers.dev`
@@ -14,7 +14,7 @@ El frontend estaba configurado para usar `acachile-api-production.juecart.worker
 - **Secretos configurados**: JWT_SECRET, CORS_ORIGIN
 
 ### 2. ✅ CORS Configurado:
-- **Orígenes permitidos**: `https://acachile.pages.dev,http://localhost:5173,http://localhost:5174`
+- **Orígenes permitidos**: `https://beta.acachile.com,http://localhost:5173,http://localhost:5174`
 - **Status**: ✅ Configurado en producción
 
 ### 3. ✅ Variables de Entorno:
@@ -31,7 +31,7 @@ VITE_API_BASE_URL=https://acachile-api-production.juecart.workers.dev
 - ✅ Eventos: https://acachile-api-production.juecart.workers.dev/api/eventos
 
 ### Frontend:
-- 🔄 Pages: https://acachile.pages.dev (necesita redeploy con nueva variable)
+- 🔄 Pages: https://beta.acachile.com (necesita redeploy con nueva variable)
 
 ## 🚀 PRÓXIMOS PASOS:
 

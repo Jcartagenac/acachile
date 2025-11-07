@@ -33,8 +33,8 @@ echo "📝 Configurando variables públicas..."
 wrangler pages project environment-variable add ENVIRONMENT production --project-name="$PROJECT_NAME" --compatibility-date="2024-09-23" || true
 
 # URLs del frontend
-wrangler pages project environment-variable add FRONTEND_URL "https://acachile.pages.dev" --project-name="$PROJECT_NAME" --compatibility-date="2024-09-23" || true
-wrangler pages project environment-variable add CORS_ORIGIN "https://acachile.pages.dev" --project-name="$PROJECT_NAME" --compatibility-date="2024-09-23" || true
+wrangler pages project environment-variable add FRONTEND_URL "https://beta.acachile.com" --project-name="$PROJECT_NAME" --compatibility-date="2024-09-23" || true
+wrangler pages project environment-variable add CORS_ORIGIN "https://beta.acachile.com" --project-name="$PROJECT_NAME" --compatibility-date="2024-09-23" || true
 
 # Emails
 wrangler pages project environment-variable add ADMIN_EMAIL "admin@acachile.cl" --project-name="$PROJECT_NAME" --compatibility-date="2024-09-23" || true
@@ -117,7 +117,7 @@ echo "   • JWT_SECRET (Secreto para tokens JWT)"
 echo "   • RESEND_API_KEY (API key para envío de emails)"
 echo ""
 echo "🔄 Para diferentes entornos, usa variables como:"
-echo "   • Staging: VITE_API_BASE_URL=https://staging-acachile.pages.dev"
+echo "   • Staging: VITE_API_BASE_URL=https://staging-beta.acachile.com"
 echo "   • Development: VITE_API_BASE_URL=http://localhost:8787"
 echo ""
 
@@ -125,5 +125,5 @@ echo "✅ Configuración completada!"
 echo ""
 echo "📋 Próximos pasos:"
 echo "   1. Configurar los secretos JWT_SECRET y RESEND_API_KEY manualmente"
-echo "   2. Verificar el funcionamiento en: https://acachile.pages.dev/api/bindings"
+echo "   2. Verificar el funcionamiento en: https://beta.acachile.com/api/bindings"
 echo "   3. Revisar los logs en el dashboard de Cloudflare Pages"

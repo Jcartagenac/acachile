@@ -19,7 +19,7 @@ const R2_CONFIG = {
   secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   bucketName: 'aca-chile-images',
   endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  publicUrl: 'https://images.acachile.pages.dev' // Custom domain para R2
+  publicUrl: 'https://images.beta.acachile.com' // Custom domain para R2
 };
 
 // Imágenes actuales que necesitamos descargar y subir

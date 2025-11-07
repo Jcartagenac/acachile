@@ -11,7 +11,7 @@ Este documento describe la configuración completa de variables de entorno y sec
 | Variable | Tipo | Estado | Descripción |
 |----------|------|---------|-------------|
 | `ENVIRONMENT` | Pública | ✅ Configurada | Entorno de ejecución (production) |
-| `FRONTEND_URL` | Pública | ✅ Configurada | URL del frontend (https://acachile.pages.dev) |
+| `FRONTEND_URL` | Pública | ✅ Configurada | URL del frontend (https://beta.acachile.com) |
 | `CORS_ORIGIN` | Pública | ✅ Configurada | Origen permitido para CORS |
 | `FROM_EMAIL` | Pública | ✅ Configurada | Email remitente del sistema |
 | `ADMIN_EMAIL` | Pública | ✅ Configurada | Email del administrador |
@@ -30,10 +30,10 @@ Este documento describe la configuración completa de variables de entorno y sec
 ### Frontend (Variables VITE_*)
 ```bash
 # .env.production
-VITE_API_BASE_URL=https://acachile.pages.dev
+VITE_API_BASE_URL=https://beta.acachile.com
 VITE_ENVIRONMENT=production
-FRONTEND_URL=https://acachile.pages.dev
-CORS_ORIGIN=https://acachile.pages.dev
+FRONTEND_URL=https://beta.acachile.com
+CORS_ORIGIN=https://beta.acachile.com
 
 # .env.development  
 VITE_API_BASE_URL=http://localhost:8787
@@ -52,8 +52,8 @@ CORS_ORIGIN=http://localhost:5173
 ```toml
 [env.production.vars]
 ENVIRONMENT = "production"
-CORS_ORIGIN = "https://acachile.pages.dev"
-FRONTEND_URL = "https://acachile.pages.dev"
+CORS_ORIGIN = "https://beta.acachile.com"
+FRONTEND_URL = "https://beta.acachile.com"
 FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
 ```
@@ -86,23 +86,23 @@ echo "re_tu_resend_api_key" | wrangler pages secret put RESEND_API_KEY --project
 
 ### API de Bindings
 ```bash
-curl https://acachile.pages.dev/api/bindings
+curl https://beta.acachile.com/api/bindings
 ```
 
 ### Health Check
 ```bash
-curl https://acachile.pages.dev/api/health
+curl https://beta.acachile.com/api/health
 ```
 
 ### Búsqueda (Verificar funcionamiento)
 ```bash
-curl "https://acachile.pages.dev/api/search?q=ajedrez&type=all&limit=5"
+curl "https://beta.acachile.com/api/search?q=ajedrez&type=all&limit=5"
 ```
 
 ## 📈 Entornos
 
 ### Producción
-- **URL**: https://acachile.pages.dev
+- **URL**: https://beta.acachile.com
 - **Variables**: Configuradas en Cloudflare Pages
 - **Secretos**: JWT_SECRET, RESEND_API_KEY
 
@@ -112,7 +112,7 @@ curl "https://acachile.pages.dev/api/search?q=ajedrez&type=all&limit=5"
 - **Secretos**: No necesarios para desarrollo básico
 
 ### Staging (Futuro)
-- **URL**: https://staging-acachile.pages.dev
+- **URL**: https://staging-beta.acachile.com
 - **Variables**: Copiar configuración de producción
 - **Secretos**: Usar mismos secretos o generar nuevos
 

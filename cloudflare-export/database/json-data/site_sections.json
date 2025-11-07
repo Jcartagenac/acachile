@@ -1,0 +1,65 @@
+[
+  {
+    "results": [
+      {
+        "page": "contact",
+        "key": "contact-hero",
+        "title": "Hablemos",
+        "image_url": "https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png",
+        "content": "¿Quieres sumarte a ACA, organizar un evento o colaborar con nosotros? Escríbenos y conversemos. Nuestro equipo responde a la brevedad.",
+        "sort_order": 0,
+        "source_type": "custom",
+        "source_id": null,
+        "cta_label": "Escríbenos",
+        "cta_url": "mailto:info@acachile.cl",
+        "created_at": "2025-10-22 15:12:10",
+        "updated_at": "2025-10-23 21:47:27"
+      },
+      {
+        "page": "contact",
+        "key": "contact-info",
+        "title": "Información de contacto",
+        "image_url": "",
+        "content": "\nEmail: info@acachile.cl\nTeléfono: +56 9 1234 5678\nInstagram: @acachile\nFacebook: /acachileoficial",
+        "sort_order": 1,
+        "source_type": "custom",
+        "source_id": null,
+        "cta_label": null,
+        "cta_url": null,
+        "created_at": "2025-10-22 15:12:10",
+        "updated_at": "2025-10-23 21:47:28"
+      },
+      {
+        "page": "contact",
+        "key": "contact-map",
+        "title": "Visítanos",
+        "image_url": "https://maps.googleapis.com/maps/api/staticmap?center=Vi%C3%B1a+del+Mar,+Chile&zoom=14&size=600x400&markers=Vi%C3%B1a+del+Mar,+Chile&key=",
+        "content": "",
+        "sort_order": 2,
+        "source_type": "custom",
+        "source_id": null,
+        "cta_label": "Abrir en Google Maps",
+        "cta_url": "https://maps.google.com/?q=Sporting+Club,+Vi%C3%B1a+del+Mar",
+        "created_at": "2025-10-22 15:12:10",
+        "updated_at": "2025-10-23 21:47:28"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.4259
+      },
+      "duration": 0.4259,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 3,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

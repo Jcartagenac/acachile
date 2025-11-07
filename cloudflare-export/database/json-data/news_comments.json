@@ -1,0 +1,73 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "article_id": 1,
+        "author_name": "María González",
+        "author_email": "maria.g@email.com",
+        "content": "Excelentes consejos! Los voy a aplicar en mi próximo asado familiar. Especialmente lo del reposo, nunca lo había considerado.",
+        "status": "approved",
+        "parent_id": null,
+        "created_at": "2024-10-11 15:30:00"
+      },
+      {
+        "id": 2,
+        "article_id": 1,
+        "author_name": "Pedro Morales",
+        "author_email": "pedro.m@email.com",
+        "content": "¿Qué tipo de carbón recomiendan específicamente? He probado varias marcas y no noto diferencia.",
+        "status": "approved",
+        "parent_id": null,
+        "created_at": "2024-10-11 18:45:00"
+      },
+      {
+        "id": 3,
+        "article_id": 2,
+        "author_name": "Ana Silva",
+        "author_email": "ana.silva@email.com",
+        "content": "¡Increíble! Ya me inscribí para la categoría principiantes. Será mi primera competencia oficial 😊",
+        "status": "approved",
+        "parent_id": null,
+        "created_at": "2024-10-12 20:15:00"
+      },
+      {
+        "id": 4,
+        "article_id": 2,
+        "author_name": "Carlos Rodríguez",
+        "author_email": "c.rodriguez@email.com",
+        "content": "Participé el año pasado y fue una experiencia increíble. La organización es de primera clase.",
+        "status": "approved",
+        "parent_id": null,
+        "created_at": "2024-10-13 09:20:00"
+      },
+      {
+        "id": 5,
+        "article_id": 3,
+        "author_name": "Luis Fernández",
+        "author_email": "luis.f@email.com",
+        "content": "Me interesa mucho el taller. ¿Habrá más fechas disponibles? No puedo el 30 de noviembre.",
+        "status": "approved",
+        "parent_id": null,
+        "created_at": "2024-10-13 16:40:00"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.4144
+      },
+      "duration": 0.4144,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 5,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

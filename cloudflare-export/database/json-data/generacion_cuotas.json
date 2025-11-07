@@ -1,0 +1,131 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "año": 2025,
+        "mes": 10,
+        "valor_default": 6500,
+        "generadas": 3,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-16 01:13:58"
+      },
+      {
+        "id": 2,
+        "año": 2025,
+        "mes": 11,
+        "valor_default": 6500,
+        "generadas": 3,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-16 01:14:05"
+      },
+      {
+        "id": 3,
+        "año": 2025,
+        "mes": 6,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-16 18:12:26"
+      },
+      {
+        "id": 4,
+        "año": 2025,
+        "mes": 7,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-16 18:22:57"
+      },
+      {
+        "id": 5,
+        "año": 2025,
+        "mes": 8,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-16 18:23:01"
+      },
+      {
+        "id": 6,
+        "año": 2025,
+        "mes": 1,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:15"
+      },
+      {
+        "id": 7,
+        "año": 2025,
+        "mes": 12,
+        "valor_default": 6500,
+        "generadas": 3,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:15"
+      },
+      {
+        "id": 8,
+        "año": 2025,
+        "mes": 9,
+        "valor_default": 6500,
+        "generadas": 4,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:15"
+      },
+      {
+        "id": 9,
+        "año": 2025,
+        "mes": 4,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:16"
+      },
+      {
+        "id": 10,
+        "año": 2025,
+        "mes": 2,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:16"
+      },
+      {
+        "id": 11,
+        "año": 2025,
+        "mes": 3,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:16"
+      },
+      {
+        "id": 12,
+        "año": 2025,
+        "mes": 5,
+        "valor_default": 6500,
+        "generadas": 5,
+        "generado_por": 1,
+        "fecha_generacion": "2025-10-17 14:45:16"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2948
+      },
+      "duration": 0.2948,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 12,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

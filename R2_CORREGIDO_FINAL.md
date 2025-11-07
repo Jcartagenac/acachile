@@ -68,7 +68,7 @@ gallery/        - .gitkeep + futura galería
 
 ```bash
 # 1. Verificar estructura
-curl https://acachile.pages.dev/api/list-objects
+curl https://beta.acachile.com/api/list-objects
 
 # 2. Una vez habilitado acceso público, probar URL:
 curl https://pub-85ac8c62baca4966b2ac0b16e1b9b6c6.r2.dev/eventos/campeonato-nacional-asado.jpg

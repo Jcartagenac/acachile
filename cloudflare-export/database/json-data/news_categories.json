@@ -1,0 +1,77 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "name": "Eventos",
+        "slug": "eventos",
+        "description": "Noticias sobre eventos y competencias",
+        "color": "#EF4444",
+        "created_at": "2025-10-14 23:13:07",
+        "updated_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 2,
+        "name": "Torneos",
+        "slug": "torneos",
+        "description": "Cobertura de torneos y campeonatos",
+        "color": "#F59E0B",
+        "created_at": "2025-10-14 23:13:07",
+        "updated_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 3,
+        "name": "Talleres",
+        "slug": "talleres",
+        "description": "Información sobre talleres y capacitaciones",
+        "color": "#3B82F6",
+        "created_at": "2025-10-14 23:13:07",
+        "updated_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 4,
+        "name": "Técnicas",
+        "slug": "tecnicas",
+        "description": "Tips y técnicas de asado",
+        "color": "#10B981",
+        "created_at": "2025-10-14 23:13:07",
+        "updated_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 5,
+        "name": "Miembros",
+        "slug": "miembros",
+        "description": "Destacados y entrevistas a miembros",
+        "color": "#8B5CF6",
+        "created_at": "2025-10-14 23:13:07",
+        "updated_at": "2025-10-14 23:13:07"
+      },
+      {
+        "id": 6,
+        "name": "General",
+        "slug": "general",
+        "description": "Noticias generales de ACA Chile",
+        "color": "#6B7280",
+        "created_at": "2025-10-14 23:13:07",
+        "updated_at": "2025-10-14 23:13:07"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3549
+      },
+      "duration": 0.3549,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 6,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

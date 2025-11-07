@@ -4,7 +4,7 @@ set -euo pipefail
 # check_deploy.sh - Verify Cloudflare Pages deploy serves compiled assets with correct Content-Type
 # Usage: ./check_deploy.sh [BASE_URL]
 
-URL=${1:-https://acachile.pages.dev}
+URL=${1:-https://beta.acachile.com}
 echo "Checking index at $URL"
 
 INDEX=$(curl -sS "$URL")

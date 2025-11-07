@@ -85,8 +85,8 @@ Tendrás:
 Después de la migración, puedes configurar un dominio personalizado:
 
 1. En R2 bucket → **Settings** → **Custom Domains**
-2. Agregar: `images.acachile.pages.dev`
-3. URLs cambiarían a: `https://images.acachile.pages.dev/eventos/xxx.jpg`
+2. Agregar: `images.beta.acachile.com`
+3. URLs cambiarían a: `https://images.beta.acachile.com/eventos/xxx.jpg`
 
 ## 📋 Después de la Migración
 
@@ -97,7 +97,7 @@ git commit -m "feat: Migrar imágenes a Cloudflare R2"
 git push origin main
 
 # Verificar en producción
-# https://acachile.pages.dev
+# https://beta.acachile.com
 ```
 
 ## 💡 ¿Necesitas ayuda?

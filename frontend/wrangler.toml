@@ -7,12 +7,12 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "acachile-db"
-database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
+database_id = "2af4176e-ad62-4f85-a6d2-0bccef75fc66"
 
 [[kv_namespaces]]
 binding = "ACA_KV"
-id = "b080082921d447e6995c8085f1033286"
-preview_id = "deda506587a1476a96578cb545f0128e"
+id = "4325e2596d6c455a8e90be44b3239ca4"
+preview_id = "5390e4691c2c45d787ccd2a6d5383ea1"
 
 # R2 bucket para imágenes
 [[r2_buckets]]
@@ -21,15 +21,15 @@ bucket_name = "aca-chile-images"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-CORS_ORIGIN = "https://acachile.pages.dev"
-FRONTEND_URL = "https://acachile.pages.dev"
+CORS_ORIGIN = "https://beta.acachile.com"
+FRONTEND_URL = "https://beta.acachile.com"
 FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
 
 [env.preview.vars]
 ENVIRONMENT = "preview"
 CORS_ORIGIN = "*"
-FRONTEND_URL = "https://acachile.pages.dev"
+FRONTEND_URL = "https://beta.acachile.com"
 FROM_EMAIL = "noreply@mail.juancartagena.cl"
 ADMIN_EMAIL = "admin@acachile.cl"
 

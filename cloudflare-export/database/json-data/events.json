@@ -1,0 +1,65 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "title": "Campeonato Nacional de Asadores 2025",
+        "description": "El evento más importante del año para asadores chilenos. Competencia por categorías con premiación especial y degustación para el público.",
+        "date": "2025-11-15",
+        "time": "09:00",
+        "location": "Parque O'Higgins, Santiago",
+        "image": "https://acachile.com/wp-content/uploads/2025/03/64694334-bbdc-4e97-b4a7-ef75e6bbe50d-500x375.jpg",
+        "type": "campeonato",
+        "registration_open": 1,
+        "max_participants": 50,
+        "current_participants": 0,
+        "price": 15000,
+        "requirements": "[\"Parrilla propia\", \"Implementos de cocina\", \"Delantal\"]",
+        "tags": "[\"campeonato\", \"nacional\", \"asadores\"]",
+        "contact_info": "{\"email\": \"campeonato@acachile.com\", \"phone\": \"+56912345678\"}",
+        "organizer_id": 1,
+        "status": "published",
+        "created_at": "2025-10-14 22:21:15",
+        "updated_at": "2025-10-14 22:55:17"
+      },
+      {
+        "id": 2,
+        "title": "Taller de Técnicas de Ahumado",
+        "description": "Aprende las técnicas tradicionales de ahumado con expertos internacionales. Incluye degustación y certificado.",
+        "date": "2025-11-08",
+        "time": "14:00",
+        "location": "Centro de Capacitación ACA, Las Condes",
+        "image": "https://acachile.com/wp-content/uploads/2024/08/post-alemania-500x375.jpg",
+        "type": "taller",
+        "registration_open": 1,
+        "max_participants": 20,
+        "current_participants": 1,
+        "price": 35000,
+        "requirements": "[\"Sin experiencia previa necesaria\"]",
+        "tags": "[\"taller\", \"ahumado\", \"técnicas\"]",
+        "contact_info": "{\"email\": \"talleres@acachile.com\", \"phone\": \"+56987654321\"}",
+        "organizer_id": 1,
+        "status": "published",
+        "created_at": "2025-10-14 22:21:15",
+        "updated_at": "2025-10-14 22:24:58"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.4872
+      },
+      "duration": 0.4872,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 2,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

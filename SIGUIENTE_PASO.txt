@@ -1,0 +1,44 @@
+================================================
+✅ ACTUALIZACIÓN COMPLETADA
+================================================
+
+1. ✅ wrangler.toml actualizado con los nuevos IDs:
+   - D1 Database: 2af4176e-ad62-4f85-a6d2-0bccef75fc66
+   - KV Production: 4325e2596d6c455a8e90be44b3239ca4
+   - KV Preview: 5390e4691c2c45d787ccd2a6d5383ea1
+
+================================================
+⚠️  SIGUIENTE PASO REQUERIDO
+================================================
+
+DEBES HABILITAR R2 MANUALMENTE:
+
+1. Abre esta URL en tu navegador:
+   https://dash.cloudflare.com/876bb78a66fe6e1932038334d6f44117/r2/overview
+
+2. Haz clic en el botón "Enable R2"
+
+3. Acepta los términos y condiciones
+
+4. Una vez habilitado, ejecuta:
+   ./setup-nueva-cuenta.sh
+
+El script te guiará para:
+- Crear el bucket R2 'aca-chile-images'
+- Configurar los secrets (RESEND_API_KEY, GOOGLE_MAPS_API_KEY)
+- Verificar que todo esté listo
+
+================================================
+ALTERNATIVA: Configuración manual
+================================================
+
+Si prefieres hacerlo manualmente:
+
+# Crear bucket R2
+wrangler r2 bucket create aca-chile-images
+
+# Configurar secrets
+wrangler secret put RESEND_API_KEY
+wrangler secret put GOOGLE_MAPS_API_KEY
+
+================================================

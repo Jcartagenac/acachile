@@ -48,11 +48,11 @@
 
 ```bash
 # ✅ Carpetas creadas exitosamente
-curl -X POST https://acachile.pages.dev/api/init-folders
+curl -X POST https://beta.acachile.com/api/init-folders
 # Respuesta: {"success":true,"message":"Estructura de carpetas inicializada: 5/5 carpetas"}
 
 # ✅ Verificación de carpetas
-curl -X GET https://acachile.pages.dev/api/init-folders  
+curl -X GET https://beta.acachile.com/api/init-folders  
 # Respuesta: Todas las 5 carpetas existentes y funcionales
 
 # ✅ Subida directa a R2 funciona
@@ -70,7 +70,7 @@ wrangler r2 object put aca-chile-images/avatars/test-upload.txt
 ## 🚀 **Para Probar el Sistema Completo:**
 
 1. **Habilitar acceso público** (1 click en Cloudflare Dashboard)
-2. **Ir a** https://acachile.pages.dev/perfil
+2. **Ir a** https://beta.acachile.com/perfil
 3. **Subir foto** de perfil
 4. **Refrescar página** (F5) 
 5. **Verificar** que la foto persiste ✅

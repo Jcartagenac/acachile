@@ -1,0 +1,54 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "full_name": "pepito",
+        "email": "juecart@gmail.com",
+        "phone": "+5698765432",
+        "rut": "15749226-8",
+        "birthdate": "2007-02-16",
+        "region": "Metropolitana de Santiago",
+        "city": "santiago",
+        "occupation": "nada",
+        "experience_level": "entusiasta",
+        "specialties": null,
+        "motivation": "datos de pruebaasfsdfsdfsdf asfasfs f asdf asdf",
+        "contribution": "datos pruebas asf asfa sdf sd fsdf sdf sdf sdfsd fsd",
+        "availability": "[\"eventos_publicos\"]",
+        "has_competition_experience": 0,
+        "competition_details": null,
+        "instagram": null,
+        "other_networks": null,
+        "references_info": null,
+        "photo_url": null,
+        "status": "pendiente",
+        "approvals_required": 2,
+        "approvals_count": 0,
+        "rejection_reason": null,
+        "approved_at": null,
+        "rejected_at": null,
+        "socio_id": null,
+        "created_at": "2025-10-27 22:44:21",
+        "updated_at": "2025-10-27 22:44:21"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.4964
+      },
+      "duration": 0.4964,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

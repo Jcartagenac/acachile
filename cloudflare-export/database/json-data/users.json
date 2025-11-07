@@ -1,0 +1,56 @@
+[
+  {
+    "results": [
+      {
+        "id": 1,
+        "name": "admin",
+        "email": "jcartagenac@gmail.com",
+        "phone": null,
+        "region": "Metropolitana",
+        "password_hash": null,
+        "is_admin": 1,
+        "created_at": "2025-10-14 22:21:28",
+        "updated_at": "2025-10-14 22:21:28"
+      },
+      {
+        "id": 2,
+        "name": "Organizador",
+        "email": "organizador@acachile.com",
+        "phone": null,
+        "region": "Metropolitana",
+        "password_hash": null,
+        "is_admin": 0,
+        "created_at": "2025-10-14 22:21:28",
+        "updated_at": "2025-10-14 22:21:28"
+      },
+      {
+        "id": 3,
+        "name": "Admin Sistema",
+        "email": "admin@acachile.cl",
+        "phone": "+56912345678",
+        "region": "Santiago",
+        "password_hash": "e3afed0047b08059d0fada10f400c1e5",
+        "is_admin": 1,
+        "created_at": "2025-10-14 23:18:07",
+        "updated_at": "2025-10-14 23:18:07"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3061
+      },
+      "duration": 0.3061,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 1748992,
+      "rows_read": 3,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

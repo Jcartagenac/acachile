@@ -109,7 +109,7 @@ Mantén estos archivos en la raíz para consultas rápidas; están referenciados
 
 ## Despliegue y operaciones
 
-- Producción vive en Cloudflare Pages (`acachile.pages.dev`).
+- Producción vive en Cloudflare Pages (`beta.acachile.com`).
 - Usa `npm run deploy -w frontend` para builds controlados o `frontend/scripts/intelligent-deploy.cjs` para despliegues asistidos.
 - Health checks:
   - `/api/system/health?detailed=true`

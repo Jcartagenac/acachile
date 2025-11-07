@@ -22,10 +22,10 @@ const CONFIG = {
     }],
     envVars: {
       ENVIRONMENT: process.env.VITE_ENVIRONMENT || 'production',
-      CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://acachile.pages.dev',
+      CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://beta.acachile.com',
       FROM_EMAIL: process.env.FROM_EMAIL || 'noreply@mail.juancartagena.cl',
       ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@acachile.cl',
-      FRONTEND_URL: process.env.FRONTEND_URL || 'https://acachile.pages.dev'
+      FRONTEND_URL: process.env.FRONTEND_URL || 'https://beta.acachile.com'
     }
   }
 };
