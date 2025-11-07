@@ -325,9 +325,9 @@ const EventDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="space-y-8">
           {/* Información principal */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Detalles básicos */}
             <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-md p-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center text-neutral-700">
@@ -370,44 +370,12 @@ const EventDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Requisitos */}
-            {evento.requirements && evento.requirements.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-3">Requisitos</h3>
-                <ul className="space-y-2">
-                  {evento.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Tags */}
-            {evento.tags && evento.tags.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-3">Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {evento.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar de inscripción */}
-          <div className="space-y-6">
-            {/* Estado de inscripción */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Inscripción</h3>
+            {/* Formulario de Inscripción */}
+            <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-md p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-neutral-700">
+                <UserPlus className="w-5 h-5 mr-2 text-primary-600" />
+                Inscripción
+              </h3>
               
               {/* Si el evento es público, mostrar formulario de inscripción pública */}
               {evento.isPublic ? (
@@ -473,9 +441,12 @@ const EventDetailPage: React.FC = () => {
 
             {/* Información de contacto */}
             {evento.contactInfo && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Contacto</h3>
-                <div className="space-y-2 text-sm">
+              <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-md p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center text-neutral-700">
+                  <Info className="w-5 h-5 mr-2 text-primary-600" />
+                  Contacto
+                </h3>
+                <div className="space-y-2 text-sm text-gray-700">
                   {evento.contactInfo.email && (
                     <div>
                       <span className="font-medium">Email:</span>{' '}
@@ -513,6 +484,38 @@ const EventDetailPage: React.FC = () => {
                       </a>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Requisitos */}
+            {evento.requirements && evento.requirements.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-3">Requisitos</h3>
+                <ul className="space-y-2">
+                  {evento.requirements.map((req, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Tags */}
+            {evento.tags && evento.tags.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-3">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {evento.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
