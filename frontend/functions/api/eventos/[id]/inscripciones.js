@@ -98,8 +98,8 @@ export async function onRequest(context) {
 
     return new Response(JSON.stringify({
       success: true,
-      data: result.data,
-      stats: result.stats
+      data: result.data, // Array de inscripciones directamente
+      count: result.count
     }), {
       headers: {
         'Content-Type': 'application/json',
@@ -125,59 +125,33 @@ export async function onRequest(context) {
 // Función para obtener inscripciones completas del evento con datos de usuarios
 async function getInscripcionesEventoCompletas(env, eventoId) {
   try {
-    // Verificar que el evento existe
-    const eventoData = await env.ACA_KV.get(`evento:${eventoId}`);
-    if (!eventoData) {
+    // Verificar que el evento existe en D1
+    const eventoResult = await env.DB.prepare(
+      'SELECT id, title, max_participants FROM eventos WHERE id = ?'
+    ).bind(eventoId).first();
+
+    if (!eventoResult) {
       return {
         success: false,
         error: 'Evento no encontrado'
       };
     }
 
-    const evento = JSON.parse(eventoData);
-
-    // Obtener inscripciones del evento
+    // Obtener inscripciones del evento desde KV
     const inscripcionesData = await env.ACA_KV.get(`inscripciones:evento:${eventoId}`);
     const inscripciones = inscripcionesData ? JSON.parse(inscripcionesData) : [];
 
-    // Enriquecer con datos de usuarios (simulado por ahora)
-    const inscripcionesConUsuarios = inscripciones.map((inscripcion) => {
-      return {
-        ...inscripcion,
-        usuario: {
-          id: inscripcion.userId,
-          email: `usuario${inscripcion.userId}@ejemplo.com`, // TODO: Obtener desde D1
-          name: `Usuario ${inscripcion.userId}`, // TODO: Obtener desde D1
-        }
-      };
-    });
+    console.log(`Inscripciones encontradas para evento ${eventoId}:`, inscripciones.length);
 
-    // Ordenar por fecha de inscripción
-    inscripcionesConUsuarios.sort((a, b) => 
-      new Date(a.fechaInscripcion).getTime() - new Date(b.fechaInscripcion).getTime()
+    // Ordenar por fecha de creación (más recientes primero)
+    inscripciones.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-
-    // Estadísticas
-    const stats = {
-      totalInscripciones: inscripciones.length,
-      maxParticipants: evento.maxParticipants,
-      espaciosDisponibles: evento.maxParticipants ? evento.maxParticipants - inscripciones.length : null,
-      porcentajeOcupacion: evento.maxParticipants ? 
-        Math.round((inscripciones.length / evento.maxParticipants) * 100) : null,
-      estadosInscripciones: {
-        confirmada: inscripciones.filter(i => i.estado === 'confirmada').length,
-        pendiente: inscripciones.filter(i => i.estado === 'pendiente').length,
-        cancelada: inscripciones.filter(i => i.estado === 'cancelada').length,
-      }
-    };
 
     return {
       success: true,
-      data: {
-        evento: evento,
-        inscripciones: inscripcionesConUsuarios
-      },
-      stats: stats
+      data: inscripciones, // Retornar array directamente
+      count: inscripciones.length
     };
 
   } catch (error) {
