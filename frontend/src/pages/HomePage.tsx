@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { Evento } from '@shared/index';
 import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
-import { getDefaultSections } from '@shared/siteSections';
 import type { NewsArticle } from '../services/newsService';
 
 type SectionDisplay = SiteSection & {
@@ -12,15 +11,13 @@ type SectionDisplay = SiteSection & {
   display_cta_url?: string;
 };
 
-const cloneDefaults = (): SiteSection[] => getDefaultSections('home').map((section) => ({ ...section }));
-
+// NO usar defaults - trabajar solo con datos reales de BD
 const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
-  // Si no hay incoming data, usar defaults completos
+  // Si no hay datos, retornar array vacío
   if (!incoming || incoming.length === 0) {
-    return cloneDefaults();
+    return [];
   }
 
-  // Si hay incoming data, usar SOLO lo que viene (respetar datos guardados)
   const normalized: SiteSection[] = [];
 
   incoming.forEach((raw, index) => {

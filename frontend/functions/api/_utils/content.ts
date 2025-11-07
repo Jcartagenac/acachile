@@ -134,7 +134,6 @@ export const ensureTable = async (db: Database) => {
 
 export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<SiteSection[]> => {
   const cacheKey = cacheKeyFor(page);
-  const defaults = getDefaultSections(page);
   let sections: SiteSection[] = [];
 
   if (env.DB) {
@@ -149,7 +148,7 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
     console.log('[getSectionsForPage] DB query results for page', page, ':', JSON.stringify(res.results, null, 2));
 
     if (res.results && res.results.length > 0) {
-      // Cuando hay datos en DB, NO mezclar con defaults (useDefaults=false)
+      // NO usar defaults - solo datos reales de BD
       sections = normalizeSections(res.results, page, false);
       console.log('[getSectionsForPage] Normalized sections from DB:', JSON.stringify(sections, null, 2));
       if (env.ACA_KV) {
@@ -158,27 +157,20 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
     }
   }
 
+  // Si no hay datos en DB, intentar cache
   if ((!sections || sections.length === 0) && env.ACA_KV) {
     const cached = await env.ACA_KV.get(cacheKey);
     if (cached) {
       try {
         const parsed = JSON.parse(cached) as RawSection[];
-        // Cuando viene del cache, tampoco mezclar con defaults
         sections = normalizeSections(parsed, page, false);
       } catch (error) {
-        console.warn('[content] Failed to parse cached sections, using defaults', error);
+        console.warn('[content] Failed to parse cached sections', error);
       }
     }
   }
 
-  // Solo usar defaults si NO hay datos guardados
-  if (!sections || sections.length === 0) {
-    console.log('[getSectionsForPage] No saved data found, using defaults');
-    sections = defaults;
-    if (env.ACA_KV) {
-      await env.ACA_KV.put(cacheKey, JSON.stringify(sections));
-    }
-  }
-
+  // NO usar defaults - si no hay datos, retornar array vacío
+  console.log('[getSectionsForPage] Returning', sections.length, 'sections (NO defaults)');
   return sections;
 };

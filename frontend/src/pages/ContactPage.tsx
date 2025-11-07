@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { SiteSection } from '@shared/siteSections';
-import { getDefaultSections } from '@shared/siteSections';
 
 type DisplaySection = SiteSection & {
   display_title: string;
@@ -17,11 +16,10 @@ interface ContactDetail {
   icon?: string;
 }
 
-const cloneDefaults = (): SiteSection[] => getDefaultSections('contact').map((section) => ({ ...section }));
-
+// NO usar defaults - trabajar solo con datos reales de BD
 const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
   if (!incoming || incoming.length === 0) {
-    return cloneDefaults();
+    return [];
   }
 
   const normalized: SiteSection[] = [];
@@ -169,7 +167,7 @@ const MapSection: React.FC<{ section: DisplaySection }> = ({ section }) => {
 };
 
 export const ContactPage: React.FC = () => {
-  const [sections, setSections] = useState<SiteSection[]>(cloneDefaults());
+  const [sections, setSections] = useState<SiteSection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -193,9 +191,9 @@ export const ContactPage: React.FC = () => {
           console.warn('[ContactPage] Response not successful or missing data');
         }
       } catch (error) {
-        console.warn('[ContactPage] No se pudo obtener contenido dinámico, usando valores por defecto.', error);
+        console.warn('[ContactPage] No se pudo obtener contenido dinámico.', error);
         if (active) {
-          setSections(cloneDefaults());
+          setSections([]);
         }
       } finally {
         if (active) {
@@ -220,15 +218,7 @@ export const ContactPage: React.FC = () => {
     }));
   }, [sections]);
 
-  const defaults = cloneDefaults();
-  const defaultHero: DisplaySection = defaults[0] ? {
-    ...defaults[0],
-    display_title: defaults[0].title,
-    display_content: defaults[0].content,
-    display_image: defaults[0].image_url,
-    display_cta_label: defaults[0].cta_label,
-    display_cta_url: defaults[0].cta_url
-  } : {
+  const defaultHero: DisplaySection = {
     page: 'contact',
     key: 'hero',
     title: '',

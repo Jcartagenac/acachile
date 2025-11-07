@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/Button';
 import type { SiteSection, SiteSectionSourceType, SitePageKey } from '@shared/siteSections';
-import { getDefaultSections } from '@shared/siteSections';
 import type { Evento } from '@shared/index';
 import type { NewsArticle } from '../../services/newsService';
 
@@ -28,17 +27,14 @@ const getAuthToken = () => {
   return '';
 };
 
-const cloneDefaults = (page: SitePageKey): EditableSection[] =>
-  getDefaultSections(page).map((section) => ({ ...section }));
-
-const mergeWithDefaults = (page: SitePageKey, incoming: Partial<SiteSection>[] | undefined): EditableSection[] => {
-  // Si no hay incoming data, usar defaults completos
+// NO usar defaults - trabajar solo con datos reales
+const processIncomingSections = (page: SitePageKey, incoming: Partial<SiteSection>[] | undefined): EditableSection[] => {
+  // Si no hay datos, retornar array vacío
   if (!incoming || incoming.length === 0) {
-    return getDefaultSections(page).map((section) => ({ ...section }));
+    return [];
   }
 
-  // Si hay incoming data, NO mezclar con defaults (respetar lo guardado)
-  const merged: EditableSection[] = [];
+  const processed: EditableSection[] = [];
 
   incoming.forEach((raw, index) => {
     const tentativeKey =
@@ -51,7 +47,7 @@ const mergeWithDefaults = (page: SitePageKey, incoming: Partial<SiteSection>[] |
         ? raw.sort_order
         : index;
 
-    merged.push({
+    processed.push({
       page,
       key: tentativeKey,
       title: typeof raw?.title === 'string' ? raw.title : '',
@@ -65,7 +61,7 @@ const mergeWithDefaults = (page: SitePageKey, incoming: Partial<SiteSection>[] |
     });
   });
 
-  return merged.sort((a, b) => a.sort_order - b.sort_order);
+  return processed.sort((a, b) => a.sort_order - b.sort_order);
 };
 
 const sanitizeSectionsForSave = (page: SitePageKey, sections: EditableSection[]): SiteSection[] =>
@@ -90,7 +86,7 @@ interface AdminHomeEditorProps {
 
 export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEditorProps) {
   const [activePage, setActivePage] = useState<SitePageKey>(initialPage);
-  const [sections, setSections] = useState<EditableSection[]>(cloneDefaults('home'));
+  const [sections, setSections] = useState<EditableSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
@@ -113,14 +109,14 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
         const response = await fetch(`/api/admin/content?page=${activePage}`, { cache: 'no-store' });
         const json = await response.json();
         if (active && json?.success) {
-          setSections(mergeWithDefaults(activePage, json.sections));
+          setSections(processIncomingSections(activePage, json.sections));
         } else if (active) {
-          setSections(cloneDefaults(activePage));
+          setSections([]);
         }
       } catch (error) {
         console.error('[AdminHomeEditor] fetchSections error:', error);
         if (active) {
-          setSections(cloneDefaults(activePage));
+          setSections([]);
         }
       } finally {
         if (active) {
@@ -299,7 +295,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
 
       if (json.success) {
         alert('Secciones guardadas correctamente');
-        setSections(mergeWithDefaults(activePage, json.sections));
+        setSections(processIncomingSections(activePage, json.sections));
         console.log('[AdminHomeEditor] Save successful, sections updated');
       } else {
         console.error('[AdminHomeEditor] Save failed with error:', json.error);
@@ -418,9 +414,15 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
     setSections((prev) => [...prev, newSection]);
   }, [sections.length, activePage]);
 
+  const deleteSection = useCallback((sectionKey: string) => {
+    if (window.confirm('¿Eliminar esta sección?')) {
+      setSections((prev) => prev.filter(s => s.key !== sectionKey));
+    }
+  }, []);
+
   const resetToDefaults = useCallback(() => {
-    if (window.confirm('¿Restablecer las secciones a los valores por defecto?')) {
-      setSections(cloneDefaults(activePage));
+    if (window.confirm('¿Eliminar todas las secciones? Esta acción no se puede deshacer.')) {
+      setSections([]);
     }
   }, [activePage]);
 
@@ -579,6 +581,16 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
                     placeholder="https://..."
                   />
                 </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => deleteSection(section.key)}
+                  className="text-red-600 hover:bg-red-50"
+                >
+                  Eliminar sección
+                </Button>
               </div>
             </div>
           ))}

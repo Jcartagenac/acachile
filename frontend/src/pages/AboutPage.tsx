@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { SiteSection } from '@shared/siteSections';
-import { getDefaultSections } from '@shared/siteSections';
 
 type DisplaySection = SiteSection & {
   display_title: string;
@@ -10,11 +9,10 @@ type DisplaySection = SiteSection & {
   display_cta_url?: string;
 };
 
-const cloneDefaults = (): SiteSection[] => getDefaultSections('about').map((section) => ({ ...section }));
-
+// NO usar defaults - trabajar solo con datos reales de BD
 const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
   if (!incoming || incoming.length === 0) {
-    return cloneDefaults();
+    return [];
   }
 
   const normalized: SiteSection[] = [];
@@ -173,7 +171,7 @@ const SectionBlock: React.FC<{ section: DisplaySection; reverse?: boolean }> = (
 };
 
 export const AboutPage: React.FC = () => {
-  const [sections, setSections] = useState<SiteSection[]>(cloneDefaults());
+  const [sections, setSections] = useState<SiteSection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -190,9 +188,9 @@ export const AboutPage: React.FC = () => {
           setSections(normalizeSections(json.sections));
         }
       } catch (error) {
-        console.warn('[AboutPage] No se pudo obtener contenido dinámico, usando valores por defecto.', error);
+        console.warn('[AboutPage] No se pudo obtener contenido dinámico.', error);
         if (active) {
-          setSections(cloneDefaults());
+          setSections([]);
         }
       } finally {
         if (active) {
@@ -217,13 +215,7 @@ export const AboutPage: React.FC = () => {
     }));
   }, [sections]);
 
-  const defaults = cloneDefaults();
-  const defaultHero: DisplaySection = defaults[0] ? {
-    ...defaults[0],
-    display_title: defaults[0].title,
-    display_content: defaults[0].content,
-    display_image: defaults[0].image_url
-  } : {
+  const defaultHero: DisplaySection = {
     page: 'about',
     key: 'hero',
     title: '',
