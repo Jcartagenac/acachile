@@ -193,7 +193,7 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
 };
 
 const HomePage: React.FC = () => {
-  const [sections, setSections] = useState<SiteSection[]>(cloneDefaults);
+  const [sections, setSections] = useState<SiteSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventLookup, setEventLookup] = useState<Record<string, Evento>>({});
   const [newsLookup, setNewsLookup] = useState<Record<string, NewsArticle>>({});
@@ -214,9 +214,9 @@ const HomePage: React.FC = () => {
           setSections(normalizeSections(json.sections));
         }
       } catch (error) {
-        console.warn('[HomePage] No se pudo obtener contenido dinámico, usando valores por defecto.', error);
+        console.warn('[HomePage] No se pudo obtener contenido dinámico.', error);
         if (active) {
-          setSections(cloneDefaults());
+          setSections([]);
         }
       } finally {
         if (active) {
