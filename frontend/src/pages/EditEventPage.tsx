@@ -106,7 +106,7 @@ export const EditEventPage: React.FC = () => {
     setValue
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
-    mode: 'onChange',
+    mode: 'all',
     defaultValues: {
       price: 0,
       registrationOpen: true,
@@ -161,30 +161,30 @@ export const EditEventPage: React.FC = () => {
         setSelectedImage(eventoData.image || '');
 
         // Llenar el formulario con los datos existentes
-        setValue('title', eventoData.title);
-        setValue('description', eventoData.description);
-        setValue('date', eventoData.date?.split('T')[0] || eventoData.date);
-        setValue('time', eventoData.time || '');
-        setValue('location', eventoData.location);
-        setValue('type', eventoData.type);
-        setValue('maxParticipants', eventoData.maxParticipants || undefined);
-        setValue('price', eventoData.price || 0);
-        setValue('registrationOpen', eventoData.registrationOpen);
-        setValue('isPublic', eventoData.isPublic ?? true);
-        setValue('paymentLink', eventoData.paymentLink || '');
+        setValue('title', eventoData.title, { shouldValidate: true });
+        setValue('description', eventoData.description, { shouldValidate: true });
+        setValue('date', eventoData.date?.split('T')[0] || eventoData.date, { shouldValidate: true });
+        setValue('time', eventoData.time || '', { shouldValidate: true });
+        setValue('location', eventoData.location, { shouldValidate: true });
+        setValue('type', eventoData.type, { shouldValidate: true });
+        setValue('maxParticipants', eventoData.maxParticipants || undefined, { shouldValidate: true });
+        setValue('price', eventoData.price || 0, { shouldValidate: true });
+        setValue('registrationOpen', eventoData.registrationOpen, { shouldValidate: true });
+        setValue('isPublic', eventoData.isPublic ?? true, { shouldValidate: true });
+        setValue('paymentLink', eventoData.paymentLink || '', { shouldValidate: true });
         
         if (eventoData.requirements && Array.isArray(eventoData.requirements)) {
-          setValue('requirements', eventoData.requirements.join('\n'));
+          setValue('requirements', eventoData.requirements.join('\n'), { shouldValidate: true });
         }
         
         if (eventoData.tags && Array.isArray(eventoData.tags)) {
-          setValue('tags', eventoData.tags.join(', '));
+          setValue('tags', eventoData.tags.join(', '), { shouldValidate: true });
         }
 
         if (eventoData.contactInfo) {
-          setValue('contactEmail', eventoData.contactInfo.email || '');
-          setValue('contactPhone', eventoData.contactInfo.phone || '');
-          setValue('contactWebsite', eventoData.contactInfo.website || '');
+          setValue('contactEmail', eventoData.contactInfo.email || '', { shouldValidate: true });
+          setValue('contactPhone', eventoData.contactInfo.phone || '', { shouldValidate: true });
+          setValue('contactWebsite', eventoData.contactInfo.website || '', { shouldValidate: true });
         }
 
         setLoadingEvento(false);
