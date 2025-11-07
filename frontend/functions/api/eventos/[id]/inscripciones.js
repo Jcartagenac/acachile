@@ -1,6 +1,23 @@
 // Endpoint para ver las inscripciones de un evento específico
 // GET /api/eventos/[id]/inscripciones - Ver inscripciones del evento
 
+// Función para verificar autenticación
+async function requireAuth(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Token no proporcionado');
+  }
+
+  const token = authHeader.substring(7);
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload;
+  } catch (e) {
+    throw new Error('Token inválido');
+  }
+}
+
 export async function onRequest(context) {
   const { request, env, params } = context;
   const method = request.method;

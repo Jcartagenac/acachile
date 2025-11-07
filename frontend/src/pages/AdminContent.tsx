@@ -24,12 +24,13 @@ import { Evento } from '@shared/index';
 import type { SitePageKey } from '@shared/siteSections';
 
 export default function AdminContent() {
-  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'noticias' | 'imagenes';
+  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'postulantes' | 'noticias' | 'imagenes';
   const [activeTab, setActiveTab] = useState<ContentTab>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
   const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
+  const AdminPostulantes = React.lazy(() => import('../components/admin/AdminPostulantes'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
     switch (tab) {
@@ -54,6 +55,7 @@ export default function AdminContent() {
     { id: 'contacto', label: 'Contacto', icon: Mail },
     { id: 'imagenes', label: 'Subir Imagen', icon: Upload },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
+    { id: 'postulantes', label: 'Postulantes', icon: Users },
     { id: 'noticias', label: 'Noticias Editoriales', icon: Newspaper }
   ];
 
@@ -343,6 +345,19 @@ export default function AdminContent() {
           <div>
             <React.Suspense fallback={<div>Cargando gestor de imágenes...</div>}>
               <ImageUploader />
+            </React.Suspense>
+          </div>
+        )}
+
+        {activeTab === 'postulantes' && (
+          <div>
+            <React.Suspense fallback={
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                <p className="text-gray-600 mt-2">Cargando postulantes...</p>
+              </div>
+            }>
+              <AdminPostulantes />
             </React.Suspense>
           </div>
         )}
