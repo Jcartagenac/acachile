@@ -139,49 +139,60 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   return (
     <section className="relative overflow-hidden py-14 sm:py-20 bg-soft-gradient-light">
       <div className="relative px-4 py-14 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Columna izquierda: Título, Texto y CTA */}
-          <div className="space-y-8">
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-16 lg:items-center">
+          {/* Título - siempre primero en mobile y desktop */}
+          <div className="lg:hidden mb-4">
+            <h1 className="text-3xl sm:text-5xl font-bold leading-tight text-neutral-900">
+              {section.display_title}
+            </h1>
+          </div>
+
+          {/* Columna izquierda en desktop: Título y Texto */}
+          <div className="space-y-8 order-2 lg:order-1">
+            {/* Título - solo visible en desktop */}
+            <h1 className="hidden lg:block text-3xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
               {section.display_title}
             </h1>
             
-            <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4">
-              {blocks.length === 0 ? (
-                <p>{section.display_content}</p>
-              ) : (
-                blocks.map((block, index) =>
-                  block.type === 'paragraph' ? (
-                    <p key={index}>{block.text}</p>
-                  ) : (
-                    <ul key={index} className="list-disc pl-5 space-y-1">
-                      {block.items.map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
-                      ))}
-                    </ul>
+            {/* Texto y CTA */}
+            <div>
+              <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4">
+                {blocks.length === 0 ? (
+                  <p>{section.display_content}</p>
+                ) : (
+                  blocks.map((block, index) =>
+                    block.type === 'paragraph' ? (
+                      <p key={index}>{block.text}</p>
+                    ) : (
+                      <ul key={index} className="list-disc pl-5 space-y-1">
+                        {block.items.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    )
                   )
-                )
-              )}
-            </div>
-            
-            {section.display_cta_label && section.display_cta_url ? (
-              <div>
-                <a
-                  href={section.display_cta_url}
-                  className="inline-flex items-center px-7 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl text-white font-semibold text-lg transition-all duration-500"
-                  style={{
-                    background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
-                  }}
-                >
-                  {section.display_cta_label}
-                </a>
+                )}
               </div>
-            ) : null}
+              
+              {section.display_cta_label && section.display_cta_url ? (
+                <div className="mt-8">
+                  <a
+                    href={section.display_cta_url}
+                    className="inline-flex items-center px-7 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl text-white font-semibold text-lg transition-all duration-500"
+                    style={{
+                      background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
+                    }}
+                  >
+                    {section.display_cta_label}
+                  </a>
+                </div>
+              ) : null}
+            </div>
           </div>
           
-          {/* Columna derecha: Imagen */}
+          {/* Columna derecha en desktop: Imagen - segundo en mobile (después del título) */}
           {section.display_image ? (
-            <div>
+            <div className="order-1 lg:order-2 mb-8 lg:mb-0">
               <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
                 <div className="overflow-hidden rounded-xl sm:rounded-2xl">
                   <img
