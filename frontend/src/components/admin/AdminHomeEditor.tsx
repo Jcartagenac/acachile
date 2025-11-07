@@ -106,11 +106,17 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
     (async () => {
       setLoading(true);
       try {
+        console.log('[AdminHomeEditor] Fetching sections for page:', activePage);
         const response = await fetch(`/api/admin/content?page=${activePage}`, { cache: 'no-store' });
         const json = await response.json();
+        console.log('[AdminHomeEditor] Response:', json);
+        
         if (active && json?.success) {
-          setSections(processIncomingSections(activePage, json.sections));
+          const processed = processIncomingSections(activePage, json.sections);
+          console.log('[AdminHomeEditor] Processed sections:', processed);
+          setSections(processed);
         } else if (active) {
+          console.warn('[AdminHomeEditor] No success in response, setting empty array');
           setSections([]);
         }
       } catch (error) {
