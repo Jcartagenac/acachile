@@ -15,18 +15,20 @@ import {
   Search,
   Trash2,
   Eye,
-  Users
+  Users,
+  Upload
 } from 'lucide-react';
 import { useEvents } from '../contexts/EventContext';
 import { Evento } from '@shared/index';
 import type { SitePageKey } from '@shared/siteSections';
 
 export default function AdminContent() {
-  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'noticias';
+  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'noticias' | 'imagenes';
   const [activeTab, setActiveTab] = useState<ContentTab>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
+  const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
     switch (tab) {
@@ -49,6 +51,7 @@ export default function AdminContent() {
     { id: 'inicio', label: 'Inicio', icon: Home },
     { id: 'quienes', label: 'Quiénes Somos', icon: Users2 },
     { id: 'contacto', label: 'Contacto', icon: Mail },
+    { id: 'imagenes', label: 'Subir Imagen', icon: Upload },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'noticias', label: 'Noticias Editoriales', icon: Newspaper }
   ];
@@ -325,6 +328,14 @@ export default function AdminContent() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'imagenes' && (
+          <div>
+            <React.Suspense fallback={<div>Cargando gestor de imágenes...</div>}>
+              <ImageUploader />
+            </React.Suspense>
           </div>
         )}
 
