@@ -22,25 +22,16 @@ bucket_name = "aca-chile-images"
 # ⚠️ IMPORTANTE: Variables de Entorno
 # Para cambiar el dominio en producción, actualiza estas variables en:
 # Cloudflare Pages Dashboard → Settings → Environment variables
+# O vía wrangler CLI: npx wrangler pages secret put NOMBRE_VAR --project-name=acachile --env=production
 # 
 # NO es necesario editar este archivo para cambios de dominio en producción.
 # Este archivo es solo para desarrollo local y como referencia.
 #
+# Las variables de producción están configuradas como Secrets vía wrangler CLI.
 # Ver CLOUDFLARE_ENV_SETUP.md para instrucciones completas.
-
-[env.production.vars]
-ENVIRONMENT = "production"
-CORS_ORIGIN = "https://beta.acachile.com"
-FRONTEND_URL = "https://beta.acachile.com"
-FROM_EMAIL = "noreply@mail.juancartagena.cl"
-ADMIN_EMAIL = "admin@acachile.cl"
-
-[env.preview.vars]
-ENVIRONMENT = "preview"
-CORS_ORIGIN = "*"
-FRONTEND_URL = "https://beta.acachile.com"
-FROM_EMAIL = "noreply@mail.juancartagena.cl"
-ADMIN_EMAIL = "admin@acachile.cl"
+#
+# NOTA: Los secrets configurados vía CLI tienen prioridad sobre las vars de wrangler.toml
+# Para evitar conflictos, NO definimos vars aquí para producción/preview.
 
 # Bindings específicas para producción
 [[env.production.kv_namespaces]]
