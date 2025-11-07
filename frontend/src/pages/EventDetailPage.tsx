@@ -14,6 +14,7 @@ import {
 import { Evento, EventInscription } from '@shared/index';
 import { eventService } from '../services/eventService';
 import { useAuth } from '../contexts/AuthContext';
+import PublicEventRegistration from '../components/events/PublicEventRegistration';
 
 interface InscriptionStatus {
   isInscribed: boolean;
@@ -394,7 +395,15 @@ const EventDetailPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4">Inscripción</h3>
               
-              {user ? (
+              {/* Si el evento es público, mostrar formulario de inscripción pública */}
+              {evento.isPublic ? (
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800 mb-4">
+                    Este es un evento público. Completa el formulario para inscribirte.
+                  </p>
+                  <PublicEventRegistration evento={evento} />
+                </div>
+              ) : user ? (
                 <div className="space-y-4">
                   {inscriptionStatus.isInscribed ? (
                     // Usuario ya inscrito

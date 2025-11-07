@@ -239,7 +239,8 @@ async function getEventoById(env, id) {
   try {
     const { results } = await env.DB.prepare(
       `SELECT id, title, description, event_date, location, image_url, type, status,
-              registration_open, max_participants, price, organizer_id, created_at, updated_at, end_date
+              registration_open, max_participants, price, organizer_id, created_at, updated_at, end_date,
+              is_public, payment_link
        FROM eventos
        WHERE id = ?`
     ).bind(id).all();
@@ -268,6 +269,8 @@ async function getEventoById(env, id) {
       currentParticipants: 0, // Esto se calcula desde inscripciones
       price: evento.price,
       organizerId: evento.organizer_id,
+      isPublic: Boolean(evento.is_public),
+      paymentLink: evento.payment_link,
       createdAt: evento.created_at,
       updatedAt: evento.updated_at,
       endDate: evento.end_date

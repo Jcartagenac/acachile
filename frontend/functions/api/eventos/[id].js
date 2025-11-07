@@ -283,6 +283,8 @@ async function getEventoById(env, id) {
       createdAt: evento.created_at,
       updatedAt: evento.updated_at,
       endDate: evento.end_date,
+      isPublic: Boolean(evento.is_public),
+      paymentLink: evento.payment_link,
     };
 
     return {
@@ -328,13 +330,17 @@ async function updateEvento(env, id, updateData) {
       registrationOpen: 'registration_open',
       maxParticipants: 'max_participants',
       price: 'price',
-      endDate: 'end_date'
+      endDate: 'end_date',
+      isPublic: 'is_public',
+      paymentLink: 'payment_link'
     };
 
     Object.keys(updateData).forEach(key => {
       if (fieldsMap[key] !== undefined && updateData[key] !== undefined) {
+        // Convertir isPublic a 0 o 1 para SQLite
+        const value = key === 'isPublic' ? (updateData[key] ? 1 : 0) : updateData[key];
         updateFields.push(`${fieldsMap[key]} = ?`);
-        values.push(updateData[key]);
+        values.push(value);
       }
     });
 

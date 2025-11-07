@@ -54,6 +54,12 @@ const eventSchema = z
       .min(0, 'El precio no puede ser negativo')
       .max(1_000_000, 'El precio es demasiado alto'),
     registrationOpen: z.boolean(),
+    isPublic: z.boolean().optional(),
+    paymentLink: z
+      .string()
+      .url('Debe ser una URL válida')
+      .optional()
+      .or(z.literal('')),
     requirements: z.string().optional(),
     tags: z.string().optional(),
     contactEmail: z
@@ -102,7 +108,8 @@ export const CreateEventPage: React.FC = () => {
     mode: 'onChange',
     defaultValues: {
       price: 0,
-      registrationOpen: true
+      registrationOpen: true,
+      isPublic: true
     }
   });
 
@@ -151,6 +158,8 @@ export const CreateEventPage: React.FC = () => {
         maxParticipants: data.maxParticipants,
         price: data.price,
         registrationOpen: data.registrationOpen,
+        isPublic: data.isPublic,
+        paymentLink: data.paymentLink?.trim() || undefined,
         status: 'published',
         image:
           selectedImage ||
@@ -358,6 +367,33 @@ export const CreateEventPage: React.FC = () => {
                   <label htmlFor="registration-open" className="text-sm text-neutral-600">
                     Permitir inscripciones en línea para este evento
                   </label>
+                </div>
+
+                <div className="flex items-center gap-3 bg-white/70 border border-white/60 rounded-2xl px-4 py-3">
+                  <input
+                    type="checkbox"
+                    {...register('isPublic')}
+                    id="is-public"
+                    className="h-4 w-4 text-primary-500 rounded border-neutral-300"
+                  />
+                  <label htmlFor="is-public" className="text-sm text-neutral-600">
+                    Evento público (permite inscripción sin autenticación)
+                  </label>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Enlace de Pago/Entradas (opcional)</label>
+                  <input
+                    {...register('paymentLink')}
+                    className={inputClass}
+                    placeholder="https://ejemplo.com/pagar"
+                  />
+                  {errors.paymentLink && (
+                    <p className="text-red-500 text-sm mt-1">{errors.paymentLink.message}</p>
+                  )}
+                  <p className="text-xs text-neutral-500 mt-1">
+                    URL para completar pago o generar entradas después de la inscripción
+                  </p>
                 </div>
               </div>
 

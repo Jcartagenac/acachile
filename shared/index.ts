@@ -127,6 +127,8 @@ export interface Evento {
   organizerId: number;
   organizerName?: string;
   contactInfo?: Record<string, unknown>;
+  isPublic: boolean; // Indica si el evento permite inscripción pública sin autenticación
+  paymentLink?: string; // Enlace para pagos o generación de entradas
   createdAt: string;
   updatedAt: string;
 }
@@ -147,6 +149,8 @@ export interface EventoForm {
   requirements?: string[];
   tags?: string[];
   contactInfo?: Record<string, unknown>;
+  isPublic?: boolean; // Indica si el evento permite inscripción pública sin autenticación
+  paymentLink?: string; // Enlace para pagos o generación de entradas
 }
 
 export type EventInscriptionStatus = 'pending' | 'confirmed' | 'waitlist' | 'cancelled';
