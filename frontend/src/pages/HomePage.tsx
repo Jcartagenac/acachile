@@ -137,8 +137,8 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="relative overflow-hidden py-6 sm:py-8 bg-soft-gradient-light">
-      <div className="relative px-4 py-4 sm:py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-10">
+    <section className="relative overflow-hidden py-14 sm:py-20 bg-soft-gradient-light">
+      <div className="relative px-4 py-14 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-24">
         <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
           {/* Título - orden 1 en mobile */}
           <div className="order-1 lg:col-span-6 mb-6 lg:mb-0">
