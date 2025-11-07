@@ -107,7 +107,11 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
       setLoading(true);
       try {
         console.log('[AdminHomeEditor] Fetching sections for page:', activePage);
-        const response = await fetch(`/api/admin/content?page=${activePage}`, { cache: 'no-store' });
+        const token = getAuthToken();
+        const response = await fetch(`/api/admin/content?page=${activePage}`, { 
+          cache: 'no-store',
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         const json = await response.json();
         console.log('[AdminHomeEditor] Response:', json);
         
