@@ -105,16 +105,16 @@ export async function onRequest(context) {
 // Función para inscribirse a un evento (reutilizada desde inscripciones/index.js)
 async function inscribirseEvento(env, userId, eventoId) {
   try {
-    // Verificar que el evento existe
-    const eventoData = await env.ACA_KV.get(`evento:${eventoId}`);
-    if (!eventoData) {
+    // Verificar que el evento existe en D1
+    const eventoResult = await getEventoById(env, eventoId);
+    if (!eventoResult.success || !eventoResult.data) {
       return {
         success: false,
         error: 'Evento no encontrado'
       };
     }
 
-    const evento = JSON.parse(eventoData);
+    const evento = eventoResult.data;
 
     // Verificar que las inscripciones están abiertas
     if (!evento.registrationOpen) {
@@ -171,19 +171,6 @@ async function inscribirseEvento(env, userId, eventoId) {
     const eventInscripciones = eventoInscripciones.success ? eventoInscripciones.data : [];
     eventInscripciones.push(inscripcion);
     await env.ACA_KV.put(`inscripciones:evento:${eventoId}`, JSON.stringify(eventInscripciones));
-
-    // Actualizar contador de participantes del evento
-    evento.currentParticipants = eventInscripciones.length;
-    await env.ACA_KV.put(`evento:${eventoId}`, JSON.stringify(evento));
-
-    // Actualizar lista general de eventos
-    const eventosData = await env.ACA_KV.get('eventos:all');
-    const eventos = eventosData ? JSON.parse(eventosData) : [];
-    const eventoIndex = eventos.findIndex(e => e.id === eventoId);
-    if (eventoIndex !== -1) {
-      eventos[eventoIndex] = evento;
-      await env.ACA_KV.put('eventos:all', JSON.stringify(eventos));
-    }
 
     // Actualizar lista general de inscripciones
     const allInscripcionesData = await env.ACA_KV.get('inscripciones:all');
@@ -243,6 +230,59 @@ async function getInscripcionesEvento(env, eventoId) {
     return {
       success: false,
       error: 'Error obteniendo inscripciones del evento'
+    };
+  }
+}
+
+// Función para obtener evento por ID desde D1
+async function getEventoById(env, id) {
+  try {
+    const { results } = await env.DB.prepare(
+      `SELECT id, title, description, event_date, location, image_url, type, status,
+              registration_open, max_participants, price, organizer_id, created_at, updated_at, end_date
+       FROM eventos
+       WHERE id = ?`
+    ).bind(id).all();
+
+    if (!results || results.length === 0) {
+      return {
+        success: false,
+        error: 'Evento no encontrado'
+      };
+    }
+
+    const evento = results[0];
+    
+    // Convertir snake_case a camelCase
+    const eventoFormatted = {
+      id: evento.id,
+      title: evento.title,
+      description: evento.description,
+      eventDate: evento.event_date,
+      location: evento.location,
+      imageUrl: evento.image_url,
+      type: evento.type,
+      status: evento.status,
+      registrationOpen: evento.registration_open === 1,
+      maxParticipants: evento.max_participants,
+      currentParticipants: 0, // Esto se calcula desde inscripciones
+      price: evento.price,
+      organizerId: evento.organizer_id,
+      createdAt: evento.created_at,
+      updatedAt: evento.updated_at,
+      endDate: evento.end_date
+    };
+
+    return {
+      success: true,
+      data: eventoFormatted
+    };
+
+  } catch (error) {
+    console.error('Error getting evento by ID from D1:', error);
+    return {
+      success: false,
+      error: 'Error obteniendo evento de la base de datos'
     };
   }
 }
