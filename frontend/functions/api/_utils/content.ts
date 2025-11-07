@@ -31,7 +31,7 @@ const coerceSourceType = (value: unknown): SiteSectionSourceType => {
   return 'custom';
 };
 
-export const normalizeSections = (rawSections: RawSection[] | undefined, page: SitePageKey): SiteSection[] => {
+export const normalizeSections = (rawSections: RawSection[] | undefined, page: SitePageKey, useDefaults: boolean = true): SiteSection[] => {
   const defaults = new Map(getDefaultSections(page).map((section) => [section.key, section]));
   const collected = new Map<string, SiteSection>();
 
@@ -41,27 +41,21 @@ export const normalizeSections = (rawSections: RawSection[] | undefined, page: S
         ? raw.key.trim()
         : getDefaultSections(page)[index]?.key ?? `section_${index}`;
 
-    const fallback = defaults.get(tentativeKey);
+    const fallback = useDefaults ? defaults.get(tentativeKey) : undefined;
     const sortOrder = coerceNumber(raw?.sort_order, fallback?.sort_order ?? index);
     const sourceType = coerceSourceType(raw?.source_type);
-    // IMPORTANTE: Solo usar fallback si raw no tiene el campo definido (undefined/null)
-    // Si raw tiene el campo pero está vacío (string vacía), respetar ese valor
-    const sourceId = raw?.source_id !== undefined && raw?.source_id !== null ? String(raw.source_id) : (fallback?.source_id ?? undefined);
-    const ctaLabel = raw?.cta_label !== undefined && raw?.cta_label !== null ? String(raw.cta_label) : (fallback?.cta_label ?? undefined);
-    const ctaUrl = raw?.cta_url !== undefined && raw?.cta_url !== null ? String(raw.cta_url) : (fallback?.cta_url ?? undefined);
+    
+    // Convertir null a undefined para campos opcionales
+    const sourceId = raw?.source_id != null ? String(raw.source_id) : undefined;
+    const ctaLabel = raw?.cta_label != null ? String(raw.cta_label) : undefined;
+    const ctaUrl = raw?.cta_url != null ? String(raw.cta_url) : undefined;
 
     const normalized: SiteSection = {
       page,
       key: tentativeKey,
-      title:
-        typeof raw?.title === 'string'
-          ? raw.title.trim()
-          : fallback?.title ?? '',
+      title: typeof raw?.title === 'string' ? raw.title : (fallback?.title ?? ''),
       content: typeof raw?.content === 'string' ? raw.content : (fallback?.content ?? ''),
-      image_url:
-        typeof raw?.image_url === 'string'
-          ? raw.image_url.trim()
-          : (fallback?.image_url ?? ''),
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : (fallback?.image_url ?? ''),
       sort_order: sortOrder,
       source_type: sourceType,
       source_id: sourceId,
@@ -73,8 +67,11 @@ export const normalizeSections = (rawSections: RawSection[] | undefined, page: S
     defaults.delete(normalized.key);
   });
 
-  for (const remaining of defaults.values()) {
-    collected.set(remaining.key, { ...remaining, page });
+  // Solo agregar defaults restantes si useDefaults es true
+  if (useDefaults) {
+    for (const remaining of defaults.values()) {
+      collected.set(remaining.key, { ...remaining, page });
+    }
   }
 
   return Array.from(collected.values()).sort((a, b) => a.sort_order - b.sort_order);
@@ -149,8 +146,12 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
       .bind(page)
       .all();
 
+    console.log('[getSectionsForPage] DB query results for page', page, ':', JSON.stringify(res.results, null, 2));
+
     if (res.results && res.results.length > 0) {
-      sections = normalizeSections(res.results, page);
+      // Cuando hay datos en DB, NO mezclar con defaults (useDefaults=false)
+      sections = normalizeSections(res.results, page, false);
+      console.log('[getSectionsForPage] Normalized sections from DB:', JSON.stringify(sections, null, 2));
       if (env.ACA_KV) {
         await env.ACA_KV.put(cacheKey, JSON.stringify(sections));
       }
@@ -162,14 +163,17 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
     if (cached) {
       try {
         const parsed = JSON.parse(cached) as RawSection[];
-        sections = normalizeSections(parsed, page);
+        // Cuando viene del cache, tampoco mezclar con defaults
+        sections = normalizeSections(parsed, page, false);
       } catch (error) {
         console.warn('[content] Failed to parse cached sections, using defaults', error);
       }
     }
   }
 
+  // Solo usar defaults si NO hay datos guardados
   if (!sections || sections.length === 0) {
+    console.log('[getSectionsForPage] No saved data found, using defaults');
     sections = defaults;
     if (env.ACA_KV) {
       await env.ACA_KV.put(cacheKey, JSON.stringify(sections));

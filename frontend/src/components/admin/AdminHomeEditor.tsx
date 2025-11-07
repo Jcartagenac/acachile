@@ -32,59 +32,40 @@ const cloneDefaults = (page: SitePageKey): EditableSection[] =>
   getDefaultSections(page).map((section) => ({ ...section }));
 
 const mergeWithDefaults = (page: SitePageKey, incoming: Partial<SiteSection>[] | undefined): EditableSection[] => {
-  const defaults = new Map(getDefaultSections(page).map((section) => [section.key, section]));
-  const merged = new Map<string, EditableSection>();
+  // Si no hay incoming data, usar defaults completos
+  if (!incoming || incoming.length === 0) {
+    return getDefaultSections(page).map((section) => ({ ...section }));
+  }
 
-  (incoming || []).forEach((raw, index) => {
+  // Si hay incoming data, NO mezclar con defaults (respetar lo guardado)
+  const merged: EditableSection[] = [];
+
+  incoming.forEach((raw, index) => {
     const tentativeKey =
       typeof raw?.key === 'string' && raw.key.trim().length > 0
         ? raw.key.trim()
-        : getDefaultSections(page)[index]?.key ?? `section_${index}`;
+        : `section_${index}`;
 
-    const fallback = defaults.get(tentativeKey);
     const sortOrder =
       typeof raw?.sort_order === 'number'
         ? raw.sort_order
-        : fallback?.sort_order ?? index;
+        : index;
 
-    // IMPORTANTE: Si raw tiene un valor (incluso string vacía), usarlo.
-    // Solo usar fallback si el campo es undefined/null
-    merged.set(tentativeKey, {
+    merged.push({
       page,
       key: tentativeKey,
-      title: typeof raw?.title === 'string' ? raw.title : (fallback?.title ?? ''),
-      content: typeof raw?.content === 'string' ? raw.content : (fallback?.content ?? ''),
-      image_url: typeof raw?.image_url === 'string' ? raw.image_url : (fallback?.image_url ?? ''),
+      title: typeof raw?.title === 'string' ? raw.title : '',
+      content: typeof raw?.content === 'string' ? raw.content : '',
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : '',
       sort_order: sortOrder,
-      source_type: coerceSourceType(raw?.source_type ?? fallback?.source_type),
-      source_id:
-        raw?.source_id !== undefined && raw?.source_id !== null
-          ? String(raw.source_id)
-          : typeof fallback?.source_id === 'string'
-            ? fallback.source_id
-            : undefined,
-      cta_label:
-        raw?.cta_label !== undefined && raw?.cta_label !== null
-          ? String(raw.cta_label)
-          : typeof fallback?.cta_label === 'string'
-            ? fallback.cta_label
-            : undefined,
-      cta_url:
-        raw?.cta_url !== undefined && raw?.cta_url !== null
-          ? String(raw.cta_url)
-          : typeof fallback?.cta_url === 'string'
-            ? fallback.cta_url
-            : undefined
+      source_type: coerceSourceType(raw?.source_type),
+      source_id: raw?.source_id != null ? String(raw.source_id) : undefined,
+      cta_label: raw?.cta_label != null ? String(raw.cta_label) : undefined,
+      cta_url: raw?.cta_url != null ? String(raw.cta_url) : undefined
     });
-
-    defaults.delete(tentativeKey);
   });
 
-  for (const remaining of defaults.values()) {
-    merged.set(remaining.key, { ...remaining });
-  }
-
-  return Array.from(merged.values()).sort((a, b) => a.sort_order - b.sort_order);
+  return merged.sort((a, b) => a.sort_order - b.sort_order);
 };
 
 const sanitizeSectionsForSave = (page: SitePageKey, sections: EditableSection[]): SiteSection[] =>

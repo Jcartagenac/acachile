@@ -2,10 +2,13 @@ export async function onRequestGet(context) {
   const bindings = {
     DB: !!context.env.DB,
     ACA_KV: !!context.env.ACA_KV,
+    IMAGES: !!context.env.IMAGES,
     JWT_SECRET: !!context.env.JWT_SECRET,
     RESEND_API_KEY: !!context.env.RESEND_API_KEY,
     CORS_ORIGIN: context.env.CORS_ORIGIN || 'not set',
     ENVIRONMENT: context.env.ENVIRONMENT || 'not set',
+    FRONTEND_URL: context.env.FRONTEND_URL || 'not set',
+    R2_PUBLIC_URL: context.env.R2_PUBLIC_URL || 'not set',
     FROM_EMAIL: context.env.FROM_EMAIL || 'not set',
     ADMIN_EMAIL: context.env.ADMIN_EMAIL || 'not set'
   };

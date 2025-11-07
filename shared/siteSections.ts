@@ -34,12 +34,12 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       key: 'international',
       title: 'Somos Internacionales',
       content:
-        '',  // Contenido manejado por el editor del panel de admin
-      image_url: '',  // Imagen manejada por el editor del panel de admin
+        'El 29 y 30 de noviembre de 2025 estaremos junto a la World Barbecue Association recibiendo a 80 equipos de 40 países. La gran final del WBQA International BBQ Championship se vive en Viña del Mar, y queremos que formes parte de este hito profesional.',
+      image_url: 'https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png',
       sort_order: 1,
       source_type: 'custom',
-      cta_label: '',
-      cta_url: ''
+      cta_label: 'Eventos WBQA',
+      cta_url: 'https://wbqachile2025.cl/'
     },
     {
       key: 'community',
