@@ -20,7 +20,9 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     }
 
     const page = parsePageParam(new URL(request.url).searchParams.get('page'));
+    console.log('[CONTENT GET] Fetching sections for page:', page);
     const sections = await getSectionsForPage(env, page);
+    console.log('[CONTENT GET] Sections returned:', JSON.stringify(sections, null, 2));
 
     return jsonResponse({ success: true, sections });
   } catch (error) {

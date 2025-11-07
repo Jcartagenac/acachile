@@ -13,41 +13,27 @@ type DisplaySection = SiteSection & {
 const cloneDefaults = (): SiteSection[] => getDefaultSections('about').map((section) => ({ ...section }));
 
 const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
-  const defaults = new Map(getDefaultSections('about').map((section) => [section.key, section]));
-  const merged = new Map<string, SiteSection>();
-
-  (incoming || []).forEach((raw, index) => {
-    const tentativeKey =
-      typeof raw?.key === 'string' && raw.key.trim().length > 0
-        ? raw.key.trim()
-        : getDefaultSections('about')[index]?.key ?? `section_${index}`;
-
-    const fallback = defaults.get(tentativeKey);
-    const normalized: SiteSection = {
-      page: 'about',
-      key: tentativeKey,
-      title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
-      content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
-      image_url: typeof raw?.image_url === 'string' ? raw.image_url : fallback?.image_url ?? '',
-      sort_order:
-        typeof raw?.sort_order === 'number'
-          ? raw.sort_order
-          : fallback?.sort_order ?? index,
-      source_type: raw?.source_type ?? fallback?.source_type,
-      source_id: raw?.source_id ?? fallback?.source_id,
-      cta_label: raw?.cta_label ?? fallback?.cta_label,
-      cta_url: raw?.cta_url ?? fallback?.cta_url
-    };
-
-    merged.set(normalized.key, normalized);
-    defaults.delete(normalized.key);
-  });
-
-  for (const remaining of defaults.values()) {
-    merged.set(remaining.key, { ...remaining });
+  if (!incoming || incoming.length === 0) {
+    return cloneDefaults();
   }
 
-  return Array.from(merged.values()).sort((a, b) => a.sort_order - b.sort_order);
+  const normalized: SiteSection[] = [];
+  incoming.forEach((raw, index) => {
+    normalized.push({
+      page: 'about',
+      key: typeof raw?.key === 'string' && raw.key.trim() ? raw.key.trim() : `section_${index}`,
+      title: typeof raw?.title === 'string' ? raw.title : '',
+      content: typeof raw?.content === 'string' ? raw.content : '',
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : '',
+      sort_order: typeof raw?.sort_order === 'number' ? raw.sort_order : index,
+      source_type: raw?.source_type ?? 'custom',
+      source_id: raw?.source_id != null ? String(raw.source_id) : undefined,
+      cta_label: raw?.cta_label != null ? String(raw.cta_label) : undefined,
+      cta_url: raw?.cta_url != null ? String(raw.cta_url) : undefined
+    });
+  });
+
+  return normalized.sort((a, b) => a.sort_order - b.sort_order);
 };
 
 const parseContentBlocks = (content: string) => {
@@ -231,12 +217,26 @@ export const AboutPage: React.FC = () => {
     }));
   }, [sections]);
 
-  const heroSection = displaySections[0] ?? {
-    ...cloneDefaults()[0],
-    display_title: cloneDefaults()[0].title,
-    display_content: cloneDefaults()[0].content,
-    display_image: cloneDefaults()[0].image_url
+  const defaults = cloneDefaults();
+  const defaultHero: DisplaySection = defaults[0] ? {
+    ...defaults[0],
+    display_title: defaults[0].title,
+    display_content: defaults[0].content,
+    display_image: defaults[0].image_url
+  } : {
+    page: 'about',
+    key: 'hero',
+    title: '',
+    content: '',
+    image_url: '',
+    sort_order: 0,
+    source_type: 'custom',
+    display_title: '',
+    display_content: '',
+    display_image: ''
   };
+  
+  const heroSection = displaySections[0] ?? defaultHero;
   const otherSections = displaySections.slice(1);
 
   return (

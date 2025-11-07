@@ -15,57 +15,40 @@ type SectionDisplay = SiteSection & {
 const cloneDefaults = (): SiteSection[] => getDefaultSections('home').map((section) => ({ ...section }));
 
 const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSection[] => {
-  const defaults = new Map(getDefaultSections('home').map((section) => [section.key, section]));
-  const merged = new Map<string, SiteSection>();
+  // Si no hay incoming data, usar defaults completos
+  if (!incoming || incoming.length === 0) {
+    return cloneDefaults();
+  }
 
-  (incoming || []).forEach((raw, index) => {
+  // Si hay incoming data, usar SOLO lo que viene (respetar datos guardados)
+  const normalized: SiteSection[] = [];
+
+  incoming.forEach((raw, index) => {
     const tentativeKey =
       typeof raw?.key === 'string' && raw.key.trim().length > 0
         ? raw.key.trim()
-        : getDefaultSections('home')[index]?.key ?? `section_${index}`;
+        : `section_${index}`;
 
-    const fallback = defaults.get(tentativeKey);
     const sortOrder =
       typeof raw?.sort_order === 'number'
         ? raw.sort_order
-        : fallback?.sort_order ?? index;
+        : index;
 
-    merged.set(tentativeKey, {
+    normalized.push({
       page: 'home',
       key: tentativeKey,
-      title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
-      content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
-      image_url: typeof raw?.image_url === 'string' ? raw.image_url : fallback?.image_url ?? '',
+      title: typeof raw?.title === 'string' ? raw.title : '',
+      content: typeof raw?.content === 'string' ? raw.content : '',
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : '',
       sort_order: sortOrder,
-      source_type: (raw?.source_type as SiteSectionSourceType) ?? fallback?.source_type ?? 'custom',
-      source_id:
-        typeof raw?.source_id === 'string'
-          ? raw.source_id
-          : typeof fallback?.source_id === 'string'
-            ? fallback.source_id
-            : undefined,
-      cta_label:
-        typeof raw?.cta_label === 'string'
-          ? raw.cta_label
-          : typeof fallback?.cta_label === 'string'
-            ? fallback.cta_label
-            : undefined,
-      cta_url:
-        typeof raw?.cta_url === 'string'
-          ? raw.cta_url
-          : typeof fallback?.cta_url === 'string'
-            ? fallback.cta_url
-            : undefined
+      source_type: (raw?.source_type as SiteSectionSourceType) ?? 'custom',
+      source_id: raw?.source_id != null ? String(raw.source_id) : undefined,
+      cta_label: raw?.cta_label != null ? String(raw.cta_label) : undefined,
+      cta_url: raw?.cta_url != null ? String(raw.cta_url) : undefined
     });
-
-    defaults.delete(tentativeKey);
   });
 
-  for (const remaining of defaults.values()) {
-    merged.set(remaining.key, { ...remaining });
-  }
-
-  return Array.from(merged.values()).sort((a, b) => a.sort_order - b.sort_order);
+  return normalized.sort((a, b) => a.sort_order - b.sort_order);
 };
 
 const parseContentBlocks = (content: string) => {
@@ -362,13 +345,23 @@ const HomePage: React.FC = () => {
     });
   }, [sections, eventLookup, newsLookup]);
 
-  const heroSection = resolvedSections[0] ?? {
-    ...DEFAULT_SITE_SECTIONS[0],
-    display_title: DEFAULT_SITE_SECTIONS[0].title,
-    display_content: DEFAULT_SITE_SECTIONS[0].content,
-    display_image: DEFAULT_SITE_SECTIONS[0].image_url,
-    display_cta_label: DEFAULT_SITE_SECTIONS[0].cta_label,
-    display_cta_url: DEFAULT_SITE_SECTIONS[0].cta_url
+  const defaultHero = getDefaultSections('home')[0] || {
+    page: 'home' as const,
+    key: 'hero',
+    title: '',
+    content: '',
+    image_url: '',
+    sort_order: 0,
+    source_type: 'custom' as const
+  };
+  
+  const heroSection: SectionDisplay = resolvedSections[0] ?? {
+    ...defaultHero,
+    display_title: defaultHero.title,
+    display_content: defaultHero.content,
+    display_image: defaultHero.image_url,
+    display_cta_label: defaultHero.cta_label,
+    display_cta_url: defaultHero.cta_url
   };
   const otherSections = resolvedSections.slice(1);
 
