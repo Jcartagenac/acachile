@@ -563,6 +563,20 @@ export const EditEventPage: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
+                {/* Debug: Mostrar errores si existen */}
+                {Object.keys(errors).length > 0 && (
+                  <div className="w-full mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-800 font-semibold mb-2">Errores en el formulario:</p>
+                    <ul className="text-sm text-red-700 list-disc list-inside">
+                      {Object.entries(errors).map(([field, error]: [string, any]) => (
+                        <li key={field}>
+                          <strong>{field}:</strong> {error?.message || 'Error desconocido'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={Object.keys(errors).length > 0 || isLoading}
