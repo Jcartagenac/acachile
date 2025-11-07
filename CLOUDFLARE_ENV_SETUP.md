@@ -26,7 +26,7 @@ VITE_API_BASE_URL=https://beta.acachile.com
 VITE_DOMAIN=beta.acachile.com
 
 # URL pública del bucket R2 para imágenes
-VITE_R2_PUBLIC_URL=https://images.beta.acachile.com
+VITE_R2_PUBLIC_URL=https://images.acachile.com
 
 # Entorno (production/preview/development)
 VITE_ENVIRONMENT=production
@@ -44,7 +44,7 @@ FRONTEND_URL=https://beta.acachile.com
 CORS_ORIGIN=https://beta.acachile.com
 
 # URL pública del bucket R2 (para generar URLs de imágenes)
-R2_PUBLIC_URL=https://images.beta.acachile.com
+R2_PUBLIC_URL=https://images.acachile.com
 
 # Email configuration
 FROM_EMAIL=noreply@mail.juancartagena.cl

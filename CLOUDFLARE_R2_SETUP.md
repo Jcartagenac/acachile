@@ -40,9 +40,9 @@ R2_PUBLIC_URL=https://pub-TU_ACCOUNT_ID.r2.dev/aca-chile-images
 
 1. En el bucket `aca-chile-images` → **Settings** → **Custom Domains**
 2. Haz clic en **"Connect Domain"**
-3. Dominio: `images.beta.acachile.com`
+3. Dominio: `images.acachile.com`
 4. Cloudflare configurará automáticamente el DNS
-5. Actualizar `R2_PUBLIC_URL` a: `https://images.beta.acachile.com`
+5. Actualizar `R2_PUBLIC_URL` a: `https://images.acachile.com`
 
 ### 5. Subir Imágenes Existentes
 
@@ -68,12 +68,12 @@ Una vez subidas las imágenes, actualizar en:
 
 **frontend/functions/api/eventos/init.js**:
 ```javascript
-image: "https://images.beta.acachile.com/eventos/campeonato-nacional-asado.jpg"
+image: "https://images.acachile.com/eventos/campeonato-nacional-asado.jpg"
 ```
 
 **frontend/functions/api/noticias/index.js**:
 ```javascript
-image: "https://images.beta.acachile.com/noticias/mundial-barbacoa-2024.jpg"
+image: "https://images.acachile.com/noticias/mundial-barbacoa-2024.jpg"
 ```
 
 ## 📁 Estructura Final en R2
@@ -103,7 +103,7 @@ https://images.unsplash.com/photo-xxx?w=600&h=400...
 
 **Después (R2 con custom domain):**
 ```
-https://images.beta.acachile.com/eventos/campeonato-nacional-asado.jpg
+https://images.acachile.com/eventos/campeonato-nacional-asado.jpg
 ```
 
 ## 💰 Beneficios

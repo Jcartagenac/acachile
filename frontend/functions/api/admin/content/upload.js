@@ -55,7 +55,7 @@ export async function onRequestPost(context) {
 
     // Get R2 public URL from environment variable or use default
     // In production, R2_PUBLIC_URL should be configured in Cloudflare Pages Dashboard
-    const publicUrl = (env.R2_PUBLIC_URL || 'https://images.beta.acachile.com').replace(/\/$/, '');
+    const publicUrl = (env.R2_PUBLIC_URL || 'https://images.acachile.com').replace(/\/$/, '');
     const url = publicUrl ? `${publicUrl}/${key}` : key;
 
     return jsonResponse({ success: true, url, key });

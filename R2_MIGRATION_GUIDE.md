@@ -85,8 +85,8 @@ Tendrás:
 Después de la migración, puedes configurar un dominio personalizado:
 
 1. En R2 bucket → **Settings** → **Custom Domains**
-2. Agregar: `images.beta.acachile.com`
-3. URLs cambiarían a: `https://images.beta.acachile.com/eventos/xxx.jpg`
+2. Agregar: `images.acachile.com`
+3. URLs cambiarían a: `https://images.acachile.com/eventos/xxx.jpg`
 
 ## 📋 Después de la Migración
 
