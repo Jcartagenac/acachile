@@ -75,13 +75,29 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-soft-gradient-light relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div
-          className={`flex flex-col gap-8 sm:gap-12 lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
-        >
-          <div className="lg:w-1/2 flex flex-col justify-center space-y-5 sm:space-y-6">
+        <div className={`flex flex-col lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+          {/* Título - siempre primero en mobile */}
+          <div className="order-1 lg:w-1/2 mb-6 lg:mb-0">
             <h2 className="text-2xl sm:text-4xl font-bold text-neutral-900 leading-tight">
               {section.display_title}
             </h2>
+          </div>
+          
+          {/* Imagen - segundo en mobile, respeta reverse en desktop */}
+          {section.display_image ? (
+            <div className={`order-2 lg:w-1/2 mb-8 lg:mb-0 ${reverse ? 'lg:order-1' : 'lg:order-3'}`}>
+              <div className="relative bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
+                <img
+                  src={section.display_image}
+                  alt={section.display_title}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                />
+              </div>
+            </div>
+          ) : null}
+          
+          {/* Texto y CTA - tercero en mobile */}
+          <div className={`order-3 lg:w-1/2 flex flex-col justify-center space-y-5 sm:space-y-6 ${reverse ? 'lg:order-3' : 'lg:order-2'}`}>
             <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
               {blocks.length === 0 ? (
                 <p>{section.display_content}</p>
@@ -111,17 +127,6 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
               </div>
             ) : null}
           </div>
-          {section.display_image ? (
-            <div className="lg:w-1/2">
-              <div className="relative bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
-                <img
-                  src={section.display_image}
-                  alt={section.display_title}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-                />
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
     </section>
@@ -134,14 +139,34 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   return (
     <section className="relative overflow-hidden py-14 sm:py-20 bg-soft-gradient-light">
       <div className="relative px-4 py-14 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-24">
-        <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
-          <div className="lg:col-span-6 space-y-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center">
+          {/* Badge y Título - orden 1 en mobile */}
+          <div className="order-1 lg:col-span-6 mb-6 lg:mb-0">
             <span className="inline-block px-6 py-2 bg-soft-gradient-primary rounded-full shadow-soft-sm border border-white/40 text-primary-700 font-semibold text-sm uppercase tracking-wide">
               {loading ? 'Cargando…' : 'Inicio ACA Chile'}
             </span>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900 mt-8">
               {section.display_title}
             </h1>
+          </div>
+          
+          {/* Imagen - orden 2 en mobile */}
+          {section.display_image ? (
+            <div className="order-2 lg:order-3 lg:col-span-6 mb-8 lg:mb-0">
+              <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
+                <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                  <img
+                    src={section.display_image}
+                    alt={section.display_title}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+          
+          {/* Texto y CTA - orden 3 en mobile */}
+          <div className="order-3 lg:order-2 lg:col-span-6 space-y-8">
             <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4 max-w-xl">
               {blocks.length === 0 ? (
                 <p>{section.display_content}</p>
@@ -173,19 +198,6 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
               </div>
             ) : null}
           </div>
-          {section.display_image ? (
-            <div className="mt-12 lg:mt-0 lg:col-span-6">
-              <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
-                <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                  <img
-                    src={section.display_image}
-                    alt={section.display_title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
     </section>
