@@ -44,22 +44,24 @@ export const normalizeSections = (rawSections: RawSection[] | undefined, page: S
     const fallback = defaults.get(tentativeKey);
     const sortOrder = coerceNumber(raw?.sort_order, fallback?.sort_order ?? index);
     const sourceType = coerceSourceType(raw?.source_type);
-    const sourceId = typeof raw?.source_id === 'string' ? raw.source_id : fallback?.source_id;
-    const ctaLabel = typeof raw?.cta_label === 'string' ? raw.cta_label : fallback?.cta_label;
-    const ctaUrl = typeof raw?.cta_url === 'string' ? raw.cta_url : fallback?.cta_url;
+    // IMPORTANTE: Solo usar fallback si raw no tiene el campo definido (undefined/null)
+    // Si raw tiene el campo pero está vacío (string vacía), respetar ese valor
+    const sourceId = raw?.source_id !== undefined && raw?.source_id !== null ? String(raw.source_id) : (fallback?.source_id ?? undefined);
+    const ctaLabel = raw?.cta_label !== undefined && raw?.cta_label !== null ? String(raw.cta_label) : (fallback?.cta_label ?? undefined);
+    const ctaUrl = raw?.cta_url !== undefined && raw?.cta_url !== null ? String(raw.cta_url) : (fallback?.cta_url ?? undefined);
 
     const normalized: SiteSection = {
       page,
       key: tentativeKey,
       title:
-        typeof raw?.title === 'string' && raw.title.trim().length > 0
+        typeof raw?.title === 'string'
           ? raw.title.trim()
           : fallback?.title ?? '',
-      content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
+      content: typeof raw?.content === 'string' ? raw.content : (fallback?.content ?? ''),
       image_url:
-        typeof raw?.image_url === 'string' && raw.image_url.trim().length > 0
+        typeof raw?.image_url === 'string'
           ? raw.image_url.trim()
-          : fallback?.image_url ?? '',
+          : (fallback?.image_url ?? ''),
       sort_order: sortOrder,
       source_type: sourceType,
       source_id: sourceId,

@@ -47,29 +47,31 @@ const mergeWithDefaults = (page: SitePageKey, incoming: Partial<SiteSection>[] |
         ? raw.sort_order
         : fallback?.sort_order ?? index;
 
+    // IMPORTANTE: Si raw tiene un valor (incluso string vacía), usarlo.
+    // Solo usar fallback si el campo es undefined/null
     merged.set(tentativeKey, {
       page,
       key: tentativeKey,
-      title: typeof raw?.title === 'string' ? raw.title : fallback?.title ?? '',
-      content: typeof raw?.content === 'string' ? raw.content : fallback?.content ?? '',
-      image_url: typeof raw?.image_url === 'string' ? raw.image_url : fallback?.image_url ?? '',
+      title: typeof raw?.title === 'string' ? raw.title : (fallback?.title ?? ''),
+      content: typeof raw?.content === 'string' ? raw.content : (fallback?.content ?? ''),
+      image_url: typeof raw?.image_url === 'string' ? raw.image_url : (fallback?.image_url ?? ''),
       sort_order: sortOrder,
       source_type: coerceSourceType(raw?.source_type ?? fallback?.source_type),
       source_id:
-        typeof raw?.source_id === 'string'
-          ? raw.source_id
+        raw?.source_id !== undefined && raw?.source_id !== null
+          ? String(raw.source_id)
           : typeof fallback?.source_id === 'string'
             ? fallback.source_id
             : undefined,
       cta_label:
-        typeof raw?.cta_label === 'string'
-          ? raw.cta_label
+        raw?.cta_label !== undefined && raw?.cta_label !== null
+          ? String(raw.cta_label)
           : typeof fallback?.cta_label === 'string'
             ? fallback.cta_label
             : undefined,
       cta_url:
-        typeof raw?.cta_url === 'string'
-          ? raw.cta_url
+        raw?.cta_url !== undefined && raw?.cta_url !== null
+          ? String(raw.cta_url)
           : typeof fallback?.cta_url === 'string'
             ? fallback.cta_url
             : undefined
