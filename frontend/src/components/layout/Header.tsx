@@ -25,6 +25,10 @@ export const Header: React.FC = () => {
     { name: 'Contacto', href: '/contacto' },
   ];
 
+  // Separar navegación para mobile
+  const mobileVisibleNav = navigation.slice(0, 3); // Inicio, Quiénes Somos, Eventos
+  const mobileMenuNav = navigation.slice(3); // Noticias, Contacto
+
   return (
     <>
       {/* Header - Soft UI 2.0 */}
@@ -53,6 +57,23 @@ export const Header: React.FC = () => {
                 </div>
               </Link>
             </div>
+
+            {/* Mobile Visible Navigation - Siempre visible en mobile */}
+            <nav className="md:hidden flex items-center justify-center space-x-1 flex-1 mx-2">
+              {mobileVisibleNav.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`px-2 py-2 text-xs font-semibold rounded-xl transition-all duration-300 whitespace-nowrap ${
+                    location.pathname === item.href
+                      ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
+                      : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 border border-transparent'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
 
             {/* Desktop Navigation (centered) */}
             <nav className="hidden md:flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
@@ -131,12 +152,12 @@ export const Header: React.FC = () => {
           </Container>
         </div>
 
-        {/* Mobile Navigation Menu */}
+        {/* Mobile Navigation Menu - Solo Noticias y Contacto */}
         {isMenuOpen && (
           <div className="md:hidden absolute inset-x-0 top-full z-40 bg-white/98 backdrop-blur-soft border-t border-white/30 shadow-soft-lg">
             <div className="max-h-[calc(100vh-5rem)] overflow-y-auto">
               <Container className="py-4 space-y-3">
-                {navigation.map((item) => (
+                {mobileMenuNav.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
