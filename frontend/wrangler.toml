@@ -19,6 +19,15 @@ preview_id = "5390e4691c2c45d787ccd2a6d5383ea1"
 binding = "IMAGES"
 bucket_name = "aca-chile-images"
 
+# ⚠️ IMPORTANTE: Variables de Entorno
+# Para cambiar el dominio en producción, actualiza estas variables en:
+# Cloudflare Pages Dashboard → Settings → Environment variables
+# 
+# NO es necesario editar este archivo para cambios de dominio en producción.
+# Este archivo es solo para desarrollo local y como referencia.
+#
+# Ver CLOUDFLARE_ENV_SETUP.md para instrucciones completas.
+
 [env.production.vars]
 ENVIRONMENT = "production"
 CORS_ORIGIN = "https://beta.acachile.com"

@@ -4,8 +4,7 @@
  */
 
 import { buildAuthHeaders } from '../utils/authToken';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://beta.acachile.com';
+import { API_BASE_URL } from '../config/env';
 
 export interface NewsArticle {
   id: number;

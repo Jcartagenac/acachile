@@ -8,12 +8,13 @@ import {
   EventInscriptionStatus,
 } from '@shared/index';
 import { buildAuthHeaders } from '../utils/authToken';
+import { API_BASE_URL } from '../config/env';
 
 class EventService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://beta.acachile.com';
+    this.baseUrl = API_BASE_URL;
   }
 
   private mapInscriptionStatus(status?: string): EventInscriptionStatus {
