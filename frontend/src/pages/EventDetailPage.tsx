@@ -9,7 +9,8 @@ import {
   AlertCircle,
   UserPlus,
   X,
-  Info
+  Info,
+  Edit
 } from 'lucide-react';
 import { Evento, EventInscription } from '@shared/index';
 import { eventService } from '../services/eventService';
@@ -295,8 +296,8 @@ const EventDetailPage: React.FC = () => {
               alt={evento.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end">
-              <div className="p-6 text-white">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-between">
+              <div className="p-6 text-white flex-1">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">{evento.title}</h1>
                 <div className="flex items-center space-x-4 text-sm">
                   <span className="bg-primary-600 px-3 py-1 rounded-full capitalize backdrop-blur-medium shadow-soft-sm">
@@ -307,6 +308,19 @@ const EventDetailPage: React.FC = () => {
                   </span>
                 </div>
               </div>
+              
+              {/* Botón Editar - solo visible para el organizador o admin */}
+              {user && (user.id === evento.organizerId || user.roles?.includes('admin')) && (
+                <div className="p-6">
+                  <button
+                    onClick={() => navigate(`/eventos/${evento.id}/editar`)}
+                    className="bg-white/20 hover:bg-white/30 backdrop-blur-medium text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2 border border-white/30 shadow-soft-sm hover:shadow-soft-md"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Editar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

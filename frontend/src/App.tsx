@@ -9,6 +9,7 @@ const JoinPage = lazy(() => import('./pages/JoinPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage'));
 const EventDetailPage = lazy(() => import('./pages/EventDetailPage'));
 const CreateEventPage = lazy(() => import('./pages/CreateEventPage'));
+const EditEventPage = lazy(() => import('./pages/EditEventPage'));
 const MyEventsPage = lazy(() => import('./pages/MyEventsPage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -68,6 +69,7 @@ function App() {
           <Route path="/eventos/crear" element={<CreateEventPage />} />
           <Route path="/eventos/mis-eventos" element={<MyEventsPage />} />
           <Route path="/eventos/:id" element={<EventDetailPage />} />
+          <Route path="/eventos/:id/editar" element={<EditEventPage />} />
           
           {/* Autenticación */}
           <Route path="/auth" element={<AuthPage />} />
