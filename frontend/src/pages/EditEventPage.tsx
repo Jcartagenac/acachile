@@ -116,6 +116,29 @@ export const EditEventPage: React.FC = () => {
 
   const watchedValues = watch();
 
+  // Definir heroStats antes de los returns condicionales (regla de hooks)
+  const heroStats = useMemo(
+    () => [
+      { icon: <Calendar className="w-4 h-4" />, label: 'Fecha inicio', value: watchedValues.date || '—' },
+      {
+        icon: <Users className="w-4 h-4" />,
+        label: 'Cupos máximos',
+        value: watchedValues.maxParticipants ? watchedValues.maxParticipants : 'Ilimitado'
+      },
+      {
+        icon: <DollarSign className="w-4 h-4" />,
+        label: 'Precio',
+        value: watchedValues.price ? `$${watchedValues.price}` : 'Gratis'
+      },
+      {
+        icon: <MapPin className="w-4 h-4" />,
+        label: 'Ubicación',
+        value: watchedValues.location || 'Por definir'
+      }
+    ],
+    [watchedValues]
+  );
+
   // Cargar datos del evento
   useEffect(() => {
     const loadEvento = async () => {
@@ -279,28 +302,6 @@ export const EditEventPage: React.FC = () => {
   const inputClass =
     'w-full px-4 py-3 rounded-2xl bg-white/80 border border-white/40 text-neutral-800 shadow-soft-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition';
   const labelClass = 'block text-sm font-medium text-neutral-500 mb-2';
-  
-  const heroStats = useMemo(
-    () => [
-      { icon: <Calendar className="w-4 h-4" />, label: 'Fecha inicio', value: watchedValues.date || '—' },
-      {
-        icon: <Users className="w-4 h-4" />,
-        label: 'Cupos máximos',
-        value: watchedValues.maxParticipants ? watchedValues.maxParticipants : 'Ilimitado'
-      },
-      {
-        icon: <DollarSign className="w-4 h-4" />,
-        label: 'Precio',
-        value: watchedValues.price ? `$${watchedValues.price}` : 'Gratis'
-      },
-      {
-        icon: <MapPin className="w-4 h-4" />,
-        label: 'Ubicación',
-        value: watchedValues.location || 'Por definir'
-      }
-    ],
-    [watchedValues]
-  );
 
   return (
     <div className="min-h-screen bg-soft-gradient-light relative overflow-hidden py-12">
