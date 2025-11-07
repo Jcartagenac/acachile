@@ -342,14 +342,16 @@ const HomePage: React.FC = () => {
     });
   }, [sections, eventLookup, newsLookup]);
 
-  const defaultHero = getDefaultSections('home')[0] || {
+  const defaultHero = {
     page: 'home' as const,
     key: 'hero',
     title: '',
     content: '',
     image_url: '',
     sort_order: 0,
-    source_type: 'custom' as const
+    source_type: 'custom' as const,
+    cta_label: undefined,
+    cta_url: undefined
   };
   
   const heroSection: SectionDisplay = resolvedSections[0] ?? {
