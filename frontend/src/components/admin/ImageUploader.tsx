@@ -2,7 +2,20 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, Check, Copy, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 const getAuthToken = () => {
-  return localStorage.getItem('token') || sessionStorage.getItem('token') || null;
+  if (typeof document === 'undefined') return '';
+  
+  // Try to get from cookie first
+  const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]+)/);
+  if (match && match[1]) {
+    return decodeURIComponent(match[1]);
+  }
+  
+  // Fallback to localStorage
+  if (typeof window !== 'undefined') {
+    return window.localStorage.getItem('auth_token') || window.localStorage.getItem('token') || '';
+  }
+  
+  return '';
 };
 
 interface UploadedImage {
@@ -67,11 +80,13 @@ export default function ImageUploader() {
     try {
       const token = getAuthToken();
       if (!token) {
-        throw new Error('No se encontró token de autenticación');
+        throw new Error('No se encontró token de autenticación. Por favor, inicia sesión nuevamente.');
       }
 
       const formData = new FormData();
       formData.append('file', file);
+
+      console.log('[ImageUploader] Uploading file:', file.name, 'size:', file.size);
 
       const response = await fetch('/api/admin/content/upload', {
         method: 'POST',
@@ -81,10 +96,12 @@ export default function ImageUploader() {
         body: formData
       });
 
+      console.log('[ImageUploader] Response status:', response.status);
       const data = await response.json();
+      console.log('[ImageUploader] Response data:', data);
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Error al subir la imagen');
+        throw new Error(data.error || `Error al subir la imagen (status: ${response.status})`);
       }
 
       const newImage: UploadedImage = {
