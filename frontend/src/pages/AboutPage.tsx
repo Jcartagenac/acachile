@@ -59,8 +59,8 @@ const HeroSection: React.FC<{ section: DisplaySection; loading: boolean }> = ({ 
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="relative overflow-hidden py-20 bg-soft-gradient-light">
-      <div className="relative px-4 py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-28">
+    <section className="relative overflow-hidden py-8 sm:py-12 bg-soft-gradient-light">
+      <div className="relative px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-12">
         <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
           <div className="lg:col-span-7 space-y-8">
             <span className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-soft rounded-full shadow-soft-sm border border-white/40 text-primary-600 font-semibold text-sm tracking-wide uppercase">
