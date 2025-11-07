@@ -10,7 +10,8 @@ import {
   UserPlus,
   X,
   Info,
-  Edit
+  Edit,
+  ExternalLink
 } from 'lucide-react';
 import { Evento, EventInscription } from '@shared/index';
 import { eventService } from '../services/eventService';
@@ -376,11 +377,37 @@ const EventDetailPage: React.FC = () => {
                 <UserPlus className="w-5 h-5 mr-2 text-primary-600" />
                 Inscripción
               </h3>
+
+              {/* Mostrar enlace de pago/entradas si existe */}
+              {evento.paymentLink && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <ExternalLink className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-green-900 mb-1">
+                        Pago / Generación de Entradas
+                      </h4>
+                      <p className="text-sm text-green-700 mb-3">
+                        Accede al enlace para completar tu pago o generar tus entradas para este evento.
+                      </p>
+                      <a
+                        href={evento.paymentLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                      >
+                        Ir a Pago/Entradas
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Si el evento es público, mostrar formulario de inscripción pública */}
               {evento.isPublic ? (
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800 mb-4">
+                <div>
+                  <p className="text-sm text-neutral-600 mb-4">
                     Este es un evento público. Completa el formulario para inscribirte.
                   </p>
                   <PublicEventRegistration evento={evento} />

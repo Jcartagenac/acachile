@@ -174,8 +174,15 @@ async function getEventoById(env, id) {
   try {
     const { results } = await env.DB.prepare(
       `SELECT id, title, description, date, time, location, image, type, status,
-              registration_open, max_participants, current_participants, price, organizer_id, 
-              created_at, updated_at, is_public, payment_link
+              registration_open as registrationOpen, 
+              max_participants as maxParticipants, 
+              current_participants as currentParticipants, 
+              price, 
+              organizer_id as organizerId, 
+              created_at as createdAt, 
+              updated_at as updatedAt, 
+              is_public as isPublic, 
+              payment_link as paymentLink
        FROM eventos
        WHERE id = ?`
     ).bind(id).all();
@@ -189,7 +196,7 @@ async function getEventoById(env, id) {
 
     const evento = results[0];
     
-    // Convertir snake_case a camelCase
+    // Asegurar conversión correcta de tipos
     const eventoFormatted = {
       id: evento.id,
       title: evento.title,
@@ -200,15 +207,15 @@ async function getEventoById(env, id) {
       image: evento.image,
       type: evento.type,
       status: evento.status,
-      registrationOpen: evento.registration_open === 1,
-      maxParticipants: evento.max_participants,
-      currentParticipants: evento.current_participants || 0,
+      registrationOpen: evento.registrationOpen === 1 || evento.registrationOpen === true,
+      maxParticipants: evento.maxParticipants,
+      currentParticipants: evento.currentParticipants || 0,
       price: evento.price,
-      organizerId: evento.organizer_id,
-      isPublic: Boolean(evento.is_public),
-      paymentLink: evento.payment_link,
-      createdAt: evento.created_at,
-      updatedAt: evento.updated_at
+      organizerId: evento.organizerId,
+      isPublic: evento.isPublic === 1 || evento.isPublic === true,
+      paymentLink: evento.paymentLink,
+      createdAt: evento.createdAt,
+      updatedAt: evento.updatedAt
     };
 
     return {
