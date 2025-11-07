@@ -22,16 +22,42 @@ bucket_name = "aca-chile-images"
 # ⚠️ IMPORTANTE: Variables de Entorno
 # Para cambiar el dominio en producción, actualiza estas variables en:
 # Cloudflare Pages Dashboard → Settings → Environment variables
-# O vía wrangler CLI: npx wrangler pages secret put NOMBRE_VAR --project-name=acachile --env=production
 # 
-# NO es necesario editar este archivo para cambios de dominio en producción.
-# Este archivo es solo para desarrollo local y como referencia.
+# Las variables definidas aquí son para desarrollo local y también se usan en producción
+# a menos que sean sobrescritas en el Dashboard de Cloudflare Pages.
 #
-# Las variables de producción están configuradas como Secrets vía wrangler CLI.
+# Para variables sensibles (JWT_SECRET, API keys), usa Secrets en el Dashboard.
+# Para variables públicas (URLs, dominios), puedes usar vars normales aquí.
+#
 # Ver CLOUDFLARE_ENV_SETUP.md para instrucciones completas.
-#
-# NOTA: Los secrets configurados vía CLI tienen prioridad sobre las vars de wrangler.toml
-# Para evitar conflictos, NO definimos vars aquí para producción/preview.
+
+[env.production.vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://beta.acachile.com"
+FRONTEND_URL = "https://beta.acachile.com"
+R2_PUBLIC_URL = "https://images.beta.acachile.com"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
+ADMIN_EMAIL = "admin@acachile.cl"
+
+# Variables para build de Vite (frontend)
+VITE_API_BASE_URL = "https://beta.acachile.com"
+VITE_DOMAIN = "beta.acachile.com"
+VITE_R2_PUBLIC_URL = "https://images.beta.acachile.com"
+VITE_ENVIRONMENT = "production"
+
+[env.preview.vars]
+ENVIRONMENT = "preview"
+CORS_ORIGIN = "*"
+FRONTEND_URL = "https://beta.acachile.com"
+R2_PUBLIC_URL = "https://images.beta.acachile.com"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
+ADMIN_EMAIL = "admin@acachile.cl"
+
+# Variables para build de Vite (preview)
+VITE_API_BASE_URL = "https://beta.acachile.com"
+VITE_DOMAIN = "beta.acachile.com"
+VITE_R2_PUBLIC_URL = "https://images.beta.acachile.com"
+VITE_ENVIRONMENT = "preview"
 
 # Bindings específicas para producción
 [[env.production.kv_namespaces]]
