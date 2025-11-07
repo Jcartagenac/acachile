@@ -50,7 +50,11 @@ export async function onRequestPost(context) {
 
     // Obtener evento de D1
     const eventoResult = await getEventoById(env, eventoId);
+    
+    console.log('EventoResult:', JSON.stringify(eventoResult, null, 2));
+    
     if (!eventoResult.success) {
+      console.error('Error al obtener evento:', eventoResult.error);
       return new Response(JSON.stringify({
         success: false,
         error: eventoResult.error || 'Evento no encontrado'
@@ -176,7 +180,6 @@ async function getEventoById(env, id) {
       `SELECT id, title, description, date, time, location, image, type, status,
               registration_open as registrationOpen, 
               max_participants as maxParticipants, 
-              current_participants as currentParticipants, 
               price, 
               organizer_id as organizerId, 
               created_at as createdAt, 
@@ -209,7 +212,6 @@ async function getEventoById(env, id) {
       status: evento.status,
       registrationOpen: evento.registrationOpen === 1 || evento.registrationOpen === true,
       maxParticipants: evento.maxParticipants,
-      currentParticipants: evento.currentParticipants || 0,
       price: evento.price,
       organizerId: evento.organizerId,
       isPublic: evento.isPublic === 1 || evento.isPublic === true,
@@ -227,7 +229,7 @@ async function getEventoById(env, id) {
     console.error('Error in getEventoById:', error);
     return {
       success: false,
-      error: 'Error obteniendo evento'
+      error: `Error obteniendo evento: ${error.message}`
     };
   }
 }
