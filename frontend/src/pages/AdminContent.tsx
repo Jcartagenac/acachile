@@ -15,6 +15,7 @@ import {
   Search,
   Trash2,
   Eye,
+  Edit,
   Users,
   Upload
 } from 'lucide-react';
@@ -311,6 +312,13 @@ export default function AdminContent() {
                                 title="Ver evento"
                               >
                                 <Eye className="h-4 w-4" />
+                              </Link>
+                              <Link
+                                to={`/eventos/${evento.id}/editar`}
+                                className="text-green-600 hover:text-green-900 p-1"
+                                title="Editar evento"
+                              >
+                                <Edit className="h-4 w-4" />
                               </Link>
                               <button
                                 onClick={() => handleDeleteEvento(evento.id)}

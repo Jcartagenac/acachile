@@ -248,7 +248,7 @@ export const MyEventsPage: React.FC = () => {
 
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => navigate(`/eventos/editar/${evento.id}`)}
+                          onClick={() => navigate(`/eventos/${evento.id}/editar`)}
                           className="flex items-center space-x-1 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105"
                           style={{ 
                             backgroundColor: '#DBEAFE',
