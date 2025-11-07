@@ -173,9 +173,9 @@ export async function onRequestPost(context) {
 async function getEventoById(env, id) {
   try {
     const { results } = await env.DB.prepare(
-      `SELECT id, title, description, date as event_date, location, image as image_url, type, status,
-              registration_open, max_participants, price, organizer_id, created_at, updated_at, end_date,
-              is_public, payment_link
+      `SELECT id, title, description, date, time, location, image, type, status,
+              registration_open, max_participants, current_participants, price, organizer_id, 
+              created_at, updated_at, is_public, payment_link
        FROM eventos
        WHERE id = ?`
     ).bind(id).all();
@@ -194,20 +194,21 @@ async function getEventoById(env, id) {
       id: evento.id,
       title: evento.title,
       description: evento.description,
-      eventDate: evento.event_date,
+      date: evento.date,
+      time: evento.time,
       location: evento.location,
-      imageUrl: evento.image_url,
+      image: evento.image,
       type: evento.type,
       status: evento.status,
       registrationOpen: evento.registration_open === 1,
       maxParticipants: evento.max_participants,
+      currentParticipants: evento.current_participants || 0,
       price: evento.price,
       organizerId: evento.organizer_id,
       isPublic: Boolean(evento.is_public),
       paymentLink: evento.payment_link,
       createdAt: evento.created_at,
-      updatedAt: evento.updated_at,
-      endDate: evento.end_date,
+      updatedAt: evento.updated_at
     };
 
     return {
