@@ -55,7 +55,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const incoming = Array.isArray(body?.sections) ? (body.sections as RawSection[]) : [];
     console.log('[CONTENT POST] Incoming sections count:', incoming.length);
 
-    const normalized = normalizeSections(incoming, page).map((section, index) => ({
+    // NO usar defaults al guardar - solo normalizar y guardar lo que viene
+    const normalized = normalizeSections(incoming, page, false).map((section, index) => ({
       ...section,
       sort_order: typeof section.sort_order === 'number' ? section.sort_order : index
     }));
@@ -141,10 +142,14 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     return jsonResponse({ success: true, sections: normalized });
   } catch (error) {
     console.error('[CONTENT POST] Error:', error);
+    console.error('[CONTENT POST] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return errorResponse(
       'Internal server error',
       500,
-      env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
+      { 
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      }
     );
   }
 }
