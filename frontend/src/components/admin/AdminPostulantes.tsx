@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Download, Mail, Phone, Calendar, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Search, Download, Mail, Phone, Calendar, Filter, ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, X } from 'lucide-react';
 import { useEvents } from '../../contexts/EventContext';
 import { Evento } from '@shared/index';
 
@@ -28,6 +28,9 @@ export default function AdminPostulantes() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [selectedInscripcion, setSelectedInscripcion] = useState<Inscripcion | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchEventos(1);
@@ -76,6 +79,50 @@ export default function AdminPostulantes() {
       newExpanded.add(id);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const handleViewProfile = (inscripcion: Inscripcion) => {
+    setSelectedInscripcion(inscripcion);
+    setShowModal(true);
+  };
+
+  const handleUpdateStatus = async (inscripcionId: string, newStatus: 'confirmed' | 'waitlist' | 'cancelled') => {
+    if (!selectedEvento) return;
+    
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/eventos/${selectedEvento}/inscripciones/${inscripcionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Actualizar la lista local
+        setInscripciones(prev => 
+          prev.map(insc => 
+            insc.id === inscripcionId ? { ...insc, status: newStatus } : insc
+          )
+        );
+        
+        // Cerrar modal si está abierto
+        setShowModal(false);
+        setSelectedInscripcion(null);
+      } else {
+        alert('Error al actualizar el estado: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Error al actualizar el estado');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const filteredInscripciones = inscripciones.filter(insc => {
@@ -262,8 +309,8 @@ export default function AdminPostulantes() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Fecha
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
                     </th>
                   </tr>
                 </thead>
@@ -308,16 +355,46 @@ export default function AdminPostulantes() {
                           })}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => toggleRowExpand(insc.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            {expandedRows.has(insc.id) ? (
-                              <ChevronUp className="h-5 w-5" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5" />
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleViewProfile(insc)}
+                              className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
+                              title="Ver perfil completo"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            {insc.status !== 'confirmed' && (
+                              <button
+                                onClick={() => handleUpdateStatus(insc.id, 'confirmed')}
+                                className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded"
+                                title="Aceptar"
+                                disabled={actionLoading}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </button>
                             )}
-                          </button>
+                            {insc.status !== 'cancelled' && (
+                              <button
+                                onClick={() => handleUpdateStatus(insc.id, 'cancelled')}
+                                className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                                title="Rechazar"
+                                disabled={actionLoading}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => toggleRowExpand(insc.id)}
+                              className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded"
+                              title="Ver detalles"
+                            >
+                              {expandedRows.has(insc.id) ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                       {expandedRows.has(insc.id) && (
@@ -347,6 +424,134 @@ export default function AdminPostulantes() {
           <p className="text-gray-600">
             Elige un evento del selector para ver sus inscripciones
           </p>
+        </div>
+      )}
+
+      {/* Modal de Perfil Completo */}
+      {showModal && selectedInscripcion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Perfil del Postulante</h3>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedInscripcion(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Información Personal */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Información Personal</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-500">Nombre</label>
+                    <p className="text-gray-900 font-medium">{selectedInscripcion.nombre}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">Apellido</label>
+                    <p className="text-gray-900 font-medium">{selectedInscripcion.apellido}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">Email</label>
+                    <p className="text-gray-900">{selectedInscripcion.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">Teléfono</label>
+                    <p className="text-gray-900">{selectedInscripcion.telefono}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Estado de Inscripción */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Estado de Inscripción</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-gray-500">Estado Actual</label>
+                    <div className="mt-1">{getStatusBadge(selectedInscripcion.status)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">Tipo</label>
+                    <div className="mt-1">{getTipoBadge(selectedInscripcion.tipo)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">ID Inscripción</label>
+                    <p className="text-gray-900 text-xs font-mono">{selectedInscripcion.id}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">Fecha de Registro</label>
+                    <p className="text-gray-900">
+                      {new Date(selectedInscripcion.createdAt).toLocaleString('es-CL', {
+                        dateStyle: 'full',
+                        timeStyle: 'short'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Acciones de Gestión */}
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Gestionar Inscripción</h4>
+                <div className="flex gap-3">
+                  {selectedInscripcion.status !== 'confirmed' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedInscripcion.id, 'confirmed')}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle className="h-5 w-5" />
+                      {actionLoading ? 'Procesando...' : 'Aceptar Inscripción'}
+                    </button>
+                  )}
+                  {selectedInscripcion.status === 'confirmed' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedInscripcion.id, 'waitlist')}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50"
+                    >
+                      {actionLoading ? 'Procesando...' : 'Mover a Lista de Espera'}
+                    </button>
+                  )}
+                  {selectedInscripcion.status !== 'cancelled' && (
+                    <button
+                      onClick={() => handleUpdateStatus(selectedInscripcion.id, 'cancelled')}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <XCircle className="h-5 w-5" />
+                      {actionLoading ? 'Procesando...' : 'Rechazar Inscripción'}
+                    </button>
+                  )}
+                </div>
+                {selectedInscripcion.status === 'confirmed' && (
+                  <p className="text-sm text-green-600 mt-2">✓ Esta inscripción está confirmada</p>
+                )}
+                {selectedInscripcion.status === 'cancelled' && (
+                  <p className="text-sm text-red-600 mt-2">✗ Esta inscripción ha sido rechazada</p>
+                )}
+              </div>
+
+              {/* Botón Cerrar */}
+              <div className="border-t pt-4">
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedInscripcion(null);
+                  }}
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
