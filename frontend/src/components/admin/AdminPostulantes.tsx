@@ -42,9 +42,12 @@ export default function AdminPostulantes() {
   const fetchInscripciones = async (eventoId: number) => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('auth_token');
+      console.log('Token encontrado:', token ? 'Sí' : 'No');
+      
       const response = await fetch(`/api/eventos/${eventoId}/inscripciones`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       const data = await response.json();
