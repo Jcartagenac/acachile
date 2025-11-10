@@ -19,8 +19,8 @@
     "deploy": "npm run build && wrangler pages deploy dist --project-name=acachile",
     "deploy:auto": "node scripts/intelligent-deploy.cjs",
     "setup-bindings": "node scripts/dashboard-helper.cjs",
-    "check-bindings": "curl -s https://beta.acachile.com/api/bindings | jq .",
-    "health-check": "curl -s https://beta.acachile.com/api/health | jq ."
+    "check-bindings": "curl -s https://acachile.com/api/bindings | jq .",
+    "health-check": "curl -s https://acachile.com/api/health | jq ."
   },
   "dependencies": {
     "clsx": "^2.1.1",
