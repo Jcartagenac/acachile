@@ -178,6 +178,31 @@ async function inscribirseEvento(env, userId, eventoId) {
     allInscripciones.push(inscripcion);
     await env.ACA_KV.put('inscripciones:all', JSON.stringify(allInscripciones));
 
+    // Actualizar contador de participantes en D1
+    try {
+      await env.DB.prepare(
+        'UPDATE eventos SET current_participants = current_participants + 1 WHERE id = ?'
+      ).bind(eventoId).run();
+      console.log('[inscribirseEvento] Incremented current_participants for evento', eventoId);
+    } catch (dbError) {
+      console.error('[inscribirseEvento] Error updating current_participants in D1:', dbError);
+      // No fallar la inscripción si el contador no se actualiza
+    }
+
+    // Invalidar caché de eventos para forzar refresh desde BD
+    if (env.ACA_KV) {
+      // Eliminar las claves de caché principales de eventos
+      const cacheKeys = [
+        'eventos:list:published:all:none:1:12',
+        'eventos:list:draft:all:none:1:12',
+        'eventos:list:all:all:none:1:12'
+      ];
+      for (const key of cacheKeys) {
+        await env.ACA_KV.delete(key);
+      }
+      console.log('[inscribirseEvento] Invalidated eventos cache');
+    }
+
     // Retornar inscripción con datos del evento
     return {
       success: true,

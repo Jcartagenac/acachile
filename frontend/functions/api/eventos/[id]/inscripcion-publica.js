@@ -149,6 +149,30 @@ export async function onRequestPost(context) {
       JSON.stringify(nuevaInscripcion)
     );
 
+    // Incrementar contador de participantes en D1
+    try {
+      await env.DB.prepare(
+        'UPDATE eventos SET current_participants = current_participants + 1 WHERE id = ?'
+      ).bind(eventoId).run();
+      console.log('[inscripcion-publica] Incremented current_participants for evento', eventoId);
+    } catch (dbError) {
+      console.error('[inscripcion-publica] Error updating current_participants in D1:', dbError);
+      // No fallar la inscripción si el contador no se actualiza
+    }
+
+    // Invalidar caché de eventos para forzar refresh desde BD
+    if (env.ACA_KV) {
+      const cacheKeys = [
+        'eventos:list:published:all:none:1:12',
+        'eventos:list:draft:all:none:1:12',
+        'eventos:list:all:all:none:1:12'
+      ];
+      for (const key of cacheKeys) {
+        await env.ACA_KV.delete(key);
+      }
+      console.log('[inscripcion-publica] Invalidated eventos cache');
+    }
+
     return new Response(JSON.stringify({
       success: true,
       data: {
