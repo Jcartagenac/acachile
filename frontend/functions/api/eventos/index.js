@@ -67,7 +67,7 @@ async function handleGetEventos(url, env, corsHeaders) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
 
-    const result = await getEventos(env.DB, { type, status, search, page, limit });
+    const result = await getEventos(env.DB, env.ACA_KV, { type, status, search, page, limit });
 
     if (!result.success) {
       return new Response(JSON.stringify({ success: false, error: result.error }), {
@@ -109,7 +109,7 @@ async function handleCreateEvento(request, env, corsHeaders) {
     const userId = authUser.userId;
 
     const body = await request.json();
-    const result = await createEvento(env.DB, body, userId);
+    const result = await createEvento(env.DB, env.ACA_KV, body, userId);
 
     if (!result.success) {
       return new Response(JSON.stringify({ success: false, error: result.error }), {
@@ -138,9 +138,22 @@ async function handleCreateEvento(request, env, corsHeaders) {
 
 // --- Funciones de Servicio con D1 ---
 
-async function getEventos(db, filters) {
+async function getEventos(db, kv, filters) {
   try {
     const { type, status, search, page = 1, limit = 12 } = filters;
+    
+    // Crear clave de caché basada en los filtros
+    const cacheKey = `eventos:list:${status || 'all'}:${type || 'all'}:${search || 'none'}:${page}:${limit}`;
+    
+    // Intentar obtener desde caché KV primero
+    if (kv) {
+      const cached = await kv.get(cacheKey);
+      if (cached) {
+        console.log('[getEventos] Returning from KV cache');
+        return JSON.parse(cached);
+      }
+    }
+
     const offset = (page - 1) * limit;
 
     let whereClauses = [];
@@ -185,7 +198,7 @@ async function getEventos(db, filters) {
       paymentLink: evento.payment_link,
     }));
 
-    return {
+    const result = {
       success: true,
       data: mappedResults,
       pagination: {
@@ -196,13 +209,23 @@ async function getEventos(db, filters) {
       }
     };
 
+    // Guardar en caché KV con TTL de 24 horas
+    if (kv) {
+      await kv.put(cacheKey, JSON.stringify(result), {
+        expirationTtl: 86400 // 24 horas
+      });
+      console.log('[getEventos] Cached in KV with 24h TTL');
+    }
+
+    return result;
+
   } catch (error) {
     console.error('Error in getEventos (D1):', error);
     return { success: false, error: 'Error obteniendo eventos desde la base de datos' };
   }
 }
 
-async function createEvento(db, eventoData, organizerId) {
+async function createEvento(db, kv, eventoData, organizerId) {
   try {
     const {
       title,
@@ -255,6 +278,20 @@ async function createEvento(db, eventoData, organizerId) {
     // D1 no devuelve el objeto insertado directamente en `run()`, 
     // por lo que devolvemos el ID si es posible o simplemente confirmamos la creación.
     const insertedId = meta.last_row_id;
+
+    // Invalidar caché de eventos para forzar refresh desde BD
+    if (kv) {
+      // Eliminar todas las claves de caché relacionadas con eventos
+      const cacheKeys = [
+        'eventos:list:published:all:none:1:12',
+        'eventos:list:draft:all:none:1:12',
+        'eventos:list:all:all:none:1:12'
+      ];
+      for (const key of cacheKeys) {
+        await kv.delete(key);
+      }
+      console.log('[createEvento] Invalidated eventos cache');
+    }
 
     return {
       success: true,

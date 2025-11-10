@@ -137,6 +137,22 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
   const cacheKey = cacheKeyFor(page);
   let sections: SiteSection[] = [];
 
+  // Primero intentar obtener desde caché KV
+  if (env.ACA_KV) {
+    const cached = await env.ACA_KV.get(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as RawSection[];
+        sections = normalizeSections(parsed, page, false);
+        console.log('[getSectionsForPage] Returning', sections.length, 'sections from KV cache');
+        return sections;
+      } catch (error) {
+        console.warn('[content] Failed to parse cached sections', error);
+      }
+    }
+  }
+
+  // Si no hay caché válido, obtener desde BD
   if (env.DB) {
     await ensureTable(env.DB);
     const res = await env.DB
@@ -152,21 +168,13 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
       // NO usar defaults - solo datos reales de BD
       sections = normalizeSections(res.results, page, false);
       console.log('[getSectionsForPage] Normalized sections from DB:', JSON.stringify(sections, null, 2));
+      
+      // Guardar en caché KV con TTL de 24 horas (86400 segundos)
       if (env.ACA_KV) {
-        await env.ACA_KV.put(cacheKey, JSON.stringify(sections));
-      }
-    }
-  }
-
-  // Si no hay datos en DB, intentar cache
-  if ((!sections || sections.length === 0) && env.ACA_KV) {
-    const cached = await env.ACA_KV.get(cacheKey);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached) as RawSection[];
-        sections = normalizeSections(parsed, page, false);
-      } catch (error) {
-        console.warn('[content] Failed to parse cached sections', error);
+        await env.ACA_KV.put(cacheKey, JSON.stringify(sections), {
+          expirationTtl: 86400 // 24 horas
+        });
+        console.log('[getSectionsForPage] Cached sections in KV with 24h TTL');
       }
     }
   }

@@ -185,13 +185,15 @@ async function handleCreateNoticia(request, env, corsHeaders) {
 // Funciones de servicio
 async function getNoticias(env) {
   try {
-    // Intentar obtener desde KV
+    // Intentar obtener desde KV con metadata de TTL
     const noticiasData = await env.ACA_KV.get('noticias:all');
     
     if (noticiasData) {
+      console.log('[getNoticias] Returning from KV cache');
       return JSON.parse(noticiasData);
     }
 
+    console.log('[getNoticias] No cache found, creating sample data');
     // Si no existen, crear noticias de la ACA Chile
     const noticiasEjemplo = [
       {
@@ -336,9 +338,14 @@ async function getNoticias(env) {
       }
     ];
 
-    // Guardar noticias de ejemplo en KV
-    await env.ACA_KV.put('noticias:all', JSON.stringify(noticiasEjemplo));
-    await env.ACA_KV.put('noticias:lastId', '5');
+    // Guardar noticias de ejemplo en KV con TTL de 24 horas
+    await env.ACA_KV.put('noticias:all', JSON.stringify(noticiasEjemplo), {
+      expirationTtl: 86400 // 24 horas
+    });
+    await env.ACA_KV.put('noticias:lastId', '5', {
+      expirationTtl: 86400 // 24 horas
+    });
+    console.log('[getNoticias] Cached sample data in KV with 24h TTL');
 
     return noticiasEjemplo;
 
@@ -383,17 +390,24 @@ async function createNoticia(env, noticiaData) {
       commentsEnabled: noticiaData.commentsEnabled !== false
     };
 
-    // Guardar noticia individual
-    await env.ACA_KV.put(`noticia:${newId}`, JSON.stringify(noticia));
+    // Guardar noticia individual con TTL de 24 horas
+    await env.ACA_KV.put(`noticia:${newId}`, JSON.stringify(noticia), {
+      expirationTtl: 86400 // 24 horas
+    });
 
-    // Actualizar lista de todas las noticias
+    // Actualizar lista de todas las noticias con TTL de 24 horas
     const noticiasData = await env.ACA_KV.get('noticias:all');
     const noticias = noticiasData ? JSON.parse(noticiasData) : [];
     noticias.push(noticia);
-    await env.ACA_KV.put('noticias:all', JSON.stringify(noticias));
+    await env.ACA_KV.put('noticias:all', JSON.stringify(noticias), {
+      expirationTtl: 86400 // 24 horas
+    });
 
-    // Actualizar último ID
-    await env.ACA_KV.put('noticias:lastId', newId.toString());
+    // Actualizar último ID con TTL de 24 horas
+    await env.ACA_KV.put('noticias:lastId', newId.toString(), {
+      expirationTtl: 86400 // 24 horas
+    });
+    console.log('[createNoticia] Cached new noticia in KV with 24h TTL');
 
     return {
       success: true,

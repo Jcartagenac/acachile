@@ -134,8 +134,10 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     if (env.ACA_KV) {
       console.log('[CONTENT POST] Saving to KV cache with key:', cacheKey);
-      await env.ACA_KV.put(cacheKey, JSON.stringify(normalized));
-      console.log('[CONTENT POST] KV cache saved successfully');
+      await env.ACA_KV.put(cacheKey, JSON.stringify(normalized), {
+        expirationTtl: 86400 // 24 horas
+      });
+      console.log('[CONTENT POST] KV cache saved successfully with 24h TTL');
     } else {
       console.warn('[CONTENT POST] No ACA_KV configured, skipping cache');
     }
