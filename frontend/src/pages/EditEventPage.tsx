@@ -56,6 +56,12 @@ const eventSchema = z
       .url('Debe ser una URL válida')
       .optional()
       .or(z.literal('')),
+    buttonText: z
+      .string()
+      .min(3, 'El texto del botón debe tener al menos 3 caracteres')
+      .max(30, 'El texto del botón no puede exceder 30 caracteres')
+      .optional()
+      .or(z.literal('')),
     requirements: z.string().optional(),
     tags: z.string().optional(),
     contactEmail: z
@@ -170,9 +176,11 @@ export const EditEventPage: React.FC = () => {
         setValue('type', eventoData.type, { shouldValidate: true });
         setValue('maxParticipants', eventoData.maxParticipants || undefined, { shouldValidate: true });
         setValue('price', eventoData.price || 0, { shouldValidate: true });
-        setValue('registrationOpen', eventoData.registrationOpen, { shouldValidate: true });
-        setValue('isPublic', eventoData.isPublic ?? true, { shouldValidate: true });
+        // Convertir número a booleano
+        setValue('registrationOpen', Boolean(eventoData.registrationOpen), { shouldValidate: true });
+        setValue('isPublic', Boolean(eventoData.isPublic ?? true), { shouldValidate: true });
         setValue('paymentLink', eventoData.paymentLink || '', { shouldValidate: true });
+        setValue('buttonText', eventoData.buttonText || '', { shouldValidate: true });
         
         if (eventoData.requirements && Array.isArray(eventoData.requirements)) {
           setValue('requirements', eventoData.requirements.join('\n'), { shouldValidate: true });
@@ -489,6 +497,21 @@ export const EditEventPage: React.FC = () => {
                   )}
                   <p className="text-xs text-neutral-500 mt-1">
                     URL para completar pago o generar entradas después de la inscripción
+                  </p>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Texto del Botón de Inscripción (opcional)</label>
+                  <input
+                    {...register('buttonText')}
+                    className={inputClass}
+                    placeholder="Ej: Inscribirse, Comprar Entrada, Registrarse"
+                  />
+                  {errors.buttonText && (
+                    <p className="text-red-500 text-sm mt-1">{errors.buttonText.message}</p>
+                  )}
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Personaliza el texto del botón de inscripción (por defecto: "Inscribirse")
                   </p>
                 </div>
               </div>

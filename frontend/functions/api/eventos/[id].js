@@ -285,6 +285,7 @@ async function getEventoById(env, id) {
       endDate: evento.end_date,
       isPublic: Boolean(evento.is_public),
       paymentLink: evento.payment_link,
+      buttonText: evento.button_text,
     };
 
     return {
@@ -332,7 +333,8 @@ async function updateEvento(env, id, updateData) {
       price: 'price',
       endDate: 'end_date',
       isPublic: 'is_public',
-      paymentLink: 'payment_link'
+      paymentLink: 'payment_link',
+      buttonText: 'button_text'
     };
 
     Object.keys(updateData).forEach(key => {
