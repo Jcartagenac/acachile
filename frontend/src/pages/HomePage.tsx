@@ -38,6 +38,7 @@ const normalizeSections = (incoming: Partial<SiteSection>[] | undefined): SiteSe
       title: typeof raw?.title === 'string' ? raw.title : '',
       content: typeof raw?.content === 'string' ? raw.content : '',
       image_url: typeof raw?.image_url === 'string' ? raw.image_url : '',
+      image_url_2: typeof raw?.image_url_2 === 'string' ? raw.image_url_2 : undefined,
       sort_order: sortOrder,
       source_type: (raw?.source_type as SiteSectionSourceType) ?? 'custom',
       source_id: raw?.source_id != null ? String(raw.source_id) : undefined,
