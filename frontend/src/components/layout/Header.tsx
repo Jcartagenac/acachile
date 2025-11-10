@@ -59,12 +59,12 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Mobile Visible Navigation - Solo 2 items más importantes */}
-            <nav className="md:hidden flex items-center justify-center gap-1 flex-1 mx-1 min-w-0">
+            <nav className="md:hidden flex items-center justify-center gap-0.5 flex-1 mx-0.5 min-w-0">
               {mobileVisibleNav.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-2 py-1.5 text-[11px] font-semibold rounded-lg transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                  className={`px-1.5 py-1 text-[10px] font-semibold rounded-lg transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                     location.pathname === item.href
                       ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
                       : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 border border-transparent'
@@ -93,7 +93,7 @@ export const Header: React.FC = () => {
             </nav>
 
             {/* Auth Section */}
-            <div className="flex items-center space-x-1 sm:space-x-3 ml-1 sm:ml-4 flex-shrink-0">
+            <div className="flex items-center space-x-0.5 sm:space-x-3 ml-0.5 sm:ml-4 flex-shrink-0">
               {isAuthenticated ? (
                 <UserMenu />
               ) : (
@@ -118,7 +118,7 @@ export const Header: React.FC = () => {
               {/* Mobile menu button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden w-10 h-10 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 border border-white/30 flex-shrink-0"
+                className="md:hidden w-9 h-9 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 border border-white/30 flex-shrink-0"
               >
                 <div className="w-5 h-5 flex flex-col justify-center items-center">
                   <div className={`w-4 h-0.5 bg-neutral-600 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-0.5' : ''}`}></div>
