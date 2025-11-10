@@ -64,10 +64,10 @@ const parseContactDetails = (content: string): ContactDetail[] => {
     } else if (lowerLabel.includes('instagram')) {
       const handle = value.replace(/^@/, '');
       href = value.startsWith('http') ? value : `https://www.instagram.com/${handle}`;
-      icon = '📸';
+      icon = 'https://www.instagram.com/favicon.ico';
     } else if (lowerLabel.includes('facebook')) {
       href = value.startsWith('http') ? value : `https://www.facebook.com/${value.replace(/^\//, '')}`;
-      icon = '👍';
+      icon = 'https://www.facebook.com/favicon.ico';
     }
 
     details.push({ label, value, href, icon });
@@ -79,7 +79,19 @@ const parseContactDetails = (content: string): ContactDetail[] => {
 const HeroSection: React.FC<{ section: DisplaySection; loading: boolean }> = ({ section, loading }) => {
   return (
     <section className="relative overflow-hidden py-20 bg-soft-gradient-light">
-      <div className="relative px-4 py-16 mx-auto max-w-5xl sm:px-6 lg:px-8 lg:py-24 text-center space-y-6">
+      {/* Imagen de fondo si existe */}
+      {section.display_image && (
+        <div className="absolute inset-0 z-0">
+          <img
+            src={section.display_image}
+            alt={section.display_title}
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white/80"></div>
+        </div>
+      )}
+      
+      <div className="relative z-10 px-4 py-16 mx-auto max-w-5xl sm:px-6 lg:px-8 lg:py-24 text-center space-y-6">
         <span className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-soft rounded-full shadow-soft-sm border border-white/40 text-primary-600 font-semibold text-sm tracking-wide uppercase">
           {loading ? 'Cargando…' : 'Ponte en contacto'}
         </span>
@@ -112,7 +124,11 @@ const ContactCards: React.FC<{ details: ContactDetail[] }> = ({ details }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {details.map((detail, index) => (
           <div key={index} className="flex items-start gap-3 p-4 bg-white/40 rounded-xl border border-white/20">
-            <span className="text-xl leading-none">{detail.icon ?? '📍'}</span>
+            {detail.icon?.startsWith('http') ? (
+              <img src={detail.icon} alt={detail.label} className="w-5 h-5 object-contain" />
+            ) : (
+              <span className="text-xl leading-none">{detail.icon ?? '📍'}</span>
+            )}
             <div>
               <p className="text-sm font-semibold text-neutral-700">{detail.label}</p>
               {detail.href ? (
