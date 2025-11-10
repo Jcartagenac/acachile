@@ -154,7 +154,7 @@ export const Header: React.FC = () => {
 
         {/* Mobile Navigation Menu - Solo Noticias y Contacto */}
         {isMenuOpen && (
-          <div className="md:hidden absolute inset-x-0 top-full z-40 bg-white/98 backdrop-blur-soft border-t border-white/30 shadow-soft-lg">
+          <div className="md:hidden absolute inset-x-0 top-full z-40 bg-white border-t border-neutral-200 shadow-lg">
             <div className="max-h-[calc(100vh-5rem)] overflow-y-auto">
               <Container className="py-4 space-y-3">
                 {mobileMenuNav.map((item) => (
@@ -164,8 +164,8 @@ export const Header: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={`block px-4 py-3 text-base font-semibold rounded-2xl transition-all duration-300 text-center ${
                       location.pathname === item.href
-                        ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
-                        : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 hover:shadow-soft-sm border border-transparent hover:border-white/30'
+                        ? 'text-primary-700 bg-primary-50 shadow-sm border border-primary-200'
+                        : 'text-neutral-700 hover:text-primary-600 hover:bg-neutral-50 hover:shadow-sm border border-transparent hover:border-neutral-200'
                     }`}
                   >
                     {item.name}
@@ -174,13 +174,13 @@ export const Header: React.FC = () => {
 
                 {/* Mobile Auth Buttons */}
                 {!isAuthenticated && (
-                  <div className="pt-3 space-y-3 border-t border-neutral-200/50">
+                  <div className="pt-3 space-y-3 border-t border-neutral-200">
                     <button
                       onClick={() => {
                         setAuthModalOpen(true);
                         setIsMenuOpen(false);
                       }}
-                      className="w-full px-4 py-3 text-base font-semibold text-neutral-700 bg-white/60 backdrop-blur-soft rounded-2xl hover:bg-white/80 hover:shadow-soft-sm transition-all duration-300 border border-white/30"
+                      className="w-full px-4 py-3 text-base font-semibold text-neutral-700 bg-neutral-100 rounded-2xl hover:bg-neutral-200 hover:shadow-sm transition-all duration-300 border border-neutral-300"
                     >
                       Iniciar Sesión
                     </button>
@@ -189,7 +189,7 @@ export const Header: React.FC = () => {
                         setIsMenuOpen(false);
                         navigate('/unete');
                       }}
-                      className="w-full px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md"
+                      className="w-full px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 shadow-md hover:shadow-lg"
                     >
                       Únete a ACA
                     </button>
