@@ -38,24 +38,29 @@ export default function AdminNews() {
     }
 
     try {
+      console.log('[AdminNews] Deleting noticia with slug:', slug);
       const response = await fetch(`/api/noticias/${slug}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log('[AdminNews] Delete response status:', response.status);
       const data = await response.json();
+      console.log('[AdminNews] Delete response data:', data);
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Error al eliminar noticia');
+        throw new Error(data.error || `Error ${response.status}: ${response.statusText}`);
       }
 
+      alert('Noticia eliminada correctamente');
       // Recargar lista
       loadNews();
     } catch (err) {
-      console.error('Error deleting news:', err);
-      alert('Error al eliminar la noticia');
+      console.error('[AdminNews] Error deleting news:', err);
+      alert(`Error al eliminar la noticia: ${err instanceof Error ? err.message : 'Error desconocido'}`);
     }
   };
 

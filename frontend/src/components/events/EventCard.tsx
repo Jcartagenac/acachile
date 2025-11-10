@@ -139,13 +139,13 @@ export const EventCard: React.FC<EventCardProps> = ({
           <span className="text-xs font-semibold">Destacado</span>
         </div>
         {/* Image */}
-        <div className="relative overflow-hidden rounded-xl mb-6 shadow-soft-sm">
+        <div className="relative rounded-xl mb-6 shadow-soft-sm bg-neutral-100">
           <img
             src={evento.image}
             alt={evento.title}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
           
           {/* Type Badge */}
           <div className="absolute top-4 left-4">
@@ -239,11 +239,11 @@ export const EventCard: React.FC<EventCardProps> = ({
   return (
     <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl p-6 shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105 group">
       {/* Image */}
-      <div className="relative overflow-hidden rounded-xl mb-6 shadow-soft-sm">
+      <div className="relative rounded-xl mb-6 shadow-soft-sm bg-neutral-100">
         <img
           src={evento.image}
           alt={evento.title}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
         />
         
         {/* Type Badge */}

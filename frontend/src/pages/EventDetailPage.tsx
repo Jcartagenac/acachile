@@ -291,14 +291,14 @@ const EventDetailPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-12 relative z-10">
         {/* Header con imagen */}
         <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg overflow-hidden mb-8">
-          <div className="relative h-64 md:h-80">
+          <div className="relative bg-neutral-100">
             <img
               src={evento.image}
               alt={evento.title}
-              className="w-full h-full object-cover"
+              className="w-full h-auto object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-between">
-              <div className="p-6 text-white flex-1">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-between pointer-events-none">
+              <div className="p-6 text-white flex-1 pointer-events-auto">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">{evento.title}</h1>
                 <div className="flex items-center space-x-4 text-sm">
                   <span className="bg-primary-600 px-3 py-1 rounded-full capitalize backdrop-blur-medium shadow-soft-sm">
@@ -312,7 +312,7 @@ const EventDetailPage: React.FC = () => {
               
               {/* Botón Editar - solo visible para el organizador o admin */}
               {user && (user.id === evento.organizerId || user.roles?.includes('admin')) && (
-                <div className="p-6">
+                <div className="p-6 pointer-events-auto">
                   <button
                     onClick={() => navigate(`/eventos/${evento.id}/editar`)}
                     className="bg-white/20 hover:bg-white/30 backdrop-blur-medium text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2 border border-white/30 shadow-soft-sm hover:shadow-soft-md"
