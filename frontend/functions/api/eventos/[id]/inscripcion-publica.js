@@ -122,8 +122,47 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Crear inscripción
+    // Crear inscripción en D1
     const inscripcionId = `${eventoId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const now = new Date().toISOString();
+
+    try {
+      // Insertar inscripción pública en D1
+      await env.DB.prepare(
+        `INSERT INTO inscriptions (id, user_id, event_id, status, inscription_date, payment_status, nombre, apellido, email, telefono, tipo)
+         VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        inscripcionId,
+        eventoId,
+        'confirmed',
+        now,
+        'pending',
+        nombre,
+        apellido,
+        email,
+        telefono,
+        'publica'
+      ).run();
+
+      console.log('[inscripcion-publica] Inserted public inscription in D1 for evento', eventoId);
+
+      // Incrementar contador de participantes en D1
+      await env.DB.prepare(
+        'UPDATE eventos SET current_participants = current_participants + 1 WHERE id = ?'
+      ).bind(eventoId).run();
+      console.log('[inscripcion-publica] Incremented current_participants for evento', eventoId);
+
+    } catch (dbError) {
+      console.error('[inscripcion-publica] Error inserting inscription in D1:', dbError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Error al guardar la inscripción en la base de datos'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const nuevaInscripcion = {
       id: inscripcionId,
       eventoId,
@@ -132,33 +171,9 @@ export async function onRequestPost(context) {
       telefono,
       email,
       status: 'confirmed',
-      tipo: 'publica', // Marca para distinguir inscripciones públicas
-      createdAt: new Date().toISOString(),
+      tipo: 'publica',
+      createdAt: now,
     };
-
-    // Guardar en KV
-    const inscripcionesActualizadas = [...inscripcionesActuales, nuevaInscripcion];
-    await env.ACA_KV.put(
-      `inscripciones:evento:${eventoId}`,
-      JSON.stringify(inscripcionesActualizadas)
-    );
-
-    // También guardar la inscripción individual
-    await env.ACA_KV.put(
-      `inscripcion:${inscripcionId}`,
-      JSON.stringify(nuevaInscripcion)
-    );
-
-    // Incrementar contador de participantes en D1
-    try {
-      await env.DB.prepare(
-        'UPDATE eventos SET current_participants = current_participants + 1 WHERE id = ?'
-      ).bind(eventoId).run();
-      console.log('[inscripcion-publica] Incremented current_participants for evento', eventoId);
-    } catch (dbError) {
-      console.error('[inscripcion-publica] Error updating current_participants in D1:', dbError);
-      // No fallar la inscripción si el contador no se actualiza
-    }
 
     // Invalidar caché de eventos para forzar refresh desde BD
     if (env.ACA_KV) {
@@ -258,11 +273,14 @@ async function getEventoById(env, id) {
   }
 }
 
-// Función para obtener inscripciones de un evento desde KV
+// Función para obtener inscripciones de un evento desde D1
 async function getInscripcionesEvento(env, eventoId) {
   try {
-    const inscripcionesData = await env.ACA_KV.get(`inscripciones:evento:${eventoId}`);
-    const inscripciones = inscripcionesData ? JSON.parse(inscripcionesData) : [];
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM inscriptions WHERE event_id = ?'
+    ).bind(eventoId).all();
+
+    const inscripciones = results || [];
 
     return {
       success: true,

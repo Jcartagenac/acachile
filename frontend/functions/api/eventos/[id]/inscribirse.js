@@ -144,50 +144,50 @@ async function inscribirseEvento(env, userId, eventoId) {
       }
     }
 
-    // Crear inscripción
+    // Crear inscripción en D1
     const inscripcionId = `${userId}_${eventoId}`;
     const now = new Date().toISOString();
     
+    try {
+      // Insertar inscripción en D1
+      await env.DB.prepare(
+        `INSERT INTO inscriptions (id, user_id, event_id, status, inscription_date, payment_status, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        inscripcionId,
+        userId,
+        eventoId,
+        'confirmed',
+        now,
+        'pending',
+        ''
+      ).run();
+
+      console.log('[inscribirseEvento] Inserted inscription in D1 for evento', eventoId);
+
+      // Actualizar contador de participantes en D1
+      await env.DB.prepare(
+        'UPDATE eventos SET current_participants = current_participants + 1 WHERE id = ?'
+      ).bind(eventoId).run();
+      console.log('[inscribirseEvento] Incremented current_participants for evento', eventoId);
+
+    } catch (dbError) {
+      console.error('[inscribirseEvento] Error inserting inscription in D1:', dbError);
+      return {
+        success: false,
+        error: 'Error al guardar la inscripción en la base de datos'
+      };
+    }
+
     const inscripcion = {
       id: inscripcionId,
       userId: userId,
       eventoId: eventoId,
       fechaInscripcion: now,
-      estado: 'confirmada',
-      metodoPago: 'pendiente',
+      estado: 'confirmed',
+      metodoPago: 'pending',
       notas: ''
     };
-
-    // Guardar inscripción
-    await env.ACA_KV.put(`inscripcion:${inscripcionId}`, JSON.stringify(inscripcion));
-
-    // Actualizar lista de inscripciones del usuario
-    const userInscripciones = inscripcionesUsuario.success ? inscripcionesUsuario.data : [];
-    userInscripciones.push(inscripcion);
-    await env.ACA_KV.put(`inscripciones:usuario:${userId}`, JSON.stringify(userInscripciones));
-
-    // Actualizar lista de inscripciones del evento
-    const eventoInscripciones = await getInscripcionesEvento(env, eventoId);
-    const eventInscripciones = eventoInscripciones.success ? eventoInscripciones.data : [];
-    eventInscripciones.push(inscripcion);
-    await env.ACA_KV.put(`inscripciones:evento:${eventoId}`, JSON.stringify(eventInscripciones));
-
-    // Actualizar lista general de inscripciones
-    const allInscripcionesData = await env.ACA_KV.get('inscripciones:all');
-    const allInscripciones = allInscripcionesData ? JSON.parse(allInscripcionesData) : [];
-    allInscripciones.push(inscripcion);
-    await env.ACA_KV.put('inscripciones:all', JSON.stringify(allInscripciones));
-
-    // Actualizar contador de participantes en D1
-    try {
-      await env.DB.prepare(
-        'UPDATE eventos SET current_participants = current_participants + 1 WHERE id = ?'
-      ).bind(eventoId).run();
-      console.log('[inscribirseEvento] Incremented current_participants for evento', eventoId);
-    } catch (dbError) {
-      console.error('[inscribirseEvento] Error updating current_participants in D1:', dbError);
-      // No fallar la inscripción si el contador no se actualiza
-    }
 
     // Invalidar caché de eventos para forzar refresh desde BD
     if (env.ACA_KV) {
@@ -223,8 +223,19 @@ async function inscribirseEvento(env, userId, eventoId) {
 
 async function getInscripcionesUsuario(env, userId) {
   try {
-    const inscripcionesData = await env.ACA_KV.get(`inscripciones:usuario:${userId}`);
-    const inscripciones = inscripcionesData ? JSON.parse(inscripcionesData) : [];
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM inscriptions WHERE user_id = ?'
+    ).bind(userId).all();
+
+    const inscripciones = results.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      eventoId: row.event_id,
+      estado: row.status,
+      fechaInscripcion: row.inscription_date,
+      metodoPago: row.payment_status,
+      notas: row.notes
+    }));
 
     return {
       success: true,
@@ -242,19 +253,24 @@ async function getInscripcionesUsuario(env, userId) {
 
 async function getInscripcionesEvento(env, eventoId) {
   try {
-    const inscripcionesData = await env.ACA_KV.get(`inscripciones:evento:${eventoId}`);
-    const inscripciones = inscripcionesData ? JSON.parse(inscripcionesData) : [];
+    const { results } = await env.DB.prepare(
+      'SELECT COUNT(*) as count FROM inscriptions WHERE event_id = ?'
+    ).bind(eventoId).all();
+
+    const count = results && results.length > 0 ? results[0].count : 0;
 
     return {
       success: true,
-      data: inscripciones
+      data: [],
+      count: count
     };
 
   } catch (error) {
     console.error('Error in getInscripcionesEvento:', error);
     return {
       success: false,
-      error: 'Error obteniendo inscripciones del evento'
+      error: 'Error obteniendo inscripciones del evento',
+      count: 0
     };
   }
 }

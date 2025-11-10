@@ -77,9 +77,11 @@ async function handleGetInscripcionById(request, inscripcionId, env, corsHeaders
       });
     }
 
-    const inscripcionData = await env.ACA_KV.get(`inscripcion:${inscripcionId}`);
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM inscriptions WHERE id = ?'
+    ).bind(inscripcionId).all();
 
-    if (!inscripcionData) {
+    if (!results || results.length === 0) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Inscripción no encontrada'
@@ -92,7 +94,16 @@ async function handleGetInscripcionById(request, inscripcionId, env, corsHeaders
       });
     }
 
-    const inscripcion = JSON.parse(inscripcionData);
+    const row = results[0];
+    const inscripcion = {
+      id: row.id,
+      userId: row.user_id,
+      eventoId: row.event_id,
+      estado: row.status,
+      fechaInscripcion: row.inscription_date,
+      metodoPago: row.payment_status,
+      notas: row.notes
+    };
 
     if (authUser.userId !== inscripcion.userId) {
       return new Response(JSON.stringify({
@@ -196,18 +207,21 @@ async function handleCancelarInscripcion(request, inscripcionId, env, corsHeader
 // Función de servicio para cancelar inscripción
 async function cancelarInscripcion(env, inscripcionId, currentUserId) {
   try {
-    // Verificar que la inscripción existe
-    const inscripcionData = await env.ACA_KV.get(`inscripcion:${inscripcionId}`);
+    // Verificar que la inscripción existe en D1
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM inscriptions WHERE id = ?'
+    ).bind(inscripcionId).all();
     
-    if (!inscripcionData) {
+    if (!results || results.length === 0) {
       return {
         success: false,
         error: 'Inscripción no encontrada'
       };
     }
 
-    const inscripcion = JSON.parse(inscripcionData);
-    const { userId, eventoId } = inscripcion;
+    const inscripcion = results[0];
+    const userId = inscripcion.user_id;
+    const eventoId = inscripcion.event_id;
 
     if (currentUserId !== userId) {
       return {
@@ -216,59 +230,23 @@ async function cancelarInscripcion(env, inscripcionId, currentUserId) {
       };
     }
 
-    // Eliminar inscripción individual
-    await env.ACA_KV.delete(`inscripcion:${inscripcionId}`);
-
-    // Eliminar de la lista de inscripciones del usuario
-    const userInscripcionesData = await env.ACA_KV.get(`inscripciones:usuario:${userId}`);
-    if (userInscripcionesData) {
-      const userInscripciones = JSON.parse(userInscripcionesData);
-      const updatedUserInscripciones = userInscripciones.filter(i => i.id !== inscripcionId);
-      await env.ACA_KV.put(`inscripciones:usuario:${userId}`, JSON.stringify(updatedUserInscripciones));
-    }
-
-    // Eliminar de la lista de inscripciones del evento
-    const eventInscripcionesData = await env.ACA_KV.get(`inscripciones:evento:${eventoId}`);
-    if (eventInscripcionesData) {
-      const eventInscripciones = JSON.parse(eventInscripcionesData);
-      const updatedEventInscripciones = eventInscripciones.filter(i => i.id !== inscripcionId);
-      await env.ACA_KV.put(`inscripciones:evento:${eventoId}`, JSON.stringify(updatedEventInscripciones));
-
-      // Actualizar contador de participantes del evento
-      const eventoData = await env.ACA_KV.get(`evento:${eventoId}`);
-      if (eventoData) {
-        const evento = JSON.parse(eventoData);
-        evento.currentParticipants = updatedEventInscripciones.length;
-        await env.ACA_KV.put(`evento:${eventoId}`, JSON.stringify(evento));
-
-        // Actualizar en la lista general de eventos
-        const eventosData = await env.ACA_KV.get('eventos:all');
-        const eventos = eventosData ? JSON.parse(eventosData) : [];
-        const eventoIndex = eventos.findIndex(e => e.id === eventoId);
-        if (eventoIndex !== -1) {
-          eventos[eventoIndex] = evento;
-          await env.ACA_KV.put('eventos:all', JSON.stringify(eventos));
-        }
-      }
-    }
-
-    // Eliminar de la lista general de inscripciones
-    const allInscripcionesData = await env.ACA_KV.get('inscripciones:all');
-    if (allInscripcionesData) {
-      const allInscripciones = JSON.parse(allInscripcionesData);
-      const updatedAllInscripciones = allInscripciones.filter(i => i.id !== inscripcionId);
-      await env.ACA_KV.put('inscripciones:all', JSON.stringify(updatedAllInscripciones));
-    }
-
-    // Decrementar contador de participantes en D1
+    // Eliminar inscripción de D1 y decrementar contador en una transacción
     try {
+      await env.DB.prepare(
+        'DELETE FROM inscriptions WHERE id = ?'
+      ).bind(inscripcionId).run();
+      
       await env.DB.prepare(
         'UPDATE eventos SET current_participants = CASE WHEN current_participants > 0 THEN current_participants - 1 ELSE 0 END WHERE id = ?'
       ).bind(eventoId).run();
-      console.log('[cancelarInscripcion] Decremented current_participants for evento', eventoId);
+      
+      console.log('[cancelarInscripcion] Deleted inscription and decremented current_participants for evento', eventoId);
     } catch (dbError) {
-      console.error('[cancelarInscripcion] Error updating current_participants in D1:', dbError);
-      // No fallar la cancelación si el contador no se actualiza
+      console.error('[cancelarInscripcion] Error deleting inscription from D1:', dbError);
+      return {
+        success: false,
+        error: 'Error al cancelar la inscripción en la base de datos'
+      };
     }
 
     // Invalidar caché de eventos para forzar refresh desde BD
