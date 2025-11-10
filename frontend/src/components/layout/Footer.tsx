@@ -57,11 +57,11 @@ export const Footer: React.FC = () => {
                   className="w-12 h-12 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg border border-white/30 text-neutral-600 hover:text-primary-600 transition-all duration-300 transform hover:scale-110"
                 >
                   <span className="sr-only">Instagram</span>
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                    <path d="m12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm6-8.5c0-.276-.224-.5-.5-.5s-.5.224-.5.5.224.5.5.5.5-.224.5-.5z"></path>
-                    <circle cx="18.5" cy="5.5" r="1.5"></circle>
-                  </svg>
+                  <img
+                    src="https://images.acachile.com/icons/instagram-icon.png"
+                    alt="Instagram"
+                    className="h-6 w-6 object-contain"
+                  />
                 </a>
                 
                 <a
