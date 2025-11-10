@@ -55,19 +55,28 @@ const parseContactDetails = (content: string): ContactDetail[] => {
     let icon = '📍';
 
     const lowerLabel = label.toLowerCase();
-    if (lowerLabel.includes('mail') || value.includes('@')) {
-      href = value.startsWith('mailto:') ? value : `mailto:${value}`;
-      icon = '📧';
-    } else if (lowerLabel.includes('tel') || lowerLabel.includes('fono') || /\+?\d/.test(value)) {
-      href = value.startsWith('tel:') ? value : `tel:${value.replace(/\s+/g, '')}`;
-      icon = '📱';
-    } else if (lowerLabel.includes('instagram')) {
+    const lowerValue = value.toLowerCase();
+    
+    // Detectar Instagram: buscar en label, value, o URLs de instagram, o si empieza con @
+    if (lowerLabel.includes('instagram') || lowerValue.includes('instagram') || value.startsWith('@')) {
       const handle = value.replace(/^@/, '');
       href = value.startsWith('http') ? value : `https://www.instagram.com/${handle}`;
       icon = '/icons/instagram-favicon.ico';
-    } else if (lowerLabel.includes('facebook')) {
+    } 
+    // Detectar Facebook: buscar en label o URLs de facebook
+    else if (lowerLabel.includes('facebook') || lowerValue.includes('facebook') || lowerValue.includes('fb.com')) {
       href = value.startsWith('http') ? value : `https://www.facebook.com/${value.replace(/^\//, '')}`;
       icon = '/icons/facebook-favicon.ico';
+    }
+    // Detectar email (solo si tiene @ y contiene un punto, para evitar confusión con handles de Instagram)
+    else if ((lowerLabel.includes('mail') || lowerLabel.includes('correo')) || (value.includes('@') && value.includes('.'))) {
+      href = value.startsWith('mailto:') ? value : `mailto:${value}`;
+      icon = '📧';
+    } 
+    // Detectar teléfono
+    else if (lowerLabel.includes('tel') || lowerLabel.includes('fono') || /\+?\d/.test(value)) {
+      href = value.startsWith('tel:') ? value : `tel:${value.replace(/\s+/g, '')}`;
+      icon = '📱';
     }
 
     details.push({ label, value, href, icon });
