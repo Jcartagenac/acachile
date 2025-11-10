@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
       {/* Header - Soft UI 2.0 */}
       <header className="relative bg-white/80 backdrop-blur-soft sticky top-0 z-50 border-b border-white/20 shadow-soft-sm">
         <Container>
-          <div className="flex justify-between items-center py-3 sm:py-4 relative">
+          <div className="flex items-center py-3 sm:py-4 gap-4">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
               <Link to="/" className="flex items-center space-x-2 sm:space-x-4 group">
@@ -75,13 +75,13 @@ export const Header: React.FC = () => {
               ))}
             </nav>
 
-            {/* Desktop Navigation (centered with more spacing) */}
-            <nav className="hidden md:flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2 ml-8">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-1 flex-1 justify-center">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-6 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center text-center ${
+                  className={`px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center text-center whitespace-nowrap ${
                     location.pathname === item.href
                       ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
                       : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 hover:shadow-soft-sm border border-transparent hover:border-white/30'
@@ -93,7 +93,7 @@ export const Header: React.FC = () => {
             </nav>
 
             {/* Auth Section */}
-            <div className="flex items-center space-x-0.5 sm:space-x-3 ml-0.5 sm:ml-4 flex-shrink-0">
+            <div className="flex items-center space-x-0.5 sm:space-x-2 flex-shrink-0">
               {isAuthenticated ? (
                 <UserMenu />
               ) : (
@@ -102,13 +102,13 @@ export const Header: React.FC = () => {
                     onClick={() => {
                       setAuthModalOpen(true);
                     }}
-                    className="px-6 py-3 text-sm font-semibold text-neutral-700 bg-white/60 backdrop-blur-soft rounded-2xl hover:bg-white/80 hover:shadow-soft-sm transition-all duration-300 border border-white/30"
+                    className="px-4 py-2.5 text-sm font-semibold text-neutral-700 bg-white/60 backdrop-blur-soft rounded-2xl hover:bg-white/80 hover:shadow-soft-sm transition-all duration-300 border border-white/30 whitespace-nowrap"
                   >
                     Iniciar Sesión
                   </button>
                   <Link
                     to="/unete"
-                    className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md"
+                    className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md whitespace-nowrap"
                   >
                     Únete a ACA
                   </Link>
