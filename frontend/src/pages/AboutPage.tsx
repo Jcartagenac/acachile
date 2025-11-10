@@ -132,9 +132,9 @@ const SectionBlock: React.FC<{ section: DisplaySection; reverse?: boolean }> = (
             </h2>
           </div>
           
-          {/* Imagen - segundo en mobile, respeta reverse en desktop */}
+          {/* Imagen - segundo en mobile */}
           {section.display_image ? (
-            <div className={`order-2 lg:w-1/2 mb-8 lg:mb-0 ${reverse ? 'lg:order-1' : 'lg:order-3'}`}>
+            <div className="order-2 lg:w-1/2 mb-8 lg:mb-0">
               <div className="relative bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
                 <img
                   src={section.display_image}
@@ -146,7 +146,7 @@ const SectionBlock: React.FC<{ section: DisplaySection; reverse?: boolean }> = (
           ) : null}
           
           {/* Texto y CTA - tercero en mobile */}
-          <div className={`order-3 lg:w-1/2 flex flex-col justify-center space-y-6 ${reverse ? 'lg:order-3' : 'lg:order-2'}`}>
+          <div className="order-3 lg:w-1/2 flex flex-col justify-center space-y-6">
             <div className="space-y-4 text-neutral-600 text-lg leading-relaxed">
               {blocks.length === 0 ? (
                 <p>{section.display_content}</p>
