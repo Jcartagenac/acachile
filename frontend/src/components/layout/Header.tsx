@@ -75,8 +75,8 @@ export const Header: React.FC = () => {
               ))}
             </nav>
 
-            {/* Desktop Navigation (centered) */}
-            <nav className="hidden md:flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
+            {/* Desktop Navigation (centered with more spacing) */}
+            <nav className="hidden md:flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2 ml-8">
               {navigation.map((item) => (
                 <Link
                   key={item.name}

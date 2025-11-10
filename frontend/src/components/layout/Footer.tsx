@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from './Container';
+import logoFallback from '@/assets/aca-logo.svg';
+
+const DEFAULT_HEADER_LOGO = 'https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg';
 
 export const Footer: React.FC = () => {
+  const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
+  const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
+
   return (
     <footer className="bg-soft-gradient-medium border-t border-white/20 relative overflow-hidden">
       {/* Elementos decorativos de fondo */}
@@ -15,8 +21,14 @@ export const Footer: React.FC = () => {
             {/* Logo y descripción */}
             <div className="md:col-span-2">
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-14 h-14 bg-white/60 backdrop-blur-soft rounded-3xl flex items-center justify-center shadow-soft-lg border border-white/30">
-                  <span className="text-2xl">🔥</span>
+                <div className="w-14 h-14 bg-white/60 backdrop-blur-soft rounded-3xl flex items-center justify-center shadow-soft-lg border border-white/30 p-2">
+                  <img
+                    src={logoSrc}
+                    alt="ACA Chile"
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                    onError={() => setLogoSrc(logoFallback)}
+                  />
                 </div>
                 <div>
                   <div className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
@@ -106,17 +118,7 @@ export const Footer: React.FC = () => {
               <div className="space-y-4">
                 <div className="bg-white/40 backdrop-blur-soft rounded-2xl p-4 shadow-soft-sm border border-white/30">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">📍</span>
-                    <div>
-                      <div className="text-sm font-semibold text-neutral-700">Ubicación</div>
-                      <div className="text-sm text-neutral-600">Viña del Mar, Chile</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/40 backdrop-blur-soft rounded-2xl p-4 shadow-soft-sm border border-white/30">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">📧</span>
+                    <span className="text-2xl"></span>
                     <div>
                       <div className="text-sm font-semibold text-neutral-700">Email</div>
                       <div className="text-sm text-neutral-600">info@acachile.com</div>

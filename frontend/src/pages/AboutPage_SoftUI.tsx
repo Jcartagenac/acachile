@@ -57,7 +57,6 @@ export const AboutPage: React.FC = () => {
                       </h3>
                       <p className="text-lg leading-relaxed text-neutral-600 font-light mb-4">
                         ACA es una asociación <span className="font-semibold text-primary-600">sin fines de lucro</span>, 
-                        con sede en la ciudad de <span className="font-semibold">Viña del Mar</span> y está 
                         legalmente constituida según los registros de Servicio de Registro Civil e Identificación 
                         y con asociados a lo largo de todo Chile.
                       </p>
@@ -182,11 +181,7 @@ export const AboutPage: React.FC = () => {
                   </h4>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
-                      <span className="text-xl">📍</span>
-                      <span className="text-sm text-neutral-700">Viña del Mar, Chile</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
-                      <span className="text-xl">📧</span>
+                      <span className="text-xl"></span>
                       <span className="text-sm text-neutral-700">info@acachile.com</span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">

@@ -34,7 +34,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       key: 'international',
       title: 'Somos Internacionales',
       content:
-        'El 29 y 30 de noviembre de 2025 estaremos junto a la World Barbecue Association recibiendo a 80 equipos de 40 países. La gran final del WBQA International BBQ Championship se vive en Viña del Mar, y queremos que formes parte de este hito profesional.',
+        'El 29 y 30 de noviembre de 2025 estaremos junto a la World Barbecue Association recibiendo a 80 equipos de 40 países. La gran final del WBQA International BBQ Championship, y queremos que formes parte de este hito profesional.',
       image_url: 'https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png',
       sort_order: 1,
       source_type: 'custom',
@@ -87,7 +87,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       key: 'about-legal',
       title: 'Organización Legal',
       content:
-        'Estamos legalmente constituidos en Viña del Mar y contamos con asociados a lo largo de todo Chile. Participamos activamente en la comunidad WBQA representando a nuestro país en eventos internacionales.',
+        'Estamos legalmente constituidos y contamos con asociados a lo largo de todo Chile. Participamos activamente en la comunidad WBQA representando a nuestro país en eventos internacionales.',
       image_url: 'https://acachile.com/wp-content/uploads/2024/08/post-alemania-500x375.jpg',
       sort_order: 2
     },
@@ -117,19 +117,9 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       key: 'contact-info',
       title: 'Información de contacto',
       content:
-        'Dirección: Sporting Club, Viña del Mar\nEmail: info@acachile.cl\nTeléfono: +56 9 1234 5678\nInstagram: @acachile\nFacebook: /acachileoficial',
+        'Email: info@acachile.cl\nTeléfono: +56 9 1234 5678\nInstagram: @acachile\nFacebook: /acachileoficial',
       image_url: '',
       sort_order: 1
-    },
-    {
-      key: 'contact-map',
-      title: 'Visítanos',
-      content:
-        'Estamos ubicados en Viña del Mar, Región de Valparaíso. Agenda una visita para conocer nuestra sede y actividades.',
-      image_url: `https://maps.googleapis.com/maps/api/staticmap?center=Vi%C3%B1a+del+Mar,+Chile&zoom=14&size=600x400&markers=Vi%C3%B1a+del+Mar,+Chile&key=${process.env.GOOGLE_MAPS_API_KEY || ''}`,
-      sort_order: 2,
-      cta_label: 'Abrir en Google Maps',
-      cta_url: 'https://maps.google.com/?q=Sporting+Club,+Vi%C3%B1a+del+Mar'
     }
   ])
 };

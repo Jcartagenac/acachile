@@ -34,9 +34,8 @@ export const AboutPage: React.FC = () => {
                     las brasas y la parrilla.
                   </p>
                   <p className="text-lg leading-relaxed mb-6" style={{ color: '#4B5563' }}>
-                    ACA es una asociación sin fines de lucro, con sede en la ciudad de Viña del Mar
-                    y está legalmente constituida según los registros de Servicio de Registro Civil
-                    e Identificación y con asociados a lo largo de todo Chile.
+                    ACA es una asociación sin fines de lucro, legalmente constituida según los registros 
+                    de Servicio de Registro Civil e Identificación y con asociados a lo largo de todo Chile.
                   </p>
                   <p className="text-lg leading-relaxed mb-6" style={{ color: '#4B5563' }}>
                     Nuestro principal objetivo es compartir sanamente en torno al fuego y juntos

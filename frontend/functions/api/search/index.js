@@ -21,7 +21,7 @@ const DEFAULT_SECTION_FALLBACK = {
       key: 'international',
       title: 'Somos Internacionales',
       content:
-        'El 29 y 30 de noviembre de 2025 estaremos junto a la World Barbecue Association recibiendo a 80 equipos de 40 países. La gran final del WBQA International BBQ Championship se vive en Viña del Mar, y queremos que formes parte de este hito profesional.'
+        'El 29 y 30 de noviembre de 2025 estaremos junto a la World Barbecue Association recibiendo a 80 equipos de 40 países. La gran final del WBQA International BBQ Championship, y queremos que formes parte de este hito profesional.'
     },
     {
       key: 'community',
@@ -55,7 +55,7 @@ const DEFAULT_SECTION_FALLBACK = {
       key: 'contact-info',
       title: 'Información de contacto',
       content:
-        'Dirección: Sporting Club, Viña del Mar\nEmail: info@acachile.cl\nTeléfono: +56 9 1234 5678\nInstagram: @acachile'
+        'Email: info@acachile.cl\nTeléfono: +56 9 1234 5678\nInstagram: @acachile'
     }
   ]
 };
