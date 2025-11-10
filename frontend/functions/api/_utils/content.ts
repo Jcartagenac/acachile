@@ -140,7 +140,7 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
     await ensureTable(env.DB);
     const res = await env.DB
       .prepare<SiteSection>(
-        'SELECT page, key, title, image_url, content, sort_order, source_type, source_id, cta_label, cta_url FROM site_sections WHERE page = ? ORDER BY sort_order ASC',
+        'SELECT page, key, title, image_url, image_url_2, content, sort_order, source_type, source_id, cta_label, cta_url FROM site_sections WHERE page = ? ORDER BY sort_order ASC',
       )
       .bind(page)
       .all();
