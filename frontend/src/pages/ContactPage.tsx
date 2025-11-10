@@ -124,7 +124,7 @@ const ContactCards: React.FC<{ details: ContactDetail[] }> = ({ details }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {details.map((detail, index) => (
           <div key={index} className="flex items-start gap-3 p-4 bg-white/40 rounded-xl border border-white/20">
-            {detail.icon?.startsWith('http') ? (
+            {detail.icon?.startsWith('http') || detail.icon?.startsWith('/') ? (
               <img src={detail.icon} alt={detail.label} className="w-5 h-5 object-contain" />
             ) : (
               <span className="text-xl leading-none">{detail.icon ?? '📍'}</span>
