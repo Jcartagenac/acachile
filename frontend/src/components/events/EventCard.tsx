@@ -86,7 +86,12 @@ export const EventCard: React.FC<EventCardProps> = ({
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      // Redirigir al login o mostrar modal
+      // Si el evento es público, redirigir a la página de detalle donde está el formulario público
+      if (evento.isPublic) {
+        window.location.href = `/eventos/${evento.id}`;
+        return;
+      }
+      // Si el evento no es público, redirigir al login
       window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
       return;
     }
@@ -207,7 +212,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                   onClick={handleInscripcion}
                   className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
                 >
-                  Inscribirse
+                  {!isAuthenticated && !evento.isPublic ? 'Inicia sesión para inscribirte' : 'Inscribirse'}
                 </button>
               )}
 
@@ -344,14 +349,16 @@ export const EventCard: React.FC<EventCardProps> = ({
                 )}
               </>
             ) : (
-              <button
-                onClick={() => {
-                  // TODO: Abrir modal de login
-                }}
-                className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-neutral-500 to-neutral-600 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
-              >
-                Inicia sesión para inscribirte
-              </button>
+              <>
+                {canRegister && (
+                  <button
+                    onClick={handleInscripcion}
+                    className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
+                  >
+                    {evento.isPublic ? 'Inscribirse' : 'Inicia sesión para inscribirte'}
+                  </button>
+                )}
+              </>
             )}
 
             <Link
