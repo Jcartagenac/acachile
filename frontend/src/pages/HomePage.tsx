@@ -75,17 +75,59 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-soft-gradient-light relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className={`flex flex-col lg:gap-16 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+        {/* Mobile: orden natural - Título, Imagen, Texto */}
+        {/* Desktop: usar grid de 2 columnas como hero */}
+        <div className={`flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-16 lg:items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}>
           {/* Título - siempre primero en mobile */}
-          <div className="order-1 lg:w-1/2 mb-6 lg:mb-0">
+          <div className="lg:hidden mb-4">
             <h2 className="text-2xl sm:text-4xl font-bold text-neutral-900 leading-tight">
               {section.display_title}
             </h2>
           </div>
+
+          {/* Columna izquierda en desktop: Título y Texto */}
+          <div className={`space-y-6 sm:space-y-8 order-3 lg:order-none ${reverse ? 'lg:col-start-2' : 'lg:col-start-1'}`}>
+            {/* Título - solo visible en desktop */}
+            <h2 className="hidden lg:block text-2xl sm:text-4xl font-bold text-neutral-900 leading-tight">
+              {section.display_title}
+            </h2>
+            
+            {/* Texto y CTA */}
+            <div>
+              <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
+                {blocks.length === 0 ? (
+                  <p>{section.display_content}</p>
+                ) : (
+                  blocks.map((block, blockIndex) => {
+                    if (block.type === 'paragraph') {
+                      return <p key={blockIndex}>{block.text}</p>;
+                    }
+                    return (
+                      <ul key={blockIndex} className="list-disc pl-5 space-y-1">
+                        {block.items.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    );
+                  })
+                )}
+              </div>
+              {section.display_cta_label && section.display_cta_url ? (
+                <div className="mt-6">
+                  <a
+                    href={section.display_cta_url}
+                    className="inline-flex items-center px-5 py-3 sm:px-6 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
+                  >
+                    {section.display_cta_label}
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          </div>
           
-          {/* Imagen - segundo en mobile, respeta reverse en desktop */}
+          {/* Columna derecha en desktop: Imagen - segundo en mobile (después del título) */}
           {section.display_image ? (
-            <div className={`order-2 lg:w-1/2 mb-8 lg:mb-0 ${reverse ? 'lg:order-1' : 'lg:order-3'}`}>
+            <div className={`order-2 lg:order-none mb-8 lg:mb-0 ${reverse ? 'lg:col-start-1 lg:row-start-1' : 'lg:col-start-2'}`}>
               <div className="relative bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
                 <img
                   src={section.display_image}
@@ -95,38 +137,6 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
               </div>
             </div>
           ) : null}
-          
-          {/* Texto y CTA - tercero en mobile */}
-          <div className={`order-3 lg:w-1/2 flex flex-col justify-center space-y-5 sm:space-y-6 ${reverse ? 'lg:order-3' : 'lg:order-2'}`}>
-            <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
-              {blocks.length === 0 ? (
-                <p>{section.display_content}</p>
-              ) : (
-                blocks.map((block, blockIndex) => {
-                  if (block.type === 'paragraph') {
-                    return <p key={blockIndex}>{block.text}</p>;
-                  }
-                  return (
-                    <ul key={blockIndex} className="list-disc pl-5 space-y-1">
-                      {block.items.map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
-                      ))}
-                    </ul>
-                  );
-                })
-              )}
-            </div>
-            {section.display_cta_label && section.display_cta_url ? (
-              <div>
-                <a
-                  href={section.display_cta_url}
-                  className="inline-flex items-center px-5 py-3 sm:px-6 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
-                >
-                  {section.display_cta_label}
-                </a>
-              </div>
-            ) : null}
-          </div>
         </div>
       </div>
     </section>

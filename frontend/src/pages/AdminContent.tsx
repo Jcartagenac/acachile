@@ -31,6 +31,7 @@ export default function AdminContent() {
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
   const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
   const AdminPostulantes = React.lazy(() => import('../components/admin/AdminPostulantes'));
+  const AdminNews = React.lazy(() => import('../components/admin/AdminNews'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
     switch (tab) {
@@ -364,42 +365,14 @@ export default function AdminContent() {
 
         {activeTab === 'noticias' && (
           <div>
-            {/* Actions Bar */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar noticias..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
+            <React.Suspense fallback={
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                <p className="text-gray-600 mt-2">Cargando noticias...</p>
               </div>
-              <button
-                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Crear Noticia
-              </button>
-            </div>
-
-            {/* News List */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="text-center py-12">
-                <Newspaper className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No hay noticias publicadas
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Crea noticias editoriales para mantener informada a la comunidad
-                </p>
-                <button
-                  className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Crear Primera Noticia
-                </button>
-              </div>
-            </div>
+            }>
+              <AdminNews />
+            </React.Suspense>
           </div>
         )}
       </div>
