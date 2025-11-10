@@ -443,7 +443,7 @@ const EventDetailPage: React.FC = () => {
                           className="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
                         >
                           <UserPlus className="w-5 h-5 mr-2" />
-                          Inscribirse
+                          {evento.buttonText || 'Inscribirse'}
                         </button>
                       ) : (
                         <div className="bg-gray-100 text-gray-600 px-4 py-3 rounded-lg text-center">

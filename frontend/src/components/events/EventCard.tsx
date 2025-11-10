@@ -212,7 +212,9 @@ export const EventCard: React.FC<EventCardProps> = ({
                   onClick={handleInscripcion}
                   className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
                 >
-                  {!isAuthenticated && !evento.isPublic ? 'Inicia sesión para inscribirte' : 'Inscribirse'}
+                  {!isAuthenticated && !evento.isPublic 
+                    ? 'Inicia sesión para inscribirte' 
+                    : (evento.buttonText || 'Inscribirse')}
                 </button>
               )}
 
@@ -332,7 +334,7 @@ export const EventCard: React.FC<EventCardProps> = ({
                     onClick={handleInscripcion}
                     className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
                   >
-                    Inscribirse
+                    {evento.buttonText || 'Inscribirse'}
                   </button>
                 )}
 
@@ -355,7 +357,9 @@ export const EventCard: React.FC<EventCardProps> = ({
                     onClick={handleInscripcion}
                     className="flex-1 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-primary-600 to-primary-500 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:scale-105"
                   >
-                    {evento.isPublic ? 'Inscribirse' : 'Inicia sesión para inscribirte'}
+                    {evento.isPublic 
+                      ? (evento.buttonText || 'Inscribirse') 
+                      : 'Inicia sesión para inscribirte'}
                   </button>
                 )}
               </>
