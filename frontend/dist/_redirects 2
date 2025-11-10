@@ -1,6 +1,0 @@
-# Static assets should be served as-is
-/assets/*  /assets/:splat  200
-/api/*     /api/:splat     200
-
-# SPA fallback for all other routes
-/*         /index.html     200

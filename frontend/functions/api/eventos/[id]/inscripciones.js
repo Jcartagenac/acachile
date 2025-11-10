@@ -152,16 +152,34 @@ async function getInscripcionesEventoCompletas(env, eventoId) {
       };
     }
 
-    // Obtener inscripciones del evento desde KV
-    const inscripcionesData = await env.ACA_KV.get(`inscripciones:evento:${eventoId}`);
-    const inscripciones = inscripcionesData ? JSON.parse(inscripcionesData) : [];
+    // Obtener inscripciones del evento desde D1
+    const { results } = await env.DB.prepare(
+      `SELECT id, user_id, event_id, status, inscription_date, payment_status, 
+              payment_amount, notes, nombre, apellido, email, telefono, tipo, created_at
+       FROM inscriptions 
+       WHERE event_id = ? 
+       ORDER BY created_at DESC`
+    ).bind(eventoId).all();
 
-    console.log(`Inscripciones encontradas para evento ${eventoId}:`, inscripciones.length);
+    console.log(`Inscripciones encontradas para evento ${eventoId}:`, results ? results.length : 0);
 
-    // Ordenar por fecha de creación (más recientes primero)
-    inscripciones.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // Mapear a formato esperado por el frontend
+    const inscripciones = (results || []).map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      eventoId: row.event_id,
+      status: row.status,
+      fechaInscripcion: row.inscription_date,
+      metodoPago: row.payment_status,
+      montoApagar: row.payment_amount,
+      notas: row.notes,
+      nombre: row.nombre,
+      apellido: row.apellido,
+      email: row.email,
+      telefono: row.telefono,
+      tipo: row.tipo || 'usuario',
+      createdAt: row.created_at || row.inscription_date
+    }));
 
     return {
       success: true,
