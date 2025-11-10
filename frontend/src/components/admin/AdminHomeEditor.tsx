@@ -4,7 +4,7 @@ import type { SiteSection, SiteSectionSourceType, SitePageKey } from '@shared/si
 import type { Evento } from '@shared/index';
 import type { NewsArticle } from '../../services/newsService';
 
-type EditableSection = SiteSection & { preview_image?: string };
+type EditableSection = SiteSection & { preview_image?: string; image_url_2?: string };
 
 const PAGE_TABS: Array<{ key: SitePageKey; label: string }> = [
   { key: 'home', label: 'Inicio' },
@@ -53,6 +53,7 @@ const processIncomingSections = (page: SitePageKey, incoming: Partial<SiteSectio
       title: typeof raw?.title === 'string' ? raw.title : '',
       content: typeof raw?.content === 'string' ? raw.content : '',
       image_url: typeof raw?.image_url === 'string' ? raw.image_url : '',
+      image_url_2: typeof raw?.image_url_2 === 'string' ? raw.image_url_2 : undefined,
       sort_order: sortOrder,
       source_type: coerceSourceType(raw?.source_type),
       source_id: raw?.source_id != null ? String(raw.source_id) : undefined,
@@ -72,6 +73,7 @@ const sanitizeSectionsForSave = (page: SitePageKey, sections: EditableSection[])
       title: section.title.trim(),
       content: section.content,
       image_url: section.image_url,
+      image_url_2: section.image_url_2 || undefined,
       sort_order: typeof section.sort_order === 'number' ? section.sort_order : index,
       source_type: section.source_type ?? 'custom',
       source_id: section.source_id,
@@ -320,14 +322,14 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
   }, [sections, activePage]);
 
   const uploadImage = useCallback(
-    async (sectionKey: string, file: File) => {
+    async (sectionKey: string, file: File, targetField: 'image_url' | 'image_url_2' = 'image_url') => {
       if (!file) return;
       setUploadsInProgress((value) => value + 1);
       setUploadError((prev) => ({ ...prev, [sectionKey]: '' }));
 
       const reader = new FileReader();
       reader.onload = () => {
-        updateSection(sectionKey, 'image_url', String(reader.result));
+        updateSection(sectionKey, targetField, String(reader.result));
       };
       reader.readAsDataURL(file);
 
@@ -355,7 +357,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
               try {
                 const json = JSON.parse(xhr.responseText);
                 if (json.success && json.url) {
-                  updateSection(sectionKey, 'image_url', json.url);
+                  updateSection(sectionKey, targetField, json.url);
                   resolve();
                 } else {
                   setUploadError((prev) => ({ ...prev, [sectionKey]: json.error || 'Error subida' }));
@@ -530,7 +532,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
                 placeholder="Título de la sección"
               />
 
-              <label className="block text-sm font-medium mt-2">Imagen (URL)</label>
+              <label className="block text-sm font-medium mt-2">Imagen Principal (URL)</label>
               <input
                 value={section.image_url || ''}
                 onChange={(event) => updateSection(section.key, 'image_url', event.target.value)}
@@ -544,6 +546,25 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) uploadImage(section.key, file);
+                  }}
+                />
+                <span className="text-sm text-gray-500">o pega una URL arriba</span>
+              </div>
+
+              <label className="block text-sm font-medium mt-4">Segunda Imagen (URL) - Opcional</label>
+              <input
+                value={section.image_url_2 || ''}
+                onChange={(event) => updateSection(section.key, 'image_url_2', event.target.value)}
+                className="w-full border rounded px-2 py-1"
+                placeholder="https://... (opcional, se muestra debajo de la principal)"
+              />
+              <div className="flex items-center space-x-2 mb-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) uploadImage(section.key, file, 'image_url_2');
                   }}
                 />
                 <span className="text-sm text-gray-500">o pega una URL arriba</span>

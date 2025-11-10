@@ -7,6 +7,7 @@ type SectionDisplay = SiteSection & {
   display_title: string;
   display_content: string;
   display_image?: string;
+  display_image_2?: string;
   display_cta_label?: string;
   display_cta_url?: string;
 };
@@ -200,17 +201,35 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
             </div>
           </div>
           
-          {/* Columna derecha en desktop: Imagen - segundo en mobile (después del título) */}
-          {section.display_image ? (
+          {/* Columna derecha en desktop: Imágenes - segundo en mobile (después del título) */}
+          {(section.display_image || section.display_image_2) ? (
             <div className="order-1 lg:order-2 mb-8 lg:mb-0">
-              <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
-                <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                  <img
-                    src={section.display_image}
-                    alt={section.display_title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-                  />
-                </div>
+              <div className="space-y-4 sm:space-y-6">
+                {/* Primera imagen */}
+                {section.display_image && (
+                  <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
+                    <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                      <img
+                        src={section.display_image}
+                        alt={section.display_title}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Segunda imagen */}
+                {section.display_image_2 && (
+                  <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
+                    <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                      <img
+                        src={section.display_image_2}
+                        alt={`${section.display_title} - Imagen 2`}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : null}
@@ -364,6 +383,7 @@ const HomePage: React.FC = () => {
         display_title: title,
         display_content: content,
         display_image: image,
+        display_image_2: section.image_url_2 || undefined,
         display_cta_label: ctaLabel,
         display_cta_url: ctaUrl
       };
@@ -376,6 +396,7 @@ const HomePage: React.FC = () => {
     title: '',
     content: '',
     image_url: '',
+    image_url_2: undefined,
     sort_order: 0,
     source_type: 'custom' as const,
     cta_label: undefined,
@@ -387,6 +408,7 @@ const HomePage: React.FC = () => {
     display_title: defaultHero.title,
     display_content: defaultHero.content,
     display_image: defaultHero.image_url,
+    display_image_2: defaultHero.image_url_2,
     display_cta_label: defaultHero.cta_label,
     display_cta_url: defaultHero.cta_url
   };

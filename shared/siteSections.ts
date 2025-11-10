@@ -7,6 +7,7 @@ export interface SiteSection {
   title: string;
   content: string;
   image_url: string;
+  image_url_2?: string; // Segunda imagen opcional (para hero principalmente)
   sort_order: number;
   source_type?: SiteSectionSourceType;
   source_id?: string;
