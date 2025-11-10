@@ -1,9 +1,31 @@
 import { requireAuth, errorResponse, jsonResponse } from '../../../_middleware';
 
 // Endpoint para inscribirse a un evento específico
-// POST /api/eventos/[id]/inscribirse - Inscribirse al evento
-
-export async function onRequest(context) {
+// POST /api/eventos/[id]/inscribirse - Inscribirse al ev    // Invalidar TODAS las claves de caché de eventos para forzar refresh desde BD
+    if (env.ACA_KV) {
+      // Lista de todas las combinaciones posibles de status, type, page
+      const statuses = ['published', 'draft', 'all'];
+      const types = ['all', 'encuentro', 'taller', 'webinar'];
+      const searches = ['none'];
+      const pages = Array.from({length: 5}, (_, i) => i + 1); // páginas 1-5
+      const limit = 12;
+      
+      const cacheKeys = [];
+      for (const status of statuses) {
+        for (const type of types) {
+          for (const search of searches) {
+            for (const page of pages) {
+              cacheKeys.push(`eventos:list:${status}:${type}:${search}:${page}:${limit}`);
+            }
+          }
+        }
+      }
+      
+      for (const key of cacheKeys) {
+        await env.ACA_KV.delete(key);
+      }
+      console.log('[handleInscribirse] Invalidated all eventos cache keys');
+    }async function onRequest(context) {
   const { request, env, params } = context;
   const method = request.method;
   const eventId = parseInt(params.id);

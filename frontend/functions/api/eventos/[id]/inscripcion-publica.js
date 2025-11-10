@@ -175,17 +175,30 @@ export async function onRequestPost(context) {
       createdAt: now,
     };
 
-    // Invalidar caché de eventos para forzar refresh desde BD
+    // Invalidar TODAS las claves de caché de eventos para forzar refresh desde BD
     if (env.ACA_KV) {
-      const cacheKeys = [
-        'eventos:list:published:all:none:1:12',
-        'eventos:list:draft:all:none:1:12',
-        'eventos:list:all:all:none:1:12'
-      ];
+      // Lista de todas las combinaciones posibles de status, type, page
+      const statuses = ['published', 'draft', 'all'];
+      const types = ['all', 'encuentro', 'taller', 'webinar'];
+      const searches = ['none'];
+      const pages = Array.from({length: 5}, (_, i) => i + 1); // páginas 1-5
+      const limit = 12;
+      
+      const cacheKeys = [];
+      for (const status of statuses) {
+        for (const type of types) {
+          for (const search of searches) {
+            for (const page of pages) {
+              cacheKeys.push(`eventos:list:${status}:${type}:${search}:${page}:${limit}`);
+            }
+          }
+        }
+      }
+      
       for (const key of cacheKeys) {
         await env.ACA_KV.delete(key);
       }
-      console.log('[inscripcion-publica] Invalidated eventos cache');
+      console.log('[inscripcion-publica] Invalidated all eventos cache keys');
     }
 
     return new Response(JSON.stringify({
