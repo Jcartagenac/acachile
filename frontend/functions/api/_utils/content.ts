@@ -56,6 +56,7 @@ export const normalizeSections = (rawSections: RawSection[] | undefined, page: S
       title: typeof raw?.title === 'string' ? raw.title : (fallback?.title ?? ''),
       content: typeof raw?.content === 'string' ? raw.content : (fallback?.content ?? ''),
       image_url: typeof raw?.image_url === 'string' ? raw.image_url : (fallback?.image_url ?? ''),
+      image_url_2: typeof raw?.image_url_2 === 'string' ? raw.image_url_2 : (fallback?.image_url_2 ?? undefined),
       sort_order: sortOrder,
       source_type: sourceType,
       source_id: sourceId,
