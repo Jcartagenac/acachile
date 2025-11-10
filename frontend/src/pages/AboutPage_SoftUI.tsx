@@ -182,7 +182,7 @@ export const AboutPage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
                       <span className="text-xl"></span>
-                      <span className="text-sm text-neutral-700">info@acachile.com</span>
+                      <span className="text-sm text-neutral-700">hola@acachile.com</span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-white/40 rounded-xl border border-white/20">
                       <span className="text-xl">📱</span>

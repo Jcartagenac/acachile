@@ -75,7 +75,7 @@ export const Footer: React.FC = () => {
                 </a>
                 
                 <a
-                  href="mailto:info@acachile.com"
+                  href="mailto:hola@acachile.com"
                   className="w-12 h-12 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg border border-white/30 text-neutral-600 hover:text-primary-600 transition-all duration-300 transform hover:scale-110"
                 >
                   <span className="sr-only">Email</span>
@@ -121,7 +121,7 @@ export const Footer: React.FC = () => {
                     <span className="text-2xl"></span>
                     <div>
                       <div className="text-sm font-semibold text-neutral-700">Email</div>
-                      <div className="text-sm text-neutral-600">info@acachile.com</div>
+                      <div className="text-sm text-neutral-600">hola@acachile.com</div>
                     </div>
                   </div>
                 </div>
