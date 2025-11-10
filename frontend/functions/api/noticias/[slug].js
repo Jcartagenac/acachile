@@ -1,3 +1,5 @@
+import { requireAuth } from '../../_middleware';
+
 // Endpoint para obtener noticia individual por slug
 // GET /api/noticias/[slug]
 
@@ -85,38 +87,38 @@ export async function onRequestDelete(context) {
   try {
     console.log('[NOTICIAS/SLUG] DELETE request for slug:', params.slug);
 
-    // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Verificar autenticación usando JWT
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+      console.log('[NOTICIAS/SLUG] Auth user:', JSON.stringify({
+        id: authUser.id,
+        email: authUser.email,
+        role: authUser.role,
+        roles: authUser.roles
+      }));
+    } catch (error) {
+      console.log('[NOTICIAS/SLUG] Auth error:', error.message);
       return new Response(JSON.stringify({
         success: false,
-        error: 'No autorizado'
+        error: 'No autorizado - ' + error.message
       }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
-
-    const token = authHeader.substring(7);
-    const sessionData = await env.ACA_KV.get(`session:${token}`);
     
-    if (!sessionData) {
+    // Verificar que el usuario sea admin (verificar tanto role como roles array)
+    const isAdmin = authUser.role === 'admin' || 
+                    (Array.isArray(authUser.roles) && authUser.roles.includes('admin'));
+    
+    console.log('[NOTICIAS/SLUG] Is admin:', isAdmin);
+    
+    if (!isAdmin) {
+      console.log('[NOTICIAS/SLUG] User is not admin, role:', authUser.role, 'roles:', authUser.roles);
       return new Response(JSON.stringify({
         success: false,
-        error: 'Sesión inválida o expirada'
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const session = JSON.parse(sessionData);
-    
-    // Verificar que el usuario sea admin
-    if (session.role !== 'admin') {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No tienes permisos para eliminar noticias'
+        error: 'No tienes permisos para eliminar noticias. Se requiere rol de administrador.'
       }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
