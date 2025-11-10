@@ -33,8 +33,16 @@ export async function onRequestGet(context) {
 
     const noticias = JSON.parse(noticiasData);
     
-    // Buscar la noticia por slug
-    const noticia = noticias.find(n => n.slug === params.slug);
+    // Buscar la noticia por slug o ID
+    const slugOrId = params.slug;
+    const noticia = noticias.find(n => {
+      // Si el parámetro es numérico, buscar por ID
+      if (!isNaN(slugOrId)) {
+        return n.id === parseInt(slugOrId);
+      }
+      // Si no, buscar por slug
+      return n.slug === slugOrId;
+    });
     
     if (!noticia) {
       return new Response(JSON.stringify({
@@ -51,7 +59,7 @@ export async function onRequestGet(context) {
     
     // Guardar las noticias actualizadas
     const updatedNoticias = noticias.map(n => 
-      n.slug === params.slug ? noticia : n
+      n.id === noticia.id ? noticia : n
     );
     await env.ACA_KV.put('noticias:all', JSON.stringify(updatedNoticias));
 
@@ -149,10 +157,23 @@ export async function onRequestDelete(context) {
 
     const noticias = JSON.parse(noticiasData);
     
-    // Buscar la noticia a eliminar
-    const noticiaIndex = noticias.findIndex(n => n.slug === params.slug);
+    // Buscar la noticia a eliminar - puede ser por slug o por ID
+    const slugOrId = params.slug;
+    console.log('[NOTICIAS/SLUG] Searching for:', slugOrId);
+    
+    const noticiaIndex = noticias.findIndex(n => {
+      // Si el parámetro es numérico, buscar por ID
+      if (!isNaN(slugOrId)) {
+        return n.id === parseInt(slugOrId);
+      }
+      // Si no, buscar por slug
+      return n.slug === slugOrId;
+    });
+    
+    console.log('[NOTICIAS/SLUG] Found at index:', noticiaIndex);
     
     if (noticiaIndex === -1) {
+      console.log('[NOTICIAS/SLUG] Noticia not found, available IDs:', noticias.map(n => n.id));
       return new Response(JSON.stringify({
         success: false,
         error: 'Noticia no encontrada'
@@ -163,6 +184,7 @@ export async function onRequestDelete(context) {
     }
 
     const noticia = noticias[noticiaIndex];
+    console.log('[NOTICIAS/SLUG] Found noticia:', noticia.title, 'ID:', noticia.id);
     
     // Eliminar la noticia del array
     noticias.splice(noticiaIndex, 1);
