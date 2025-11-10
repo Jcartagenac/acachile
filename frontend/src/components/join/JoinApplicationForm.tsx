@@ -80,9 +80,8 @@ const joinApplicationSchema = z
       .regex(phoneRegex, 'Formato inválido. Ej: +56912345678'),
     rut: z
       .string()
-      .regex(rutRegex, 'Formato RUT inválido. Ej: 12.345.678-9')
-      .optional()
-      .or(z.literal('')),
+      .min(1, 'RUT requerido')
+      .regex(rutRegex, 'Formato RUT inválido. Ej: 12.345.678-9'),
     birthdate: z.string().optional().or(z.literal('')),
     region: z.enum([...REGIONES_CHILE] as [typeof REGIONES_CHILE[number], ...typeof REGIONES_CHILE]),
     city: z.string().min(2, 'Ingresa tu ciudad de residencia'),
@@ -118,6 +117,7 @@ const joinApplicationSchema = z
     otherNetworks: z.string().max(200, 'Máximo 200 caracteres').optional().or(z.literal('')),
     references: z.string().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
     photoUrl: z.string().url().optional().or(z.literal('')),
+    noSocialMedia: z.boolean(),
   })
   .refine(
     (data) => {
@@ -127,6 +127,20 @@ const joinApplicationSchema = z
     {
       path: ['competitionDetails'],
       message: 'Cuéntanos brevemente tu experiencia competitiva.',
+    },
+  )
+  .refine(
+    (data) => {
+      // Si el usuario marcó "no poseo redes sociales", skip validación
+      if (data.noSocialMedia) return true;
+      // Si no marcó checkbox, al menos una red social debe estar llena
+      const hasInstagram = !!data.instagram && data.instagram.trim().length > 0;
+      const hasOtherNetworks = !!data.otherNetworks && data.otherNetworks.trim().length > 0;
+      return hasInstagram || hasOtherNetworks;
+    },
+    {
+      path: ['instagram'],
+      message: 'Debes proporcionar al menos una red social o marcar "No poseo redes sociales"',
     },
   );
 
@@ -144,6 +158,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [noSocialMedia, setNoSocialMedia] = useState(false);
 
   const {
     handleSubmit,
@@ -174,6 +189,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       otherNetworks: '',
       references: '',
       photoUrl: '',
+      noSocialMedia: false,
     },
   });
 
@@ -209,7 +225,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       fullName: data.fullName.trim(),
       email: data.email.trim().toLowerCase(),
       phone: data.phone.trim(),
-      rut: data.rut?.trim() || null,
+      rut: data.rut.trim(),
       birthdate: data.birthdate || null,
       region: data.region,
       city: data.city.trim(),
@@ -349,7 +365,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
                 {errors.phone && <p className="mt-2 text-sm text-primary-600">{errors.phone.message}</p>}
               </div>
               <div>
-                <label className="text-sm font-medium text-neutral-700">RUT</label>
+                <label className="text-sm font-medium text-neutral-700">RUT *</label>
                 <input
                   type="text"
                   placeholder="12.345.678-9"
@@ -647,31 +663,67 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
               ) : null}
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-neutral-700">Instagram</label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/50 px-4 py-3">
                 <input
-                  type="text"
-                  placeholder="@usuario"
-                  {...register('instagram')}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                  type="checkbox"
+                  id="noSocialMedia"
+                  checked={noSocialMedia}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setNoSocialMedia(checked);
+                    setValue('noSocialMedia', checked, { shouldValidate: true });
+                    // Clear social media fields when checkbox is checked
+                    if (checked) {
+                      setValue('instagram', '', { shouldValidate: true });
+                      setValue('otherNetworks', '', { shouldValidate: true });
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                 />
-                {errors.instagram && (
-                  <p className="mt-2 text-sm text-primary-600">{errors.instagram.message}</p>
-                )}
+                <label htmlFor="noSocialMedia" className="text-sm font-medium text-neutral-700 cursor-pointer">
+                  No poseo redes sociales
+                </label>
               </div>
-              <div>
-                <label className="text-sm font-medium text-neutral-700">Otras redes</label>
-                <input
-                  type="text"
-                  placeholder="Facebook, TikTok, YouTube, etc."
-                  {...register('otherNetworks')}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                />
-                {errors.otherNetworks && (
-                  <p className="mt-2 text-sm text-primary-600">{errors.otherNetworks.message}</p>
-                )}
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-neutral-700">
+                    Instagram{!noSocialMedia && ' *'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="@usuario"
+                    {...register('instagram')}
+                    disabled={noSocialMedia}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  {errors.instagram && (
+                    <p className="mt-2 text-sm text-primary-600">{errors.instagram.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-neutral-700">
+                    Otras redes{!noSocialMedia && ' *'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Facebook, TikTok, YouTube, etc."
+                    {...register('otherNetworks')}
+                    disabled={noSocialMedia}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  {errors.otherNetworks && (
+                    <p className="mt-2 text-sm text-primary-600">{errors.otherNetworks.message}</p>
+                  )}
+                </div>
               </div>
+
+              {!noSocialMedia && (
+                <p className="text-xs text-neutral-500">
+                  * Debes proporcionar al menos una red social o marcar "No poseo redes sociales"
+                </p>
+              )}
             </div>
 
             <div>
