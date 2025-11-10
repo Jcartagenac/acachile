@@ -151,9 +151,9 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   return (
     <section className="relative overflow-hidden py-2 sm:py-20 bg-soft-gradient-light">
       <div className="relative px-4 py-2 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-24">
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-16 lg:items-center">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-2 lg:gap-16 lg:items-center">
           {/* Título - siempre primero en mobile y desktop */}
-          <div className="lg:hidden mb-2">
+          <div className="lg:hidden mb-1">
             <h1 className="text-3xl sm:text-5xl font-bold leading-tight text-neutral-900">
               {section.display_title}
             </h1>
@@ -204,8 +204,8 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
           
           {/* Columna derecha en desktop: Imágenes - segundo en mobile (después del título) */}
           {(section.display_image || section.display_image_2) ? (
-            <div className="order-1 lg:order-2 mb-3 lg:mb-0">
-              <div className="space-y-3 sm:space-y-6">
+            <div className="order-1 lg:order-2 mb-1 lg:mb-0">
+              <div className="space-y-2 sm:space-y-6">
                 {/* Primera imagen */}
                 {section.display_image && (
                   <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
