@@ -64,10 +64,10 @@ const parseContactDetails = (content: string): ContactDetail[] => {
     } else if (lowerLabel.includes('instagram')) {
       const handle = value.replace(/^@/, '');
       href = value.startsWith('http') ? value : `https://www.instagram.com/${handle}`;
-      icon = 'https://www.instagram.com/favicon.ico';
+      icon = 'https://static.cdninstagram.com/rsrc.php/v3/yt/r/30PrGfR3xhB.png';
     } else if (lowerLabel.includes('facebook')) {
       href = value.startsWith('http') ? value : `https://www.facebook.com/${value.replace(/^\//, '')}`;
-      icon = 'https://www.facebook.com/favicon.ico';
+      icon = 'https://static.xx.fbcdn.net/rsrc.php/y1/r/4lCu2zih0ca.svg';
     }
 
     details.push({ label, value, href, icon });
@@ -129,14 +129,24 @@ const ContactCards: React.FC<{ details: ContactDetail[] }> = ({ details }) => {
             ) : (
               <span className="text-xl leading-none">{detail.icon ?? '📍'}</span>
             )}
-            <div>
-              <p className="text-sm font-semibold text-neutral-700">{detail.label}</p>
+            <div className="flex-1">
               {detail.href ? (
-                <a href={detail.href} className="text-sm text-primary-600 hover:underline break-words">
-                  {detail.value}
+                <a 
+                  href={detail.href} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block hover:opacity-80 transition-opacity"
+                >
+                  <p className="text-sm font-semibold text-neutral-700 mb-1">{detail.label}</p>
+                  <p className="text-sm text-primary-600 hover:underline break-words">
+                    {detail.value}
+                  </p>
                 </a>
               ) : (
-                <p className="text-sm text-neutral-600 break-words">{detail.value}</p>
+                <>
+                  <p className="text-sm font-semibold text-neutral-700 mb-1">{detail.label}</p>
+                  <p className="text-sm text-neutral-600 break-words">{detail.value}</p>
+                </>
               )}
             </div>
           </div>
