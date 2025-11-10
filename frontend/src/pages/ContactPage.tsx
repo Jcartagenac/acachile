@@ -64,10 +64,10 @@ const parseContactDetails = (content: string): ContactDetail[] => {
     } else if (lowerLabel.includes('instagram')) {
       const handle = value.replace(/^@/, '');
       href = value.startsWith('http') ? value : `https://www.instagram.com/${handle}`;
-      icon = 'https://static.cdninstagram.com/rsrc.php/v3/yt/r/30PrGfR3xhB.png';
+      icon = '/icons/instagram-favicon.ico';
     } else if (lowerLabel.includes('facebook')) {
       href = value.startsWith('http') ? value : `https://www.facebook.com/${value.replace(/^\//, '')}`;
-      icon = 'https://static.xx.fbcdn.net/rsrc.php/y1/r/4lCu2zih0ca.svg';
+      icon = '/icons/facebook-favicon.ico';
     }
 
     details.push({ label, value, href, icon });
