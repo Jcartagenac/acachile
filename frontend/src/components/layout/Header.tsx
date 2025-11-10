@@ -25,9 +25,9 @@ export const Header: React.FC = () => {
     { name: 'Contacto', href: '/contacto' },
   ];
 
-  // Separar navegación para mobile - solo mostrar 2 items más importantes
-  const mobileVisibleNav = navigation.slice(0, 2); // Inicio, Quiénes Somos
-  const mobileMenuNav = navigation.slice(2); // Eventos, Noticias, Contacto
+  // Separar navegación para mobile - mostrar 3 items principales
+  const mobileVisibleNav = navigation.slice(0, 3); // Inicio, Quiénes Somos, Eventos
+  const mobileMenuNav = navigation.slice(3); // Noticias, Contacto
 
   return (
     <>
@@ -58,13 +58,13 @@ export const Header: React.FC = () => {
               </Link>
             </div>
 
-            {/* Mobile Visible Navigation - Solo 2 items más importantes */}
+            {/* Mobile Visible Navigation - Inicio, Quiénes Somos, Eventos */}
             <nav className="md:hidden flex items-center justify-center gap-0.5 flex-1 mx-0.5 min-w-0">
               {mobileVisibleNav.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-1.5 py-1 text-[10px] font-semibold rounded-lg transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                  className={`px-1 py-1 text-[9px] font-semibold rounded-lg transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                     location.pathname === item.href
                       ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
                       : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 border border-transparent'
