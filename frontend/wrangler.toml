@@ -7,7 +7,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "acachile-db"
-database_id = "2af4176e-ad62-4f85-a6d2-0bccef75fc66"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 
 [[kv_namespaces]]
 binding = "ACA_KV"
