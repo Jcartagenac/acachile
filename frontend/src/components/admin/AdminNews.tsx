@@ -20,6 +20,8 @@ export default function AdminNews() {
       const data = await response.json();
       
       if (data.success && Array.isArray(data.data)) {
+        console.log('[AdminNews] Loaded news articles:', data.data.length);
+        console.log('[AdminNews] First article structure:', data.data[0]);
         setNews(data.data);
       } else {
         throw new Error('Error al cargar noticias');
@@ -32,14 +34,22 @@ export default function AdminNews() {
     }
   };
 
-  const handleDelete = async (slug: string) => {
+  const handleDelete = async (slugOrId: string | number) => {
+    console.log('[AdminNews] handleDelete called with:', slugOrId, 'type:', typeof slugOrId);
+    
+    if (!slugOrId) {
+      alert('Error: No se puede eliminar la noticia sin identificador');
+      console.error('[AdminNews] Slug/ID is undefined or empty');
+      return;
+    }
+
     if (!window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
       return;
     }
 
     try {
-      console.log('[AdminNews] Deleting noticia with slug:', slug);
-      const response = await fetch(`/api/noticias/${slug}`, {
+      console.log('[AdminNews] Deleting noticia with slug/id:', slugOrId);
+      const response = await fetch(`/api/noticias/${slugOrId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -244,7 +254,14 @@ export default function AdminNews() {
                         <Edit className="h-5 w-5" />
                       </Link>
                       <button
-                        onClick={() => handleDelete(article.slug)}
+                        onClick={() => {
+                          console.log('[AdminNews] Delete button clicked for article:', {
+                            id: article.id,
+                            slug: article.slug,
+                            title: article.title
+                          });
+                          handleDelete(article.slug || article.id);
+                        }}
                         className="text-red-600 hover:text-red-900"
                         title="Eliminar"
                       >
