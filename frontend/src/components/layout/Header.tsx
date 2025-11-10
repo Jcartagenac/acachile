@@ -36,9 +36,9 @@ export const Header: React.FC = () => {
         <Container>
           <div className="flex justify-between items-center py-3 sm:py-4 relative">
             {/* Logo */}
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-3 sm:space-x-4 group">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 transform group-hover:scale-105 border border-white/30 p-2">
+            <div className="flex items-center flex-shrink-0">
+              <Link to="/" className="flex items-center space-x-2 sm:space-x-4 group">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 transform group-hover:scale-105 border border-white/30 p-1.5 sm:p-2">
                   <img
                     src={logoSrc}
                     alt="ACA Chile"
@@ -59,12 +59,12 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Mobile Visible Navigation - Siempre visible en mobile */}
-            <nav className="md:hidden flex items-center justify-center space-x-1 flex-1 mx-2">
+            <nav className="md:hidden flex items-center justify-center space-x-1 flex-1 mx-1 min-w-0">
               {mobileVisibleNav.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-2 py-2 text-xs font-semibold rounded-xl transition-all duration-300 whitespace-nowrap ${
+                  className={`px-1.5 py-2 text-xs font-semibold rounded-xl transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                     location.pathname === item.href
                       ? 'text-primary-700 bg-primary-50/80 backdrop-blur-soft shadow-soft-inset-sm border border-primary-200/50'
                       : 'text-neutral-700 hover:text-primary-600 hover:bg-white/60 border border-transparent'
@@ -93,7 +93,7 @@ export const Header: React.FC = () => {
             </nav>
 
             {/* Auth Section */}
-            <div className="flex items-center space-x-2 sm:space-x-3 ml-2 sm:ml-4">
+            <div className="flex items-center space-x-1 sm:space-x-3 ml-1 sm:ml-4 flex-shrink-0">
               {isAuthenticated ? (
                 <UserMenu />
               ) : (
@@ -118,12 +118,12 @@ export const Header: React.FC = () => {
               {/* Mobile menu button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden w-11 h-11 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 border border-white/30"
+                className="md:hidden w-10 h-10 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md hover:shadow-soft-lg transition-all duration-300 border border-white/30 flex-shrink-0"
               >
-                <div className="w-6 h-6 flex flex-col justify-center items-center">
-                  <div className={`w-5 h-0.5 bg-neutral-600 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1' : ''}`}></div>
-                  <div className={`w-5 h-0.5 bg-neutral-600 transition-all duration-300 mt-1 ${isMenuOpen ? 'opacity-0' : ''}`}></div>
-                  <div className={`w-5 h-0.5 bg-neutral-600 transition-all duration-300 mt-1 ${isMenuOpen ? '-rotate-45 -translate-y-1' : ''}`}></div>
+                <div className="w-5 h-5 flex flex-col justify-center items-center">
+                  <div className={`w-4 h-0.5 bg-neutral-600 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-0.5' : ''}`}></div>
+                  <div className={`w-4 h-0.5 bg-neutral-600 transition-all duration-300 mt-1 ${isMenuOpen ? 'opacity-0' : ''}`}></div>
+                  <div className={`w-4 h-0.5 bg-neutral-600 transition-all duration-300 mt-1 ${isMenuOpen ? '-rotate-45 -translate-y-0.5' : ''}`}></div>
                 </div>
               </button>
             </div>
