@@ -8,7 +8,7 @@ import {
 
 const STATUS_WHITELIST: PostulacionStatus[] = ['pendiente', 'en_revision', 'aprobada', 'rechazada'];
 
-export const onRequestGet = async ({ request, env }) => {
+export const onRequestGet = async ({ request, env }: any) => {
   try {
     let auth;
     try {
@@ -87,7 +87,22 @@ export const onRequestGet = async ({ request, env }) => {
               'approverName', COALESCE(u.nombre || ' ' || u.apellido, u.email)
             )
           END
-        ) as approvals_json
+        ) as approvals_json,
+        (
+          SELECT json_group_array(
+            json_object(
+              'id', r.id,
+              'reviewerId', r.reviewer_id,
+              'reviewerName', COALESCE(ur.nombre || ' ' || ur.apellido, ur.email),
+              'reviewerEmail', ur.email,
+              'reviewerRole', ur.role,
+              'createdAt', r.created_at
+            )
+          )
+          FROM postulacion_reviewers r
+          JOIN usuarios ur ON ur.id = r.reviewer_id
+          WHERE r.postulacion_id = p.id
+        ) as reviewers_json
       FROM postulaciones p
       LEFT JOIN postulacion_aprobaciones a ON a.postulacion_id = p.id
       LEFT JOIN usuarios u ON u.id = a.approver_id
@@ -131,11 +146,41 @@ export const onRequestGet = async ({ request, env }) => {
         }
       }
 
+      let reviewers: Array<{
+        id: number;
+        reviewerId: number;
+        reviewerName: string;
+        reviewerEmail: string;
+        reviewerRole: string;
+        createdAt: string;
+      }> = [];
+
+      if (row.reviewers_json) {
+        try {
+          const parsed = JSON.parse(row.reviewers_json);
+          if (Array.isArray(parsed)) {
+            reviewers = parsed
+              .filter(Boolean)
+              .map((item) => ({
+                id: Number(item.id),
+                reviewerId: Number(item.reviewerId),
+                reviewerName: item.reviewerName,
+                reviewerEmail: item.reviewerEmail,
+                reviewerRole: item.reviewerRole,
+                createdAt: item.createdAt,
+              }));
+          }
+        } catch (error) {
+          console.error('[postulaciones] Error parsing reviewers_json', error);
+        }
+      }
+
       return {
         ...base,
         approvals,
         approvalsCount: approvals.length,
         pendingApprovals: Math.max(0, (base?.approvalsRequired ?? 2) - approvals.length),
+        reviewers,
       };
     });
 

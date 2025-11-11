@@ -123,6 +123,20 @@ export const ensurePostulacionesSchema = async (db: any) => {
   `).run();
 
   await db.prepare(`
+    CREATE TABLE IF NOT EXISTS postulacion_reviewers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      postulacion_id INTEGER NOT NULL,
+      reviewer_id INTEGER NOT NULL,
+      assigned_by INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE,
+      FOREIGN KEY (reviewer_id) REFERENCES usuarios(id),
+      FOREIGN KEY (assigned_by) REFERENCES usuarios(id),
+      UNIQUE(postulacion_id, reviewer_id)
+    )
+  `).run();
+
+  await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_postulaciones_status ON postulaciones(status)
   `).run();
   await db.prepare(`

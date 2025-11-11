@@ -53,6 +53,15 @@ export interface PostulacionApproval {
   approverName: string | null;
 }
 
+export interface PostulacionReviewer {
+  id: number;
+  reviewerId: number;
+  reviewerName: string;
+  reviewerEmail: string;
+  reviewerRole: string;
+  createdAt: string;
+}
+
 export interface PostulanteSummary {
   id: number;
   fullName: string;
@@ -85,6 +94,7 @@ export interface PostulanteSummary {
   createdAt: string;
   updatedAt: string;
   approvals?: PostulacionApproval[];
+  reviewers?: PostulacionReviewer[];
 }
 
 export interface PostulacionesListResponse {
@@ -221,6 +231,48 @@ export const postulacionesService = {
     } catch (error) {
       console.error('[postulacionesService] Error rechazando postulación:', error);
       return { success: false, error: 'No pudimos rechazar la postulación' };
+    }
+  },
+
+  async assignReviewer(
+    postulacionId: number,
+    reviewerId: number,
+  ): Promise<{ success: boolean; data?: { postulacionId: number; reviewers: PostulacionReviewer[] }; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/postulantes/${postulacionId}/assign-reviewer`, {
+        method: 'POST',
+        headers: buildAuthHeaders(undefined, 'application/json'),
+        body: JSON.stringify({ reviewerId }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, error: data?.error || 'No pudimos asignar el revisor' };
+      }
+
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('[postulacionesService] Error asignando revisor:', error);
+      return { success: false, error: 'No pudimos asignar el revisor' };
+    }
+  },
+
+  async removeReviewer(postulacionId: number, reviewerId: number): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/postulantes/${postulacionId}/assign-reviewer?reviewerId=${reviewerId}`, {
+        method: 'DELETE',
+        headers: buildAuthHeaders(),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, error: data?.error || 'No pudimos remover el revisor' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('[postulacionesService] Error removiendo revisor:', error);
+      return { success: false, error: 'No pudimos remover el revisor' };
     }
   },
 };

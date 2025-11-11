@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { postulacionesService, PostulanteSummary } from '../services/postulacionesService';
+import { sociosService } from '../services/sociosService';
 import { useAuth } from '../contexts/AuthContext';
 import {
   AlertCircle,
   CheckCircle,
-  Clock3,
+
   Loader2,
   Mail,
   MapPin,
@@ -17,6 +18,7 @@ import {
   UserPlus,
   X,
   XCircle,
+  UserCog,
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -70,6 +72,10 @@ const AdminPostulantes: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedPostulacion, setSelectedPostulacion] = useState<PostulanteSummary | null>(null);
+  const [directors, setDirectors] = useState<Array<{ id: number; nombre: string; apellido: string; email: string; role: string }>>([]);
+  const [selectedDirectorId, setSelectedDirectorId] = useState<number | null>(null);
 
   const fetchPostulantes = useCallback(
     async ({ overridePage, overrideSearch }: { overridePage?: number; overrideSearch?: string } = {}) => {
@@ -115,7 +121,7 @@ const AdminPostulantes: React.FC = () => {
     try {
       const response = await postulacionesService.approvePostulante(postulacion.id, comment || undefined);
       if (response.success && response.data) {
-        setPostulantes((prev) => prev.map((item) => (item.id === response.data.postulacion.id ? response.data.postulacion : item)));
+        setPostulantes((prev) => prev.map((item) => (item.id === response.data!.postulacion.id ? response.data!.postulacion : item)));
         if (response.data.generatedPassword) {
           window.alert(`Postulación aprobada. Contraseña temporal: ${response.data.generatedPassword}`);
         }
@@ -137,7 +143,7 @@ const AdminPostulantes: React.FC = () => {
     try {
       const response = await postulacionesService.rejectPostulante(postulacion.id, reason);
       if (response.success && response.data) {
-        setPostulantes((prev) => prev.map((item) => (item.id === response.data.id ? response.data : item)));
+        setPostulantes((prev) => prev.map((item) => (item.id === response.data!.id ? response.data! : item)));
       } else if (response.error) {
         setError(response.error);
       }
@@ -180,6 +186,98 @@ const AdminPostulantes: React.FC = () => {
 
   const handleRefresh = () => {
     fetchPostulantes();
+  };
+
+  const loadDirectors = useCallback(async () => {
+    try {
+      const response = await sociosService.getSocios({ limit: 100 });
+      if (response.success && response.data) {
+        // Filtrar solo directores
+        const allSocios = response.data.socios || [];
+        const directorRoles = ['admin', 'organizer', 'editor'];
+        const filteredDirectors = allSocios
+          .filter((socio: any) => directorRoles.includes(socio.role))
+          .map((socio: any) => ({
+            id: socio.id,
+            nombre: socio.nombre,
+            apellido: socio.apellido,
+            email: socio.email,
+            role: socio.role,
+          }));
+        setDirectors(filteredDirectors);
+      }
+    } catch (error) {
+      console.error('Error loading directors:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (canReview && showAssignModal) {
+      loadDirectors();
+    }
+  }, [canReview, showAssignModal, loadDirectors]);
+
+  const handleOpenAssignModal = (postulacion: PostulanteSummary) => {
+    setSelectedPostulacion(postulacion);
+    setSelectedDirectorId(null);
+    setShowAssignModal(true);
+  };
+
+  const handleCloseAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedPostulacion(null);
+    setSelectedDirectorId(null);
+  };
+
+  const handleAssignReviewer = async () => {
+    if (!selectedPostulacion || !selectedDirectorId) return;
+
+    try {
+      setActionLoadingId(selectedPostulacion.id);
+      const response = await postulacionesService.assignReviewer(selectedPostulacion.id, selectedDirectorId);
+      
+      if (response.success && response.data) {
+        setPostulantes((prev) =>
+          prev.map((item) =>
+            item.id === selectedPostulacion.id ? { ...item, reviewers: response.data!.reviewers } : item
+          )
+        );
+        handleCloseAssignModal();
+      } else if (response.error) {
+        setError(response.error);
+      }
+    } catch (assignError) {
+      console.error('Error asignando revisor:', assignError);
+      setError('No pudimos asignar el revisor');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleRemoveReviewer = async (postulacionId: number, reviewerId: number) => {
+    if (!window.confirm('¿Estás seguro de remover este revisor?')) return;
+
+    try {
+      setActionLoadingId(postulacionId);
+      const response = await postulacionesService.removeReviewer(postulacionId, reviewerId);
+      
+      if (response.success) {
+        setPostulantes((prev) =>
+          prev.map((item) =>
+            item.id === postulacionId
+              ? { ...item, reviewers: (item.reviewers || []).filter((r) => r.reviewerId !== reviewerId) }
+              : item
+          )
+        );
+      } else if (response.error) {
+        setError(response.error);
+      }
+    } catch (removeError) {
+      console.error('Error removiendo revisor:', removeError);
+      setError('No pudimos remover el revisor');
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   if (!canReview) {
@@ -305,11 +403,27 @@ const AdminPostulantes: React.FC = () => {
                           <span className="flex items-center gap-1"><Mail className="h-4 w-4 text-gray-400" /> {postulacion.email}</span>
                           <span className="flex items-center gap-1"><Phone className="h-4 w-4 text-gray-400" /> {postulacion.phone || 'Sin teléfono'}</span>
                           <span className="flex items-center gap-1"><MapPin className="h-4 w-4 text-gray-400" /> {postulacion.region || 'Región no indicada'}</span>
+                          {postulacion.city && <span className="flex items-center gap-1"><Home className="h-4 w-4 text-gray-400" /> {postulacion.city}</span>}
                         </div>
+                        {postulacion.rut && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">RUT:</span> {postulacion.rut}
+                          </p>
+                        )}
+                        {postulacion.birthdate && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Fecha de nacimiento:</span> {formatDate(postulacion.birthdate)}
+                          </p>
+                        )}
+                        {postulacion.occupation && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Ocupación:</span> {postulacion.occupation}
+                          </p>
+                        )}
                         {postulacion.photoUrl && (
                           <button
                             type="button"
-                            onClick={() => window.open(postulacion.photoUrl, '_blank')}
+                            onClick={() => postulacion.photoUrl && window.open(postulacion.photoUrl, '_blank')}
                             className="inline-flex items-center text-xs text-primary-600 hover:text-primary-700"
                           >
                             Ver foto en tamaño completo
@@ -330,6 +444,16 @@ const AdminPostulantes: React.FC = () => {
 
                   <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
                     <div>
+                      <p className="font-semibold text-gray-800">Nivel de experiencia</p>
+                      <p className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3">{postulacion.experienceLevel}</p>
+                    </div>
+                    {postulacion.specialties && (
+                      <div>
+                        <p className="font-semibold text-gray-800">Especialidades</p>
+                        <p className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3 whitespace-pre-line">{postulacion.specialties}</p>
+                      </div>
+                    )}
+                    <div>
                       <p className="font-semibold text-gray-800">Motivación</p>
                       <p className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3 whitespace-pre-line">{postulacion.motivation}</p>
                     </div>
@@ -337,25 +461,60 @@ const AdminPostulantes: React.FC = () => {
                       <p className="font-semibold text-gray-800">Cómo puede aportar</p>
                       <p className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3 whitespace-pre-line">{postulacion.contribution}</p>
                     </div>
+                    {postulacion.hasCompetitionExperience && postulacion.competitionDetails && (
+                      <div>
+                        <p className="font-semibold text-gray-800">Experiencia competitiva</p>
+                        <p className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3 whitespace-pre-line">{postulacion.competitionDetails}</p>
+                      </div>
+                    )}
                     {postulacion.references && (
                       <div>
                         <p className="font-semibold text-gray-800">Referencias</p>
                         <p className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3 whitespace-pre-line">{postulacion.references}</p>
                       </div>
                     )}
+                    {(postulacion.instagram || postulacion.otherNetworks) && (
+                      <div>
+                        <p className="font-semibold text-gray-800">Redes sociales</p>
+                        <div className="mt-1 bg-gray-50 border border-gray-100 rounded-lg p-3 space-y-1">
+                          {postulacion.instagram && <p>Instagram: {postulacion.instagram}</p>}
+                          {postulacion.otherNetworks && <p>Otras: {postulacion.otherNetworks}</p>}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                    {(postulacion.availability || []).map((item) => (
-                      <span key={item} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                        <UserCheck className="h-3 w-3" /> {item.replace(/_/g, ' ')}
-                      </span>
-                    ))}
-                    {(postulacion.approvals || []).map((approval) => (
-                      <span key={approval.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">
-                        <UserCheck className="h-3 w-3" /> {approval.approverName || 'Miembro directorio'}
-                      </span>
-                    ))}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                      {(postulacion.availability || []).map((item) => (
+                        <span key={item} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                          <UserCheck className="h-3 w-3" /> {item.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                      {(postulacion.approvals || []).map((approval) => (
+                        <span key={approval.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">
+                          <UserCheck className="h-3 w-3" /> {approval.approverName || 'Miembro directorio'}
+                        </span>
+                      ))}
+                    </div>
+                    {(postulacion.reviewers && postulacion.reviewers.length > 0) && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-medium text-gray-600">Revisores asignados:</span>
+                        {postulacion.reviewers.map((reviewer) => (
+                          <span key={reviewer.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs">
+                            <UserCog className="h-3 w-3" /> {reviewer.reviewerName}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveReviewer(postulacion.id, reviewer.reviewerId)}
+                              disabled={disableActions}
+                              className="ml-1 hover:text-purple-900"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -374,6 +533,14 @@ const AdminPostulantes: React.FC = () => {
                       className={`inline-flex items-center px-4 py-2 rounded-lg border ${disableActions || isFinalizada ? 'border-red-200 text-red-300 cursor-not-allowed' : 'border-red-500 text-red-600 hover:bg-red-50'}`}
                     >
                       <XCircle className="h-4 w-4 mr-1" /> Rechazar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disableActions}
+                      onClick={() => handleOpenAssignModal(postulacion)}
+                      className={`inline-flex items-center px-4 py-2 rounded-lg border ${disableActions ? 'border-purple-200 text-purple-300 cursor-not-allowed' : 'border-purple-500 text-purple-600 hover:bg-purple-50'}`}
+                    >
+                      <UserCog className="h-4 w-4 mr-1" /> Asignar revisor
                     </button>
                   </div>
                 </div>
@@ -408,6 +575,69 @@ const AdminPostulantes: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal para asignar revisor */}
+      {showAssignModal && selectedPostulacion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Asignar revisor</h3>
+              <button
+                type="button"
+                onClick={handleCloseAssignModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-600 mb-2">
+                Postulación de: <span className="font-medium">{selectedPostulacion.fullName}</span>
+              </p>
+              <p className="text-xs text-gray-500 mb-4">
+                Asigna un director para que revise esta postulación
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar director
+              </label>
+              <select
+                value={selectedDirectorId || ''}
+                onChange={(e) => setSelectedDirectorId(Number(e.target.value))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Seleccionar...</option>
+                {directors.map((director) => (
+                  <option key={director.id} value={director.id}>
+                    {director.nombre} {director.apellido} ({director.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleCloseAssignModal}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignReviewer}
+                disabled={!selectedDirectorId || actionLoadingId === selectedPostulacion.id}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {actionLoadingId === selectedPostulacion.id ? 'Asignando...' : 'Asignar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
