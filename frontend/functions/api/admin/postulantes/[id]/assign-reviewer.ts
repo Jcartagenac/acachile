@@ -100,7 +100,6 @@ export const onRequestPost = async ({ request, env, params }: any) => {
         r.reviewer_id,
         r.feedback,
         r.created_at,
-        r.updated_at,
         u.nombre,
         u.apellido,
         u.email,
@@ -121,7 +120,6 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       reviewerRole: row.role,
       feedback: row.feedback || null,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
     }));
 
     return jsonResponse({

@@ -53,7 +53,7 @@ export const onRequestPut = async ({ request, env, params }: any) => {
     // Actualizar feedback
     const result = await env.DB.prepare(`
       UPDATE postulacion_reviewers
-      SET feedback = ?, updated_at = CURRENT_TIMESTAMP
+      SET feedback = ?
       WHERE postulacion_id = ? AND reviewer_id = ?
     `)
       .bind(feedback || null, postulacionId, auth.userId)
@@ -71,7 +71,6 @@ export const onRequestPut = async ({ request, env, params }: any) => {
         r.reviewer_id,
         r.feedback,
         r.created_at,
-        r.updated_at,
         u.nombre,
         u.apellido,
         u.email,
@@ -92,7 +91,6 @@ export const onRequestPut = async ({ request, env, params }: any) => {
       reviewerRole: row.role,
       feedback: row.feedback || null,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
     }));
 
     return jsonResponse({

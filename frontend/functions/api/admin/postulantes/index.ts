@@ -97,8 +97,7 @@ export const onRequestGet = async ({ request, env }: any) => {
               'reviewerEmail', ur.email,
               'reviewerRole', ur.role,
               'feedback', r.feedback,
-              'createdAt', r.created_at,
-              'updatedAt', r.updated_at
+              'createdAt', r.created_at
             )
           )
           FROM postulacion_reviewers r

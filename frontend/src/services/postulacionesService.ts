@@ -61,7 +61,7 @@ export interface PostulacionReviewer {
   reviewerRole: string;
   feedback: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface PostulanteSummary {
