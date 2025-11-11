@@ -96,12 +96,15 @@ export const onRequestGet = async ({ request, env }: any) => {
               'reviewerName', COALESCE(ur.nombre || ' ' || ur.apellido, ur.email),
               'reviewerEmail', ur.email,
               'reviewerRole', ur.role,
-              'createdAt', r.created_at
+              'feedback', r.feedback,
+              'createdAt', r.created_at,
+              'updatedAt', r.updated_at
             )
           )
           FROM postulacion_reviewers r
           JOIN usuarios ur ON ur.id = r.reviewer_id
           WHERE r.postulacion_id = p.id
+          ORDER BY r.created_at ASC
         ) as reviewers_json
       FROM postulaciones p
       LEFT JOIN postulacion_aprobaciones a ON a.postulacion_id = p.id

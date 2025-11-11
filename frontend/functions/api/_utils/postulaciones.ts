@@ -128,13 +128,28 @@ export const ensurePostulacionesSchema = async (db: any) => {
       postulacion_id INTEGER NOT NULL,
       reviewer_id INTEGER NOT NULL,
       assigned_by INTEGER NOT NULL,
+      feedback TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE,
       FOREIGN KEY (reviewer_id) REFERENCES usuarios(id),
       FOREIGN KEY (assigned_by) REFERENCES usuarios(id),
       UNIQUE(postulacion_id, reviewer_id)
     )
   `).run();
+
+  // Agregar columna feedback si la tabla ya existe y no tiene la columna
+  try {
+    await db.prepare(`ALTER TABLE postulacion_reviewers ADD COLUMN feedback TEXT`).run();
+  } catch (error) {
+    // Ignorar si la columna ya existe
+  }
+
+  try {
+    await db.prepare(`ALTER TABLE postulacion_reviewers ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP`).run();
+  } catch (error) {
+    // Ignorar si la columna ya existe
+  }
 
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_postulaciones_status ON postulaciones(status)

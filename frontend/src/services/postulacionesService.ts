@@ -59,7 +59,9 @@ export interface PostulacionReviewer {
   reviewerName: string;
   reviewerEmail: string;
   reviewerRole: string;
+  feedback: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface PostulanteSummary {
@@ -273,6 +275,29 @@ export const postulacionesService = {
     } catch (error) {
       console.error('[postulacionesService] Error removiendo revisor:', error);
       return { success: false, error: 'No pudimos remover el revisor' };
+    }
+  },
+
+  async updateReviewerFeedback(
+    postulacionId: number,
+    feedback: string,
+  ): Promise<{ success: boolean; data?: { postulacionId: number; reviewers: PostulacionReviewer[] }; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/postulantes/${postulacionId}/feedback`, {
+        method: 'PUT',
+        headers: buildAuthHeaders(undefined, 'application/json'),
+        body: JSON.stringify({ feedback }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, error: data?.error || 'No pudimos actualizar el feedback' };
+      }
+
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('[postulacionesService] Error actualizando feedback:', error);
+      return { success: false, error: 'No pudimos actualizar el feedback' };
     }
   },
 };

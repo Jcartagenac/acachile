@@ -158,6 +158,17 @@ export const onRequestPost = async ({ request, env, params }) => {
       return errorResponse('No tienes permisos para aprobar postulaciones', 403);
     }
 
+    // Verificar que el usuario sea un revisor asignado
+    const isAssignedReviewer = await env.DB.prepare(
+      `SELECT id FROM postulacion_reviewers WHERE postulacion_id = ? AND reviewer_id = ?`,
+    )
+      .bind(params.id, approver.id)
+      .first();
+
+    if (!isAssignedReviewer) {
+      return errorResponse('Solo los revisores asignados pueden aprobar esta postulación', 403);
+    }
+
     const body = await request.json().catch(() => ({}));
     const comment =
       typeof body?.comment === 'string' && body.comment.trim().length > 0

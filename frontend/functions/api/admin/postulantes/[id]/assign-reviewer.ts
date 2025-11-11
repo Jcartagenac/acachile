@@ -67,6 +67,19 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       return errorResponse('Este revisor ya está asignado a esta postulación', 409);
     }
 
+    // Verificar límite de 2 revisores
+    const countResult = await env.DB.prepare(`
+      SELECT COUNT(*) as count
+      FROM postulacion_reviewers
+      WHERE postulacion_id = ?
+    `)
+      .bind(postulacionId)
+      .first();
+
+    if (countResult && countResult.count >= 2) {
+      return errorResponse('Esta postulación ya tiene el máximo de 2 revisores asignados', 400);
+    }
+
     // Asignar revisor
     const result = await env.DB.prepare(`
       INSERT INTO postulacion_reviewers (postulacion_id, reviewer_id, assigned_by)
@@ -85,7 +98,9 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       SELECT 
         r.id,
         r.reviewer_id,
+        r.feedback,
         r.created_at,
+        r.updated_at,
         u.nombre,
         u.apellido,
         u.email,
@@ -93,7 +108,7 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       FROM postulacion_reviewers r
       JOIN usuarios u ON u.id = r.reviewer_id
       WHERE r.postulacion_id = ?
-      ORDER BY r.created_at DESC
+      ORDER BY r.created_at ASC
     `)
       .bind(postulacionId)
       .all();
@@ -104,7 +119,9 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       reviewerName: `${row.nombre} ${row.apellido}`.trim() || row.email,
       reviewerEmail: row.email,
       reviewerRole: row.role,
+      feedback: row.feedback || null,
       createdAt: row.created_at,
+      updatedAt: row.updated_at,
     }));
 
     return jsonResponse({

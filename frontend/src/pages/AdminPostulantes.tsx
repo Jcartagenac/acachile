@@ -76,6 +76,9 @@ const AdminPostulantes: React.FC = () => {
   const [selectedPostulacion, setSelectedPostulacion] = useState<PostulanteSummary | null>(null);
   const [directors, setDirectors] = useState<Array<{ id: number; nombre: string; apellido: string; email: string; role: string }>>([]);
   const [selectedDirectorId, setSelectedDirectorId] = useState<number | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const fetchPostulantes = useCallback(
     async ({ overridePage, overrideSearch }: { overridePage?: number; overrideSearch?: string } = {}) => {
@@ -277,6 +280,40 @@ const AdminPostulantes: React.FC = () => {
       setError('No pudimos remover el revisor');
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const handleOpenFeedbackModal = (postulacion: PostulanteSummary) => {
+    const currentReviewer = postulacion.reviewers?.find(r => r.reviewerId === user?.id);
+    setSelectedPostulacion(postulacion);
+    setFeedbackText(currentReviewer?.feedback || '');
+    setShowFeedbackModal(true);
+  };
+
+  const handleSaveFeedback = async () => {
+    if (!selectedPostulacion) return;
+
+    try {
+      setFeedbackLoading(true);
+      const response = await postulacionesService.updateReviewerFeedback(selectedPostulacion.id, feedbackText);
+
+      if (response.success && response.data) {
+        setPostulantes((prev) =>
+          prev.map((item) =>
+            item.id === selectedPostulacion.id ? { ...item, reviewers: response.data!.reviewers } : item
+          )
+        );
+        setShowFeedbackModal(false);
+        setFeedbackText('');
+        setSelectedPostulacion(null);
+      } else if (response.error) {
+        setError(response.error);
+      }
+    } catch (feedbackError) {
+      console.error('Error guardando feedback:', feedbackError);
+      setError('No pudimos guardar el feedback');
+    } finally {
+      setFeedbackLoading(false);
     }
   };
 
@@ -517,6 +554,39 @@ const AdminPostulantes: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Sección de Feedbacks */}
+                  {postulacion.reviewers && postulacion.reviewers.length > 0 && (
+                    <div className="mt-4 space-y-3 border-t pt-4">
+                      <h3 className="text-sm font-semibold text-gray-700">Feedback de Revisores</h3>
+                      {postulacion.reviewers.map((reviewer, idx) => {
+                        const isCurrentUser = reviewer.reviewerId === user?.id;
+                        return (
+                          <div key={reviewer.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-purple-700">
+                                Feedback {idx + 1} - {reviewer.reviewerName}
+                              </span>
+                              {isCurrentUser && !isFinalizada && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenFeedbackModal(postulacion)}
+                                  className="text-xs text-purple-600 hover:text-purple-800 underline"
+                                >
+                                  {reviewer.feedback ? 'Editar' : 'Agregar'}
+                                </button>
+                              )}
+                            </div>
+                            {reviewer.feedback ? (
+                              <p className="text-sm text-gray-700 whitespace-pre-line">{reviewer.feedback}</p>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic">Sin feedback aún</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap items-center gap-3 pt-2">
                     <button
                       type="button"
@@ -536,11 +606,12 @@ const AdminPostulantes: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      disabled={disableActions}
+                      disabled={disableActions || (postulacion.reviewers?.length || 0) >= 2}
                       onClick={() => handleOpenAssignModal(postulacion)}
-                      className={`inline-flex items-center px-4 py-2 rounded-lg border ${disableActions ? 'border-purple-200 text-purple-300 cursor-not-allowed' : 'border-purple-500 text-purple-600 hover:bg-purple-50'}`}
+                      className={`inline-flex items-center px-4 py-2 rounded-lg border ${disableActions || (postulacion.reviewers?.length || 0) >= 2 ? 'border-purple-200 text-purple-300 cursor-not-allowed' : 'border-purple-500 text-purple-600 hover:bg-purple-50'}`}
+                      title={(postulacion.reviewers?.length || 0) >= 2 ? 'Máximo 2 revisores permitidos' : ''}
                     >
-                      <UserCog className="h-4 w-4 mr-1" /> Asignar revisor
+                      <UserCog className="h-4 w-4 mr-1" /> Asignar revisor {(postulacion.reviewers?.length || 0) >= 2 ? '(máx. 2)' : ''}
                     </button>
                   </div>
                 </div>
@@ -633,6 +704,76 @@ const AdminPostulantes: React.FC = () => {
                 className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoadingId === selectedPostulacion.id ? 'Asignando...' : 'Asignar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para agregar/editar feedback */}
+      {showFeedbackModal && selectedPostulacion && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Mi Feedback</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFeedbackModal(false);
+                  setFeedbackText('');
+                  setSelectedPostulacion(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-600 mb-2">
+                Postulación de: <span className="font-medium">{selectedPostulacion.fullName}</span>
+              </p>
+              <p className="text-xs text-gray-500 mb-4">
+                Deja tu feedback sobre esta postulación
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Feedback
+              </label>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                rows={8}
+                placeholder="Escribe tu evaluación y comentarios sobre el postulante..."
+                maxLength={5000}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {feedbackText.length} / 5000 caracteres
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFeedbackModal(false);
+                  setFeedbackText('');
+                  setSelectedPostulacion(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveFeedback}
+                disabled={feedbackLoading}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {feedbackLoading ? 'Guardando...' : 'Guardar feedback'}
               </button>
             </div>
           </div>
