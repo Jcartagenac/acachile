@@ -30,7 +30,8 @@ export default function AdminContent() {
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
   const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
-  const AdminPostulantes = React.lazy(() => import('./AdminPostulantes'));
+  // IMPORTANTE: Usar el componente de /pages que tiene exportación con JWT
+  const AdminPostulantesPage = React.lazy(() => import('../pages/AdminPostulantes'));
   const AdminNews = React.lazy(() => import('../components/admin/AdminNews'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
@@ -358,7 +359,7 @@ export default function AdminContent() {
                 <p className="text-gray-600 mt-2">Cargando postulantes...</p>
               </div>
             }>
-              <AdminPostulantes />
+              <AdminPostulantesPage />
             </React.Suspense>
           </div>
         )}
