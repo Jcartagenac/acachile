@@ -197,11 +197,12 @@ const AdminPostulantes: React.FC = () => {
   const handleExportCSV = async () => {
     console.log('[AdminPostulantes] handleExportCSV iniciado');
     try {
-      const token = localStorage.getItem('token');
+      // Buscar token con el nombre correcto (auth_token)
+      const token = localStorage.getItem('auth_token');
       console.log('[AdminPostulantes] Token encontrado:', !!token);
       
       if (!token) {
-        console.error('[AdminPostulantes] No hay token en localStorage');
+        console.error('[AdminPostulantes] No hay token en localStorage (buscando "auth_token")');
         setError('No estás autenticado');
         return;
       }
