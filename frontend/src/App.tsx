@@ -47,6 +47,7 @@ const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const AdminMonitoring = lazy(() => import('./pages/AdminMonitoring'));
 const TestUser = lazy(() => import('./pages/TestUser'));
+const SociosAcaLinks = lazy(() => import('./pages/SociosAcaLinks'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -115,6 +116,9 @@ function App() {
           
           {/* Páginas generales */}
           <Route path="/contacto" element={<ContactPage />} />
+
+          {/* Enlaces para socios (acceso directo sin navegación) */}
+          <Route path="/sociosaca" element={<SociosAcaLinks />} />
 
           {/* Test Page */}
           <Route path="/testuser" element={<TestUser />} />
