@@ -30,6 +30,15 @@ bucket_name = "aca-chile-images"
 # Para variables públicas (URLs, dominios), puedes usar vars normales aquí.
 #
 # Ver CLOUDFLARE_ENV_SETUP.md para instrucciones completas.
+#
+# 📧 RESEND_API_KEY (REQUERIDO para notificaciones por email)
+# Esta variable debe configurarse como Secret en Cloudflare Pages Dashboard:
+# 1. Ve a: Cloudflare Pages → acachile → Settings → Environment variables
+# 2. Agrega variable: RESEND_API_KEY = re_xxxxxxxxxxxxxxxxxxxxx
+# 3. Márcala como "Encrypted" (Secret)
+# 4. Aplica para "Production" y "Preview"
+# 5. Para obtener la API key: https://resend.com/api-keys
+# 6. Configura el dominio de envío en Resend (acachile.com o usa resend.dev para testing)
 
 [env.production.vars]
 ENVIRONMENT = "production"

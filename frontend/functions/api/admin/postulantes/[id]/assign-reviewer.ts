@@ -1,5 +1,6 @@
 import { jsonResponse, errorResponse, requireAdminOrDirector, authErrorResponse } from '../../_middleware';
 import { ensurePostulacionesSchema } from '../../../_utils/postulaciones';
+import { sendEmail, generateReviewerAssignmentEmail } from '../../../_utils/email';
 
 export const onRequestPost = async ({ request, env, params }: any) => {
   try {
@@ -24,9 +25,9 @@ export const onRequestPost = async ({ request, env, params }: any) => {
 
     await ensurePostulacionesSchema(env.DB);
 
-    // Verificar que la postulación existe
+    // Verificar que la postulación existe y obtener info del postulante
     const postulacion = await env.DB.prepare(`
-      SELECT id, status 
+      SELECT id, status, full_name 
       FROM postulaciones 
       WHERE id = ?
     `)
@@ -80,6 +81,19 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       return errorResponse('Esta postulación ya tiene el máximo de 2 revisores asignados', 400);
     }
 
+    // Obtener información del usuario que asigna
+    const assignedBy = await env.DB.prepare(`
+      SELECT nombre, apellido, email
+      FROM usuarios
+      WHERE id = ?
+    `)
+      .bind(auth.userId)
+      .first();
+
+    const assignedByName = assignedBy 
+      ? `${assignedBy.nombre} ${assignedBy.apellido}`.trim() || assignedBy.email
+      : 'Administrador';
+
     // Asignar revisor
     const result = await env.DB.prepare(`
       INSERT INTO postulacion_reviewers (postulacion_id, reviewer_id, assigned_by)
@@ -92,6 +106,28 @@ export const onRequestPost = async ({ request, env, params }: any) => {
       console.error('[assign-reviewer] Error inserting:', result.error);
       return errorResponse('Error al asignar revisor', 500);
     }
+
+    // Enviar notificación por email al revisor
+    const reviewerName = `${reviewer.nombre} ${reviewer.apellido}`.trim() || reviewer.email;
+    const emailHtml = generateReviewerAssignmentEmail({
+      reviewerName,
+      postulanteName: postulacion.full_name,
+      postulacionId,
+      assignedByName,
+    });
+
+    // Enviar email (no bloqueante, no falla si no se envía)
+    sendEmail(
+      {
+        to: reviewer.email,
+        subject: `🎯 Nueva asignación de revisión - ${postulacion.full_name}`,
+        html: emailHtml,
+      },
+      env
+    ).catch((error) => {
+      console.error('[assign-reviewer] Error enviando email:', error);
+      // No retornamos error, el email es opcional
+    });
 
     // Obtener los revisores actualizados
     const reviewersResult = await env.DB.prepare(`
