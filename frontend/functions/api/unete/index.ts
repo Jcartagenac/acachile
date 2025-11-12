@@ -15,6 +15,7 @@ const applicationSchema = z
     birthdate: z.string().trim().optional().or(z.literal('')).nullable(),
     region: REGION_ENUM,
     city: z.string().trim().min(2, 'Ciudad requerida'),
+    address: z.string().trim().max(200).optional().or(z.literal('')).nullable(),
     occupation: z.string().trim().max(120).optional().or(z.literal('')).nullable(),
     experienceLevel: z.string().trim().min(3),
     specialties: z.string().trim().max(300).optional().or(z.literal('')).nullable(),
@@ -23,10 +24,16 @@ const applicationSchema = z
     availability: z.array(AVAILABILITY_ENUM).min(1, 'Selecciona al menos una forma de participación'),
     hasCompetitionExperience: z.boolean(),
     competitionDetails: z.string().trim().max(500).optional().or(z.literal('')).nullable(),
+    sponsor1: z.string().trim().max(120).optional().or(z.literal('')).nullable(),
+    sponsor2: z.string().trim().max(120).optional().or(z.literal('')).nullable(),
     instagram: z.string().trim().max(120).optional().or(z.literal('')).nullable(),
     otherNetworks: z.string().trim().max(200).optional().or(z.literal('')).nullable(),
     references: z.string().trim().max(500).optional().or(z.literal('')).nullable(),
     photoUrl: z.string().trim().url().optional().or(z.literal('')).nullable(),
+    previousAcaMember: z.boolean().optional(),
+    previousAssociation: z.string().trim().max(300).optional().or(z.literal('')).nullable(),
+    stillInAssociation: z.boolean().optional(),
+    exitReason: z.string().trim().max(500).optional().or(z.literal('')).nullable(),
   })
   .refine(
     (data) => {
@@ -86,6 +93,7 @@ export const onRequestPost = async ({ request, env }) => {
         birthdate,
         region,
         city,
+        address,
         occupation,
         experience_level,
         specialties,
@@ -94,14 +102,20 @@ export const onRequestPost = async ({ request, env }) => {
         availability,
         has_competition_experience,
         competition_details,
+        sponsor_1,
+        sponsor_2,
         instagram,
         other_networks,
         references_info,
         photo_url,
+        previous_aca_member,
+        previous_association,
+        still_in_association,
+        exit_reason,
         status,
         approvals_required,
         approvals_count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', 2, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', 2, 0)
     `,
     )
       .bind(
@@ -112,6 +126,7 @@ export const onRequestPost = async ({ request, env }) => {
         data.birthdate && data.birthdate.length > 0 ? data.birthdate : null,
         data.region,
         data.city.trim(),
+        data.address && data.address.length > 0 ? data.address : null,
         data.occupation && data.occupation.length > 0 ? data.occupation : null,
         data.experienceLevel,
         data.specialties && data.specialties.length > 0 ? data.specialties : null,
@@ -120,10 +135,16 @@ export const onRequestPost = async ({ request, env }) => {
         JSON.stringify(data.availability),
         data.hasCompetitionExperience ? 1 : 0,
         data.competitionDetails && data.competitionDetails.length > 0 ? data.competitionDetails : null,
+        data.sponsor1 && data.sponsor1.length > 0 ? data.sponsor1 : null,
+        data.sponsor2 && data.sponsor2.length > 0 ? data.sponsor2 : null,
         data.instagram && data.instagram.length > 0 ? data.instagram : null,
         data.otherNetworks && data.otherNetworks.length > 0 ? data.otherNetworks : null,
         data.references && data.references.length > 0 ? data.references : null,
         data.photoUrl && data.photoUrl.length > 0 ? data.photoUrl : null,
+        data.previousAcaMember ? 1 : 0,
+        data.previousAssociation && data.previousAssociation.length > 0 ? data.previousAssociation : null,
+        data.stillInAssociation ? 1 : 0,
+        data.exitReason && data.exitReason.length > 0 ? data.exitReason : null,
       )
       .run();
 

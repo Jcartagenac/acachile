@@ -85,6 +85,7 @@ const joinApplicationSchema = z
     birthdate: z.string().optional().or(z.literal('')),
     region: z.enum([...REGIONES_CHILE] as [typeof REGIONES_CHILE[number], ...typeof REGIONES_CHILE]),
     city: z.string().min(2, 'Ingresa tu ciudad de residencia'),
+    address: z.string().trim().max(200).optional().or(z.literal('')),
     occupation: z.string().max(120, 'Máximo 120 caracteres').optional().or(z.literal('')),
     experienceLevel: z.enum(['principiante', 'entusiasta', 'experto', 'competitivo']),
     specialties: z.string().max(300, 'Máximo 300 caracteres').optional().or(z.literal('')),
@@ -118,6 +119,12 @@ const joinApplicationSchema = z
     references: z.string().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
     photoUrl: z.string().url().optional().or(z.literal('')),
     noSocialMedia: z.boolean(),
+    sponsor1: z.string().trim().max(120).optional().or(z.literal('')),
+    sponsor2: z.string().trim().max(120).optional().or(z.literal('')),
+    previousAcaMember: z.boolean().optional(),
+    previousAssociation: z.string().trim().max(300).optional().or(z.literal('')),
+    stillInAssociation: z.boolean().optional(),
+    exitReason: z.string().trim().max(500).optional().or(z.literal('')),
   })
   .refine(
     (data) => {
@@ -177,6 +184,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       birthdate: '',
       region: REGIONES_CHILE[6],
       city: '',
+      address: '',
       occupation: '',
       experienceLevel: 'entusiasta',
       specialties: '',
@@ -190,6 +198,12 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       references: '',
       photoUrl: '',
       noSocialMedia: false,
+      sponsor1: '',
+      sponsor2: '',
+      previousAcaMember: false,
+      previousAssociation: '',
+      stillInAssociation: false,
+      exitReason: '',
     },
   });
 
@@ -229,6 +243,7 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       birthdate: data.birthdate || null,
       region: data.region,
       city: data.city.trim(),
+      address: data.address?.trim() || null,
       occupation: data.occupation?.trim() || null,
       experienceLevel: data.experienceLevel,
       specialties: data.specialties?.trim() || null,
@@ -240,7 +255,13 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
       instagram: data.instagram?.trim() || null,
       otherNetworks: data.otherNetworks?.trim() || null,
       references: data.references?.trim() || null,
-      photoUrl: data.photoUrl?.trim() || null
+      photoUrl: data.photoUrl?.trim() || null,
+      sponsor1: data.sponsor1?.trim() || null,
+      sponsor2: data.sponsor2?.trim() || null,
+      previousAcaMember: data.previousAcaMember || false,
+      previousAssociation: data.previousAssociation?.trim() || null,
+      stillInAssociation: data.stillInAssociation || false,
+      exitReason: data.exitReason?.trim() || null,
     };
 
     const result = await postulacionesService.submitApplication(payload);
@@ -476,6 +497,107 @@ export const JoinApplicationForm: React.FC<JoinApplicationFormProps> = ({ onSucc
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 />
                 {errors.city && <p className="mt-2 text-sm text-primary-600">{errors.city.message}</p>}
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium text-neutral-700">Dirección particular</label>
+                <input
+                  type="text"
+                  placeholder="Calle, número, depto/casa (opcional)"
+                  {...register('address')}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                />
+                {errors.address && (
+                  <p className="mt-2 text-sm text-primary-600">{errors.address.message}</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-neutral-900">Información adicional</h2>
+              <p className="text-sm text-neutral-500">
+                Datos opcionales que nos ayudan a conocerte mejor.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium text-neutral-700">Patrocinador 1</label>
+                <input
+                  type="text"
+                  placeholder="Nombre del patrocinador (opcional)"
+                  {...register('sponsor1')}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                />
+                {errors.sponsor1 && (
+                  <p className="mt-2 text-sm text-primary-600">{errors.sponsor1.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-neutral-700">Patrocinador 2</label>
+                <input
+                  type="text"
+                  placeholder="Nombre del patrocinador (opcional)"
+                  {...register('sponsor2')}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                />
+                {errors.sponsor2 && (
+                  <p className="mt-2 text-sm text-primary-600">{errors.sponsor2.message}</p>
+                )}
+              </div>
+              <div className="md:col-span-2 space-y-4 rounded-2xl border border-slate-200 bg-white/50 px-4 py-5">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-neutral-700">
+                    ¿Has pertenecido anteriormente a la ACA?
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setValue('previousAcaMember', !watch('previousAcaMember'))}
+                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      watch('previousAcaMember')
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-slate-100 text-neutral-600'
+                    }`}
+                  >
+                    {watch('previousAcaMember') ? 'Sí' : 'No'}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-neutral-700">¿Pertenecido a otra asociación?</label>
+                <input
+                  type="text"
+                  placeholder="Nombre de la asociación (opcional)"
+                  {...register('previousAssociation')}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                />
+                {errors.previousAssociation && (
+                  <p className="mt-2 text-sm text-primary-600">{errors.previousAssociation.message}</p>
+                )}
+              </div>
+              <div className="flex items-center rounded-2xl border border-slate-200 bg-white/50 px-4 py-4">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    {...register('stillInAssociation')}
+                    className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  />
+                  <span className="text-sm font-medium text-neutral-700">
+                    ¿Aún perteneces a esa asociación?
+                  </span>
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium text-neutral-700">Motivos de salida</label>
+                <textarea
+                  rows={3}
+                  placeholder="Si has salido de alguna asociación, cuéntanos por qué (opcional)"
+                  {...register('exitReason')}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/50 px-4 py-3 text-sm text-neutral-900 transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                />
+                {errors.exitReason && (
+                  <p className="mt-2 text-sm text-primary-600">{errors.exitReason.message}</p>
+                )}
               </div>
             </div>
           </section>

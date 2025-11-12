@@ -109,6 +109,7 @@ export const onRequestGet = async ({ request, env }: any) => {
         birthdate,
         region,
         city,
+        address,
         occupation,
         experience_level,
         specialties,
@@ -116,10 +117,16 @@ export const onRequestGet = async ({ request, env }: any) => {
         contribution,
         has_competition_experience,
         competition_details,
+        sponsor_1,
+        sponsor_2,
         instagram,
         other_networks,
         references_info,
         photo_url,
+        previous_aca_member,
+        previous_association,
+        still_in_association,
+        exit_reason,
         created_at
       FROM postulaciones
       WHERE status = 'pendiente'
@@ -157,7 +164,6 @@ export const onRequestGet = async ({ request, env }: any) => {
     const rows = postulaciones.map((p: any) => {
       const age = calculateAge(p.birthdate);
       
-      // Nota: Campos que no existen en BD se dejan vacíos o se mapean de campos existentes
       return [
         formatDate(p.created_at),                                    // Fecha postulación
         p.full_name || '',                                           // Nombre Completo
@@ -166,20 +172,20 @@ export const onRequestGet = async ({ request, env }: any) => {
         formatDate(p.birthdate),                                     // Fecha de Nacimiento
         age !== null ? age.toString() : '',                          // Edad
         p.phone || '',                                               // Telefono Celular
-        '',                                                          // Direccion Particular (no existe en BD)
+        p.address || '',                                             // Direccion Particular
         p.region || '',                                              // Comuna (usando region)
         p.city || '',                                                // Ciudad
         p.instagram || '',                                           // Instagram
         p.occupation || '',                                          // Cargo o profesion
         p.has_competition_experience ? (p.competition_details || 'Sí') : 'No', // Equipo de competencia
-        '',                                                          // Patrocinador 1 (no existe)
-        '',                                                          // Patrocinador 2 (no existe)
+        p.sponsor_1 || '',                                           // Patrocinador 1
+        p.sponsor_2 || '',                                           // Patrocinador 2
         p.photo_url || '',                                           // Foto
-        '',                                                          // Ha pertenecido a ACA? (no existe)
-        p.other_networks || '',                                      // Otra asociación (usando other_networks)
-        '',                                                          // Aun pertenece? (no existe)
-        '',                                                          // Motivos salida (no existe)
-        p.motivation || '',                                          // Motivos postulación (usando motivation)
+        p.previous_aca_member ? 'Sí' : 'No',                         // Ha pertenecido a ACA?
+        p.previous_association || '',                                // Otra asociación
+        p.still_in_association ? 'Sí' : 'No',                        // Aun pertenece?
+        p.exit_reason || '',                                         // Motivos salida
+        p.motivation || '',                                          // Motivos postulación
       ].map(escapeCsvValue);
     });
 

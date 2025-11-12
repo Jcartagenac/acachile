@@ -20,6 +20,7 @@ export interface JoinApplicationPayload {
   birthdate?: string | null;
   region: (typeof REGIONES_CHILE)[number];
   city: string;
+  address?: string | null;
   occupation?: string | null;
   experienceLevel: ExperienceLevel;
   specialties?: string | null;
@@ -32,6 +33,12 @@ export interface JoinApplicationPayload {
   otherNetworks?: string | null;
   references?: string | null;
   photoUrl?: string | null;
+  sponsor1?: string | null;
+  sponsor2?: string | null;
+  previousAcaMember?: boolean;
+  previousAssociation?: string | null;
+  stillInAssociation?: boolean;
+  exitReason?: string | null;
 }
 
 export interface JoinApplicationResponse {
@@ -73,6 +80,7 @@ export interface PostulanteSummary {
   birthdate: string | null;
   region: string | null;
   city: string | null;
+  address: string | null;
   occupation: string | null;
   experienceLevel: string;
   specialties: string | null;
@@ -85,6 +93,12 @@ export interface PostulanteSummary {
   otherNetworks: string | null;
   references: string | null;
   photoUrl: string | null;
+  sponsor1: string | null;
+  sponsor2: string | null;
+  previousAcaMember: boolean;
+  previousAssociation: string | null;
+  stillInAssociation: boolean;
+  exitReason: string | null;
   status: 'pendiente' | 'en_revision' | 'aprobada' | 'rechazada';
   approvalsRequired: number;
   approvalsCount: number;
