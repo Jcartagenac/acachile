@@ -191,6 +191,59 @@ const AdminPostulantes: React.FC = () => {
     fetchPostulantes();
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No estás autenticado');
+        return;
+      }
+
+      // Hacer fetch al endpoint de exportación
+      const response = await fetch('/api/admin/postulantes/export-csv', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || 'Error al exportar CSV');
+        return;
+      }
+
+      // Obtener el blob del CSV
+      const blob = await response.blob();
+      
+      // Crear URL temporal para descarga
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Obtener nombre del archivo desde Content-Disposition o usar uno por defecto
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'postulantes_pendientes.csv';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpiar
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error exportando CSV:', error);
+      setError('No pudimos exportar el CSV');
+    }
+  };
+
   const loadDirectors = useCallback(async () => {
     try {
       const response = await sociosService.getSocios({ limit: 100 });
@@ -338,6 +391,18 @@ const AdminPostulantes: React.FC = () => {
             <p className="text-gray-600">Revisa, aprueba o rechaza las postulaciones pendientes.</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            {statusFilter === 'pendiente' && (
+              <button
+                onClick={handleExportCSV}
+                className="inline-flex items-center px-4 py-2 rounded-lg border border-green-500 text-green-600 bg-white shadow-sm hover:bg-green-50 transition-colors"
+                disabled={loading}
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Exportar CSV
+              </button>
+            )}
             <button
               onClick={handleRefresh}
               className={"inline-flex items-center px-4 py-2 rounded-lg border border-gray-300 bg-white shadow-sm hover:bg-gray-100 transition-colors" + (loading ? ' opacity-70 cursor-not-allowed' : '')}
