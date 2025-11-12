@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
   CreditCard, 
@@ -14,6 +14,9 @@ import {
   Instagram,
   ExternalLink
 } from 'lucide-react';
+import logoFallback from '@/assets/aca-logo.svg';
+
+const DEFAULT_HEADER_LOGO = 'https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg';
 
 interface LinkItem {
   title: string;
@@ -23,6 +26,8 @@ interface LinkItem {
 }
 
 const SociosAcaLinks: React.FC = () => {
+  const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
+  const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
   const links: LinkItem[] = [
     {
       title: 'Archivos Oficiales',
@@ -115,8 +120,13 @@ const SociosAcaLinks: React.FC = () => {
         <div className="absolute inset-0 bg-[url('/fire-pattern.svg')] opacity-10"></div>
         <div className="relative mx-auto max-w-3xl px-4 text-center">
           <div className="mb-6 flex justify-center">
-            <div className="rounded-full bg-white/20 p-6 backdrop-blur-sm">
-              <div className="text-6xl">🔥</div>
+            <div className="rounded-3xl bg-white/95 backdrop-blur-sm p-6 shadow-2xl">
+              <img
+                src={logoSrc}
+                alt="ACA Chile"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                onError={() => setLogoSrc(logoFallback)}
+              />
             </div>
           </div>
           <h1 className="mb-2 text-4xl font-bold text-white sm:text-5xl">
