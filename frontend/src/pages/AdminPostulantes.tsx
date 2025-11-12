@@ -21,6 +21,9 @@ import {
   UserCog,
 } from 'lucide-react';
 
+// Identificador para debug - confirmar que es el componente correcto
+console.log('[AdminPostulantes.tsx] Componente /pages/AdminPostulantes.tsx cargado - CON EXPORTACIÓN JWT');
+
 const STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendientes' },
   { value: 'en_revision', label: 'En revisión' },
@@ -192,13 +195,19 @@ const AdminPostulantes: React.FC = () => {
   };
 
   const handleExportCSV = async () => {
+    console.log('[AdminPostulantes] handleExportCSV iniciado');
     try {
       const token = localStorage.getItem('token');
+      console.log('[AdminPostulantes] Token encontrado:', !!token);
+      
       if (!token) {
+        console.error('[AdminPostulantes] No hay token en localStorage');
         setError('No estás autenticado');
         return;
       }
 
+      console.log('[AdminPostulantes] Haciendo fetch a /api/admin/postulantes/export-csv');
+      
       // Hacer fetch al endpoint de exportación
       const response = await fetch('/api/admin/postulantes/export-csv', {
         method: 'GET',
@@ -206,6 +215,8 @@ const AdminPostulantes: React.FC = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
+      
+      console.log('[AdminPostulantes] Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

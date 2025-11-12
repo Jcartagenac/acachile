@@ -1,7 +1,11 @@
 /**
  * AdminPostulantes - Vista de inscripciones/postulantes por evento
  * ACA Chile Frontend
+ * NOTA: Este componente es para INSCRIPCIONES DE EVENTOS, no para postulaciones a ACA
  */
+
+// Identificador para debug - Este NO debería cargarse en la pestaña de postulantes
+console.log('[AdminPostulantes.tsx] Componente /components/admin/AdminPostulantes.tsx cargado - PARA EVENTOS (sin JWT)');
 
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Download, Mail, Phone, Calendar, Filter, ChevronDown, ChevronUp, Eye, CheckCircle, XCircle, X } from 'lucide-react';
