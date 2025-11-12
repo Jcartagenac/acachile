@@ -30,7 +30,7 @@ export default function AdminContent() {
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
   const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
-  const AdminPostulantes = React.lazy(() => import('../components/admin/AdminPostulantes'));
+  const AdminPostulantes = React.lazy(() => import('./AdminPostulantes'));
   const AdminNews = React.lazy(() => import('../components/admin/AdminNews'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
