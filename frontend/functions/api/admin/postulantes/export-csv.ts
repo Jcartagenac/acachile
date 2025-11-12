@@ -77,13 +77,20 @@ function formatRut(rut: string | null): string {
 
 export const onRequestGet = async ({ request, env }: any) => {
   try {
+    // Validar autenticación
     let auth;
     try {
       auth = await requireAdminOrDirector(request, env);
     } catch (error) {
-      return authErrorResponse(error, env);
+      console.error('[export-csv] Auth error:', error);
+      return authErrorResponse(error, env, 'No estás autenticado. Por favor inicia sesión nuevamente.');
     }
 
+    if (!auth || !auth.userId) {
+      return errorResponse('Token inválido o expirado', 401);
+    }
+
+    // Verificar permisos del usuario
     const user = await env.DB.prepare(`
       SELECT id, role
       FROM usuarios
@@ -92,8 +99,12 @@ export const onRequestGet = async ({ request, env }: any) => {
       .bind(auth.userId)
       .first();
 
-    if (!user || !isDirectorRole(user.role)) {
-      return errorResponse('No tienes permisos para exportar postulaciones', 403);
+    if (!user) {
+      return errorResponse('Usuario no encontrado', 404);
+    }
+
+    if (!isDirectorRole(user.role)) {
+      return errorResponse('No tienes permisos para exportar postulaciones. Solo directores pueden realizar esta acción.', 403);
     }
 
     await ensurePostulacionesSchema(env.DB);
