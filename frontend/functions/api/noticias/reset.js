@@ -33,16 +33,19 @@ export async function onRequest(context) {
   }
 
   try {
-    // Limpiar cache primero
+    // Solo limpiar cache, no crear noticias de ejemplo
     await env.ACA_KV.delete('noticias:all');
+    await env.ACA_KV.delete('noticias:index');
+    await env.ACA_KV.delete('noticias:lastId');
     
-    // Inicializar datos directamente sin autenticación
-    await resetNoticiasData(env);
+    // Limpiar noticias individuales (IDs 1-10)
+    for (let i = 1; i <= 10; i++) {
+      await env.ACA_KV.delete(`noticia:${i}`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Noticias de ACA Chile inicializadas exitosamente',
-      count: 5,
+      message: 'Cache de noticias limpiado exitosamente',
       timestamp: new Date().toISOString()
     }), {
       status: 200,
