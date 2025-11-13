@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Trash2, Edit, Eye, Calendar, User } from 'lucide-react';
 import type { NewsArticle } from '../../services/newsService';
+import NewsEditor from './NewsEditor';
+
+type ViewMode = 'list' | 'create' | 'edit';
 
 export default function AdminNews() {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [editingSlug, setEditingSlug] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadNews();
@@ -109,6 +114,37 @@ export default function AdminNews() {
     });
   };
 
+  const handleCreateNew = () => {
+    setViewMode('create');
+    setEditingSlug(undefined);
+  };
+
+  const handleEdit = (slug: string) => {
+    setViewMode('edit');
+    setEditingSlug(slug);
+  };
+
+  const handleBackToList = () => {
+    setViewMode('list');
+    setEditingSlug(undefined);
+  };
+
+  const handleSaveSuccess = () => {
+    loadNews();
+    handleBackToList();
+  };
+
+  // Si estamos en modo editor, mostrar el editor
+  if (viewMode === 'create' || viewMode === 'edit') {
+    return (
+      <NewsEditor
+        articleSlug={editingSlug}
+        onBack={handleBackToList}
+        onSave={handleSaveSuccess}
+      />
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -133,13 +169,13 @@ export default function AdminNews() {
           <p className="text-gray-600">Administra las noticias editoriales del sitio</p>
         </div>
         
-        <Link
-          to="/noticias/crear"
+        <button
+          onClick={handleCreateNew}
           className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
           Nueva Noticia
-        </Link>
+        </button>
       </div>
 
       {/* Barra de búsqueda */}
@@ -163,13 +199,13 @@ export default function AdminNews() {
             {searchTerm ? 'No se encontraron noticias que coincidan con tu búsqueda' : 'No hay noticias publicadas aún'}
           </p>
           {!searchTerm && (
-            <Link
-              to="/noticias/crear"
+            <button
+              onClick={handleCreateNew}
               className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               <Plus className="h-5 w-5 mr-2" />
               Crear Primera Noticia
-            </Link>
+            </button>
           )}
         </div>
       ) : (
@@ -246,13 +282,13 @@ export default function AdminNews() {
                       >
                         <Eye className="h-5 w-5" />
                       </Link>
-                      <Link
-                        to={`/noticias/${article.slug}/editar`}
+                      <button
+                        onClick={() => handleEdit(article.slug)}
                         className="text-green-600 hover:text-green-900"
                         title="Editar"
                       >
                         <Edit className="h-5 w-5" />
-                      </Link>
+                      </button>
                       <button
                         onClick={() => {
                           console.log('[AdminNews] Delete button clicked for article:', {
