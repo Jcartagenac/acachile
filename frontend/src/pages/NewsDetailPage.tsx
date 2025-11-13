@@ -379,61 +379,98 @@ const NewsDetailPage: React.FC = () => {
 
             {/* Contenido del artículo */}
             <div 
-              className="prose prose-lg max-w-none article-content"
+              className="article-content"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
             
             <style>{`
-              /* Estilos para imágenes en el contenido */
+              /* Contenedor del artículo con estilos prose personalizados */
+              .article-content {
+                max-width: none !important;
+                width: 100% !important;
+                color: #374151;
+                font-size: 1.125rem;
+                line-height: 1.75rem;
+              }
+              
+              .article-content p {
+                margin-top: 1.25em;
+                margin-bottom: 1.25em;
+              }
+              
+              .article-content h1, .article-content h2, .article-content h3 {
+                font-weight: 700;
+                margin-top: 1.5em;
+                margin-bottom: 0.75em;
+                color: #111827;
+              }
+              
+              .article-content ul, .article-content ol {
+                margin-top: 1.25em;
+                margin-bottom: 1.25em;
+                padding-left: 1.625em;
+              }
+              
+              .article-content li {
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+              }
+              
+              /* Estilos AGRESIVOS para imágenes - MÁXIMA PRIORIDAD */
               .article-content img,
               .article-content figure img,
-              .article-content p img {
+              .article-content p img,
+              .article-content div img,
+              .article-content span img {
                 width: 100% !important;
                 height: auto !important;
-                max-width: 100% !important;
+                max-width: none !important;
                 min-width: 100% !important;
                 display: block !important;
-                border-radius: 0.5rem;
-                margin: 1.5rem 0 !important;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                object-fit: cover;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                margin-top: 2rem !important;
+                margin-bottom: 2rem !important;
+                border-radius: 0.5rem !important;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+              }
+              
+              .article-content figure {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 2rem 0 !important;
+              }
+              
+              .article-content p:has(img) {
+                width: 100% !important;
+                max-width: none !important;
               }
               
               /* Estilos para enlaces en el contenido */
               .article-content a,
               .article-content p a,
-              .article-content div a {
+              .article-content div a,
+              .article-content span a {
                 color: #DC2626 !important;
                 text-decoration: underline !important;
                 text-decoration-thickness: 2px !important;
-                text-underline-offset: 2px !important;
+                text-underline-offset: 3px !important;
                 cursor: pointer !important;
                 pointer-events: auto !important;
                 transition: all 0.2s ease !important;
                 word-break: break-all !important;
+                font-weight: 500 !important;
               }
               
-              .article-content a:hover,
-              .article-content p a:hover,
-              .article-content div a:hover {
+              .article-content a:hover {
                 color: #991B1B !important;
                 text-decoration: underline !important;
                 text-decoration-thickness: 2px !important;
+                background-color: rgba(220, 38, 38, 0.05) !important;
               }
               
               .article-content a:visited {
                 color: #7C2D12 !important;
-              }
-              
-              /* Override de prose para asegurar que funcione */
-              .prose a {
-                color: #DC2626 !important;
-                text-decoration: underline !important;
-              }
-              
-              .prose img {
-                width: 100% !important;
-                max-width: 100% !important;
               }
             `}</style>
 
