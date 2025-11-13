@@ -40,7 +40,6 @@ const NewsDetailPage: React.FC = () => {
   });
   
   // Estado del formulario de comentarios
-  const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentForm, setCommentForm] = useState({
     author_name: '',
     author_email: '',
@@ -213,7 +212,6 @@ const NewsDetailPage: React.FC = () => {
           content: '',
           parent_id: undefined
         });
-        setShowCommentForm(false);
         loadComments(); // Recargar comentarios
         alert('Comentario enviado. Será revisado antes de publicarse.');
       } else {
@@ -381,7 +379,10 @@ const NewsDetailPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setShowCommentForm(!showCommentForm)}
+                  onClick={() => {
+                    const commentsSection = document.getElementById('comments-section');
+                    commentsSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
                 >
                   <MessageCircle className="h-5 w-5" />
@@ -549,26 +550,14 @@ const NewsDetailPage: React.FC = () => {
         </article>
 
         {/* Sección de comentarios */}
-        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Comentarios ({comments.length})
-            </h2>
-            {!showCommentForm && (
-              <button
-                onClick={() => setShowCommentForm(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span>Agregar comentario</span>
-              </button>
-            )}
-          </div>
+        <div id="comments-section" className="bg-white rounded-lg shadow-lg p-6 md:p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Comentarios ({comments.length})
+          </h2>
 
-          {/* Formulario de comentarios */}
-          {showCommentForm && (
-            <form onSubmit={handleCommentSubmit} className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar comentario</h3>
+          {/* Formulario de comentarios - Siempre visible */}
+          <form onSubmit={handleCommentSubmit} className="mb-8 p-6 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar comentario</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <input
@@ -598,14 +587,7 @@ const NewsDetailPage: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
               />
               
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCommentForm(false)}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
+              <div className="flex justify-end">
                 <button
                   type="submit"
                   disabled={submittingComment}
@@ -615,7 +597,6 @@ const NewsDetailPage: React.FC = () => {
                 </button>
               </div>
             </form>
-          )}
 
           {/* Lista de comentarios */}
           {comments.length > 0 ? (

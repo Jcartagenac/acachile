@@ -12,7 +12,10 @@ import {
   Music,
   Globe,
   Instagram,
-  ExternalLink
+  ExternalLink,
+  Users,
+  X,
+  Phone
 } from 'lucide-react';
 import logoFallback from '@/assets/aca-logo.svg';
 
@@ -25,9 +28,26 @@ interface LinkItem {
   description?: string;
 }
 
+interface DirectorInfo {
+  name: string;
+  role: string;
+  phone: string;
+}
+
 const SociosAcaLinks: React.FC = () => {
   const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
   const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
+  const [showDirectorio, setShowDirectorio] = useState(false);
+
+  const directores: DirectorInfo[] = [
+    { name: 'Vianca Galdames', role: 'Presidenta', phone: '+56934520459' },
+    { name: 'Alejandro Bakit', role: 'Director Ejecutivo', phone: '+56964342200' },
+    { name: 'Daniel Toloza', role: 'Tesorería', phone: '+56982278485' },
+    { name: 'Carolina Carriel', role: 'Directora de Torneos y Competencias', phone: '+56955347961' },
+    { name: 'María José Gallegos', role: 'Directora de Proyectos', phone: '+56954881808' },
+    { name: 'Paulina Sandoval', role: 'Directora de Comunicaciones', phone: '+56950486915' }
+  ];
+
   const links: LinkItem[] = [
     {
       title: 'Archivos Oficiales',
@@ -141,6 +161,35 @@ const SociosAcaLinks: React.FC = () => {
       {/* Links Container */}
       <div className="mx-auto max-w-3xl px-4 py-12">
         <div className="space-y-4">
+          {/* Botón Directorio */}
+          <button
+            onClick={() => setShowDirectorio(true)}
+            className="group w-full block transform rounded-2xl border-2 border-primary-400 bg-gradient-to-br from-primary-500 to-orange-500 p-6 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+          >
+            <div className="flex items-center gap-4">
+              {/* Icon */}
+              <div className="flex-shrink-0 rounded-xl bg-white/20 backdrop-blur-sm p-3 text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                <Users className="h-6 w-6" />
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0 text-left">
+                <h3 className="text-lg font-bold text-white">
+                  Directorio
+                </h3>
+                <p className="text-sm text-white/90 mt-1">
+                  Información de contacto del directorio de ACA
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex-shrink-0 text-white/80">
+                <Users className="h-5 w-5" />
+              </div>
+            </div>
+          </button>
+
+          {/* Enlaces normales */}
           {links.map((link, index) => (
             <a
               key={index}
@@ -188,6 +237,78 @@ const SociosAcaLinks: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Directorio */}
+      {showDirectorio && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowDirectorio(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del Modal */}
+            <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-orange-600 text-white p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <h2 className="text-2xl font-bold">Directorio ACA</h2>
+                </div>
+                <button
+                  onClick={() => setShowDirectorio(false)}
+                  className="bg-white/20 hover:bg-white/30 rounded-lg p-2 transition-colors"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido del Modal */}
+            <div className="p-6">
+              <p className="text-neutral-600 mb-6 text-center">
+                Información de contacto del directorio de la Asociación Chilena del Asado
+              </p>
+              
+              <div className="space-y-4">
+                {directores.map((director, index) => (
+                  <div
+                    key={index}
+                    className="border-2 border-neutral-200 rounded-xl p-4 hover:border-primary-300 hover:shadow-md transition-all"
+                  >
+                    <h3 className="font-bold text-lg text-neutral-900 mb-1">
+                      {director.name}
+                    </h3>
+                    <p className="text-sm text-primary-600 font-medium mb-2">
+                      {director.role}
+                    </p>
+                    <a
+                      href={`tel:${director.phone}`}
+                      className="flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors"
+                    >
+                      <Phone className="h-4 w-4" />
+                      <span className="font-mono text-sm">{director.phone}</span>
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer del Modal */}
+            <div className="border-t border-neutral-200 p-4 rounded-b-2xl bg-neutral-50">
+              <button
+                onClick={() => setShowDirectorio(false)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-medium rounded-xl hover:from-primary-700 hover:to-orange-700 transition-all"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

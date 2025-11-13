@@ -60,14 +60,25 @@ export default function AdminNews() {
   const loadPendingComments = async () => {
     try {
       setCommentsLoading(true);
-      const response = await fetch('/api/comments/pending');
+      const response = await fetch('/api/comments/pending', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
       const data = await response.json();
       
+      console.log('[AdminNews] Pending comments response:', data);
+      
       if (data.success && Array.isArray(data.data)) {
+        console.log('[AdminNews] Loaded pending comments:', data.data.length);
         setPendingComments(data.data);
+      } else {
+        console.log('[AdminNews] No pending comments or error:', data);
+        setPendingComments([]);
       }
     } catch (err) {
       console.error('Error loading pending comments:', err);
+      setPendingComments([]);
     } finally {
       setCommentsLoading(false);
     }
