@@ -379,9 +379,37 @@ const NewsDetailPage: React.FC = () => {
 
             {/* Contenido del artículo */}
             <div 
-              className="prose prose-lg max-w-none"
+              className="prose prose-lg max-w-none article-content"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
+            
+            <style>{`
+              .article-content img {
+                width: 100% !important;
+                height: auto !important;
+                max-width: 100% !important;
+                border-radius: 0.5rem;
+                margin: 1.5rem 0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              }
+              
+              .article-content a {
+                color: #DC2626 !important;
+                text-decoration: underline !important;
+                cursor: pointer !important;
+                pointer-events: auto !important;
+                transition: color 0.2s ease;
+              }
+              
+              .article-content a:hover {
+                color: #991B1B !important;
+                text-decoration: underline !important;
+              }
+              
+              .article-content a:visited {
+                color: #7C2D12 !important;
+              }
+            `}</style>
 
             {/* Tags */}
             {article.tags && article.tags.length > 0 && (
