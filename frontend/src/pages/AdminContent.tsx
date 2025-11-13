@@ -30,8 +30,8 @@ export default function AdminContent() {
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
   const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
-  // IMPORTANTE: Usar el componente de /pages que tiene exportación con JWT
-  const AdminPostulantesPage = React.lazy(() => import('../pages/AdminPostulantes'));
+  // IMPORTANTE: Este AdminPostulantes es para inscripciones a EVENTOS (no para postulaciones a socios ACA)
+  const AdminPostulantes = React.lazy(() => import('../components/admin/AdminPostulantes'));
   const AdminNews = React.lazy(() => import('../components/admin/AdminNews'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
@@ -356,10 +356,10 @@ export default function AdminContent() {
             <React.Suspense fallback={
               <div className="p-6 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                <p className="text-gray-600 mt-2">Cargando postulantes...</p>
+                <p className="text-gray-600 mt-2">Cargando postulantes de eventos...</p>
               </div>
             }>
-              <AdminPostulantesPage />
+              <AdminPostulantes />
             </React.Suspense>
           </div>
         )}
