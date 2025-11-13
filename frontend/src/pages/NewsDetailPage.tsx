@@ -384,30 +384,56 @@ const NewsDetailPage: React.FC = () => {
             />
             
             <style>{`
-              .article-content img {
+              /* Estilos para imágenes en el contenido */
+              .article-content img,
+              .article-content figure img,
+              .article-content p img {
                 width: 100% !important;
                 height: auto !important;
                 max-width: 100% !important;
+                min-width: 100% !important;
+                display: block !important;
                 border-radius: 0.5rem;
-                margin: 1.5rem 0;
+                margin: 1.5rem 0 !important;
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                object-fit: cover;
               }
               
-              .article-content a {
+              /* Estilos para enlaces en el contenido */
+              .article-content a,
+              .article-content p a,
+              .article-content div a {
                 color: #DC2626 !important;
                 text-decoration: underline !important;
+                text-decoration-thickness: 2px !important;
+                text-underline-offset: 2px !important;
                 cursor: pointer !important;
                 pointer-events: auto !important;
-                transition: color 0.2s ease;
+                transition: all 0.2s ease !important;
+                word-break: break-all !important;
               }
               
-              .article-content a:hover {
+              .article-content a:hover,
+              .article-content p a:hover,
+              .article-content div a:hover {
                 color: #991B1B !important;
                 text-decoration: underline !important;
+                text-decoration-thickness: 2px !important;
               }
               
               .article-content a:visited {
                 color: #7C2D12 !important;
+              }
+              
+              /* Override de prose para asegurar que funcione */
+              .prose a {
+                color: #DC2626 !important;
+                text-decoration: underline !important;
+              }
+              
+              .prose img {
+                width: 100% !important;
+                max-width: 100% !important;
               }
             `}</style>
 
