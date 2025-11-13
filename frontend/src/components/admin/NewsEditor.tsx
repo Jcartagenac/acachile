@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Upload, Image as ImageIcon } from 'lucide-react';
 import type { NewsArticle } from '../../services/newsService';
 
 interface NewsEditorProps {
@@ -18,6 +18,8 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<Array<{ id: number; name: string; color: string }>>([]);
+  const [showImageUploader, setShowImageUploader] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -93,6 +95,55 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
       title,
       slug: articleSlug ? prev.slug : generateSlug(title)
     }));
+  };
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      setUploadingImage(true);
+      const token = localStorage.getItem('auth_token');
+      
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/admin/content/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataUpload
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Error al subir la imagen');
+      }
+
+      // Actualizar la URL de la imagen en el formulario
+      setFormData(prev => ({
+        ...prev,
+        featured_image: data.url
+      }));
+      
+      setShowImageUploader(false);
+      alert('Imagen subida correctamente');
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert(`Error al subir la imagen: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+      }
+      handleImageUpload(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,25 +321,85 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
           {/* Imagen destacada */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Imagen Destacada (URL)
+              Imagen Destacada
             </label>
-            <input
-              type="url"
-              value={formData.featured_image}
-              onChange={(e) => setFormData({ ...formData, featured_image: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="https://ejemplo.com/imagen.jpg"
-            />
-            {formData.featured_image && (
-              <img
-                src={formData.featured_image}
-                alt="Preview"
-                className="mt-2 h-32 w-auto rounded-lg object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            )}
+            
+            <div className="space-y-4">
+              {/* Vista previa de la imagen */}
+              {formData.featured_image && (
+                <div className="relative inline-block">
+                  <img
+                    src={formData.featured_image}
+                    alt="Preview"
+                    className="h-48 w-auto rounded-lg object-cover border border-gray-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, featured_image: '' })}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
+              {/* Uploader */}
+              {!showImageUploader ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowImageUploader(true)}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Subir Imagen al R2
+                  </button>
+                  
+                  <span className="text-gray-500 self-center">o</span>
+                  
+                  <input
+                    type="url"
+                    value={formData.featured_image}
+                    onChange={(e) => setFormData({ ...formData, featured_image: e.target.value })}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Ingresa una URL externa"
+                  />
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                  <div className="text-center">
+                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <label className="cursor-pointer">
+                      <span className="text-sm text-gray-600">
+                        {uploadingImage ? 'Subiendo...' : 'Haz clic para seleccionar una imagen'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        disabled={uploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">
+                      PNG, JPG, GIF hasta 10MB
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowImageUploader(false)}
+                      className="mt-3 text-sm text-gray-600 hover:text-gray-900"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Opciones */}
