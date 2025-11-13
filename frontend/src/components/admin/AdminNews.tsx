@@ -4,7 +4,18 @@ import { Plus, Search, Trash2, Edit, Eye, Calendar, User } from 'lucide-react';
 import type { NewsArticle } from '../../services/newsService';
 import NewsEditor from './NewsEditor';
 
-type ViewMode = 'list' | 'create' | 'edit';
+type ViewMode = 'list' | 'create' | 'edit' | 'comments';
+
+interface PendingComment {
+  id: string;
+  article_id: string;
+  article_title?: string;
+  author_name: string;
+  author_email: string;
+  content: string;
+  created_at: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
 
 export default function AdminNews() {
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -13,10 +24,15 @@ export default function AdminNews() {
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingSlug, setEditingSlug] = useState<string | undefined>(undefined);
+  const [pendingComments, setPendingComments] = useState<PendingComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
 
   useEffect(() => {
     loadNews();
-  }, []);
+    if (viewMode === 'comments') {
+      loadPendingComments();
+    }
+  }, [viewMode]);
 
   const loadNews = async () => {
     try {
@@ -29,13 +45,61 @@ export default function AdminNews() {
         console.log('[AdminNews] First article structure:', data.data[0]);
         setNews(data.data);
       } else {
-        throw new Error('Error al cargar noticias');
+        console.log('[AdminNews] Response data:', data);
+        setNews([]);
       }
     } catch (err) {
       console.error('Error loading news:', err);
       setError('Error al cargar las noticias');
+      setNews([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPendingComments = async () => {
+    try {
+      setCommentsLoading(true);
+      const response = await fetch('/api/comments/pending');
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        setPendingComments(data.data);
+      }
+    } catch (err) {
+      console.error('Error loading pending comments:', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleModerateComment = async (commentId: string, articleId: string, action: 'approve' | 'reject') => {
+    try {
+      const response = await fetch('/api/comments/moderate', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          comment_id: commentId,
+          article_id: articleId,
+          type: 'noticia',
+          action
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`Comentario ${action === 'approve' ? 'aprobado' : 'rechazado'} correctamente`);
+        loadPendingComments();
+      } else {
+        throw new Error(data.error || 'Error moderando comentario');
+      }
+    } catch (err) {
+      console.error('Error moderating comment:', err);
+      alert(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`);
     }
   };
 
@@ -178,22 +242,106 @@ export default function AdminNews() {
         </button>
       </div>
 
-      {/* Barra de búsqueda */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input
-            type="text"
-            placeholder="Buscar noticias..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-          />
-        </div>
+      {/* Pestañas */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`${
+              viewMode === 'list'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            Noticias ({news.length})
+          </button>
+          <button
+            onClick={() => setViewMode('comments')}
+            className={`${
+              viewMode === 'comments'
+                ? 'border-red-600 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm relative`}
+          >
+            Comentarios Pendientes
+            {pendingComments.length > 0 && (
+              <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">
+                {pendingComments.length}
+              </span>
+            )}
+          </button>
+        </nav>
       </div>
 
-      {/* Lista de noticias */}
-      {filteredNews.length === 0 ? (
+      {/* Vista de Comentarios Pendientes */}
+      {viewMode === 'comments' ? (
+        <div>
+          {commentsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+            </div>
+          ) : pendingComments.length === 0 ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+              <p className="text-gray-600">No hay comentarios pendientes de revisión</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingComments.map((comment) => (
+                <div key={comment.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{comment.author_name}</h3>
+                      <p className="text-sm text-gray-500">{comment.author_email}</p>
+                      {comment.article_title && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          En: <span className="font-medium">{comment.article_title}</span>
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {new Date(comment.created_at).toLocaleDateString('es-CL')}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-700 mb-4">{comment.content}</p>
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => handleModerateComment(comment.id, comment.article_id, 'approve')}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => handleModerateComment(comment.id, comment.article_id, 'reject')}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Barra de búsqueda */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Buscar noticias..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          {/* Lista de noticias */}
+          {filteredNews.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
           <p className="text-gray-600 mb-4">
             {searchTerm ? 'No se encontraron noticias que coincidan con tu búsqueda' : 'No hay noticias publicadas aún'}
@@ -310,6 +458,8 @@ export default function AdminNews() {
             </tbody>
           </table>
         </div>
+      )}
+        </>
       )}
     </div>
   );
