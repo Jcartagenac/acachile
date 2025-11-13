@@ -214,14 +214,15 @@ async function getNoticias(env) {
           
           <p>Nuestros representantes competirán contra más de 500 equipos internacionales, llevando las técnicas tradicionales del asado chileno al escenario mundial.</p>
         `,
-        image: "/api/images?path=noticias/mundial-barbacoa-2024.jpg",
-        category: "competencias",
+        featured_image: "/api/images?path=noticias/mundial-barbacoa-2024.jpg",
+        category: { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
         tags: ["mundial", "barbacoa", "2024", "internacional"],
-        author: "ACA Chile",
-        publishedAt: "2025-10-14T10:00:00Z",
+        author_name: "ACA Chile",
+        published_at: "2025-10-14T10:00:00Z",
+        created_at: "2025-10-14T10:00:00Z",
         status: "published",
-        featured: true,
-        views: 245,
+        is_featured: true,
+        view_count: 245,
         commentsEnabled: true
       },
       {
@@ -242,14 +243,15 @@ async function getNoticias(env) {
           
           <p>El curso incluye degustación y material teórico. ¡Solo 20 cupos disponibles!</p>
         `,
-        image: "/api/images?path=noticias/curso-basico-asado.jpg",
-        category: "educacion",
+        featured_image: "/api/images?path=noticias/curso-basico-asado.jpg",
+        category: { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
         tags: ["curso", "principiantes", "técnicas", "educación"],
-        author: "Maestro Asador Juan Pérez",
-        publishedAt: "2025-10-12T15:30:00Z",
+        author_name: "Maestro Asador Juan Pérez",
+        published_at: "2025-10-12T15:30:00Z",
+        created_at: "2025-10-12T15:30:00Z",
         status: "published",
-        featured: false,
-        views: 128,
+        is_featured: false,
+        view_count: 128,
         commentsEnabled: true
       },
       {
@@ -270,14 +272,15 @@ async function getNoticias(env) {
           
           <p>Felicitamos a todos los participantes por su técnica excepcional y el compañerismo demostrado durante la competencia.</p>
         `,
-        image: "/api/images?path=noticias/campeonato-regional-asadores.jpg",
-        category: "resultados",
+        featured_image: "/api/images?path=noticias/campeonato-regional-asadores.jpg",
+        category: { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
         tags: ["regional", "campeonato", "resultados", "asadores"],
-        author: "Comité de Competencias ACA",
-        publishedAt: "2025-10-10T09:15:00Z",
+        author_name: "Comité de Competencias ACA",
+        published_at: "2025-10-10T09:15:00Z",
+        created_at: "2025-10-10T09:15:00Z",
         status: "published",
-        featured: false,
-        views: 89,
+        is_featured: false,
+        view_count: 89,
         commentsEnabled: true
       },
       {
@@ -298,14 +301,15 @@ async function getNoticias(env) {
           
           <p>La inauguración será el 25 de octubre con un gran asado comunitario y demostraciones gratuitas.</p>
         `,
-        image: "/api/images?path=noticias/centro-excelencia-valparaiso.jpg",
-        category: "institucional",
+        featured_image: "/api/images?path=noticias/centro-excelencia-valparaiso.jpg",
+        category: { id: 4, name: 'Institucional', slug: 'institucional', color: '#7C3AED' },
         tags: ["sede", "valparaíso", "inauguración", "capacitación"],
-        author: "Directorio ACA Chile",
-        publishedAt: "2025-10-08T12:00:00Z",
+        author_name: "Directorio ACA Chile",
+        published_at: "2025-10-08T12:00:00Z",
+        created_at: "2025-10-08T12:00:00Z",
         status: "published",
-        featured: true,
-        views: 167,
+        is_featured: true,
+        view_count: 167,
         commentsEnabled: true
       },
       {
@@ -326,14 +330,15 @@ async function getNoticias(env) {
           
           <p>Una oportunidad única para aprender de uno de los mayores exponentes del asado tradicional chileno.</p>
         `,
-        image: "/api/images?path=noticias/masterclass-patagonico.jpg",
-        category: "educacion",
+        featured_image: "/api/images?path=noticias/masterclass-patagonico.jpg",
+        category: { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
         tags: ["masterclass", "patagónico", "tradicional", "avanzado"],
-        author: "Maestro Raúl Barrientos",
-        publishedAt: "2025-10-06T16:45:00Z",
+        author_name: "Maestro Raúl Barrientos",
+        published_at: "2025-10-06T16:45:00Z",
+        created_at: "2025-10-06T16:45:00Z",
         status: "published",
-        featured: false,
-        views: 203,
+        is_featured: false,
+        view_count: 203,
         commentsEnabled: true
       }
     ];
@@ -362,8 +367,8 @@ async function createNoticia(env, noticiaData) {
     const lastId = lastIdData ? parseInt(lastIdData) : 0;
     const newId = lastId + 1;
 
-    // Crear slug desde el título
-    const slug = noticiaData.title
+    // Crear slug desde el título si no viene
+    const slug = noticiaData.slug || noticiaData.title
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -371,7 +376,21 @@ async function createNoticia(env, noticiaData) {
       .replace(/\s+/g, "-")
       .substring(0, 100);
 
-    // Crear la noticia
+    // Obtener categoría completa
+    const categories = [
+      { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
+      { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
+      { id: 3, name: 'Eventos', slug: 'eventos', color: '#2563EB' },
+      { id: 4, name: 'Institucional', slug: 'institucional', color: '#7C3AED' },
+      { id: 5, name: 'Internacional', slug: 'internacional', color: '#EA580C' },
+      { id: 6, name: 'Comunidad', slug: 'comunidad', color: '#0891B2' },
+      { id: 7, name: 'Técnicas', slug: 'tecnicas', color: '#CA8A04' },
+      { id: 8, name: 'General', slug: 'general', color: '#64748B' }
+    ];
+    
+    const categoryObj = categories.find(c => c.id === noticiaData.category_id) || categories[7]; // Default: General
+
+    // Crear la noticia con los campos correctos para el frontend
     const now = new Date().toISOString();
     const noticia = {
       id: newId,
@@ -379,14 +398,15 @@ async function createNoticia(env, noticiaData) {
       slug: slug,
       excerpt: noticiaData.excerpt || '',
       content: noticiaData.content,
-      image: noticiaData.image || '/images/default-news.jpg',
-      category: noticiaData.category || 'general',
+      featured_image: noticiaData.featured_image || '/images/default-news.jpg', // featured_image no image
+      category: categoryObj, // Objeto completo con id, name, slug, color
       tags: noticiaData.tags || [],
-      author: noticiaData.author || 'ACA Chile',
-      publishedAt: noticiaData.publishedAt || now,
+      author_name: noticiaData.author_name || 'ACA Chile', // author_name no author
+      published_at: noticiaData.published_at || now, // published_at no publishedAt
+      created_at: now,
       status: noticiaData.status || 'draft',
-      featured: noticiaData.featured || false,
-      views: 0,
+      is_featured: noticiaData.is_featured || false, // is_featured no featured
+      view_count: 0, // view_count no views
       commentsEnabled: noticiaData.commentsEnabled !== false
     };
 
