@@ -90,13 +90,49 @@ const NewsDetailPage: React.FC = () => {
   };
 
   const loadLikes = async () => {
-    // TODO: Implementar likes de artículos cuando esté disponible el endpoint
-    setLikes({ totalLikes: 0, userLiked: false });
+    if (!article?.id) return;
+    
+    try {
+      const response = await commentsService.getLikes(article.id);
+      if (response.success && response.data) {
+        setLikes(response.data);
+      }
+    } catch (err) {
+      console.error('Error cargando likes:', err);
+    }
   };
 
   const handleLike = async () => {
-    // TODO: Implementar toggle de likes de artículos
-    console.log('Like functionality not implemented yet');
+    if (!article?.id) return;
+    
+    try {
+      // Actualizar UI optimísticamente
+      const newLikes = {
+        totalLikes: likes.userLiked ? likes.totalLikes - 1 : likes.totalLikes + 1,
+        userLiked: !likes.userLiked
+      };
+      setLikes(newLikes);
+      
+      // Hacer la petición al servidor
+      const response = await fetch(`/api/likes/${article.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setLikes(result.data);
+        }
+      } else {
+        // Revertir si falla
+        setLikes(likes);
+      }
+    } catch (err) {
+      console.error('Error procesando like:', err);
+      // Revertir si hay error
+      setLikes(likes);
+    }
   };
 
   const handleShare = async (platform: 'facebook' | 'twitter' | 'whatsapp' | 'copy') => {

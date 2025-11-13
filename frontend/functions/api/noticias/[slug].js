@@ -54,8 +54,10 @@ export async function onRequestGet(context) {
       });
     }
 
-    // Incrementar contador de vistas
-    noticia.views = (noticia.views || 0) + 1;
+    // Incrementar contador de vistas (usar view_count en lugar de views)
+    noticia.view_count = (noticia.view_count || noticia.views || 0) + 1;
+    // Mantener compatibilidad con views
+    noticia.views = noticia.view_count;
     
     // Guardar las noticias actualizadas
     const updatedNoticias = noticias.map(n => 
@@ -66,7 +68,7 @@ export async function onRequestGet(context) {
     // También actualizar la noticia individual en KV
     await env.ACA_KV.put(`noticia:${noticia.id}`, JSON.stringify(noticia));
 
-    console.log(`[NOTICIAS/SLUG] Noticia encontrada: ${noticia.title}, views: ${noticia.views}`);
+    console.log(`[NOTICIAS/SLUG] Noticia encontrada: ${noticia.title}, views: ${noticia.view_count}`);
 
     return new Response(JSON.stringify({
       success: true,
