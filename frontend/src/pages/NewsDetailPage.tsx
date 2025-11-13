@@ -29,6 +29,16 @@ const NewsDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Generar o recuperar userId único del localStorage
+  const [userId] = useState(() => {
+    let id = localStorage.getItem('acachile_user_id');
+    if (!id) {
+      id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('acachile_user_id', id);
+    }
+    return id;
+  });
+  
   // Estado del formulario de comentarios
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentForm, setCommentForm] = useState({
@@ -93,9 +103,16 @@ const NewsDetailPage: React.FC = () => {
     if (!article?.id) return;
     
     try {
-      const response = await commentsService.getLikes(article.id);
-      if (response.success && response.data) {
-        setLikes(response.data);
+      const response = await fetch(`/api/likes/${article.id}?userId=${userId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setLikes(result.data);
+        }
       }
     } catch (err) {
       console.error('Error cargando likes:', err);
@@ -113,10 +130,11 @@ const NewsDetailPage: React.FC = () => {
       };
       setLikes(newLikes);
       
-      // Hacer la petición al servidor
+      // Hacer la petición al servidor con userId
       const response = await fetch(`/api/likes/${article.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
       });
       
       if (response.ok) {
@@ -531,9 +549,20 @@ const NewsDetailPage: React.FC = () => {
 
         {/* Sección de comentarios */}
         <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Comentarios ({comments.length})
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Comentarios ({comments.length})
+            </h2>
+            {!showCommentForm && (
+              <button
+                onClick={() => setShowCommentForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span>Agregar comentario</span>
+              </button>
+            )}
+          </div>
 
           {/* Formulario de comentarios */}
           {showCommentForm && (

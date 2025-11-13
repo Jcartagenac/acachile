@@ -32,12 +32,16 @@ export async function onRequestGet(context) {
       comments = JSON.parse(commentsData);
     }
 
+    // Filtrar solo comentarios aprobados (a menos que sea admin)
+    // TODO: Verificar si el usuario es admin para mostrar todos
+    comments = comments.filter(c => c.status === 'approved');
+
     // Ordenar por fecha (más recientes primero) y limitar
     comments = comments
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, limit);
 
-    console.log(`[COMMENTS] Encontrados: ${comments.length} comentarios`);
+    console.log(`[COMMENTS] Encontrados: ${comments.length} comentarios aprobados`);
 
     return new Response(JSON.stringify({
       success: true,

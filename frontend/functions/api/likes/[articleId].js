@@ -3,7 +3,7 @@
 // POST /api/likes/[articleId] - Toggle like
 
 export async function onRequestGet(context) {
-  const { env, params } = context;
+  const { env, params, request } = context;
 
   try {
     const articleId = parseInt(params.articleId);
@@ -18,16 +18,22 @@ export async function onRequestGet(context) {
       });
     }
 
+    // Obtener userId del query param o IP
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId') || request.headers.get('CF-Connecting-IP') || 'anonymous';
+
     // Obtener likes del KV
     const likesData = await env.ACA_KV.get(`likes:article:${articleId}`);
     const likes = likesData ? JSON.parse(likesData) : { count: 0, users: [] };
 
-    // Por ahora, sin autenticación de usuario, solo devolver el conteo
+    // Verificar si el usuario ya dio like
+    const userLiked = likes.users && likes.users.includes(userId);
+
     return new Response(JSON.stringify({
       success: true,
       data: {
         totalLikes: likes.count || 0,
-        userLiked: false // TODO: Implementar cuando haya autenticación de usuario
+        userLiked: userLiked
       }
     }), {
       headers: { 'Content-Type': 'application/json' }
@@ -61,17 +67,34 @@ export async function onRequestPost(context) {
       });
     }
 
+    // Obtener body para userId (generado en el cliente)
+    const body = await request.json();
+    const userId = body.userId || request.headers.get('CF-Connecting-IP') || 'anonymous';
+
     // Obtener datos actuales de likes
     const likesData = await env.ACA_KV.get(`likes:article:${articleId}`);
     const likes = likesData ? JSON.parse(likesData) : { count: 0, users: [] };
 
-    // Por ahora sin autenticación, solo incrementar el contador
-    // TODO: Cuando haya autenticación, verificar si el usuario ya dio like
-    const newCount = (likes.count || 0) + 1;
+    // Verificar si el usuario ya dio like
+    const userIndex = likes.users.findIndex(u => u === userId);
+    let newCount;
+    let userLiked;
+
+    if (userIndex !== -1) {
+      // Usuario ya dio like, removerlo (unlike)
+      likes.users.splice(userIndex, 1);
+      newCount = Math.max(0, (likes.count || 0) - 1);
+      userLiked = false;
+    } else {
+      // Usuario no ha dado like, agregarlo
+      likes.users.push(userId);
+      newCount = (likes.count || 0) + 1;
+      userLiked = true;
+    }
     
     const updatedLikes = {
       count: newCount,
-      users: likes.users || [],
+      users: likes.users,
       lastUpdated: new Date().toISOString()
     };
 
@@ -91,11 +114,13 @@ export async function onRequestPost(context) {
       }
     }
 
+    console.log(`[LIKES] Article ${articleId}: User ${userId} ${userLiked ? 'liked' : 'unliked'}. Total: ${newCount}`);
+
     return new Response(JSON.stringify({
       success: true,
       data: {
         totalLikes: newCount,
-        userLiked: true
+        userLiked: userLiked
       }
     }), {
       headers: { 'Content-Type': 'application/json' }
