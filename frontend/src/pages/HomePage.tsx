@@ -187,15 +187,25 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
               </div>
               
               {section.display_cta_label && section.display_cta_url ? (
-                <div className="mt-8">
+                <div className="mt-8 sm:mt-10">
                   <a
                     href={section.display_cta_url}
-                    className="inline-flex items-center px-7 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl text-white font-semibold text-lg transition-all duration-500"
+                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 sm:px-10 sm:py-5 rounded-2xl sm:rounded-3xl text-white font-bold text-lg sm:text-xl transition-all duration-500 transform hover:scale-105 hover:shadow-2xl active:scale-95 shadow-xl"
                     style={{
                       background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
                     }}
                   >
-                    {section.display_cta_label}
+                    <span className="relative">
+                      {section.display_cta_label}
+                    </span>
+                    <svg 
+                      className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:translate-x-1" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
                   </a>
                 </div>
               ) : null}
