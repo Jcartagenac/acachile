@@ -81,6 +81,8 @@ function App() {
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:slug" element={<PostDetailPage />} />
           <Route path="/noticias" element={<NewsPage />} />
+          <Route path="/noticias/crear" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
+          <Route path="/noticias/editar/:slug" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
           <Route path="/noticias/:slug" element={<NewsDetailPage />} />
           
           {/* Búsqueda */}
