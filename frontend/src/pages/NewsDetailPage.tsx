@@ -318,11 +318,12 @@ const NewsDetailPage: React.FC = () => {
         <article className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
           {/* Imagen destacada */}
           {article.featured_image && (
-            <div className="h-64 md:h-96 overflow-hidden">
+            <div className="w-full bg-gray-100">
               <img
                 src={article.featured_image}
                 alt={article.title}
-                className="w-full h-full object-cover"
+                className="w-full h-auto object-contain"
+                style={{ maxHeight: 'none' }}
               />
             </div>
           )}
