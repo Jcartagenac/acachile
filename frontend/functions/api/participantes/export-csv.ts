@@ -25,9 +25,11 @@ export async function onRequestGet(context: any) {
   const { request, env } = context;
 
   try {
-    // Verificar autenticación
-    const authResult = await requireAuth(request, env);
-    if (!authResult.success || !authResult.user) {
+    // Verificar autenticación de admin
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
       return new Response(
         JSON.stringify({ success: false, error: 'No autorizado' }),
         {
@@ -37,10 +39,13 @@ export async function onRequestGet(context: any) {
       );
     }
 
-    // Verificar que sea admin
-    if (authResult.user.role !== 'admin') {
+    // Verificar que el usuario sea admin
+    const isAdmin = authUser.role === 'admin' || 
+                    (Array.isArray(authUser.roles) && authUser.roles.includes('admin'));
+    
+    if (!isAdmin) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Acceso denegado' }),
+        JSON.stringify({ success: false, error: 'Se requiere rol de administrador' }),
         {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
