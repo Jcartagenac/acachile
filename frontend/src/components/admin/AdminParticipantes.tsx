@@ -34,11 +34,13 @@ const AdminParticipantes: React.FC = () => {
       if (data.success) {
         setParticipantes(data.participantes);
       } else {
-        setError(data.error || 'Error al cargar participantes');
+        const errorMsg = data.details ? `${data.error}: ${data.details}` : data.error;
+        setError(errorMsg || 'Error al cargar participantes');
+        console.error('[AdminParticipantes] Error response:', data);
       }
     } catch (err) {
-      console.error('Error al cargar participantes:', err);
-      setError('Error al cargar participantes');
+      console.error('[AdminParticipantes] Error al cargar participantes:', err);
+      setError(`Error al cargar participantes: ${err}`);
     } finally {
       setLoading(false);
     }

@@ -89,6 +89,24 @@ export async function onRequestPost(context: any) {
       );
     }
 
+    // Crear tabla si no existe
+    try {
+      await env.DB.exec(`
+        CREATE TABLE IF NOT EXISTS participantes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          apellido TEXT NOT NULL,
+          rut TEXT NOT NULL UNIQUE,
+          email TEXT NOT NULL,
+          edad INTEGER NOT NULL,
+          telefono TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+    } catch (createError: any) {
+      console.error('[participantes] Error creando tabla:', createError);
+    }
+
     // Verificar si el RUT ya existe
     const existingStmt = env.DB.prepare(
       'SELECT id FROM participantes WHERE rut = ?'
@@ -184,6 +202,24 @@ export async function onRequestGet(context: any) {
       );
     }
 
+    // Crear tabla si no existe
+    try {
+      await env.DB.exec(`
+        CREATE TABLE IF NOT EXISTS participantes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          apellido TEXT NOT NULL,
+          rut TEXT NOT NULL UNIQUE,
+          email TEXT NOT NULL,
+          edad INTEGER NOT NULL,
+          telefono TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+    } catch (createError: any) {
+      console.error('[participantes] Error creando tabla:', createError);
+    }
+
     // Obtener todos los participantes ordenados por fecha de registro
     const stmt = env.DB.prepare(`
       SELECT id, nombre, apellido, rut, email, edad, telefono, created_at
@@ -205,10 +241,13 @@ export async function onRequestGet(context: any) {
     );
   } catch (error: any) {
     console.error('[participantes] Error al obtener participantes:', error);
+    console.error('[participantes] Error stack:', error?.stack);
+    console.error('[participantes] Error message:', error?.message);
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Error al obtener participantes'
+        error: 'Error al obtener participantes',
+        details: error?.message || String(error)
       }),
       {
         status: 500,
