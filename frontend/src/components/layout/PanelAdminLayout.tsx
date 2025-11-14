@@ -15,6 +15,7 @@ import {
   UserCheck,
   Menu as MenuIcon,
   X,
+  Gift,
 } from 'lucide-react';
 
 interface PanelAdminLayoutProps {
@@ -57,6 +58,12 @@ const menuItems = [
     label: 'Comunicados',
     icon: Megaphone,
     description: 'Anuncios y avisos',
+  },
+  {
+    path: '/panel-admin/participantes',
+    label: 'Participantes Sorteo',
+    icon: Gift,
+    description: 'Lista de participantes',
   },
 ];
 

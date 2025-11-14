@@ -48,6 +48,8 @@ const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const AdminMonitoring = lazy(() => import('./pages/AdminMonitoring'));
 const TestUser = lazy(() => import('./pages/TestUser'));
 const SociosAcaLinks = lazy(() => import('./pages/SociosAcaLinks'));
+const ParticipaPage = lazy(() => import('./pages/ParticipaPage'));
+const AdminParticipantes = lazy(() => import('./components/admin/AdminParticipantes'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -110,6 +112,7 @@ function App() {
           <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
           <Route path="/panel-admin/postulantes" element={<PanelAdminLayout><AdminPostulantes /></PanelAdminLayout>} />
+          <Route path="/panel-admin/participantes" element={<PanelAdminLayout><AdminParticipantes /></PanelAdminLayout>} />
           
           {/* Perfil de Usuario */}
           <Route path="/perfil" element={<ProfilePage />} />
@@ -121,6 +124,9 @@ function App() {
 
           {/* Enlaces para socios (acceso directo sin navegación) */}
           <Route path="/sociosaca" element={<SociosAcaLinks />} />
+
+          {/* Página de participación sorteo (acceso directo, sin indexar) */}
+          <Route path="/participa" element={<ParticipaPage />} />
 
           {/* Test Page */}
           <Route path="/testuser" element={<TestUser />} />
