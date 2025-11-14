@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Container } from './Container';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserMenu, AuthModal } from '../auth';
@@ -12,7 +12,6 @@ export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
   const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
@@ -106,12 +105,14 @@ export const Header: React.FC = () => {
                   >
                     Iniciar Sesión
                   </button>
-                  <Link
-                    to="/unete"
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md whitespace-nowrap"
                   >
                     Únete a ACA
-                  </Link>
+                  </a>
                 </div>
               )}
 
@@ -184,15 +185,15 @@ export const Header: React.FC = () => {
                     >
                       Iniciar Sesión
                     </button>
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate('/unete');
-                      }}
-                      className="w-full px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                    <a
+                      href="https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 shadow-md hover:shadow-lg text-center block"
                     >
                       Únete a ACA
-                    </button>
+                    </a>
                   </div>
                 )}
               </Container>

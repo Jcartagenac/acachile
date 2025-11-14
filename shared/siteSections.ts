@@ -51,7 +51,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       sort_order: 2,
       source_type: 'custom',
       cta_label: 'Únete a ACA',
-      cta_url: '/unete'
+      cta_url: 'https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform'
     },
     {
       key: 'events',
@@ -74,7 +74,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       image_url: 'https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png',
       sort_order: 0,
       cta_label: 'Únete a ACA',
-      cta_url: '/unete'
+      cta_url: 'https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform'
     },
     {
       key: 'about-mission',
