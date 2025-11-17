@@ -64,7 +64,12 @@ const ParticipaPage: React.FC = () => {
           telefono: ''
         });
       } else {
-        setError(data.error || 'Error al registrar participación');
+        // Mostrar error detallado en consola para debugging
+        console.error('Error detallado:', data);
+        const errorMessage = data.details 
+          ? `${data.error}: ${data.details}` 
+          : (data.error || 'Error al registrar participación');
+        setError(errorMessage);
       }
     } catch (err) {
       console.error('Error:', err);

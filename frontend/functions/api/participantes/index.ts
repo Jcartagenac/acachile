@@ -156,10 +156,15 @@ export async function onRequestPost(context: any) {
     );
   } catch (error: any) {
     console.error('[participantes] Error al crear participante:', error);
+    console.error('[participantes] Error stack:', error?.stack);
+    console.error('[participantes] Error message:', error?.message);
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Error al procesar el registro'
+        error: 'Error al procesar el registro',
+        details: error?.message || 'Error desconocido',
+        stack: env.ENVIRONMENT === 'development' ? error?.stack : undefined
       }),
       {
         status: 500,
