@@ -14,6 +14,7 @@ const ParticipaPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedMarketing, setAcceptedMarketing] = useState(false);
 
   const formatRut = (value: string) => {
     // Eliminar todo excepto números y K
@@ -49,7 +50,10 @@ const ParticipaPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          acceptsMarketing: acceptedMarketing
+        }),
       });
 
       const data = await response.json();
@@ -65,6 +69,7 @@ const ParticipaPage: React.FC = () => {
           telefono: ''
         });
         setAcceptedTerms(false);
+        setAcceptedMarketing(false);
       } else {
         // Mostrar error detallado en consola para debugging
         console.error('Error detallado:', data);
@@ -254,7 +259,21 @@ const ParticipaPage: React.FC = () => {
                 >
                   términos y condiciones
                 </a>
-                {' '}del sorteo
+                {' '}del sorteo <span className="text-red-500">*</span>
+              </label>
+            </div>
+
+            {/* Checkbox Marketing (Opcional) */}
+            <div className="flex items-start space-x-3 bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
+              <input
+                type="checkbox"
+                id="acceptMarketing"
+                checked={acceptedMarketing}
+                onChange={(e) => setAcceptedMarketing(e.target.checked)}
+                className="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <label htmlFor="acceptMarketing" className="text-sm text-gray-700 cursor-pointer">
+                <span className="font-semibold text-blue-800">(Opcional)</span> Autorizo recibir información y promociones de ACACHILE por email o WhatsApp
               </label>
             </div>
 

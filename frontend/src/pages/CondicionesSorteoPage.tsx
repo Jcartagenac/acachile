@@ -53,22 +53,31 @@ const CondicionesSorteoPage: React.FC = () => {
 
               <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">3.2 Finalidad del Tratamiento</h3>
               <p>
-                Los datos personales proporcionados serán utilizados para las siguientes finalidades:
+                Los datos personales proporcionados serán utilizados para las siguientes finalidades estrictamente necesarias para la gestión del sorteo:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Gestión del sorteo:</strong> Registro de participantes, realización del sorteo y notificación de ganadores.</li>
                 <li><strong>Comunicaciones relacionadas con el sorteo:</strong> Envío de información sobre el estado del sorteo, resultados y entrega de premios.</li>
-                <li><strong>Marketing y promociones:</strong> Envío de información sobre eventos, actividades, noticias y promociones organizadas por ACACHILE.</li>
-                <li><strong>Comunicaciones institucionales:</strong> Información sobre la asociación, sus actividades y oportunidades de participación.</li>
+                <li><strong>Publicación del ganador:</strong> El nombre y comuna del ganador podrán ser publicados en los canales oficiales de ACACHILE para fines de transparencia del sorteo.</li>
                 <li><strong>Análisis y estadísticas:</strong> Elaboración de estadísticas agregadas y anónimas para mejorar nuestros servicios.</li>
                 <li><strong>Cumplimiento legal:</strong> Cumplir con obligaciones legales y reglamentarias aplicables.</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">3.3 Consentimiento</h3>
+              <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">3.3 Comunicaciones Promocionales (Opcional)</h3>
+              <p>
+                El envío de comunicaciones promocionales (información sobre eventos, actividades, noticias y promociones organizadas por ACACHILE) 
+                <strong> solo se realizará si el participante otorga su consentimiento específico mediante una casilla adicional independiente</strong> en el formulario de registro.
+              </p>
+              <p className="mt-2">
+                Este consentimiento es completamente opcional y no afecta la participación en el sorteo. El participante puede revocar 
+                este consentimiento en cualquier momento contactando a ACACHILE.
+              </p>
+
+              <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">3.4 Consentimiento</h3>
               <p>
                 Al aceptar estos términos y condiciones, el participante otorga su consentimiento expreso, libre, 
                 informado e inequívoco para que ACACHILE trate sus datos personales conforme a las finalidades 
-                descritas anteriormente.
+                estrictamente necesarias descritas en la sección 3.2.
               </p>
             </section>
 
@@ -104,9 +113,9 @@ const CondicionesSorteoPage: React.FC = () => {
                 <li><strong>Acceso:</strong> Conocer qué datos personales tenemos sobre usted.</li>
                 <li><strong>Rectificación:</strong> Solicitar la corrección de datos inexactos o incompletos.</li>
                 <li><strong>Cancelación:</strong> Solicitar la eliminación de sus datos personales.</li>
-                <li><strong>Oposición:</strong> Oponerse al tratamiento de sus datos para fines específicos, como marketing.</li>
+                <li><strong>Oposición:</strong> Oponerse al tratamiento de sus datos para fines específicos, como comunicaciones promocionales.</li>
                 <li><strong>Revocación del consentimiento:</strong> Retirar su consentimiento en cualquier momento.</li>
-                <li><strong>Portabilidad:</strong> Solicitar una copia de sus datos en formato estructurado y de uso común.</li>
+                <li><strong>Portabilidad:</strong> Solicitar una copia de sus datos en formato estructurado y de uso común, en la medida en que la legislación chilena lo permita.</li>
               </ul>
               <p className="mt-4">
                 Para ejercer estos derechos, puede contactarnos a través de:
@@ -120,14 +129,22 @@ const CondicionesSorteoPage: React.FC = () => {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Retención de Datos</h2>
               <p>
-                Los datos personales de los participantes serán conservados durante el tiempo necesario para 
-                cumplir con las finalidades para las cuales fueron recopilados, incluyendo:
+                Los datos personales de los participantes serán conservados por un <strong>plazo máximo de 10 años</strong> después 
+                del cierre del sorteo, salvo que el participante solicite su eliminación antes de dicho plazo.
+              </p>
+              <p className="mt-4">
+                Este plazo de retención considera:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Durante la vigencia del sorteo y hasta la entrega del premio al ganador.</li>
-                <li>Por el plazo legalmente requerido para cumplir obligaciones fiscales y legales.</li>
-                <li>Mientras el participante no solicite la eliminación de sus datos o retire su consentimiento.</li>
+                <li>El tiempo necesario para la gestión del sorteo y entrega del premio.</li>
+                <li>Los plazos legales requeridos para cumplir obligaciones fiscales y de transparencia.</li>
+                <li>La conservación de registros históricos de la asociación.</li>
               </ul>
+              <p className="mt-4">
+                Transcurrido el plazo de 10 años, o si el participante solicita la eliminación de sus datos, 
+                estos serán eliminados de manera segura y definitiva de nuestros sistemas, salvo que exista 
+                una obligación legal que requiera su conservación adicional.
+              </p>
             </section>
 
             <section>

@@ -28,7 +28,7 @@ export async function onRequestPost(context: any) {
 
   try {
     const body = await request.json();
-    const { nombre, apellido, rut, email, edad, telefono } = body;
+    const { nombre, apellido, rut, email, edad, telefono, acceptsMarketing } = body;
 
     // Validación de campos obligatorios
     if (!nombre || !apellido || !rut || !email || !edad || !telefono) {
@@ -128,10 +128,11 @@ export async function onRequestPost(context: any) {
     }
 
     // Insertar participante
+    const acceptsMarketingValue = acceptsMarketing ? 1 : 0;
     const insertStmt = env.DB.prepare(`
-      INSERT INTO participantes (nombre, apellido, rut, email, edad, telefono)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(nombre, apellido, rutLimpio, email, edadNum, telefono);
+      INSERT INTO participantes (nombre, apellido, rut, email, edad, telefono, accepts_marketing)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(nombre, apellido, rutLimpio, email, edadNum, telefono, acceptsMarketingValue);
 
     const result = await insertStmt.run();
 
@@ -146,7 +147,8 @@ export async function onRequestPost(context: any) {
           rut: rutLimpio,
           email,
           edad: edadNum,
-          telefono
+          telefono,
+          accepts_marketing: acceptsMarketingValue
         }
       }),
       {
