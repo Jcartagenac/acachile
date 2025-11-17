@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame } from 'lucide-react';
 import { Container } from './Container';
+import logoFallback from '@/assets/aca-logo.svg';
+
+const DEFAULT_HEADER_LOGO = 'https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg';
 
 export const Footer: React.FC = () => {
+  const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
+  const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
+
   return (
     <footer className="bg-soft-gradient-medium border-t border-white/20 relative overflow-hidden">
       {/* Elementos decorativos de fondo */}
@@ -15,8 +20,16 @@ export const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
             {/* Logo y descripción */}
             <div className="md:col-span-2">
-                            <div className="flex items-center space-x-4 mb-6">
-                <Flame className="h-12 w-12 text-primary-600" />
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-12 h-12 bg-white/60 backdrop-blur-soft rounded-2xl flex items-center justify-center shadow-soft-md border border-white/30 p-2">
+                  <img
+                    src={logoSrc}
+                    alt="ACA Chile"
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                    onError={() => setLogoSrc(logoFallback)}
+                  />
+                </div>
                 <div>
                   <div className="text-2xl font-bold text-primary-600">ACA Chile</div>
                   <div className="text-sm text-neutral-600">
