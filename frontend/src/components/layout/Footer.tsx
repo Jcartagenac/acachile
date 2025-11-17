@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { Flame } from 'lucide-react';
 import { Container } from './Container';
-import logoFallback from '@/assets/aca-logo.svg';
-
-const DEFAULT_HEADER_LOGO = 'https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg';
 
 export const Footer: React.FC = () => {
-  const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
-  const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
-
   return (
     <footer className="bg-soft-gradient-medium border-t border-white/20 relative overflow-hidden">
       {/* Elementos decorativos de fondo */}
