@@ -348,20 +348,25 @@ export async function onRequestDelete(context) {
     const noticia = noticias[noticiaIndex];
     console.log('[NOTICIAS/SLUG] Found noticia:', noticia.title, 'ID:', noticia.id);
     
-    // Eliminar la noticia del array
-    noticias.splice(noticiaIndex, 1);
+    // SOFT DELETE: Marcar como eliminada en lugar de borrar
+    noticia.deleted_at = new Date().toISOString();
+    noticia.status = 'archived'; // Cambiar a archived para que no aparezca en público
+    
+    // Actualizar la noticia en el array
+    noticias[noticiaIndex] = noticia;
     
     // Guardar el array actualizado
     await env.ACA_KV.put('noticias:all', JSON.stringify(noticias));
     
-    // Eliminar también la entrada individual
-    await env.ACA_KV.delete(`noticia:${noticia.id}`);
+    // Actualizar también la entrada individual
+    await env.ACA_KV.put(`noticia:${noticia.id}`, JSON.stringify(noticia));
 
-    console.log(`[NOTICIAS/SLUG] Noticia eliminada: ${noticia.title}`);
+    console.log(`[NOTICIAS/SLUG] Noticia movida a papelera: ${noticia.title}`);
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Noticia eliminada correctamente'
+      message: 'Noticia movida a la papelera. Se eliminará permanentemente en 30 días.',
+      data: noticia
     }), {
       headers: { 'Content-Type': 'application/json' }
     });

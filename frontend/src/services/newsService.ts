@@ -35,6 +35,7 @@ export interface NewsArticle {
   published_at: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null; // Fecha de eliminación (soft delete), se elimina permanentemente después de 30 días
 }
 
 export interface NewsCategory {

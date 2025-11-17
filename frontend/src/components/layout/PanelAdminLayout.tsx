@@ -16,6 +16,7 @@ import {
   Menu as MenuIcon,
   X,
   Gift,
+  Trash2,
 } from 'lucide-react';
 
 interface PanelAdminLayoutProps {
@@ -58,6 +59,12 @@ const menuItems = [
     label: 'Comunicados',
     icon: Megaphone,
     description: 'Anuncios y avisos',
+  },
+  {
+    path: '/panel-admin/papelera',
+    label: 'Papelera',
+    icon: Trash2,
+    description: 'Noticias eliminadas',
   },
   {
     path: '/panel-admin/participantes',

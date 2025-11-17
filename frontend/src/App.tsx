@@ -50,6 +50,7 @@ const TestUser = lazy(() => import('./pages/TestUser'));
 const SociosAcaLinks = lazy(() => import('./pages/SociosAcaLinks'));
 const ParticipaPage = lazy(() => import('./pages/ParticipaPage'));
 const AdminParticipantes = lazy(() => import('./components/admin/AdminParticipantes'));
+const AdminTrash = lazy(() => import('./components/admin/AdminTrash'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -111,6 +112,7 @@ function App() {
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
+          <Route path="/panel-admin/papelera" element={<PanelAdminLayout><AdminTrash /></PanelAdminLayout>} />
           <Route path="/panel-admin/postulantes" element={<PanelAdminLayout><AdminPostulantes /></PanelAdminLayout>} />
           <Route path="/panel-admin/participantes" element={<PanelAdminLayout><AdminParticipantes /></PanelAdminLayout>} />
           

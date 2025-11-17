@@ -43,7 +43,12 @@ export default function AdminNews() {
       if (data.success && Array.isArray(data.data)) {
         console.log('[AdminNews] Loaded news articles:', data.data.length);
         console.log('[AdminNews] First article structure:', data.data[0]);
-        setNews(data.data);
+        
+        // Filtrar noticias eliminadas (que tienen deleted_at)
+        const activeNews = data.data.filter((article: NewsArticle) => !article.deleted_at);
+        console.log('[AdminNews] Active news (excluding deleted):', activeNews.length);
+        
+        setNews(activeNews);
       } else {
         console.log('[AdminNews] Response data:', data);
         setNews([]);
@@ -118,17 +123,17 @@ export default function AdminNews() {
     console.log('[AdminNews] handleDelete called with:', slugOrId, 'type:', typeof slugOrId);
     
     if (!slugOrId) {
-      alert('Error: No se puede eliminar la noticia sin identificador');
+      alert('Error: No se puede mover la noticia a la papelera sin identificador');
       console.error('[AdminNews] Slug/ID is undefined or empty');
       return;
     }
 
-    if (!window.confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
+    if (!window.confirm('¿Mover esta noticia a la papelera?\n\nPodrás restaurarla durante 30 días desde la sección "Papelera".')) {
       return;
     }
 
     try {
-      console.log('[AdminNews] Deleting noticia with slug/id:', slugOrId);
+      console.log('[AdminNews] Moving noticia to trash with slug/id:', slugOrId);
       const response = await fetch(`/api/noticias/${slugOrId}`, {
         method: 'DELETE',
         headers: {
@@ -145,12 +150,12 @@ export default function AdminNews() {
         throw new Error(data.error || `Error ${response.status}: ${response.statusText}`);
       }
 
-      alert('Noticia eliminada correctamente');
+      alert('Noticia movida a la papelera correctamente');
       // Recargar lista
       loadNews();
     } catch (err) {
-      console.error('[AdminNews] Error deleting news:', err);
-      alert(`Error al eliminar la noticia: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+      console.error('[AdminNews] Error moving news to trash:', err);
+      alert(`Error al mover la noticia a la papelera: ${err instanceof Error ? err.message : 'Error desconocido'}`);
     }
   };
 
@@ -458,7 +463,7 @@ export default function AdminNews() {
                           handleDelete(article.slug || article.id);
                         }}
                         className="text-red-600 hover:text-red-900"
-                        title="Eliminar"
+                        title="Mover a papelera"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
