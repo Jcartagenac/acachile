@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
                     ACA Chile
                   </div>
                   <div className="text-sm text-neutral-600 font-medium">
-                    Asociación Chilena de Asadores
+                    Asociación Chilena de Asadores A.G.
                   </div>
                 </div>
               </Link>

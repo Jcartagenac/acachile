@@ -17,7 +17,7 @@ const CondicionesSorteoPage: React.FC = () => {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Aceptación de Términos</h2>
               <p>
-                Al participar en el sorteo organizado por la Asociación Chilena de Asadores (en adelante, "ACACHILE"), 
+                Al participar en el sorteo organizado por la Asociación Chilena de Asadores A.G. (en adelante, "ACACHILE"), 
                 el participante acepta expresamente estos términos y condiciones en su totalidad. La participación 
                 en el sorteo implica el conocimiento y aceptación de las presentes bases.
               </p>
@@ -236,7 +236,7 @@ const CondicionesSorteoPage: React.FC = () => {
                 tratamiento de sus datos personales, puede contactarnos en:
               </p>
               <div className="bg-gray-100 p-4 rounded-lg mt-4">
-                <p><strong>Asociación Chilena de Asadores (ACACHILE)</strong></p>
+                <p><strong>Asociación Chilena de Asadores A.G. (ACACHILE)</strong></p>
                 <p><strong>Correo electrónico:</strong> hola@acachile.com</p>
                 <p><strong>Sitio web:</strong> www.acachile.com</p>
               </div>

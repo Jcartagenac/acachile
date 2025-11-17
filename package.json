@@ -1,7 +1,7 @@
 {
   "name": "acachile-monorepo",
   "version": "1.0.0",
-  "description": "ACA Chile - Asociación Chilena de Asadores - Monorepo",
+  "description": "ACA Chile - Asociación Chilena de Asadores A.G. - Monorepo",
   "type": "module",
   "private": true,
   "workspaces": [

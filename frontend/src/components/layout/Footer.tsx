@@ -20,22 +20,12 @@ export const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
             {/* Logo y descripción */}
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-14 h-14 bg-white/60 backdrop-blur-soft rounded-3xl flex items-center justify-center shadow-soft-lg border border-white/30 p-2">
-                  <img
-                    src={logoSrc}
-                    alt="ACA Chile"
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                    onError={() => setLogoSrc(logoFallback)}
-                  />
-                </div>
+                            <div className="flex items-center space-x-4 mb-6">
+                <Flame className="h-12 w-12 text-primary-600" />
                 <div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
-                    ACA Chile
-                  </div>
-                  <div className="text-sm text-neutral-600 font-medium">
-                    Asociación Chilena de Asadores
+                  <div className="text-2xl font-bold text-primary-600">ACA Chile</div>
+                  <div className="text-sm text-neutral-600">
+                    Asociación Chilena de Asadores A.G.
                   </div>
                 </div>
               </div>
@@ -144,7 +134,7 @@ export const Footer: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="text-center md:text-left">
                 <p className="text-neutral-600 text-sm font-medium">
-                  © 2025 ACA Chile - Asociación Chilena de Asadores
+                  © 2025 ACA Chile - Asociación Chilena de Asadores A.G.
                 </p>
                 <p className="text-neutral-500 text-xs mt-1">
                   Todos los derechos reservados. Hecho con ❤️ para la comunidad asadora.

@@ -1,6 +1,6 @@
 # ACA Chile Platform
 
-> Plataforma digital para la Asociación Chilena de Asadores (ACA Chile). Incluye frontend en React/Vite, Pages Functions en Cloudflare, D1, KV y R2 para administrar socios, eventos, noticias y operaciones internas.
+> Plataforma digital para la Asociación Chilena de Asadores A.G. (ACA Chile). Incluye frontend en React/Vite, Pages Functions en Cloudflare, D1, KV y R2 para administrar socios, eventos, noticias y operaciones internas.
 
 ---
 

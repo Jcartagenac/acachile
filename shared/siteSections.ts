@@ -22,7 +22,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
   home: withPage('home', [
     {
       key: 'hero',
-      title: 'Asociación Chilena de Asadores',
+      title: 'Asociación Chilena de Asadores A.G.',
       content:
         'Somos la comunidad oficial de asadores en Chile. Conectamos a parrilleros, aficionados y profesionales en torno al fuego, la gastronomía y la camaradería. Únete a ACA para vivir experiencias únicas y compartir nuestra pasión por la parrilla.',
       image_url: 'https://acachile.com/wp-content/uploads/2024/08/post-alemania-500x375.jpg',
@@ -70,7 +70,7 @@ export const DEFAULT_SECTIONS: Record<SitePageKey, SiteSection[]> = {
       key: 'about-hero',
       title: 'Quiénes Somos',
       content:
-        'Somos la Asociación Chilena de Asadores (ACA), una organización sin fines de lucro que reúne a amantes de la parrilla y del fuego de todo Chile. Promovemos la cultura parrillera, la camaradería y el perfeccionamiento de las técnicas de asado.',
+        'Somos la Asociación Chilena de Asadores A.G. (ACA), una organización sin fines de lucro que reúne a amantes de la parrilla y del fuego de todo Chile. Promovemos la cultura parrillera, la camaradería y el perfeccionamiento de las técnicas de asado.',
       image_url: 'https://acachile.com/wp-content/uploads/2024/07/CONFEDERACION.png',
       sort_order: 0,
       cta_label: 'Únete a ACA',
