@@ -49,6 +49,7 @@ const AdminMonitoring = lazy(() => import('./pages/AdminMonitoring'));
 const TestUser = lazy(() => import('./pages/TestUser'));
 const SociosAcaLinks = lazy(() => import('./pages/SociosAcaLinks'));
 const ParticipaPage = lazy(() => import('./pages/ParticipaPage'));
+const CondicionesSorteoPage = lazy(() => import('./pages/CondicionesSorteoPage'));
 const AdminParticipantes = lazy(() => import('./components/admin/AdminParticipantes'));
 const AdminTrash = lazy(() => import('./components/admin/AdminTrash'));
 
@@ -129,6 +130,7 @@ function App() {
 
           {/* Página de participación sorteo (acceso directo, sin indexar) */}
           <Route path="/participa" element={<ParticipaPage />} />
+          <Route path="/condicionessorteo" element={<CondicionesSorteoPage />} />
 
           {/* Test Page */}
           <Route path="/testuser" element={<TestUser />} />

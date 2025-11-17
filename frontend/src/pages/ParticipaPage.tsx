@@ -13,6 +13,7 @@ const ParticipaPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const formatRut = (value: string) => {
     // Eliminar todo excepto números y K
@@ -63,6 +64,7 @@ const ParticipaPage: React.FC = () => {
           edad: '',
           telefono: ''
         });
+        setAcceptedTerms(false);
       } else {
         // Mostrar error detallado en consola para debugging
         console.error('Error detallado:', data);
@@ -233,10 +235,33 @@ const ParticipaPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Checkbox Términos y Condiciones */}
+            <div className="flex items-start space-x-3 bg-gray-50 p-4 rounded-xl border-2 border-gray-200">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+              />
+              <label htmlFor="acceptTerms" className="text-sm text-gray-700 cursor-pointer">
+                Al participar aceptas los{' '}
+                <a
+                  href="/condicionessorteo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 hover:text-primary-700 font-semibold underline"
+                >
+                  términos y condiciones
+                </a>
+                {' '}del sorteo
+              </label>
+            </div>
+
             {/* Botón Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !acceptedTerms}
               className="w-full px-6 py-4 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-bold text-lg rounded-xl hover:from-primary-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center space-x-2"
             >
               {loading ? (
