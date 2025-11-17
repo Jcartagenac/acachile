@@ -189,6 +189,17 @@ export async function onRequestPut(context) {
 
     const noticiaActual = noticias[noticiaIndex];
     
+    // Validar galería (máximo 20 imágenes)
+    if (body.gallery && Array.isArray(body.gallery) && body.gallery.length > 20) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'La galería no puede tener más de 20 imágenes'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Actualizar los campos de la noticia
     const noticiaActualizada = {
       ...noticiaActual,
@@ -197,6 +208,8 @@ export async function onRequestPut(context) {
       excerpt: body.excerpt || noticiaActual.excerpt,
       content: body.content || noticiaActual.content,
       featured_image: body.featured_image !== undefined ? body.featured_image : noticiaActual.featured_image,
+      gallery: body.gallery !== undefined ? body.gallery : noticiaActual.gallery,
+      video_url: body.video_url !== undefined ? body.video_url : noticiaActual.video_url,
       category: body.category || noticiaActual.category,
       tags: body.tags || noticiaActual.tags,
       status: body.status || noticiaActual.status,

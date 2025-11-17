@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Eye, Upload, Image as ImageIcon } from 'lucide-react';
 import type { NewsArticle } from '../../services/newsService';
+import { ImageGalleryUploader } from './ImageGalleryUploader';
 
 interface NewsEditorProps {
   articleSlug?: string;
@@ -28,10 +29,15 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
     content: '',
     category_id: '',
     featured_image: '',
+    gallery: [] as string[],
+    video_url: '',
     is_featured: false,
     status: 'draft' as 'draft' | 'published',
     tags: [] as string[]
   });
+
+  const [showGallery, setShowGallery] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -67,10 +73,20 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
           content: article.content,
           category_id: typeof article.category === 'object' ? article.category.id.toString() : '',
           featured_image: article.featured_image || '',
+          gallery: article.gallery || [],
+          video_url: article.video_url || '',
           is_featured: article.is_featured || false,
           status: article.status || 'draft',
           tags: article.tags?.map((t: any) => t.name) || []
         });
+        
+        // Activar checkboxes si ya tienen contenido
+        if (article.gallery && article.gallery.length > 0) {
+          setShowGallery(true);
+        }
+        if (article.video_url) {
+          setShowVideo(true);
+        }
       }
     } catch (err) {
       console.error('Error loading article:', err);
@@ -400,6 +416,69 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Galería de fotos */}
+          <div className="mb-6">
+            <label className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                checked={showGallery}
+                onChange={(e) => {
+                  setShowGallery(e.target.checked);
+                  if (!e.target.checked) {
+                    setFormData({ ...formData, gallery: [] });
+                  }
+                }}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm font-medium text-gray-700">
+                Incluir galería de fotos (hasta 20 imágenes)
+              </span>
+            </label>
+
+            {showGallery && (
+              <ImageGalleryUploader
+                images={formData.gallery}
+                onChange={(newGallery) => setFormData({ ...formData, gallery: newGallery })}
+                maxImages={20}
+              />
+            )}
+          </div>
+
+          {/* Video embebido */}
+          <div className="mb-6">
+            <label className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                checked={showVideo}
+                onChange={(e) => {
+                  setShowVideo(e.target.checked);
+                  if (!e.target.checked) {
+                    setFormData({ ...formData, video_url: '' });
+                  }
+                }}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm font-medium text-gray-700">
+                Incluir video embebido
+              </span>
+            </label>
+
+            {showVideo && (
+              <div className="space-y-2">
+                <input
+                  type="url"
+                  value={formData.video_url}
+                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="URL del video (YouTube, Vimeo, o enlace directo)"
+                />
+                <p className="text-xs text-gray-500">
+                  Ejemplos: https://www.youtube.com/watch?v=VIDEO_ID o https://vimeo.com/VIDEO_ID
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Opciones */}

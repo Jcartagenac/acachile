@@ -8,6 +8,7 @@ import { useParams, Link } from 'react-router-dom';
 import { newsService, NewsArticle } from '../services/newsService';
 import { commentsService, Comment, LikesState } from '../services/commentsService';
 import { searchService } from '../services/searchService';
+import { ImageCarousel } from '../components/ImageCarousel';
 import { 
   Calendar, 
   User, 
@@ -150,6 +151,84 @@ const NewsDetailPage: React.FC = () => {
       // Revertir si hay error
       setLikes(likes);
     }
+  };
+
+  // Renderizar video embebido según URL
+  const renderVideoEmbed = (videoUrl: string) => {
+    // YouTube
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      let videoId = '';
+      
+      if (videoUrl.includes('youtube.com/watch')) {
+        const url = new URL(videoUrl);
+        videoId = url.searchParams.get('v') || '';
+      } else if (videoUrl.includes('youtu.be/')) {
+        videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0] || '';
+      }
+      
+      if (videoId) {
+        return (
+          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+            <iframe
+              className="absolute top-0 left-0 w-full h-full rounded-lg"
+              src={`https://www.youtube.com/embed/${videoId}`}
+              title="YouTube video"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
+    }
+    
+    // Vimeo
+    if (videoUrl.includes('vimeo.com')) {
+      const videoId = videoUrl.split('vimeo.com/')[1]?.split('?')[0] || '';
+      
+      if (videoId) {
+        return (
+          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+            <iframe
+              className="absolute top-0 left-0 w-full h-full rounded-lg"
+              src={`https://player.vimeo.com/video/${videoId}`}
+              title="Vimeo video"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
+    }
+    
+    // Video directo (mp4, webm, etc)
+    if (videoUrl.match(/\.(mp4|webm|ogg)$/i)) {
+      return (
+        <video
+          className="w-full rounded-lg"
+          controls
+          src={videoUrl}
+        >
+          Tu navegador no soporta la reproducción de video.
+        </video>
+      );
+    }
+    
+    // Fallback: enlace directo
+    return (
+      <div className="bg-gray-100 rounded-lg p-6 text-center">
+        <p className="text-gray-600 mb-4">Video externo</p>
+        <a
+          href={videoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          Ver video →
+        </a>
+      </div>
+    );
   };
 
   const handleShare = async (platform: 'facebook' | 'twitter' | 'whatsapp' | 'copy') => {
@@ -529,6 +608,22 @@ const NewsDetailPage: React.FC = () => {
                 color: #7C2D12 !important;
               }
             `}</style>
+
+            {/* Galería de fotos */}
+            {article.gallery && article.gallery.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Galería de fotos</h3>
+                <ImageCarousel images={article.gallery} alt={article.title} />
+              </div>
+            )}
+
+            {/* Video embebido */}
+            {article.video_url && (
+              <div className="mt-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Video</h3>
+                {renderVideoEmbed(article.video_url)}
+              </div>
+            )}
 
             {/* Tags */}
             {article.tags && article.tags.length > 0 && (

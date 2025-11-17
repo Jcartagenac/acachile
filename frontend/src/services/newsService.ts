@@ -13,6 +13,8 @@ export interface NewsArticle {
   excerpt: string;
   content: string;
   featured_image?: string;
+  gallery?: string[]; // Array de URLs de imágenes para el carrusel (máx 20)
+  video_url?: string; // URL del video embebido (YouTube, Vimeo, etc.)
   author_id: number;
   author_name: string;
   category_id: number;

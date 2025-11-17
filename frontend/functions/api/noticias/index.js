@@ -234,6 +234,14 @@ async function createNoticia(env, noticiaData) {
     
     const categoryObj = categories.find(c => c.id === noticiaData.category_id) || categories[7]; // Default: General
 
+    // Validar galería (máximo 20 imágenes)
+    if (noticiaData.gallery && Array.isArray(noticiaData.gallery) && noticiaData.gallery.length > 20) {
+      return {
+        success: false,
+        error: 'La galería no puede tener más de 20 imágenes'
+      };
+    }
+
     // Crear la noticia con los campos correctos para el frontend
     const now = new Date().toISOString();
     const noticia = {
@@ -243,6 +251,8 @@ async function createNoticia(env, noticiaData) {
       excerpt: noticiaData.excerpt || '',
       content: noticiaData.content,
       featured_image: noticiaData.featured_image || '/images/default-news.jpg', // featured_image no image
+      gallery: noticiaData.gallery || [], // Array de URLs de galería
+      video_url: noticiaData.video_url || '', // URL del video
       category: categoryObj, // Objeto completo con id, name, slug, color
       tags: noticiaData.tags || [],
       author_name: noticiaData.author_name || 'ACA Chile', // author_name no author
