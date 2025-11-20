@@ -144,11 +144,15 @@ async function getEventos(db, kv, filters) {
   try {
     const { type, status, search, page = 1, limit = 12, includeArchived = false } = filters;
     
-    // Crear clave de caché basada en los filtros
-    const cacheKey = `eventos:list:${status || 'all'}:${type || 'all'}:${search || 'none'}:${page}:${limit}:${includeArchived}`;
+    // NO usar caché para queries del admin (includeArchived) o con búsqueda
+    // Solo cachear queries públicas básicas
+    const shouldCache = kv && !includeArchived && !search;
     
-    // Intentar obtener desde caché KV primero
-    if (kv) {
+    // Crear clave de caché basada en los filtros
+    const cacheKey = `eventos:list:${status || 'all'}:${type || 'all'}:${page}:${limit}`;
+    
+    // Intentar obtener desde caché KV solo para queries públicas
+    if (shouldCache) {
       const cached = await kv.get(cacheKey);
       if (cached) {
         console.log('[getEventos] Returning from KV cache');
@@ -183,17 +187,22 @@ async function getEventos(db, kv, filters) {
 
     const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-    // Query para obtener el total
-    const countQuery = `SELECT COUNT(*) as total FROM eventos ${whereString}`;
-    const totalResult = await db.prepare(countQuery).bind(...bindings).first();
-    const total = totalResult.total;
+    console.log('[getEventos] Query filters:', { status, type, search, includeArchived, page, limit });
+    const startTime = Date.now();
 
-    // Query para obtener los eventos paginados
+    // Query para obtener los eventos paginados (solo traer un registro extra para saber si hay más)
     const dataQuery = `SELECT * FROM eventos ${whereString} ORDER BY date DESC LIMIT ? OFFSET ?`;
-    const { results } = await db.prepare(dataQuery).bind(...bindings, limit, offset).all();
+    const { results } = await db.prepare(dataQuery).bind(...bindings, limit + 1, offset).all();
+    
+    // Si hay más de 'limit' resultados, significa que hay más páginas
+    const hasMore = results.length > limit;
+    const eventos = hasMore ? results.slice(0, limit) : results;
+    
+    const queryTime = Date.now() - startTime;
+    console.log(`[getEventos] Query completed in ${queryTime}ms, returned ${eventos.length} eventos`);
 
     // Mapear nombres de columnas de DB a nombres de propiedades del frontend
-    const mappedResults = results.map(evento => ({
+    const mappedResults = eventos.map(evento => ({
       ...evento,
       registrationOpen: evento.registration_open,
       maxParticipants: evento.max_participants,
@@ -212,17 +221,18 @@ async function getEventos(db, kv, filters) {
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        hasMore,
+        total: eventos.length, // Solo el count de esta página
+        totalPages: hasMore ? page + 1 : page, // Estimado
       }
     };
 
-    // Guardar en caché KV con TTL de 24 horas
-    if (kv) {
+    // Guardar en caché KV solo para queries públicas con TTL de 5 minutos
+    if (shouldCache) {
       await kv.put(cacheKey, JSON.stringify(result), {
-        expirationTtl: 86400 // 24 horas
+        expirationTtl: 300 // 5 minutos
       });
-      console.log('[getEventos] Cached in KV with 24h TTL');
+      console.log('[getEventos] Cached in KV with 5min TTL');
     }
 
     return result;

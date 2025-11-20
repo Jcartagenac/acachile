@@ -84,17 +84,31 @@ class EventService {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers: buildAuthHeaders(options?.headers, 'application/json'),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Error de conexión' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        headers: buildAuthHeaders(options?.headers, 'application/json'),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Error de conexión' }));
+        throw new Error(error.error || `HTTP ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('La solicitud tardó demasiado tiempo. Por favor, intenta de nuevo.');
+      }
+      throw error;
     }
-
-    return response.json();
   }
 
   // Obtener todos los eventos con filtros
