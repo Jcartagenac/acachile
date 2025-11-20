@@ -27,6 +27,9 @@ function handleOptions(origin?: string): Response {
 
 
 
+// Cache para validación de env (evita validar en cada request)
+let envValidated = false;
+
 // Middleware principal - Solo aplicar a rutas de API
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next } = context;
@@ -37,24 +40,25 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return next();
   }
 
-  // Validar bindings críticos
-  try {
-    validateEnv(env);
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Server configuration error',
-        message: error instanceof Error ? error.message : 'Missing critical bindings'
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+  // Validar bindings críticos solo una vez (cachear resultado)
+  if (!envValidated) {
+    try {
+      validateEnv(env);
+      envValidated = true;
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error',
+          message: error instanceof Error ? error.message : 'Missing critical bindings'
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
   }
-
-  // console.log(`[MIDDLEWARE] ${request.method} ${url.pathname}`);
 
   // Manejar preflight OPTIONS requests
   if (request.method === 'OPTIONS') {
