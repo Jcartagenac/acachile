@@ -36,7 +36,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return next();
   }
 
-  console.log(`[MIDDLEWARE] ${request.method} ${url.pathname}`);
+  // console.log(`[MIDDLEWARE] ${request.method} ${url.pathname}`);
 
   // Manejar preflight OPTIONS requests
   if (request.method === 'OPTIONS') {
