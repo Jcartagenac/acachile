@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Trash2, Edit, Eye, Calendar, User } from 'lucide-react';
+import { Plus, Search, Trash2, Edit, Eye, Calendar, User, Archive, ArchiveRestore } from 'lucide-react';
 import type { NewsArticle } from '../../services/newsService';
 import NewsEditor from './NewsEditor';
 
@@ -26,6 +26,7 @@ export default function AdminNews() {
   const [editingSlug, setEditingSlug] = useState<string | undefined>(undefined);
   const [pendingComments, setPendingComments] = useState<PendingComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     loadNews();
@@ -159,11 +160,67 @@ export default function AdminNews() {
     }
   };
 
-  const filteredNews = news.filter(article =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    article.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (typeof article.category === 'object' ? article.category.name : article.category)?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleArchive = async (slugOrId: string | number) => {
+    try {
+      const response = await fetch(`/api/noticias/${slugOrId}/archive`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Noticia archivada exitosamente');
+        loadNews();
+      } else {
+        alert('Error archivando noticia: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error archiving noticia:', error);
+      alert('Error archivando noticia');
+    }
+  };
+
+  const handleUnarchive = async (slugOrId: string | number) => {
+    try {
+      const response = await fetch(`/api/noticias/${slugOrId}/unarchive`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Noticia desarchivada exitosamente');
+        loadNews();
+      } else {
+        alert('Error desarchivando noticia: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error unarchiving noticia:', error);
+      alert('Error desarchivando noticia');
+    }
+  };
+
+  const filteredNews = news.filter(article => {
+    const matchesSearch =
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (typeof article.category === 'object' ? article.category.name : article.category)?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Excluir archivadas a menos que showArchived esté activado
+    if (!showArchived && (article as any).archived) {
+      return false;
+    }
+    
+    return matchesSearch;
+  });
+
+
 
   const getCategoryColor = (category?: { name: string; color: string } | string) => {
     const categoryName = typeof category === 'object' ? category.name.toLowerCase() : category?.toLowerCase() || 'general';
@@ -343,8 +400,8 @@ export default function AdminNews() {
       ) : (
         <>
           {/* Barra de búsqueda */}
-          <div className="mb-6">
-            <div className="relative">
+          <div className="mb-6 flex items-center gap-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
@@ -354,6 +411,15 @@ export default function AdminNews() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
+            <label className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              Mostrar archivadas
+            </label>
           </div>
 
           {/* Lista de noticias */}
@@ -453,6 +519,23 @@ export default function AdminNews() {
                       >
                         <Edit className="h-5 w-5" />
                       </button>
+                      {(article as any).archived ? (
+                        <button
+                          onClick={() => handleUnarchive(article.slug || article.id)}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Desarchivar"
+                        >
+                          <ArchiveRestore className="h-5 w-5" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleArchive(article.slug || article.id)}
+                          className="text-orange-600 hover:text-orange-900"
+                          title="Archivar"
+                        >
+                          <Archive className="h-5 w-5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           console.log('[AdminNews] Delete button clicked for article:', {

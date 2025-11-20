@@ -67,6 +67,12 @@ async function handleGetNoticias(url, env, corsHeaders) {
     const featured = url.searchParams.get('featured');
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
+    const includeArchived = url.searchParams.get('includeArchived') === 'true';
+
+    // Excluir noticias archivadas por defecto (solo visible en admin con includeArchived=true)
+    if (!includeArchived) {
+      noticias = noticias.filter(noticia => !noticia.archived);
+    }
 
     if (category) {
       noticias = noticias.filter(noticia => noticia.category === category);
@@ -261,7 +267,8 @@ async function createNoticia(env, noticiaData) {
       status: noticiaData.status || 'draft',
       is_featured: noticiaData.is_featured || false, // is_featured no featured
       view_count: 0, // view_count no views
-      commentsEnabled: noticiaData.commentsEnabled !== false
+      commentsEnabled: noticiaData.commentsEnabled !== false,
+      archived: noticiaData.archived || false  // Nuevo campo para archivar
     };
 
     // Guardar noticia individual con TTL de 24 horas

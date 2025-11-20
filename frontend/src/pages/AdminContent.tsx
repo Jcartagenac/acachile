@@ -17,7 +17,9 @@ import {
   Eye,
   Edit,
   Users,
-  Upload
+  Upload,
+  Archive,
+  ArchiveRestore
 } from 'lucide-react';
 import { useEvents } from '../contexts/EventContext';
 import { Evento } from '@shared/index';
@@ -27,6 +29,7 @@ export default function AdminContent() {
   type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'postulantes' | 'noticias' | 'imagenes';
   const [activeTab, setActiveTab] = useState<ContentTab>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const { eventos, fetchEventos, deleteEvento, isLoading, setFilters } = useEvents();
   const AdminHomeEditor = React.lazy(() => import('../components/admin/AdminHomeEditor'));
   const ImageUploader = React.lazy(() => import('../components/admin/ImageUploader'));
@@ -69,17 +72,72 @@ export default function AdminContent() {
     }
   }, [activeTab]); // Removido fetchEventos y setFilters ya que son estables
 
-  const filteredEventos = eventos.filter(evento =>
-    evento.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    evento.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    evento.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEventos = eventos.filter(evento => {
+    const matchesSearch = evento.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      evento.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      evento.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Excluir archivados a menos que showArchived esté activado
+    if (!showArchived && evento.status === 'archived') {
+      return false;
+    }
+    
+    return matchesSearch;
+  });
 
   const handleDeleteEvento = async (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
       await deleteEvento(id);
       // Recargar eventos después de eliminar
       fetchEventos(1);
+    }
+  };
+
+  const handleArchiveEvento = async (id: number) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/eventos/${id}/archive`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Evento archivado exitosamente');
+        fetchEventos(1);
+      } else {
+        alert('Error archivando evento: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error archiving evento:', error);
+      alert('Error archivando evento');
+    }
+  };
+
+  const handleUnarchiveEvento = async (id: number) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/eventos/${id}/unarchive`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Evento desarchivado exitosamente');
+        fetchEventos(1);
+      } else {
+        alert('Error desarchivando evento: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error unarchiving evento:', error);
+      alert('Error desarchivando evento');
     }
   };
 
@@ -93,6 +151,8 @@ export default function AdminContent() {
         return 'bg-red-100 text-red-800';
       case 'completed':
         return 'bg-blue-100 text-blue-800';
+      case 'archived':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -108,6 +168,8 @@ export default function AdminContent() {
         return 'Cancelado';
       case 'completed':
         return 'Completado';
+      case 'archived':
+        return 'Archivado';
       default:
         return status;
     }
@@ -180,15 +242,26 @@ export default function AdminContent() {
           <div>
             {/* Actions Bar */}
             <div className="flex items-center justify-between mb-6">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar eventos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
+              <div className="flex items-center gap-4 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar eventos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={showArchived}
+                    onChange={(e) => setShowArchived(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  Mostrar archivados
+                </label>
               </div>
               <Link
                 to="/eventos/crear"
@@ -324,6 +397,23 @@ export default function AdminContent() {
                               >
                                 <Edit className="h-4 w-4" />
                               </Link>
+                              {evento.status === 'archived' ? (
+                                <button
+                                  onClick={() => handleUnarchiveEvento(evento.id)}
+                                  className="text-purple-600 hover:text-purple-900 p-1"
+                                  title="Desarchivar evento"
+                                >
+                                  <ArchiveRestore className="h-4 w-4" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleArchiveEvento(evento.id)}
+                                  className="text-orange-600 hover:text-orange-900 p-1"
+                                  title="Archivar evento"
+                                >
+                                  <Archive className="h-4 w-4" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDeleteEvento(evento.id)}
                                 className="text-red-600 hover:text-red-900 p-1"

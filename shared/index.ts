@@ -105,7 +105,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   pagination: Pagination;
 }
 
-export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed';
+export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'archived';
 
 export interface Evento {
   id: number;

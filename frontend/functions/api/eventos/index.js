@@ -66,8 +66,9 @@ async function handleGetEventos(url, env, corsHeaders) {
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
+    const includeArchived = searchParams.get('includeArchived') === 'true';
 
-    const result = await getEventos(env.DB, env.ACA_KV, { type, status, search, page, limit });
+    const result = await getEventos(env.DB, env.ACA_KV, { type, status, search, page, limit, includeArchived });
 
     if (!result.success) {
       return new Response(JSON.stringify({ success: false, error: result.error }), {
@@ -140,10 +141,10 @@ async function handleCreateEvento(request, env, corsHeaders) {
 
 async function getEventos(db, kv, filters) {
   try {
-    const { type, status, search, page = 1, limit = 12 } = filters;
+    const { type, status, search, page = 1, limit = 12, includeArchived = false } = filters;
     
     // Crear clave de caché basada en los filtros
-    const cacheKey = `eventos:list:${status || 'all'}:${type || 'all'}:${search || 'none'}:${page}:${limit}`;
+    const cacheKey = `eventos:list:${status || 'all'}:${type || 'all'}:${search || 'none'}:${page}:${limit}:${includeArchived}`;
     
     // Intentar obtener desde caché KV primero
     if (kv) {
@@ -158,6 +159,12 @@ async function getEventos(db, kv, filters) {
 
     let whereClauses = [];
     let bindings = [];
+
+    // Excluir eventos archivados por defecto (solo visible en admin con includeArchived=true)
+    if (!includeArchived) {
+      whereClauses.push('status != ?');
+      bindings.push('archived');
+    }
 
     if (status) {
       whereClauses.push('status = ?');
