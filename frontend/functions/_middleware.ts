@@ -7,13 +7,13 @@ import type { PagesFunction, Env } from './types';
 // Configurar CORS headers
 function setCORSHeaders(response: Response, origin?: string): Response {
   const corsOrigin = origin || '*';
-  
+
   response.headers.set('Access-Control-Allow-Origin', corsOrigin);
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Max-Age', '86400');
-  
+
   return response;
 }
 
@@ -90,44 +90,63 @@ async function verifyToken(token: string, jwtSecret: string): Promise<any> {
   }
 }
 
+// Override console.log en producción para reducir ruido en logs
+// Mantenemos console.error y console.warn siempre activos
+let originalConsoleLog: typeof console.log;
+let consoleLogOverridden = false;
+
+function setupConditionalLogging(env: Env) {
+  // Solo override una vez
+  if (consoleLogOverridden) return;
+
+  if (env.ENVIRONMENT !== 'development') {
+    originalConsoleLog = console.log;
+    console.log = () => { }; // Silenciar en producción
+    consoleLogOverridden = true;
+  }
+}
+
 // Middleware principal - Solo aplicar a rutas de API
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next } = context;
   const url = new URL(request.url);
-  
+
+  // Setup del logging condicional (se ejecuta solo una vez)
+  setupConditionalLogging(env);
+
   // Solo aplicar middleware a rutas de API
   if (!url.pathname.startsWith('/api/')) {
     return next();
   }
-  
+
   console.log(`[MIDDLEWARE] ${request.method} ${url.pathname}`);
-  
+
   // Manejar preflight OPTIONS requests
   if (request.method === 'OPTIONS') {
     return handleOptions(env.CORS_ORIGIN);
   }
-  
+
   // Continuar con la siguiente función
   try {
     const response = await next();
-    
+
     // Agregar headers CORS solo a respuestas de API
     return setCORSHeaders(response, env.CORS_ORIGIN);
   } catch (error) {
     console.error('[MIDDLEWARE] Error:', error);
-    
+
     const errorResponse = new Response(
-      JSON.stringify({ 
-        success: false, 
+      JSON.stringify({
+        success: false,
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
       }
     );
-    
+
     return setCORSHeaders(errorResponse, env.CORS_ORIGIN);
   }
 };
@@ -266,8 +285,8 @@ export function authErrorResponse(
 
 // Utilidad para crear respuestas JSON
 export function jsonResponse(
-  data: any, 
-  status: number = 200, 
+  data: any,
+  status: number = 200,
   headers: Record<string, string> = {}
 ): Response {
   return new Response(JSON.stringify(data), {
@@ -281,8 +300,8 @@ export function jsonResponse(
 
 // Utilidad para crear respuestas de error
 export function errorResponse(
-  message: string, 
-  status: number = 400, 
+  message: string,
+  status: number = 400,
   details?: any,
   headers?: Record<string, string>
 ): Response {
