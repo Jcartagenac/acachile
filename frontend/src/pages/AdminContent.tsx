@@ -22,7 +22,6 @@ import {
   ArchiveRestore
 } from 'lucide-react';
 import { useEvents } from '../contexts/EventContext';
-import { Evento } from '@shared/index';
 import type { SitePageKey } from '@shared/siteSections';
 
 export default function AdminContent() {

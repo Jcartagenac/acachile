@@ -222,14 +222,10 @@ class EventService {
   async uploadEventImage(file: File): Promise<ApiResponse<{ url: string }>> {
     const formData = new FormData();
     formData.append('image', file);
-
-    const token = this.getAuthToken();
     
     const response = await fetch(`${this.baseUrl}/api/eventos/upload-image`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      headers: buildAuthHeaders(),
       body: formData,
     });
 
