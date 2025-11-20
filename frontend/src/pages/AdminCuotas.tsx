@@ -20,7 +20,6 @@ import {
   AlertTriangle,
   FileDown
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -196,14 +195,15 @@ export default function AdminCuotas() {
 
 
 
-  const exportarAExcel = () => {
+  const exportarAExcel = async () => {
     try {
       if (sociosFiltrados.length === 0) {
         setError('No hay datos para exportar');
         return;
       }
 
-      // Preparar datos para Excel
+      // Cargar librería dinámicamente solo cuando se necesita
+      const XLSX = await import('xlsx');
       const datosExcel = sociosFiltrados.map(socio => ({
         'Nombre': socio.nombreCompleto,
         'Email': socio.email,
