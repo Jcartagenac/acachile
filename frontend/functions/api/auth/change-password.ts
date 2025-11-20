@@ -78,10 +78,16 @@ async function updatePasswordInDB(env: Env, userId: number, newPasswordHash: str
 // Handler principal de change password
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
-  
+
   try {
     console.log('[AUTH/CHANGE-PASSWORD] Processing change password request');
-    
+
+    // Validar binding de DB
+    if (!env.DB) {
+      console.error('[AUTH/CHANGE-PASSWORD] Database not configured');
+      return errorResponse('Database not available', 500);
+    }
+
     // Verificar autenticación
     let authUser;
     try {
@@ -92,9 +98,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Parsear body
-    const body = await request.json() as { 
+    const body = await request.json() as {
       currentPassword: string;
-      newPassword: string; 
+      newPassword: string;
       confirmPassword: string;
     };
     const { currentPassword, newPassword, confirmPassword } = body;
@@ -142,12 +148,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   } catch (error) {
     console.error('[AUTH/CHANGE-PASSWORD] Error:', error);
+
+    // Solo exponer detalles en desarrollo
+    const details = env.ENVIRONMENT === 'development' && error instanceof Error
+      ? {
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      }
+      : undefined;
+
     return errorResponse(
       'Error interno del servidor',
       500,
-      env.ENVIRONMENT === 'development' ? { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      } : undefined
+      details
     );
   }
 };

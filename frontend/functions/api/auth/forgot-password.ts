@@ -56,10 +56,16 @@ function generateResetToken(): string {
 // Handler principal de forgot password
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
-  
+
   try {
     console.log('[AUTH/FORGOT-PASSWORD] Processing forgot password request');
-    
+
+    // Validar binding de DB
+    if (!env.DB) {
+      console.error('[AUTH/FORGOT-PASSWORD] Database not configured');
+      return errorResponse('Database not available', 500);
+    }
+
     // Parsear body
     const body = await request.json() as { email: string };
     const { email } = body;
@@ -110,7 +116,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Preparar email
     const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
+
     const emailHtml = `
       <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
         <div style="text-align: center; margin-bottom: 30px;">
@@ -168,12 +174,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   } catch (error) {
     console.error('[AUTH/FORGOT-PASSWORD] Error:', error);
+
+    // Solo exponer detalles en desarrollo
+    const details = env.ENVIRONMENT === 'development' && error instanceof Error
+      ? {
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      }
+      : undefined;
+
     return errorResponse(
       'Error interno del servidor',
       500,
-      env.ENVIRONMENT === 'development' ? { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      } : undefined
+      details
     );
   }
 };

@@ -1,13 +1,9 @@
 import { requireAdmin, authErrorResponse } from './_middleware';
+import type { Env } from '../../types';
 
 /**
  * Endpoint temporal para debugging - ver datos exactos del usuario
  */
-
-type Env = {
-  DB: any;
-  ENVIRONMENT?: string;
-};
 
 export async function onRequestPost(context: {
   request: Request;
@@ -27,6 +23,18 @@ export async function onRequestPost(context: {
   }
 
   try {
+    // Validar binding de DB
+    if (!context.env.DB) {
+      console.error('[DEBUG] Database not configured');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Database not available'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     let adminUser;
     try {
       adminUser = await requireAdmin(context.request, context.env);
@@ -53,7 +61,8 @@ export async function onRequestPost(context: {
 
     console.log(`[DEBUG] Consultando usuario: ${email}`);
 
-    // Consultar TODOS los datos del usuario incluido el hash
+    // SEGURIDAD: Nunca exponer password_hash, ni siquiera en debug
+    // Si necesitas verificar el hash, usa un endpoint separado con logging adicional
     const user = await context.env.DB.prepare(
       `SELECT 
         id, 
@@ -61,11 +70,15 @@ export async function onRequestPost(context: {
         apellido, 
         email, 
         rut,
-        password_hash,
+        telefono,
+        ciudad,
+        region,
+        direccion,
         role,
         activo,
         created_at,
-        updated_at
+        updated_at,
+        last_login
       FROM usuarios 
       WHERE email = ?`
     ).bind(email).first();
@@ -80,7 +93,7 @@ export async function onRequestPost(context: {
       });
     }
 
-    // Retornar toda la info (solo para debug)
+    // Retornar info completa (excepto password_hash por seguridad)
     return new Response(JSON.stringify({
       success: true,
       data: {
@@ -89,11 +102,17 @@ export async function onRequestPost(context: {
         apellido: user.apellido,
         email: user.email,
         rut: user.rut,
-        password_hash: user.password_hash,
+        telefono: user.telefono,
+        ciudad: user.ciudad,
+        region: user.region,
+        direccion: user.direccion,
         role: user.role,
         activo: user.activo,
         created_at: user.created_at,
-        updated_at: user.updated_at
+        updated_at: user.updated_at,
+        last_login: user.last_login,
+        // password_hash: NUNCA exponer - riesgo de seguridad
+        hasPasswordHash: !!user.password_hash // Solo indicar si existe
       }
     }), {
       status: 200,
@@ -102,10 +121,16 @@ export async function onRequestPost(context: {
 
   } catch (error: any) {
     console.error('[DEBUG] Error:', error);
+
+    // Solo exponer detalles en desarrollo
+    const details = context.env.ENVIRONMENT === 'development' && error instanceof Error
+      ? { error: error.message, stack: error.stack?.split('\n').slice(0, 3).join('\n') }
+      : undefined;
+
     return new Response(JSON.stringify({
       success: false,
       error: 'Error interno del servidor',
-      details: context.env.ENVIRONMENT === 'development' ? error.message : undefined
+      details
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

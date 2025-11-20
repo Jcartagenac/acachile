@@ -47,7 +47,7 @@ async function hmacSha256(key: string, data: string): Promise<ArrayBuffer> {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(key);
   const dataArray = encoder.encode(data);
-  
+
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
     keyData,
@@ -55,7 +55,7 @@ async function hmacSha256(key: string, data: string): Promise<ArrayBuffer> {
     false,
     ['sign']
   );
-  
+
   return await crypto.subtle.sign('HMAC', cryptoKey, dataArray);
 }
 
@@ -68,23 +68,29 @@ async function createJWT(payload: any, secret: string): Promise<string> {
   const encodedHeader = base64UrlEncode(JSON.stringify(header));
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   const data = `${encodedHeader}.${encodedPayload}`;
-  
+
   const signature = await hmacSha256(secret, data);
   const encodedSignature = base64UrlEncode(String.fromCharCode(...new Uint8Array(signature)));
-  
+
   return `${data}.${encodedSignature}`;
 }
 
 // Handler principal de login
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
-  
+
   try {
     console.log('[AUTH/LOGIN] Processing login request');
-    
+
+    // Validar bindings críticos
     if (!env.JWT_SECRET) {
       console.error('[AUTH/LOGIN] JWT_SECRET not configured');
       return errorResponse('Authentication system not configured', 500);
+    }
+
+    if (!env.DB) {
+      console.error('[AUTH/LOGIN] Database not configured');
+      return errorResponse('Database not available', 500);
     }
 
     // Parsear body
@@ -176,12 +182,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   } catch (error) {
     console.error('[AUTH/LOGIN] Error:', error);
+
+    // Solo exponer detalles en desarrollo (incluye stack trace limitado)
+    const details = env.ENVIRONMENT === 'development' && error instanceof Error
+      ? {
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      }
+      : undefined;
+
     return errorResponse(
       'Error interno del servidor',
       500,
-      env.ENVIRONMENT === 'development' ? { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      } : undefined
+      details
     );
   }
 };

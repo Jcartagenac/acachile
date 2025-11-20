@@ -2,6 +2,7 @@
 export interface Env {
   ACA_KV: KVNamespace;
   DB: D1Database;
+  IMAGES: R2Bucket;
   ENVIRONMENT: string;
   JWT_SECRET?: string;
   ADMIN_EMAIL?: string;
@@ -9,6 +10,7 @@ export interface Env {
   RESEND_API_KEY?: string;
   FROM_EMAIL?: string;
   FRONTEND_URL?: string;
+  R2_PUBLIC_URL?: string;
 }
 
 // Pages Function context type
@@ -24,7 +26,7 @@ export interface PagesFunction<Env = {}> {
 }
 
 // Request handler types for different HTTP methods
-export interface PagesRequestHandler<Env = {}> extends PagesFunction<Env> {}
+export interface PagesRequestHandler<Env = {}> extends PagesFunction<Env> { }
 
 declare const onRequestGet: PagesRequestHandler<Env>;
 declare const onRequestPost: PagesRequestHandler<Env>;

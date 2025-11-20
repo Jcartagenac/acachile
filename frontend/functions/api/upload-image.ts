@@ -1,10 +1,7 @@
 // Cloudflare Pages Function para subida de imágenes a R2
 // Ruta: /functions/api/upload-image.ts
 
-interface Env {
-  IMAGES: any; // R2Bucket binding
-  R2_PUBLIC_URL: string;
-}
+import type { Env } from '../types';
 
 // Tipos simplificados para evitar dependencias
 interface CloudflareContext {
@@ -19,19 +16,19 @@ interface ImageUploadRequest {
 }
 
 // Función para subir imagen sin procesamiento (temporalmente desactivado)
-async function processImage(file: File, folder: string): Promise<{buffer: ArrayBuffer, size: number, contentType: string}> {
+async function processImage(file: File, folder: string): Promise<{ buffer: ArrayBuffer, size: number, contentType: string }> {
   console.log(`📁 Subiendo imagen original sin procesamiento para ${folder}:`, {
     originalSize: file.size,
     originalType: file.type,
     name: file.name
   });
-  
+
   // Retornar imagen original sin ningún procesamiento
   const buffer = await file.arrayBuffer();
-  return { 
-    buffer, 
-    size: buffer.byteLength, 
-    contentType: file.type 
+  return {
+    buffer,
+    size: buffer.byteLength,
+    contentType: file.type
   };
 }
 
@@ -51,14 +48,14 @@ const COMPRESSION_CONFIG = {
 
 // Función para subir imagen a R2
 async function uploadToR2(
-  r2Bucket: any, 
-  file: File, 
+  r2Bucket: any,
+  file: File,
   request: ImageUploadRequest,
   publicUrl: string
 ) {
   try {
     const { filename, folder, contentType } = request;
-    
+
     // Validar carpeta
     if (!ALLOWED_FOLDERS.includes(folder)) {
       throw new Error(`Carpeta no permitida: ${folder}`);
@@ -136,9 +133,10 @@ export async function onRequestPost(context: CloudflareContext) {
   try {
     // Verificar que tengamos el binding R2
     if (!env.IMAGES) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'R2 binding no configurado' 
+      console.error('[UPLOAD] R2 binding not configured');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'R2 storage not configured'
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -174,7 +172,7 @@ export async function onRequestPost(context: CloudflareContext) {
     const statusCode = result.success ? 200 : 500;
     return new Response(JSON.stringify(result), {
       status: statusCode,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -183,11 +181,20 @@ export async function onRequestPost(context: CloudflareContext) {
     });
 
   } catch (error) {
-    console.error('Handler error:', error);
+    console.error('[UPLOAD] Handler error:', error);
+
+    // Solo exponer detalles en desarrollo
+    const details = env.ENVIRONMENT === 'development' && error instanceof Error
+      ? {
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      }
+      : undefined;
+
     return new Response(JSON.stringify({
       success: false,
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
+      details
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

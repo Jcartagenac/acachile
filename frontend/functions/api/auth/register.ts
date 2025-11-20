@@ -24,10 +24,16 @@ interface User {
 // Handler principal de registro
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
-  
+
   try {
     console.log('[AUTH/REGISTER] Processing registration request');
-    
+
+    // Validar binding de DB
+    if (!env.DB) {
+      console.error('[AUTH/REGISTER] Database not configured');
+      return errorResponse('Database not available', 500);
+    }
+
     // Parsear body
     const body = await request.json() as {
       email: string;
@@ -40,15 +46,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       role?: 'admin' | 'editor' | 'user';
     };
 
-    const { 
-      email, 
-      nombre, 
-      apellido, 
-      password, 
-      telefono, 
-      rut, 
-      ciudad, 
-      role = 'user' 
+    const {
+      email,
+      nombre,
+      apellido,
+      password,
+      telefono,
+      rut,
+      ciudad,
+      role = 'user'
     } = body;
 
     // Validaciones básicas
@@ -146,12 +152,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   } catch (error) {
     console.error('[AUTH/REGISTER] Error:', error);
+
+    // Solo exponer detalles en desarrollo
+    const details = env.ENVIRONMENT === 'development' && error instanceof Error
+      ? {
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      }
+      : undefined;
+
     return errorResponse(
       'Error interno del servidor',
       500,
-      env.ENVIRONMENT === 'development' ? { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      } : undefined
+      details
     );
   }
 };

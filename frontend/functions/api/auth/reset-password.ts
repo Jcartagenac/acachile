@@ -10,14 +10,20 @@ import { hashPassword } from '../../utils/password';
 // Handler principal de reset password
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
-  
+
   try {
     console.log('[AUTH/RESET-PASSWORD] Processing reset password request');
-    
+
+    // Validar binding de DB
+    if (!env.DB) {
+      console.error('[AUTH/RESET-PASSWORD] Database not configured');
+      return errorResponse('Database not available', 500);
+    }
+
     // Parsear body
-    const body = await request.json() as { 
-      token: string; 
-      password: string; 
+    const body = await request.json() as {
+      token: string;
+      password: string;
       confirmPassword: string;
     };
     const { token, password, confirmPassword } = body;
@@ -88,12 +94,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   } catch (error) {
     console.error('[AUTH/RESET-PASSWORD] Error:', error);
+
+    // Solo exponer detalles en desarrollo
+    const details = env.ENVIRONMENT === 'development' && error instanceof Error
+      ? {
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n')
+      }
+      : undefined;
+
     return errorResponse(
       'Error interno del servidor',
       500,
-      env.ENVIRONMENT === 'development' ? { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      } : undefined
+      details
     );
   }
 };
