@@ -1,4 +1,5 @@
 import type { PagesFunction, Env } from './types';
+import { verifyToken } from './utils/jwt';
 
 /**
  * Middleware de CORS y autenticación para Pages Functions
@@ -23,72 +24,7 @@ function handleOptions(origin?: string): Response {
   return setCORSHeaders(response, origin);
 }
 
-function base64UrlToUint8Array(base64Url: string): Uint8Array {
-  let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  while (base64.length % 4 !== 0) {
-    base64 += '=';
-  }
 
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  return bytes;
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  return bytes.slice().buffer;
-}
-
-// Verificar JWT token
-async function verifyToken(token: string, jwtSecret: string): Promise<any> {
-  const parts = token.split('.');
-  if (parts.length !== 3) {
-    throw new Error('Invalid token format');
-  }
-
-  const [encodedHeader, encodedPayload, encodedSignature] = parts;
-
-  try {
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(jwtSecret);
-    const keyBuffer = toArrayBuffer(keyData);
-    const key = await crypto.subtle.importKey(
-      'raw',
-      keyBuffer,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify']
-    );
-
-    const signatureBytes = base64UrlToUint8Array(encodedSignature);
-    const signatureBuffer = toArrayBuffer(signatureBytes);
-    const dataBytes = encoder.encode(`${encodedHeader}.${encodedPayload}`);
-    const dataBuffer = toArrayBuffer(dataBytes);
-
-    const isValid = await crypto.subtle.verify('HMAC', key, signatureBuffer, dataBuffer);
-    if (!isValid) {
-      throw new Error('Invalid token signature');
-    }
-
-    const payloadBytes = base64UrlToUint8Array(encodedPayload);
-    const payloadJson = new TextDecoder().decode(payloadBytes);
-    const payload = JSON.parse(payloadJson);
-
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      throw new Error('Token expired');
-    }
-
-    return payload;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Invalid token');
-  }
-}
 
 // Middleware principal - Solo aplicar a rutas de API
 export const onRequest: PagesFunction<Env> = async (context) => {

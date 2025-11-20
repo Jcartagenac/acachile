@@ -1,6 +1,7 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse } from '../../_middleware';
 import { hashPassword, verifyPassword } from '../../utils/password';
+import { createJWT } from '../../utils/jwt';
 
 /**
  * Funciones de autenticación JWT para Pages Functions
@@ -30,50 +31,7 @@ interface AuthToken {
   iat: number;
 }
 
-// Utilidades JWT
-function base64UrlEncode(str: string): string {
-  return btoa(str)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
 
-function base64UrlDecode(str: string): string {
-  str += '='.repeat((4 - str.length % 4) % 4);
-  return atob(str.replace(/-/g, '+').replace(/_/g, '/'));
-}
-
-async function hmacSha256(key: string, data: string): Promise<ArrayBuffer> {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(key);
-  const dataArray = encoder.encode(data);
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  return await crypto.subtle.sign('HMAC', cryptoKey, dataArray);
-}
-
-async function createJWT(payload: any, secret: string): Promise<string> {
-  const header = {
-    alg: 'HS256',
-    typ: 'JWT'
-  };
-
-  const encodedHeader = base64UrlEncode(JSON.stringify(header));
-  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-  const data = `${encodedHeader}.${encodedPayload}`;
-
-  const signature = await hmacSha256(secret, data);
-  const encodedSignature = base64UrlEncode(String.fromCharCode(...new Uint8Array(signature)));
-
-  return `${data}.${encodedSignature}`;
-}
 
 // Handler principal de login
 export const onRequestPost: PagesFunction<Env> = async (context) => {
