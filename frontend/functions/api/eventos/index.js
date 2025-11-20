@@ -62,11 +62,12 @@ async function handleGetEventos(url, env, corsHeaders) {
   try {
     const { searchParams } = url;
     const type = searchParams.get('type');
-    const status = searchParams.get('status') || 'published';
+    // Solo usar 'published' por defecto si no se incluyen archivados
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+    const status = searchParams.get('status') || (includeArchived ? null : 'published');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
-    const includeArchived = searchParams.get('includeArchived') === 'true';
 
     const result = await getEventos(env.DB, env.ACA_KV, { type, status, search, page, limit, includeArchived });
 
@@ -160,16 +161,16 @@ async function getEventos(db, kv, filters) {
     let whereClauses = [];
     let bindings = [];
 
-    // Excluir eventos archivados por defecto (solo visible en admin con includeArchived=true)
-    if (!includeArchived) {
-      whereClauses.push('status != ?');
-      bindings.push('archived');
-    }
-
+    // Si hay un status específico, filtrarlo
     if (status) {
       whereClauses.push('status = ?');
       bindings.push(status);
+    } else if (!includeArchived) {
+      // Si no hay status específico y no se incluyen archivados, excluirlos
+      whereClauses.push('status != ?');
+      bindings.push('archived');
     }
+    // Si includeArchived=true y no hay status, mostrar todos (no agregar filtro)
     if (type) {
       whereClauses.push('type = ?');
       bindings.push(type);
