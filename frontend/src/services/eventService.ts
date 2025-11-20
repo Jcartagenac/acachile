@@ -104,6 +104,7 @@ class EventService {
     search?: string;
     page?: number;
     limit?: number;
+    includeArchived?: boolean;
   }): Promise<PaginatedResponse<Evento>> {
     const params = new URLSearchParams();
     

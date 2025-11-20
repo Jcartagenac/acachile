@@ -67,22 +67,16 @@ export default function AdminContent() {
   useEffect(() => {
     if (activeTab === 'eventos') {
       // Para admins, mostrar todos los eventos sin filtro de status
-      setFilters({ status: undefined });
+      setFilters({ status: undefined, includeArchived: showArchived });
       fetchEventos(1);
     }
-  }, [activeTab]); // Removido fetchEventos y setFilters ya que son estables
+  }, [activeTab, showArchived]); // Agregado showArchived para recargar cuando cambie
 
   const filteredEventos = eventos.filter(evento => {
-    const matchesSearch = evento.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // Solo filtrar por búsqueda local, el API ya filtra archivados
+    return evento.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       evento.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       evento.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Excluir archivados a menos que showArchived esté activado
-    if (!showArchived && evento.status === 'archived') {
-      return false;
-    }
-    
-    return matchesSearch;
   });
 
   const handleDeleteEvento = async (id: number) => {

@@ -19,6 +19,7 @@ interface EventState {
     type?: string;
     status?: string;
     search?: string;
+    includeArchived?: boolean;
   };
 }
 
