@@ -90,29 +90,10 @@ async function verifyToken(token: string, jwtSecret: string): Promise<any> {
   }
 }
 
-// Override console.log en producción para reducir ruido en logs
-// Mantenemos console.error y console.warn siempre activos
-let originalConsoleLog: typeof console.log;
-let consoleLogOverridden = false;
-
-function setupConditionalLogging(env: Env) {
-  // Solo override una vez
-  if (consoleLogOverridden) return;
-
-  if (env.ENVIRONMENT !== 'development') {
-    originalConsoleLog = console.log;
-    console.log = () => { }; // Silenciar en producción
-    consoleLogOverridden = true;
-  }
-}
-
 // Middleware principal - Solo aplicar a rutas de API
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next } = context;
   const url = new URL(request.url);
-
-  // Setup del logging condicional (se ejecuta solo una vez)
-  setupConditionalLogging(env);
 
   // Solo aplicar middleware a rutas de API
   if (!url.pathname.startsWith('/api/')) {
