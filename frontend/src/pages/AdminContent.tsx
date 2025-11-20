@@ -67,9 +67,14 @@ export default function AdminContent() {
     if (activeTab === 'eventos') {
       // Para admins, mostrar todos los eventos sin filtro de status
       setFilters({ status: undefined, includeArchived: showArchived });
+    }
+  }, [activeTab, showArchived, setFilters]);
+
+  useEffect(() => {
+    if (activeTab === 'eventos') {
       fetchEventos(1);
     }
-  }, [activeTab, showArchived]); // Agregado showArchived para recargar cuando cambie
+  }, [activeTab, fetchEventos]);
 
   const filteredEventos = eventos.filter(evento => {
     // Solo filtrar por búsqueda local, el API ya filtra archivados

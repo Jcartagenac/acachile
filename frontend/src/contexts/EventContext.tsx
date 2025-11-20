@@ -157,33 +157,36 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(eventReducer, initialState);
   const { user } = useAuth();
 
-  const fetchEventos = useCallback(async (page?: number) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const response = await eventService.getEventos({
-        ...state.filters,
-        page: page || state.pagination.page,
-        limit: state.pagination.limit,
-      });
-
-      if (response.success && response.data) {
-        dispatch({
-          type: 'SET_EVENTOS',
-          payload: {
-            eventos: response.data,
-            pagination: response.pagination || state.pagination,
-          },
+  const fetchEventos = useCallback(
+    async (page?: number) => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        const response = await eventService.getEventos({
+          ...state.filters,
+          page: page || state.pagination.page,
+          limit: state.pagination.limit,
         });
+
+        if (response.success && response.data) {
+          dispatch({
+            type: 'SET_EVENTOS',
+            payload: {
+              eventos: response.data,
+              pagination: response.pagination || state.pagination,
+            },
+          });
+        }
+      } catch (error) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Error al cargar eventos',
+        });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
-    } catch (error) {
-      dispatch({
-        type: 'SET_ERROR',
-        payload: error instanceof Error ? error.message : 'Error al cargar eventos',
-      });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  }, [state.filters, state.pagination.page, state.pagination.limit]);
+    },
+    [state.filters, state.pagination.page, state.pagination.limit]
+  );
 
   const fetchEvento = useCallback(async (id: number) => {
     dispatch({ type: 'SET_LOADING', payload: true });
