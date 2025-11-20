@@ -61,8 +61,8 @@ export default function AdminCuotas() {
       console.log('[AdminCuotas] Cargando datos...');
 
       const [sociosResponse, cuotasResponse] = await Promise.all([
-        sociosService.getSocios({ estado: 'activo' }),
-        sociosService.getCuotas({ año: añoSeleccionado })
+        sociosService.getSocios({ estado: 'activo', limit: 1000 }),
+        sociosService.getCuotas({ año: añoSeleccionado, limit: 1000 })
       ]);
 
       console.log('[AdminCuotas] Respuesta socios completa:', JSON.stringify(sociosResponse, null, 2));

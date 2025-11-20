@@ -127,7 +127,9 @@ export async function onRequestGet(context) {
     query += `
       GROUP BY u.id
       ORDER BY u.apellido ASC, u.nombre ASC
+      LIMIT ? OFFSET ?
     `;
+    params.push(limit, (page - 1) * limit);
 
     // Ejecutar query principal
     const { results } = await env.DB.prepare(query).bind(...params).all();
@@ -154,10 +156,8 @@ export async function onRequestGet(context) {
     const totalResult = await env.DB.prepare(countQuery).bind(...countParams).first();
     const total = totalResult?.total || 0;
 
-    // Aplicar paginación a los resultados
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedResults = results.slice(startIndex, endIndex);
+    // Resultados ya paginados por SQL
+    const paginatedResults = results;
 
     // Formatear resultados
     const socios = paginatedResults.map(socio => ({
@@ -184,7 +184,7 @@ export async function onRequestGet(context) {
         cuotasPagadas: socio.cuotas_pagadas_año || 0,
         cuotasPendientes: socio.cuotas_pendientes_año || 0,
         ultimoPago: socio.ultimo_pago,
-        porcentajePago: socio.total_cuotas_año > 0 
+        porcentajePago: socio.total_cuotas_año > 0
           ? Math.round((socio.cuotas_pagadas_año / socio.total_cuotas_año) * 100)
           : 0
       }
@@ -239,16 +239,16 @@ export async function onRequestPost(context) {
 
     const body = await request.json();
     console.log('[ADMIN SOCIOS] Datos recibidos:', JSON.stringify(body, null, 2));
-    
-    const { 
-      email, 
-      nombre, 
-      apellido, 
-      telefono, 
-      rut, 
-      ciudad, 
-      direccion, 
-      fotoUrl, 
+
+    const {
+      email,
+      nombre,
+      apellido,
+      telefono,
+      rut,
+      ciudad,
+      direccion,
+      fotoUrl,
       valorCuota = 6500,
       estadoSocio = 'activo',
       fechaIngreso,
@@ -316,7 +316,7 @@ export async function onRequestPost(context) {
       } else {
         // Usuario existe pero está inactivo - REACTIVAR
         console.log('[ADMIN SOCIOS] Reactivando socio eliminado:', email);
-        
+
         const updateResult = await env.DB.prepare(`
           UPDATE usuarios 
           SET nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, direccion = ?,
@@ -429,7 +429,7 @@ export async function onRequestPost(context) {
 
   } catch (error) {
     console.error('[ADMIN SOCIOS] Error creando socio:', error);
-    
+
     return new Response(JSON.stringify({
       success: false,
       error: `Error creando socio: ${error.message}`
