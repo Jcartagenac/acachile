@@ -46,14 +46,14 @@ export async function onRequestPost(context) {
 }
 
 export async function onRequestOptions(context) {
-    return new Response(null, { 
-      status: 204, 
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      } 
-    });
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    }
+  });
 }
 
 // Función para inicializar eventos con datos de ejemplo en D1
@@ -134,7 +134,6 @@ async function initializeEventos(db) {
     ];
 
     // Limpiar tablas (solo eventos por ahora)
-    // await db.exec('DELETE FROM evento_inscripciones'); // TODO: Crear tabla cuando sea necesaria
     await db.exec('DELETE FROM eventos');
 
     // Preparar inserción
@@ -143,7 +142,7 @@ async function initializeEventos(db) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const insertions = eventosIniciales.map(evento => 
+    const insertions = eventosIniciales.map(evento =>
       stmt.bind(
         evento.title,
         evento.description,

@@ -18,9 +18,9 @@ export async function onRequest(context) {
 
   // Manejar preflight requests
   if (method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 204, 
-      headers: corsHeaders 
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
     });
   }
 
@@ -42,7 +42,7 @@ export async function onRequest(context) {
     if (method === 'GET') {
       return await handleGetEventoById(eventId, env, corsHeaders);
     }
-    
+
     if (method === 'PUT') {
       return await handleUpdateEvento(request, eventId, env, corsHeaders);
     }
@@ -153,7 +153,7 @@ async function handleUpdateEvento(request, eventId, env, corsHeaders) {
       });
     }
     const body = await request.json();
-    
+
     const result = await updateEvento(env, eventId, body);
 
     if (!result.success) {
@@ -213,7 +213,7 @@ async function handleDeleteEvento(request, eventId, env, corsHeaders) {
       });
     }
 
-    // TODO: Verificar JWT y permisos de admin/organizador
+    // Permisos ya verificados por requireAdminOrDirector arriba
 
     const result = await deleteEvento(env, eventId);
 
@@ -261,9 +261,9 @@ async function getEventoById(env, id) {
     const query = `
       SELECT * FROM eventos WHERE id = ?
     `;
-    
+
     const { results } = await env.DB.prepare(query).bind(id).all();
-    
+
     if (results.length === 0) {
       return {
         success: false,
@@ -272,7 +272,7 @@ async function getEventoById(env, id) {
     }
 
     const evento = results[0];
-    
+
     // Mapear nombres de columnas de DB a nombres de propiedades del frontend
     const mappedEvento = {
       ...evento,
@@ -307,7 +307,7 @@ async function updateEvento(env, id, updateData) {
     // Verificar que el evento existe
     const existingQuery = `SELECT * FROM eventos WHERE id = ?`;
     const { results } = await env.DB.prepare(existingQuery).bind(id).all();
-    
+
     if (results.length === 0) {
       return {
         success: false,
@@ -318,10 +318,10 @@ async function updateEvento(env, id, updateData) {
     // Construir consulta de actualización dinámica
     const updateFields = [];
     const values = [];
-    
+
     const fieldsMap = {
       title: 'title',
-      description: 'description', 
+      description: 'description',
       date: 'date',
       time: 'time',
       location: 'location',
@@ -356,7 +356,7 @@ async function updateEvento(env, id, updateData) {
     // Agregar updated_at
     updateFields.push('updated_at = ?');
     values.push(new Date().toISOString());
-    
+
     // Agregar ID al final para el WHERE
     values.push(id);
 
@@ -403,7 +403,7 @@ async function deleteEvento(env, id) {
     // Verificar que el evento existe
     const existingQuery = `SELECT id FROM eventos WHERE id = ?`;
     const { results } = await env.DB.prepare(existingQuery).bind(id).all();
-    
+
     if (results.length === 0) {
       return {
         success: false,

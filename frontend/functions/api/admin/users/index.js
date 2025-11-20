@@ -89,18 +89,18 @@ export async function onRequestGet(context) {
     `;
 
     const params = [];
-    
+
     // Filtros
     if (search) {
       query += ` AND (nombre LIKE ? OR apellido LIKE ? OR email LIKE ?)`;
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-    
+
     if (role) {
       query += ` AND role = ?`;
       params.push(role);
     }
-    
+
     if (status) {
       query += ` AND status = ?`;
       params.push(status);
@@ -217,7 +217,7 @@ export async function onRequestPost(context) {
       } else {
         // Usuario existe pero está inactivo - REACTIVAR
         console.log('[ADMIN USERS] Reactivando usuario eliminado:', email);
-        
+
         const updateResult = await env.DB.prepare(`
           UPDATE usuarios 
           SET nombre = ?, apellido = ?, password_hash = ?, role = ?, rut = ?, telefono = ?, ciudad = ?, direccion = ?, activo = 1, updated_at = ?
@@ -252,10 +252,15 @@ export async function onRequestPost(context) {
       `).bind(email).first();
     }
 
-    // TODO: Enviar email de bienvenida si se solicita
+    // Enviar email de bienvenida si se solicita
     if (send_welcome_email) {
       console.log('[ADMIN USERS] Enviando email de bienvenida a:', email);
-      // await sendWelcomeEmail(email, name, password, env);
+      const emailResult = await sendWelcomeEmail(email, name, password, env);
+
+      if (!emailResult.success) {
+        console.warn('[ADMIN USERS] No se pudo enviar email de bienvenida:', emailResult.error);
+        // No fallar la creación del usuario por un email fallido, pero loguearlo
+      }
     }
 
     console.log('[ADMIN USERS] Usuario creado exitosamente:', newUser.id);
@@ -276,5 +281,72 @@ export async function onRequestPost(context) {
       500,
       env.ENVIRONMENT === 'development' ? { details: error instanceof Error ? error.message : error } : undefined
     );
+  }
+}
+
+async function sendWelcomeEmail(email, name, temporaryPassword, env) {
+  if (!env.RESEND_API_KEY) {
+    console.warn('[ADMIN USERS] RESEND_API_KEY no configurado, saltando email');
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: env.FROM_EMAIL || 'noreply@acachile.cl',
+        to: [email],
+        subject: 'Bienvenido a ACA Chile - Cuenta Creada',
+        html: `
+          <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+              <h2 style="color: #dc2626;">¡Bienvenido a ACA Chile!</h2>
+              <p>Hola ${name},</p>
+              <p>Tu cuenta ha sido creada exitosamente por un administrador.</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Datos de Acceso</h3>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Contraseña temporal:</strong> <code style="background-color: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${temporaryPassword}</code></p>
+              </div>
+              
+              <p><strong style="color: #dc2626;">⚠️ Importante:</strong> Por seguridad, te recomendamos cambiar tu contraseña inmediatamente después de iniciar sesión.</p>
+              
+              <p>
+                <a href="${env.FRONTEND_URL || 'https://acachile.cl'}/login" 
+                   style="display: inline-block; background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">
+                  Iniciar Sesión
+                </a>
+              </p>
+              
+              <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+              
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+              <p style="color: #6b7280; font-size: 12px;">
+                Este es un correo automático, por favor no respondas a este mensaje.
+              </p>
+            </body>
+          </html>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('[ADMIN USERS] Error enviando email:', errorData);
+      return { success: false, error: errorData };
+    }
+
+    const data = await response.json();
+    console.log('[ADMIN USERS] Email enviado:', data.id);
+
+    return { success: true, emailId: data.id };
+  } catch (error) {
+    console.error('[ADMIN USERS] Excepción enviando email:', error);
+    return { success: false, error: error.message };
   }
 }
