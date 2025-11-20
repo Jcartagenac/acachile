@@ -58,48 +58,35 @@ export default function AdminCuotas() {
       setLoading(true);
       setError(null);
 
-      console.log('[AdminCuotas] Cargando datos...');
-
       const [sociosResponse, cuotasResponse] = await Promise.all([
-        sociosService.getSocios({ estado: 'activo', limit: 100 }),
-        sociosService.getCuotas({ año: añoSeleccionado, limit: 100 })
+        sociosService.getSocios({ estado: 'activo', limit: 500 }),
+        sociosService.getCuotas({ año: añoSeleccionado, limit: 1000 })
       ]);
 
-      console.log('[AdminCuotas] Respuesta socios completa:', JSON.stringify(sociosResponse, null, 2));
-      console.log('[AdminCuotas] Respuesta cuotas completa:', JSON.stringify(cuotasResponse, null, 2));
-
       if (sociosResponse.success && sociosResponse.data) {
-        // Verificar la estructura de la respuesta
         const sociosList = sociosResponse.data.socios || [];
 
         if (!Array.isArray(sociosList)) {
-          console.error('[AdminCuotas] sociosList no es un array:', sociosList);
           setError('Error: La respuesta del servidor no tiene el formato esperado');
           return;
         }
 
         const cuotasList = cuotasResponse.data?.cuotas || [];
-
         const sociosConEstado = procesarEstadoSocios(sociosList, cuotasList);
         setSocios(sociosConEstado);
-        console.log('[AdminCuotas] Socios procesados:', sociosConEstado.length);
       } else {
         setError(sociosResponse.error || 'Error al cargar socios');
-        console.error('[AdminCuotas] Error en respuesta de socios:', sociosResponse);
       }
 
       if (cuotasResponse.success && cuotasResponse.data) {
         const cuotasList = cuotasResponse.data.cuotas || [];
         setCuotas(cuotasList);
-        console.log('[AdminCuotas] Cuotas cargadas:', cuotasList.length);
-      } else {
-        console.warn('[AdminCuotas] Error al cargar cuotas:', cuotasResponse.error);
       }
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(`Error al cargar datos: ${errorMsg}`);
-      console.error('[AdminCuotas] Error:', err);
+      console.error('[AdminCuotas] Error crítico:', err);
     } finally {
       setLoading(false);
     }
@@ -248,9 +235,15 @@ export default function AdminCuotas() {
       const fileName = `cuotas_${añoSeleccionado}_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
 
-      console.log(`[AdminCuotas] Excel exportado: ${fileName}`);
+      if (import.meta.env.MODE === 'development') {
+        if (import.meta.env.MODE === 'development') {
+          console.log(`[AdminCuotas] Excel exportado: ${fileName}`);
+        }
+      }
     } catch (error) {
-      console.error('[AdminCuotas] Error exportando a Excel:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[AdminCuotas] Error exportando a Excel:', error);
+      }
       setError('Error al exportar a Excel');
     }
   };
@@ -582,7 +575,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
 
         // Si no existe la cuota, crearla
         if (!cuotasExistentes.has(clave)) {
-          console.log(`[Auto-generar] Creando cuota para ${mes}/${año}`);
+          if (import.meta.env.MODE === 'development') {
+            console.log(`[Auto-generar] Creando cuota para ${mes}/${año}`);
+          }
           await sociosService.crearCuotaIndividual(
             socio.id,
             año,
@@ -592,7 +587,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         }
       }
     } catch (err) {
-      console.error('[Auto-generar] Error generando cuotas futuras:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[Auto-generar] Error generando cuotas futuras:', err);
+      }
     }
   };
 
@@ -626,7 +623,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           }
         }
       } catch (err) {
-        console.error('Error cargando cuotas:', err);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Error cargando cuotas:', err);
+        }
       } finally {
         setLoading(false);
       }
@@ -657,8 +656,6 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       setError(null);
       setShowCreateCuotaModal(false);
 
-      console.log('[SocioDetailModal] Creando cuota individual para mes:', mesToCreate, 'año:', añoSeleccionado, 'socio:', socio.id);
-
       // Crear la cuota para este socio específico
       const crearResponse = await sociosService.crearCuotaIndividual(
         socio.id,
@@ -666,8 +663,6 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         mesToCreate,
         socio.valorCuota
       );
-
-      console.log('[SocioDetailModal] Respuesta crear cuota:', crearResponse);
 
       if (!crearResponse.success) {
         setError(crearResponse.error || 'Error al crear cuota');
@@ -682,16 +677,12 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         return;
       }
 
-      console.log('[SocioDetailModal] Marcando cuota como pagada:', nuevaCuotaId);
-
       const fechaPagoISO = new Date(fechaPago).toISOString();
 
       const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuotaId, {
         metodoPago: 'transferencia',
         fechaPago: fechaPagoISO
       });
-
-      console.log('[SocioDetailModal] Respuesta marcar pagado:', marcarResponse);
 
       if (!marcarResponse.success) {
         setError(marcarResponse.error || 'Error al marcar como pagado');
@@ -712,7 +703,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(`Error al crear cuota: ${errorMsg}`);
-      console.error('[SocioDetailModal] Error excepción:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SocioDetailModal] Error excepción:', err);
+      }
     } finally {
       setLoading(false);
       setMesToCreate(null);
@@ -727,7 +720,11 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       setError(null);
       setShowConfirmModal(false);
 
-      console.log('[SocioDetailModal] Marcando cuota:', cuotaToToggle);
+      if (import.meta.env.MODE === 'development') {
+
+        console.log('[SocioDetailModal] Marcando cuota:', cuotaToToggle);
+
+      }
 
       if (!cuotaToToggle.pagado) {
         // Marcar como pagado con la fecha seleccionada
@@ -738,7 +735,11 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           fechaPago: fechaPagoISO
         });
 
-        console.log('[SocioDetailModal] Respuesta marcar pagado:', response);
+        if (import.meta.env.MODE === 'development') {
+
+          console.log('[SocioDetailModal] Respuesta marcar pagado:', response);
+
+        }
 
         if (response.success) {
           // Recargar cuotas para mostrar el cambio
@@ -757,7 +758,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         }
       } else {
         // Desmarcar pago - llamar al API directamente
-        console.log('[SocioDetailModal] Desmarcando pago...');
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SocioDetailModal] Desmarcando pago...');
+        }
 
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/admin/cuotas/${cuotaToToggle.id}`, {
@@ -773,7 +776,11 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           }),
         });
 
-        console.log('[SocioDetailModal] Respuesta desmarcar:', response.status);
+        if (import.meta.env.MODE === 'development') {
+
+          console.log('[SocioDetailModal] Respuesta desmarcar:', response.status);
+
+        }
 
         if (response.ok) {
           // Recargar cuotas para mostrar el cambio
@@ -789,7 +796,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           onUpdate();
         } else {
           const errorText = await response.text();
-          console.error('[SocioDetailModal] Error al desmarcar:', errorText);
+          if (import.meta.env.MODE === 'development') {
+            console.error('[SocioDetailModal] Error al desmarcar:', errorText);
+          }
 
           try {
             const errorData = JSON.parse(errorText);
@@ -802,7 +811,9 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(`Error al actualizar el pago: ${errorMsg}`);
-      console.error('[SocioDetailModal] Error:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SocioDetailModal] Error:', err);
+      }
     } finally {
       setLoading(false);
       setCuotaToToggle(null);
@@ -822,15 +833,27 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
       setError(null);
       setShowDeleteModal(false);
 
-      console.log('[SocioDetailModal] Eliminando cuota:', cuotaToDelete.id);
-      console.log('[SocioDetailModal] Cuota completa:', cuotaToDelete);
+      if (import.meta.env.MODE === 'development') {
+
+        console.log('[SocioDetailModal] Eliminando cuota:', cuotaToDelete.id);
+
+      }
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SocioDetailModal] Cuota completa:', cuotaToDelete);
+      }
 
       const response = await sociosService.eliminarCuota(cuotaToDelete.id);
 
-      console.log('[SocioDetailModal] Respuesta eliminar:', response);
+      if (import.meta.env.MODE === 'development') {
+
+        console.log('[SocioDetailModal] Respuesta eliminar:', response);
+
+      }
 
       if (response.success) {
-        console.log('[SocioDetailModal] Cuota eliminada exitosamente, recargando...');
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SocioDetailModal] Cuota eliminada exitosamente, recargando...');
+        }
 
         // Recargar cuotas del modal
         const cuotasResponse = await sociosService.getCuotas({
@@ -838,24 +861,36 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           socioId: socio.id
         });
 
-        console.log('[SocioDetailModal] Cuotas recargadas:', cuotasResponse);
+        if (import.meta.env.MODE === 'development') {
+
+          console.log('[SocioDetailModal] Cuotas recargadas:', cuotasResponse);
+
+        }
 
         if (cuotasResponse.success && cuotasResponse.data) {
           setCuotas(cuotasResponse.data.cuotas || []);
-          console.log('[SocioDetailModal] Cuotas actualizadas en modal:', cuotasResponse.data.cuotas?.length);
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SocioDetailModal] Cuotas actualizadas en modal:', cuotasResponse.data.cuotas?.length);
+          }
         }
 
         // Recargar lista principal
-        console.log('[SocioDetailModal] Llamando onUpdate para recargar lista principal...');
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SocioDetailModal] Llamando onUpdate para recargar lista principal...');
+        }
         onUpdate();
       } else {
-        console.error('[SocioDetailModal] Error al eliminar:', response.error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('[SocioDetailModal] Error al eliminar:', response.error);
+        }
         setError(response.error || 'Error al eliminar cuota');
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(`Error al eliminar cuota: ${errorMsg}`);
-      console.error('[SocioDetailModal] Error excepción:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SocioDetailModal] Error excepción:', err);
+      }
     } finally {
       setLoading(false);
       setCuotaToDelete(null);
@@ -1322,7 +1357,9 @@ function GenerarCuotasModal({ año, onClose, onGenerate }: GenerarCuotasModalPro
       }
     } catch (err) {
       setError('Error al generar cuotas');
-      console.error(err);
+      if (import.meta.env.MODE === 'development') {
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
