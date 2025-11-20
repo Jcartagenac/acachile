@@ -1,5 +1,6 @@
 import type { PagesFunction, Env } from './types';
 import { verifyToken } from './utils/jwt';
+import { validateEnv } from './utils/env';
 
 /**
  * Middleware de CORS y autenticación para Pages Functions
@@ -34,6 +35,23 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // Solo aplicar middleware a rutas de API
   if (!url.pathname.startsWith('/api/')) {
     return next();
+  }
+
+  // Validar bindings críticos
+  try {
+    validateEnv(env);
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Server configuration error',
+        message: error instanceof Error ? error.message : 'Missing critical bindings'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   // console.log(`[MIDDLEWARE] ${request.method} ${url.pathname}`);

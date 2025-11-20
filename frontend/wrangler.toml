@@ -95,3 +95,21 @@ database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
 [[env.preview.r2_buckets]]
 binding = "IMAGES"
 bucket_name = "aca-chile-images"
+
+# Production bindings - estas aparecerán en Functions tab
+[env.production]
+[env.production.vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://acachile-frontend.pages.dev"
+FRONTEND_URL = "https://acachile-frontend.pages.dev"
+FROM_EMAIL = "noreply@mail.juancartagena.cl"
+ADMIN_EMAIL = "admin@acachile.cl"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "acachile-db"
+database_id = "086f0530-48b6-41db-95ab-77bce733f0df"
+
+[[env.production.kv_namespaces]]
+binding = "ACA_KV"
+id = "60fff9f10819406cad241e326950f056"
