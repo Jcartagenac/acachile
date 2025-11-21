@@ -60,7 +60,7 @@ export async function onRequest(context) {
 async function handleGetNoticias(url, env, corsHeaders) {
   try {
     // Obtener noticias desde KV (o crear datos de ejemplo si no existen)
-    let noticias = await getNoticias(env);
+    let todasLasNoticias = await getNoticias(env);
 
     // Aplicar filtros básicos
     const category = url.searchParams.get('category');
@@ -69,7 +69,11 @@ async function handleGetNoticias(url, env, corsHeaders) {
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const includeArchived = url.searchParams.get('includeArchived') === 'true';
 
-    // CRÍTICO: Excluir noticias en papelera (deleted_at) SIEMPRE
+    // CRÍTICO: Copiar array para no mutar el original
+    // Esto previene que se pierdan noticias en papelera al editar otras noticias
+    let noticias = [...todasLasNoticias];
+
+    // SIEMPRE excluir noticias en papelera (deleted_at) de la respuesta pública
     // Las noticias eliminadas solo se ven en la sección "Papelera"
     noticias = noticias.filter(noticia => !noticia.deleted_at);
 
