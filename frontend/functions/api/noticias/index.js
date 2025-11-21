@@ -68,14 +68,17 @@ async function handleGetNoticias(url, env, corsHeaders) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const includeArchived = url.searchParams.get('includeArchived') === 'true';
+    const includeDeleted = url.searchParams.get('includeDeleted') === 'true';
 
     // CRÍTICO: Copiar array para no mutar el original
     // Esto previene que se pierdan noticias en papelera al editar otras noticias
     let noticias = [...todasLasNoticias];
 
-    // SIEMPRE excluir noticias en papelera (deleted_at) de la respuesta pública
-    // Las noticias eliminadas solo se ven en la sección "Papelera"
-    noticias = noticias.filter(noticia => !noticia.deleted_at);
+    // Excluir noticias en papelera (deleted_at) por defecto
+    // Solo incluir si includeDeleted=true (usado por la papelera)
+    if (!includeDeleted) {
+      noticias = noticias.filter(noticia => !noticia.deleted_at);
+    }
 
     // Excluir noticias archivadas por defecto (solo visible en admin con includeArchived=true)
     if (!includeArchived) {

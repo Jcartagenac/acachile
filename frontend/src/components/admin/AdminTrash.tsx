@@ -14,7 +14,8 @@ export default function AdminTrash() {
   const loadDeletedNews = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/noticias');
+      // Agregar includeDeleted=true para que el backend devuelva noticias eliminadas
+      const response = await fetch('/api/noticias?includeDeleted=true&limit=1000');
       const data = await response.json();
       
       if (data.success && Array.isArray(data.data)) {
