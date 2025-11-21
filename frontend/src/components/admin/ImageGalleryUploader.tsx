@@ -172,6 +172,7 @@ export function ImageGalleryUploader({
               {/* Overlay con controles */}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     removeImage(index);
@@ -184,6 +185,7 @@ export function ImageGalleryUploader({
 
                 {index > 0 && (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       moveImage(index, index - 1);
@@ -197,6 +199,7 @@ export function ImageGalleryUploader({
 
                 {index < images.length - 1 && (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       moveImage(index, index + 1);
