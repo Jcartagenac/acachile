@@ -427,7 +427,7 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
                 onChange={(e) => {
                   setShowGallery(e.target.checked);
                   if (!e.target.checked) {
-                    setFormData({ ...formData, gallery: [] });
+                    setFormData(prev => ({ ...prev, gallery: [] }));
                   }
                 }}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -440,7 +440,7 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
             {showGallery && (
               <ImageGalleryUploader
                 images={formData.gallery}
-                onChange={(newGallery) => setFormData({ ...formData, gallery: newGallery })}
+                onChange={(newGallery) => setFormData(prev => ({ ...prev, gallery: newGallery }))}
                 maxImages={20}
               />
             )}

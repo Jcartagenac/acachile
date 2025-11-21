@@ -69,6 +69,10 @@ async function handleGetNoticias(url, env, corsHeaders) {
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const includeArchived = url.searchParams.get('includeArchived') === 'true';
 
+    // CRÍTICO: Excluir noticias en papelera (deleted_at) SIEMPRE
+    // Las noticias eliminadas solo se ven en la sección "Papelera"
+    noticias = noticias.filter(noticia => !noticia.deleted_at);
+
     // Excluir noticias archivadas por defecto (solo visible en admin con includeArchived=true)
     if (!includeArchived) {
       noticias = noticias.filter(noticia => !noticia.archived);
