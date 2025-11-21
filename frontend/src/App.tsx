@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Layout } from './components/layout';
 import { DebugPanel } from './components/debug';
+import { EventProviderWrapper } from './components/providers/EventProviderWrapper';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
@@ -70,11 +71,11 @@ function App() {
           <Route path="/unete" element={<JoinPage />} />
           
           {/* Eventos */}
-          <Route path="/eventos" element={<EventsPage />} />
-          <Route path="/eventos/crear" element={<CreateEventPage />} />
-          <Route path="/eventos/mis-eventos" element={<MyEventsPage />} />
-          <Route path="/eventos/:id" element={<EventDetailPage />} />
-          <Route path="/eventos/:id/editar" element={<EditEventPage />} />
+          <Route path="/eventos" element={<EventProviderWrapper><EventsPage /></EventProviderWrapper>} />
+          <Route path="/eventos/crear" element={<EventProviderWrapper><CreateEventPage /></EventProviderWrapper>} />
+          <Route path="/eventos/mis-eventos" element={<EventProviderWrapper><MyEventsPage /></EventProviderWrapper>} />
+          <Route path="/eventos/:id" element={<EventProviderWrapper><EventDetailPage /></EventProviderWrapper>} />
+          <Route path="/eventos/:id/editar" element={<EventProviderWrapper><EditEventPage /></EventProviderWrapper>} />
           
           {/* Autenticación */}
           <Route path="/auth" element={<AuthPage />} />
@@ -97,8 +98,8 @@ function App() {
           <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-          <Route path="/admin/eventos" element={<AdminLayout><AdminContent /></AdminLayout>} />
-          <Route path="/admin/socios" element={<ProfilePage defaultTab="admin" />} />
+          <Route path="/admin/eventos" element={<EventProviderWrapper><AdminLayout><AdminContent /></AdminLayout></EventProviderWrapper>} />
+          <Route path="/admin/socios" element={<ProfilePage />} />
           <Route path="/admin/socios/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/admin/cuotas" element={<AdminLayout><AdminCuotas /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
@@ -111,10 +112,10 @@ function App() {
           <Route path="/panel-admin/users/:socioId/edituser" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
           <Route path="/panel-admin/users/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
-          <Route path="/panel-admin/content" element={<PanelAdminLayout><AdminContent /></PanelAdminLayout>} />
+          <Route path="/panel-admin/content" element={<EventProviderWrapper><PanelAdminLayout><AdminContent /></PanelAdminLayout></EventProviderWrapper>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
           <Route path="/panel-admin/papelera" element={<PanelAdminLayout><AdminTrash /></PanelAdminLayout>} />
-          <Route path="/panel-admin/postulantes" element={<PanelAdminLayout><AdminPostulantes /></PanelAdminLayout>} />
+          <Route path="/panel-admin/postulantes" element={<EventProviderWrapper><PanelAdminLayout><AdminPostulantes /></PanelAdminLayout></EventProviderWrapper>} />
           <Route path="/panel-admin/participantes" element={<PanelAdminLayout><AdminParticipantes /></PanelAdminLayout>} />
           
           {/* Perfil de Usuario */}

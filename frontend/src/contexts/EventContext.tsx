@@ -157,14 +157,21 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(eventReducer, initialState);
   const { user } = useAuth();
 
+  // Usar ref para acceder a state actual sin causar re-renders
+  const stateRef = React.useRef(state);
+  React.useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   const fetchEventos = useCallback(
     async (page?: number) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
+        const currentState = stateRef.current;
         const response = await eventService.getEventos({
-          ...state.filters,
-          page: page || state.pagination.page,
-          limit: state.pagination.limit,
+          ...currentState.filters,
+          page: page || currentState.pagination.page,
+          limit: currentState.pagination.limit,
         });
 
         if (response.success && response.data) {
@@ -172,7 +179,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
             type: 'SET_EVENTOS',
             payload: {
               eventos: response.data,
-              pagination: response.pagination || state.pagination,
+              pagination: response.pagination || currentState.pagination,
             },
           });
         }
@@ -185,7 +192,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     },
-    [state.filters, state.pagination.page, state.pagination.limit]
+    [] // Sin dependencias - usa ref
   );
 
   const fetchEvento = useCallback(async (id: number) => {
