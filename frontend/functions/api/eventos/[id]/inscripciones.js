@@ -139,20 +139,27 @@ export async function onRequest(context) {
 
 // Función para obtener inscripciones completas del evento con datos de usuarios
 async function getInscripcionesEventoCompletas(env, eventoId) {
+  const startTotal = Date.now();
   try {
     // Verificar que el evento existe en D1
+    const startEvento = Date.now();
     const eventoResult = await env.DB.prepare(
       'SELECT id, title, max_participants FROM eventos WHERE id = ?'
     ).bind(eventoId).first();
+    const eventoTime = Date.now() - startEvento;
 
     if (!eventoResult) {
+      console.log(`[Performance] Evento lookup: ${eventoTime}ms (not found)`);
       return {
         success: false,
         error: 'Evento no encontrado'
       };
     }
+    console.log(`[Performance] Evento lookup: ${eventoTime}ms`);
 
     // Obtener inscripciones del evento desde D1
+    // Optimizado: Solo columnas necesarias, ORDER BY usa índice idx_inscriptions_created_at
+    const startQuery = Date.now();
     const { results } = await env.DB.prepare(
       `SELECT id, user_id, event_id, status, inscription_date, payment_status, 
               payment_amount, notes, nombre, apellido, email, telefono, tipo, created_at
@@ -160,8 +167,9 @@ async function getInscripcionesEventoCompletas(env, eventoId) {
        WHERE event_id = ? 
        ORDER BY created_at DESC`
     ).bind(eventoId).all();
+    const queryTime = Date.now() - startQuery;
 
-    console.log(`Inscripciones encontradas para evento ${eventoId}:`, results ? results.length : 0);
+    console.log(`Inscripciones encontradas para evento ${eventoId}:`, results ? results.length : 0, `(${queryTime}ms)`);
 
     // Mapear a formato esperado por el frontend
     const inscripciones = (results || []).map(row => ({
@@ -180,6 +188,9 @@ async function getInscripcionesEventoCompletas(env, eventoId) {
       tipo: row.tipo || 'usuario',
       createdAt: row.created_at || row.inscription_date
     }));
+
+    const totalTime = Date.now() - startTotal;
+    console.log(`[Performance] Total inscripciones fetch: ${totalTime}ms (evento: ${eventoTime}ms, query: ${queryTime}ms, mapping: ${totalTime - eventoTime - queryTime}ms)`);
 
     return {
       success: true,
