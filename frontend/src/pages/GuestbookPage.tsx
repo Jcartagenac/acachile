@@ -173,11 +173,11 @@ export default function GuestbookPage() {
         
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center mb-6">
             <img 
               src="https://images.acachile.com/home/img-1764027992246-i023ig.jpg" 
               alt="Libro de Visitas" 
-              className="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-full shadow-lg"
+              className="h-64 w-64 sm:h-80 sm:w-80 object-cover rounded-full shadow-lg"
             />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Libro de Visitas</h1>
