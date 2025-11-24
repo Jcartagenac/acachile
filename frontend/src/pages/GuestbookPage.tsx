@@ -394,49 +394,51 @@ export default function GuestbookPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {entries.map((entry) => {
               const SocialIcon = getSocialIcon(entry.social_network);
               
               return (
-                <div key={entry.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-start gap-4">
-                    {/* Imagen opcional */}
-                    {entry.image_url && (
+                <div key={entry.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  {/* Header con título y metadata */}
+                  <div className="p-4 sm:p-6 border-b border-gray-100">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 break-words">
+                          {entry.title}
+                        </h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-sm text-gray-600">
+                          <span className="font-medium truncate">{entry.name}</span>
+                          {entry.social_network !== 'none' && entry.social_handle && (
+                            <span className="flex items-center gap-1">
+                              <SocialIcon className="h-4 w-4 flex-shrink-0" />
+                              <span className="truncate">@{entry.social_handle}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-500 flex-shrink-0">
+                        {formatDate(entry.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Imagen con tamaño estándar */}
+                  {entry.image_url && (
+                    <div className="w-full bg-gray-100">
                       <img 
                         src={entry.image_url} 
                         alt={entry.title}
-                        className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                        className="w-full h-64 sm:h-80 md:h-96 object-cover"
                       />
-                    )}
-                    
-                    <div className="flex-1">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">
-                            {entry.title}
-                          </h3>
-                          <div className="flex items-center gap-3 text-sm text-gray-600">
-                            <span className="font-medium">{entry.name}</span>
-                            {entry.social_network !== 'none' && entry.social_handle && (
-                              <span className="flex items-center gap-1">
-                                <SocialIcon className="h-4 w-4" />
-                                @{entry.social_handle}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-500">
-                          {formatDate(entry.created_at)}
-                        </span>
-                      </div>
-
-                      {/* Mensaje */}
-                      <p className="text-gray-700 whitespace-pre-wrap">
-                        {entry.message}
-                      </p>
                     </div>
+                  )}
+
+                  {/* Mensaje */}
+                  <div className="p-4 sm:p-6">
+                    <p className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap break-words">
+                      {entry.message}
+                    </p>
                   </div>
                 </div>
               );
