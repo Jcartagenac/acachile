@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Send, Facebook, Instagram, Twitter, Linkedin, User, MessageSquare, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Send, Facebook, Instagram, Twitter, Linkedin, User, MessageSquare, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useImageService } from '../hooks/useImageService';
 
 interface GuestbookEntry {
@@ -174,7 +174,11 @@ export default function GuestbookPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <BookOpen className="h-12 w-12 text-red-600" />
+            <img 
+              src="https://images.acachile.com/home/img-1764027992246-i023ig.jpg" 
+              alt="Libro de Visitas" 
+              className="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-full shadow-lg"
+            />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Libro de Visitas</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -423,13 +427,13 @@ export default function GuestbookPage() {
                     </div>
                   </div>
 
-                  {/* Imagen con tamaño estándar */}
+                  {/* Imagen en tamaño completo */}
                   {entry.image_url && (
                     <div className="w-full bg-gray-100">
                       <img 
                         src={entry.image_url} 
                         alt={entry.title}
-                        className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                        className="w-full h-auto object-contain"
                       />
                     </div>
                   )}
