@@ -17,6 +17,7 @@ import {
   X,
   Gift,
   Trash2,
+  BookOpen,
 } from 'lucide-react';
 
 interface PanelAdminLayoutProps {
@@ -61,10 +62,22 @@ const menuItems = [
     description: 'Anuncios y avisos',
   },
   {
+    path: '/panel-admin/guestbook',
+    label: 'Libro de Visitas',
+    icon: BookOpen,
+    description: 'Gestionar mensajes',
+  },
+  {
     path: '/panel-admin/papelera',
     label: 'Papelera',
     icon: Trash2,
     description: 'Noticias eliminadas',
+  },
+  {
+    path: '/panel-admin/guestbook/trash',
+    label: 'Papelera Visitas',
+    icon: Trash2,
+    description: 'Visitas eliminadas',
   },
   {
     path: '/panel-admin/participantes',

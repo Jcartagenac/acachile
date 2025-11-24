@@ -53,6 +53,9 @@ const ParticipaPage = lazy(() => import('./pages/ParticipaPage'));
 const CondicionesSorteoPage = lazy(() => import('./pages/CondicionesSorteoPage'));
 const AdminParticipantes = lazy(() => import('./components/admin/AdminParticipantes'));
 const AdminTrash = lazy(() => import('./components/admin/AdminTrash'));
+const GuestbookPage = lazy(() => import('./pages/GuestbookPage'));
+const AdminGuestbook = lazy(() => import('./components/admin/AdminGuestbook'));
+const AdminGuestbookTrash = lazy(() => import('./components/admin/AdminGuestbookTrash'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -90,6 +93,9 @@ function App() {
           <Route path="/noticias/editar/:slug" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
           <Route path="/noticias/:slug" element={<NewsDetailPage />} />
           
+          {/* Libro de Visitas */}
+          <Route path="/visitas" element={<GuestbookPage />} />
+          
           {/* Búsqueda */}
           <Route path="/buscar" element={<SearchResultsPage />} />
           <Route path="/socios/:id" element={<PublicSocioPage />} />
@@ -117,6 +123,8 @@ function App() {
           <Route path="/panel-admin/papelera" element={<PanelAdminLayout><AdminTrash /></PanelAdminLayout>} />
           <Route path="/panel-admin/postulantes" element={<EventProviderWrapper><PanelAdminLayout><AdminPostulantes /></PanelAdminLayout></EventProviderWrapper>} />
           <Route path="/panel-admin/participantes" element={<PanelAdminLayout><AdminParticipantes /></PanelAdminLayout>} />
+          <Route path="/panel-admin/guestbook" element={<PanelAdminLayout><AdminGuestbook /></PanelAdminLayout>} />
+          <Route path="/panel-admin/guestbook/trash" element={<PanelAdminLayout><AdminGuestbookTrash /></PanelAdminLayout>} />
           
           {/* Perfil de Usuario */}
           <Route path="/perfil" element={<ProfilePage />} />
