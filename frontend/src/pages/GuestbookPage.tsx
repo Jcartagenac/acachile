@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, Facebook, Instagram, Twitter, Linkedin, User, MessageSquare, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Send, Facebook, Instagram, Twitter, Linkedin, User, MessageSquare, Image as ImageIcon, Loader2, Globe } from 'lucide-react';
 import { useImageService } from '../hooks/useImageService';
 
 interface GuestbookEntry {
@@ -14,8 +14,156 @@ interface GuestbookEntry {
   created_at: string;
 }
 
-const SOCIAL_NETWORKS = [
-  { value: 'none', label: 'No tengo redes sociales', icon: User },
+type Language = 'es' | 'en' | 'de' | 'pt';
+
+const TRANSLATIONS = {
+  es: {
+    title: 'Libro de Visitas',
+    subtitle: 'Comparte tus experiencias, comentarios y mensajes con nuestra comunidad de asadores',
+    leaveMessage: 'Dejar un Mensaje',
+    writeMessage: 'Deja tu mensaje',
+    name: 'Nombre completo',
+    email: 'Email',
+    emailNote: 'No será compartido públicamente',
+    socialNetwork: 'Red Social',
+    selectOption: 'Selecciona una opción',
+    noSocial: 'No tengo redes sociales',
+    socialUser: 'Usuario de',
+    titleField: 'Título',
+    titlePlaceholder: 'Título de tu mensaje',
+    message: 'Mensaje',
+    messagePlaceholder: 'Comparte tu experiencia, comentarios o mensaje...',
+    optionalImage: 'Imagen (opcional)',
+    uploading: 'Subiendo...',
+    clickUpload: 'Click para subir una imagen',
+    cancel: 'Cancelar',
+    sending: 'Enviando...',
+    publish: 'Publicar Mensaje',
+    noMessages: 'Aún no hay mensajes',
+    beFirst: '¡Sé el primero en dejar un mensaje en nuestro libro de visitas!',
+    required: '*',
+    alertName: 'Por favor ingresa tu nombre',
+    alertEmail: 'Por favor ingresa tu email',
+    alertSocial: 'Por favor selecciona una red social',
+    alertSocialHandle: 'Por favor ingresa tu usuario de la red social seleccionada',
+    alertTitle: 'Por favor ingresa un título',
+    alertMessage: 'Por favor ingresa tu mensaje',
+    alertImageError: 'Error al subir la imagen',
+    successMessage: '¡Gracias por tu mensaje! Se ha publicado correctamente.',
+  },
+  en: {
+    title: 'Guestbook',
+    subtitle: 'Share your experiences, comments and messages with our BBQ community',
+    leaveMessage: 'Leave a Message',
+    writeMessage: 'Write your message',
+    name: 'Full name',
+    email: 'Email',
+    emailNote: 'Will not be shared publicly',
+    socialNetwork: 'Social Network',
+    selectOption: 'Select an option',
+    noSocial: "I don't have social media",
+    socialUser: 'Username on',
+    titleField: 'Title',
+    titlePlaceholder: 'Your message title',
+    message: 'Message',
+    messagePlaceholder: 'Share your experience, comments or message...',
+    optionalImage: 'Image (optional)',
+    uploading: 'Uploading...',
+    clickUpload: 'Click to upload an image',
+    cancel: 'Cancel',
+    sending: 'Sending...',
+    publish: 'Publish Message',
+    noMessages: 'No messages yet',
+    beFirst: 'Be the first to leave a message in our guestbook!',
+    required: '*',
+    alertName: 'Please enter your name',
+    alertEmail: 'Please enter your email',
+    alertSocial: 'Please select a social network',
+    alertSocialHandle: 'Please enter your social media username',
+    alertTitle: 'Please enter a title',
+    alertMessage: 'Please enter your message',
+    alertImageError: 'Error uploading image',
+    successMessage: 'Thank you for your message! It has been published successfully.',
+  },
+  de: {
+    title: 'Gästebuch',
+    subtitle: 'Teilen Sie Ihre Erfahrungen, Kommentare und Nachrichten mit unserer Grill-Community',
+    leaveMessage: 'Nachricht Hinterlassen',
+    writeMessage: 'Schreiben Sie Ihre Nachricht',
+    name: 'Vollständiger Name',
+    email: 'E-Mail',
+    emailNote: 'Wird nicht öffentlich geteilt',
+    socialNetwork: 'Soziales Netzwerk',
+    selectOption: 'Wählen Sie eine Option',
+    noSocial: 'Ich habe keine sozialen Medien',
+    socialUser: 'Benutzername auf',
+    titleField: 'Titel',
+    titlePlaceholder: 'Titel Ihrer Nachricht',
+    message: 'Nachricht',
+    messagePlaceholder: 'Teilen Sie Ihre Erfahrungen, Kommentare oder Nachricht...',
+    optionalImage: 'Bild (optional)',
+    uploading: 'Hochladen...',
+    clickUpload: 'Klicken Sie, um ein Bild hochzuladen',
+    cancel: 'Abbrechen',
+    sending: 'Senden...',
+    publish: 'Nachricht Veröffentlichen',
+    noMessages: 'Noch keine Nachrichten',
+    beFirst: 'Seien Sie der Erste, der eine Nachricht in unserem Gästebuch hinterlässt!',
+    required: '*',
+    alertName: 'Bitte geben Sie Ihren Namen ein',
+    alertEmail: 'Bitte geben Sie Ihre E-Mail ein',
+    alertSocial: 'Bitte wählen Sie ein soziales Netzwerk',
+    alertSocialHandle: 'Bitte geben Sie Ihren Social-Media-Benutzernamen ein',
+    alertTitle: 'Bitte geben Sie einen Titel ein',
+    alertMessage: 'Bitte geben Sie Ihre Nachricht ein',
+    alertImageError: 'Fehler beim Hochladen des Bildes',
+    successMessage: 'Vielen Dank für Ihre Nachricht! Sie wurde erfolgreich veröffentlicht.',
+  },
+  pt: {
+    title: 'Livro de Visitas',
+    subtitle: 'Compartilhe suas experiências, comentários e mensagens com nossa comunidade de churrasqueiros',
+    leaveMessage: 'Deixar uma Mensagem',
+    writeMessage: 'Escreva sua mensagem',
+    name: 'Nome completo',
+    email: 'Email',
+    emailNote: 'Não será compartilhado publicamente',
+    socialNetwork: 'Rede Social',
+    selectOption: 'Selecione uma opção',
+    noSocial: 'Não tenho redes sociais',
+    socialUser: 'Usuário em',
+    titleField: 'Título',
+    titlePlaceholder: 'Título da sua mensagem',
+    message: 'Mensagem',
+    messagePlaceholder: 'Compartilhe sua experiência, comentários ou mensagem...',
+    optionalImage: 'Imagem (opcional)',
+    uploading: 'Enviando...',
+    clickUpload: 'Clique para enviar uma imagem',
+    cancel: 'Cancelar',
+    sending: 'Enviando...',
+    publish: 'Publicar Mensagem',
+    noMessages: 'Ainda não há mensagens',
+    beFirst: 'Seja o primeiro a deixar uma mensagem em nosso livro de visitas!',
+    required: '*',
+    alertName: 'Por favor, insira seu nome',
+    alertEmail: 'Por favor, insira seu email',
+    alertSocial: 'Por favor, selecione uma rede social',
+    alertSocialHandle: 'Por favor, insira seu usuário da rede social',
+    alertTitle: 'Por favor, insira um título',
+    alertMessage: 'Por favor, insira sua mensagem',
+    alertImageError: 'Erro ao enviar a imagem',
+    successMessage: 'Obrigado pela sua mensagem! Foi publicada com sucesso.',
+  }
+};
+
+const LANGUAGES = [
+  { code: 'es' as Language, label: 'Español', flag: '🇪🇸' },
+  { code: 'en' as Language, label: 'English', flag: '🇬🇧' },
+  { code: 'de' as Language, label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'pt' as Language, label: 'Português', flag: '🇵🇹' },
+];
+
+const getSocialNetworks = (lang: Language) => [
+  { value: 'none', label: TRANSLATIONS[lang].noSocial, icon: User },
   { value: 'facebook', label: 'Facebook', icon: Facebook },
   { value: 'instagram', label: 'Instagram', icon: Instagram },
   { value: 'twitter', label: 'Twitter / X', icon: Twitter },
@@ -27,7 +175,12 @@ export default function GuestbookPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [language, setLanguage] = useState<Language>('es');
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const imageService = useImageService();
+
+  const t = TRANSLATIONS[language];
+  const SOCIAL_NETWORKS = getSocialNetworks(language);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -69,11 +222,11 @@ export default function GuestbookPage() {
       if (result.success && result.data) {
         setFormData(prev => ({ ...prev, image_url: result.data!.publicUrl }));
       } else {
-        alert('Error al subir la imagen');
+        alert(t.alertImageError);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Error al subir la imagen');
+      alert(t.alertImageError);
     } finally {
       setUploadingImage(false);
     }
@@ -83,32 +236,32 @@ export default function GuestbookPage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert('Por favor ingresa tu nombre');
+      alert(t.alertName);
       return;
     }
 
     if (!formData.email.trim()) {
-      alert('Por favor ingresa tu email');
+      alert(t.alertEmail);
       return;
     }
 
     if (!formData.social_network) {
-      alert('Por favor selecciona una red social');
+      alert(t.alertSocial);
       return;
     }
 
     if (formData.social_network !== 'none' && !formData.social_handle.trim()) {
-      alert('Por favor ingresa tu usuario de la red social seleccionada');
+      alert(t.alertSocialHandle);
       return;
     }
 
     if (!formData.title.trim()) {
-      alert('Por favor ingresa un título');
+      alert(t.alertTitle);
       return;
     }
 
     if (!formData.message.trim()) {
-      alert('Por favor ingresa tu mensaje');
+      alert(t.alertMessage);
       return;
     }
 
@@ -128,7 +281,7 @@ export default function GuestbookPage() {
         throw new Error(data.error || 'Error al enviar el mensaje');
       }
 
-      alert('¡Gracias por tu mensaje! Se ha publicado correctamente.');
+      alert(t.successMessage);
       
       // Limpiar formulario
       setFormData({
@@ -171,18 +324,53 @@ export default function GuestbookPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
+        {/* Language Selector - Top Right */}
+        <div className="flex justify-end mb-4">
+          <div className="relative">
+            <button
+              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <Globe className="h-5 w-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                {LANGUAGES.find(l => l.code === language)?.flag} {LANGUAGES.find(l => l.code === language)?.label}
+              </span>
+            </button>
+            
+            {showLanguageMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setShowLanguageMenu(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center gap-2 ${
+                      language === lang.code ? 'bg-red-50 text-red-600 font-medium' : 'text-gray-700'
+                    } ${lang.code === 'es' ? 'rounded-t-lg' : ''} ${lang.code === 'pt' ? 'rounded-b-lg' : ''}`}
+                  >
+                    <span className="text-xl">{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
             <img 
               src="https://images.acachile.com/home/img-1764027992246-i023ig.jpg" 
-              alt="Libro de Visitas" 
+              alt={t.title} 
               className="h-64 w-64 sm:h-80 sm:w-80 object-cover rounded-full shadow-lg"
             />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Libro de Visitas</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">{t.title}</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Comparte tus experiencias, comentarios y mensajes con nuestra comunidad de asadores
+            {t.subtitle}
           </p>
         </div>
 
@@ -194,7 +382,7 @@ export default function GuestbookPage() {
               className="inline-flex items-center px-8 py-4 bg-red-600 text-white text-lg font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-lg"
             >
               <Send className="h-6 w-6 mr-2" />
-              Dejar un Mensaje
+              {t.leaveMessage}
             </button>
           </div>
         )}
@@ -202,20 +390,20 @@ export default function GuestbookPage() {
         {/* Formulario */}
         {showForm && (
           <div className="bg-white rounded-lg shadow-md p-8 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Deja tu mensaje</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t.writeMessage}</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre completo <span className="text-red-600">*</span>
+                  {t.name} <span className="text-red-600">{t.required}</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Tu nombre"
+                  placeholder={t.name}
                   required
                 />
               </div>
@@ -223,23 +411,23 @@ export default function GuestbookPage() {
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email <span className="text-red-600">*</span>
+                  {t.email} <span className="text-red-600">{t.required}</span>
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="tu@email.com"
+                  placeholder={t.email}
                   required
                 />
-                <p className="mt-1 text-sm text-gray-500">No será compartido públicamente</p>
+                <p className="mt-1 text-sm text-gray-500">{t.emailNote}</p>
               </div>
 
               {/* Red Social */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Red Social <span className="text-red-600">*</span>
+                  {t.socialNetwork} <span className="text-red-600">{t.required}</span>
                 </label>
                 <select
                   value={formData.social_network}
@@ -247,7 +435,7 @@ export default function GuestbookPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   required
                 >
-                  <option value="">Selecciona una opción</option>
+                  <option value="">{t.selectOption}</option>
                   {SOCIAL_NETWORKS.map(network => (
                     <option key={network.value} value={network.value}>
                       {network.label}
@@ -260,7 +448,7 @@ export default function GuestbookPage() {
               {formData.social_network && formData.social_network !== 'none' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Usuario de {SOCIAL_NETWORKS.find(n => n.value === formData.social_network)?.label} <span className="text-red-600">*</span>
+                    {t.socialUser} {SOCIAL_NETWORKS.find(n => n.value === formData.social_network)?.label} <span className="text-red-600">{t.required}</span>
                   </label>
                   <input
                     type="text"
@@ -276,14 +464,14 @@ export default function GuestbookPage() {
               {/* Título */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Título <span className="text-red-600">*</span>
+                  {t.titleField} <span className="text-red-600">{t.required}</span>
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Título de tu mensaje"
+                  placeholder={t.titlePlaceholder}
                   maxLength={100}
                   required
                 />
@@ -292,14 +480,14 @@ export default function GuestbookPage() {
               {/* Mensaje */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mensaje <span className="text-red-600">*</span>
+                  {t.message} <span className="text-red-600">{t.required}</span>
                 </label>
                 <textarea
                   value={formData.message}
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
                   rows={5}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Comparte tu experiencia, comentarios o mensaje..."
+                  placeholder={t.messagePlaceholder}
                   required
                 />
               </div>
@@ -307,7 +495,7 @@ export default function GuestbookPage() {
               {/* Imagen opcional */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Imagen (opcional)
+                  {t.optionalImage}
                 </label>
                 {formData.image_url ? (
                   <div className="relative">
@@ -343,7 +531,7 @@ export default function GuestbookPage() {
                         <ImageIcon className="h-12 w-12 mx-auto text-gray-400" />
                       )}
                       <p className="mt-2 text-sm text-gray-600">
-                        {uploadingImage ? 'Subiendo...' : 'Click para subir una imagen'}
+                        {uploadingImage ? t.uploading : t.clickUpload}
                       </p>
                     </label>
                   </div>
@@ -358,7 +546,7 @@ export default function GuestbookPage() {
                   className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   disabled={submitting}
                 >
-                  Cancelar
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
@@ -368,12 +556,12 @@ export default function GuestbookPage() {
                   {submitting ? (
                     <>
                       <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      Enviando...
+                      {t.sending}
                     </>
                   ) : (
                     <>
                       <Send className="h-5 w-5 mr-2" />
-                      Publicar Mensaje
+                      {t.publish}
                     </>
                   )}
                 </button>
@@ -391,10 +579,10 @@ export default function GuestbookPage() {
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Aún no hay mensajes
+              {t.noMessages}
             </h3>
             <p className="text-gray-600">
-              ¡Sé el primero en dejar un mensaje en nuestro libro de visitas!
+              {t.beFirst}
             </p>
           </div>
         ) : (
