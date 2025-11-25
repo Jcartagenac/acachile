@@ -35,48 +35,25 @@ export async function onRequestGet(context) {
       });
     }
 
-    // Obtener todas las noticias para mapear IDs a títulos
-    const noticiasData = await env.ACA_KV.get('noticias:all');
-    const noticias = noticiasData ? JSON.parse(noticiasData) : [];
-    const noticiasMap = {};
-    noticias.forEach(n => {
-      noticiasMap[n.slug] = n.title;
-      noticiasMap[n.id.toString()] = n.title;
-    });
+    // Obtener comentarios pendientes desde D1 con JOIN a news_articles
+    const query = `
+      SELECT 
+        c.id, c.article_id, c.author_name, c.author_email, c.content, 
+        c.status, c.parent_id, c.created_at,
+        n.title as article_title, n.slug as article_slug
+      FROM news_comments c
+      LEFT JOIN news_articles n ON c.article_id = n.id
+      WHERE c.status = 'pending'
+      ORDER BY c.created_at DESC
+    `;
 
-    // Obtener todos los comentarios pendientes
-    const allPendingComments = [];
-
-    // Iterar sobre cada noticia para obtener sus comentarios
-    for (const noticia of noticias) {
-      const commentsKey = `comments:noticia:${noticia.slug}`;
-      const commentsData = await env.ACA_KV.get(commentsKey);
-      
-      if (commentsData) {
-        const comments = JSON.parse(commentsData);
-        const pendingComments = comments.filter(c => c.status === 'pending');
-        
-        // Agregar título del artículo a cada comentario
-        pendingComments.forEach(comment => {
-          allPendingComments.push({
-            ...comment,
-            article_title: noticia.title,
-            article_slug: noticia.slug
-          });
-        });
-      }
-    }
-
-    // Ordenar por fecha (más recientes primero)
-    allPendingComments.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    console.log(`[PENDING-COMMENTS] Found ${allPendingComments.length} pending comments`);
+    const { results } = await env.DB.prepare(query).all();
+    
+    console.log(`[PENDING-COMMENTS] Found ${results.length} pending comments from D1`);
 
     return new Response(JSON.stringify({
       success: true,
-      data: allPendingComments
+      data: results
     }), {
       headers: { 'Content-Type': 'application/json' }
     });

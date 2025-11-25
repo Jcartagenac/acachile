@@ -32,44 +32,12 @@ export async function onRequestPatch(context) {
       });
     }
 
-    const commentsKey = `comments:${type}:${article_id}`;
-    const commentsData = await env.ACA_KV.get(commentsKey);
+    // Buscar el comentario en D1
+    const comment = await env.DB.prepare(
+      'SELECT id, status FROM news_comments WHERE id = ?'
+    ).bind(comment_id).first();
     
-    if (!commentsData) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No se encontraron comentarios para este artículo'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const comments = JSON.parse(commentsData);
-    let commentFound = false;
-    let oldStatus = null;
-
-    // Buscar y actualizar el comentario (incluyendo respuestas)
-    function updateCommentStatus(commentsList) {
-      for (let i = 0; i < commentsList.length; i++) {
-        if (commentsList[i].id === comment_id) {
-          oldStatus = commentsList[i].status;
-          commentsList[i].status = action === 'approve' ? 'approved' : 'rejected';
-          commentsList[i].moderated_at = new Date().toISOString();
-          commentFound = true;
-          return;
-        }
-        // Buscar en respuestas
-        if (commentsList[i].replies && commentsList[i].replies.length > 0) {
-          updateCommentStatus(commentsList[i].replies);
-          if (commentFound) return;
-        }
-      }
-    }
-
-    updateCommentStatus(comments);
-
-    if (!commentFound) {
+    if (!comment) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Comentario no encontrado'
@@ -79,32 +47,15 @@ export async function onRequestPatch(context) {
       });
     }
 
-    // Actualizar comentarios en KV
-    await env.ACA_KV.put(commentsKey, JSON.stringify(comments));
+    const oldStatus = comment.status;
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
-    // Actualizar estadísticas
-    const statsKey = `comments:stats:${type}:${article_id}`;
-    const currentStats = await env.ACA_KV.get(statsKey);
-    const stats = currentStats ? JSON.parse(currentStats) : { total: 0, pending: 0, approved: 0, rejected: 0 };
-    
-    // Actualizar contadores según el cambio de estado
-    if (oldStatus === 'pending') {
-      stats.pending -= 1;
-    } else if (oldStatus === 'approved') {
-      stats.approved -= 1;
-    } else if (oldStatus === 'rejected') {
-      stats.rejected -= 1;
-    }
+    // Actualizar el estado del comentario en D1
+    await env.DB.prepare(
+      'UPDATE news_comments SET status = ? WHERE id = ?'
+    ).bind(newStatus, comment_id).run();
 
-    if (action === 'approve') {
-      stats.approved += 1;
-    } else {
-      stats.rejected += 1;
-    }
-
-    await env.ACA_KV.put(statsKey, JSON.stringify(stats));
-
-    console.log(`[COMMENTS MODERATE] Comentario ${comment_id} ${action}d`);
+    console.log(`[COMMENTS MODERATE] Comentario ${comment_id} ${action}d (${oldStatus} -> ${newStatus})`);
 
     return new Response(JSON.stringify({
       success: true,

@@ -8,10 +8,9 @@ export async function onRequestGet(context) {
   try {
     const url = new URL(request.url);
     const articleId = url.searchParams.get('article_id');
-    const type = url.searchParams.get('type') || 'noticia'; // noticia, evento
     const limit = parseInt(url.searchParams.get('limit')) || 20;
 
-    console.log(`[COMMENTS] GET - Article ID: ${articleId}, Type: ${type}, Limit: ${limit}`);
+    console.log(`[COMMENTS] GET - Article ID: ${articleId}, Limit: ${limit}`);
 
     if (!articleId) {
       return new Response(JSON.stringify({
@@ -23,33 +22,27 @@ export async function onRequestGet(context) {
       });
     }
 
-    // Obtener comentarios del KV
-    const commentsKey = `comments:${type}:${articleId}`;
-    const commentsData = await env.ACA_KV.get(commentsKey);
-    
-    let comments = [];
-    if (commentsData) {
-      comments = JSON.parse(commentsData);
-    }
+    // Obtener comentarios aprobados de D1
+    const query = `
+      SELECT id, article_id, author_name, author_email, content, status, parent_id, created_at
+      FROM news_comments
+      WHERE article_id = ? AND status = 'approved'
+      ORDER BY created_at DESC
+      LIMIT ?
+    `;
 
-    // Filtrar solo comentarios aprobados (a menos que sea admin)
-    // TODO: Verificar si el usuario es admin para mostrar todos
-    comments = comments.filter(c => c.status === 'approved');
+    const { results } = await env.DB.prepare(query)
+      .bind(articleId, limit)
+      .all();
 
-    // Ordenar por fecha (más recientes primero) y limitar
-    comments = comments
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, limit);
-
-    console.log(`[COMMENTS] Encontrados: ${comments.length} comentarios aprobados`);
+    console.log(`[COMMENTS] Encontrados: ${results.length} comentarios aprobados`);
 
     return new Response(JSON.stringify({
       success: true,
       data: {
-        comments,
-        total: comments.length,
-        article_id: articleId,
-        type
+        comments: results,
+        total: results.length,
+        article_id: articleId
       }
     }), {
       headers: { 'Content-Type': 'application/json' }
@@ -185,40 +178,31 @@ export async function onRequestPost(context) {
       });
     }
 
-    const commentsKey = `comments:${type}:${article_id}`;
-    
-    // Obtener comentarios existentes
-    const existingCommentsData = await env.ACA_KV.get(commentsKey);
-    const existingComments = existingCommentsData ? JSON.parse(existingCommentsData) : [];
+    // Insertar comentario en D1 (news_comments table)
+    const insertQuery = `
+      INSERT INTO news_comments (article_id, author_name, author_email, content, status, parent_id, created_at)
+      VALUES (?, ?, ?, ?, 'pending', ?, datetime('now'))
+    `;
 
-    // Generar ID único y crear comentario
-    const commentId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    const newComment = createCommentObject(body, commentId);
+    const result = await env.DB.prepare(insertQuery)
+      .bind(
+        article_id,
+        body.author_name.trim(),
+        body.author_email.toLowerCase().trim(),
+        body.content.trim(),
+        parent_id || null
+      )
+      .run();
 
-    // Agregar comentario a la lista
-    const addResult = addCommentToList(existingComments, newComment, parent_id);
-    if (!addResult.success) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: addResult.error
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (!result.success) {
+      throw new Error('Failed to insert comment into D1');
     }
 
-    // Guardar comentarios actualizados
-    await env.ACA_KV.put(commentsKey, JSON.stringify(existingComments));
-
-    // Actualizar estadísticas
-    await updateCommentStats(env, type, article_id);
-
-    console.log(`[COMMENTS] Comentario creado: ${commentId} para ${type}:${article_id}`);
+    console.log(`[COMMENTS] Comentario creado en D1 para article_id: ${article_id}`);
 
     return new Response(JSON.stringify({
       success: true,
       data: {
-        comment: newComment,
         message: 'Comentario enviado. Será revisado antes de publicarse.'
       }
     }), {

@@ -59,9 +59,8 @@ async function handleGetNoticias(url, env, corsHeaders) {
     
     // Obtener noticias de D1
     const query = `
-      SELECT id, title, slug, excerpt, content, featured_image, gallery, video_url, 
-             author_id, category_id, status, is_featured, view_count, 
-             published_at, created_at, updated_at, deleted_at
+      SELECT id, title, slug, excerpt, content, featured_image, author_id, category_id,
+             status, is_featured, view_count, published_at, created_at, updated_at, deleted_at
       FROM news_articles 
       ${whereClause}
       ORDER BY created_at DESC 
@@ -91,41 +90,28 @@ async function handleGetNoticias(url, env, corsHeaders) {
     };
 
     // Formatear noticias para el frontend
-    const formattedNews = results.map(article => {
-      // Parsear gallery si es un string JSON
-      let gallery = [];
-      if (article.gallery) {
-        try {
-          gallery = typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery;
-        } catch (e) {
-          console.error('Error parsing gallery:', e);
-          gallery = [];
-        }
-      }
-
-      return {
-        id: article.id,
-        title: article.title,
-        slug: article.slug,
-        excerpt: article.excerpt || '',
-        content: article.content,
-        featured_image: article.featured_image || '/images/default-news.jpg',
-        gallery: gallery,
-        video_url: article.video_url || '',
-        category: categories[article.category_id] || categories[8],
-        tags: [],
-        author_name: 'ACA Chile',
-        published_at: article.published_at,
-        created_at: article.created_at,
-        updated_at: article.updated_at,
-        deleted_at: article.deleted_at,
-        status: article.status,
-        is_featured: article.is_featured,
-        view_count: article.view_count,
-        views: article.view_count,
-        commentsEnabled: true
-      };
-    });
+    const formattedNews = results.map(article => ({
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      excerpt: article.excerpt || '',
+      content: article.content,
+      featured_image: article.featured_image || '/images/default-news.jpg',
+      gallery: [],
+      video_url: '',
+      category: categories[article.category_id] || categories[8],
+      tags: [],
+      author_name: 'ACA Chile',
+      published_at: article.published_at,
+      created_at: article.created_at,
+      updated_at: article.updated_at,
+      deleted_at: article.deleted_at,
+      status: article.status,
+      is_featured: article.is_featured,
+      view_count: article.view_count,
+      views: article.view_count,
+      commentsEnabled: true
+    }));
 
     return new Response(JSON.stringify({
       success: true,
@@ -184,15 +170,12 @@ async function handleCreateNoticia(request, env, corsHeaders) {
 
     const now = new Date().toISOString();
 
-    // Convertir gallery a JSON string si viene como array
-    const galleryJson = body.gallery ? JSON.stringify(body.gallery) : null;
-
     // Insertar en D1
     const insertQuery = `
       INSERT INTO news_articles (
-        title, slug, excerpt, content, featured_image, gallery, video_url, author_id, category_id,
+        title, slug, excerpt, content, featured_image, author_id, category_id,
         status, is_featured, view_count, published_at, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const result = await env.DB.prepare(insertQuery)
@@ -202,8 +185,6 @@ async function handleCreateNoticia(request, env, corsHeaders) {
         body.excerpt || '',
         body.content,
         body.featured_image || '/images/default-news.jpg',
-        galleryJson,
-        body.video_url || null,
         1, // author_id por defecto
         body.category_id || 8,
         body.status || 'published',
@@ -239,16 +220,6 @@ async function handleCreateNoticia(request, env, corsHeaders) {
       8: { id: 8, name: 'General', slug: 'general', color: '#64748B' }
     };
 
-    // Parsear gallery
-    let gallery = [];
-    if (article.gallery) {
-      try {
-        gallery = typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery;
-      } catch (e) {
-        console.error('Error parsing gallery:', e);
-      }
-    }
-
     const formatted = {
       id: article.id,
       title: article.title,
@@ -256,8 +227,8 @@ async function handleCreateNoticia(request, env, corsHeaders) {
       excerpt: article.excerpt,
       content: article.content,
       featured_image: article.featured_image,
-      gallery: gallery,
-      video_url: article.video_url || '',
+      gallery: [],
+      video_url: '',
       category: categories[article.category_id] || categories[8],
       tags: [],
       author_name: 'ACA Chile',

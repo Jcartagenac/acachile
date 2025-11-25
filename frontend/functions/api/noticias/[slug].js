@@ -1,385 +1,250 @@
 import { requireAuth } from '../../_middleware';
 
-// Endpoint para obtener noticia individual por slug
-// GET /api/noticias/[slug]
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+const categories = {
+  1: { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
+  2: { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
+  3: { id: 3, name: 'Eventos', slug: 'eventos', color: '#2563EB' },
+  4: { id: 4, name: 'Institucional', slug: 'institucional', color: '#7C3AED' },
+  5: { id: 5, name: 'Internacional', slug: 'internacional', color: '#EA580C' },
+  6: { id: 6, name: 'Comunidad', slug: 'comunidad', color: '#0891B2' },
+  7: { id: 7, name: 'Técnicas', slug: 'tecnicas', color: '#CA8A04' },
+  8: { id: 8, name: 'General', slug: 'general', color: '#64748B' }
+};
+
+function formatArticle(article) {
+  // Parsear gallery si es un string JSON
+  let gallery = [];
+  if (article.gallery) {
+    try {
+      gallery = typeof article.gallery === 'string' ? JSON.parse(article.gallery) : article.gallery;
+    } catch (e) {
+      console.error('Error parsing gallery:', e);
+      gallery = [];
+    }
+  }
+
+  return {
+    id: article.id,
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.excerpt || '',
+    content: article.content,
+    featured_image: article.featured_image || '/images/default-news.jpg',
+    gallery: gallery,
+    video_url: article.video_url || '',
+    category: categories[article.category_id] || categories[8],
+    tags: [],
+    author_name: 'ACA Chile',
+    published_at: article.published_at,
+    created_at: article.created_at,
+    updated_at: article.updated_at,
+    deleted_at: article.deleted_at,
+    status: article.status,
+    is_featured: article.is_featured,
+    view_count: article.view_count,
+    views: article.view_count,
+    commentsEnabled: true
+  };
+}
+
+export async function onRequestOptions(context) {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
 
 export async function onRequestGet(context) {
-  const { request, env, params } = context;
-
+  const { env, params } = context;
   try {
-    console.log('[NOTICIAS/SLUG] Processing request for slug:', params.slug);
-
     if (!params.slug) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Slug requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ success: false, error: 'Slug requerido' }), {
+        status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
-
-    // Obtener todas las noticias del KV
-    const noticiasData = await env.ACA_KV.get('noticias:all');
-    if (!noticiasData) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No hay noticias disponibles'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
+    let query, binding;
+    if (!isNaN(params.slug)) {
+      query = 'SELECT * FROM news_articles WHERE id = ? AND deleted_at IS NULL';
+      binding = parseInt(params.slug);
+    } else {
+      query = 'SELECT * FROM news_articles WHERE slug = ? AND deleted_at IS NULL';
+      binding = params.slug;
+    }
+    const article = await env.DB.prepare(query).bind(binding).first();
+    if (!article) {
+      return new Response(JSON.stringify({ success: false, error: 'Noticia no encontrada' }), {
+        status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
-
-    const noticias = JSON.parse(noticiasData);
-    
-    // Buscar la noticia por slug o ID
-    const slugOrId = params.slug;
-    const noticia = noticias.find(n => {
-      // Si el parámetro es numérico, buscar por ID
-      if (!isNaN(slugOrId)) {
-        return n.id === parseInt(slugOrId);
-      }
-      // Si no, buscar por slug
-      return n.slug === slugOrId;
+    await env.DB.prepare('UPDATE news_articles SET view_count = view_count + 1 WHERE id = ?').bind(article.id).run();
+    const formatted = formatArticle(article);
+    formatted.view_count = article.view_count + 1;
+    formatted.views = article.view_count + 1;
+    return new Response(JSON.stringify({ success: true, data: formatted }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
-    
-    if (!noticia) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Noticia no encontrada'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Incrementar contador de vistas (usar view_count en lugar de views)
-    noticia.view_count = (noticia.view_count || noticia.views || 0) + 1;
-    // Mantener compatibilidad con views
-    noticia.views = noticia.view_count;
-    
-    // Guardar las noticias actualizadas
-    const updatedNoticias = noticias.map(n => 
-      n.id === noticia.id ? noticia : n
-    );
-    await env.ACA_KV.put('noticias:all', JSON.stringify(updatedNoticias));
-
-    // También actualizar la noticia individual en KV
-    await env.ACA_KV.put(`noticia:${noticia.id}`, JSON.stringify(noticia));
-
-    console.log(`[NOTICIAS/SLUG] Noticia encontrada: ${noticia.title}, views: ${noticia.view_count}`);
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: noticia
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
   } catch (error) {
-    console.error('[NOTICIAS/SLUG] Error:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+    console.error('[NOTICIAS/SLUG] GET Error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Error interno del servidor' }), {
+      status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
   }
 }
 
-// PUT /api/noticias/[slug] - Actualizar noticia
-export async function onRequestPut(context) {
-  const { request, env, params } = context;
-
-  try {
-    console.log('[NOTICIAS/SLUG] PUT request for slug:', params.slug);
-
-    // Verificar autenticación usando JWT
-    let authUser;
-    try {
-      authUser = await requireAuth(request, env);
-      console.log('[NOTICIAS/SLUG] Auth user:', JSON.stringify({
-        id: authUser.id,
-        email: authUser.email,
-        role: authUser.role,
-        roles: authUser.roles
-      }));
-    } catch (error) {
-      console.log('[NOTICIAS/SLUG] Auth error:', error.message);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No autorizado - ' + error.message
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    // Verificar que el usuario sea admin
-    const isAdmin = authUser.role === 'admin' || 
-                    (Array.isArray(authUser.roles) && authUser.roles.includes('admin'));
-    
-    console.log('[NOTICIAS/SLUG] Is admin:', isAdmin);
-    
-    if (!isAdmin) {
-      console.log('[NOTICIAS/SLUG] User is not admin, role:', authUser.role, 'roles:', authUser.roles);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No tienes permisos para actualizar noticias. Se requiere rol de administrador.'
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    if (!params.slug) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Slug requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Obtener los datos de la noticia actualizada
-    const body = await request.json();
-    console.log('[NOTICIAS/SLUG] Update data:', JSON.stringify(body, null, 2));
-
-    // Obtener todas las noticias
-    const noticiasData = await env.ACA_KV.get('noticias:all');
-    if (!noticiasData) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No hay noticias disponibles'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const noticias = JSON.parse(noticiasData);
-    
-    // Buscar la noticia a actualizar
-    const slugOrId = params.slug;
-    console.log('[NOTICIAS/SLUG] Searching for:', slugOrId);
-    
-    const noticiaIndex = noticias.findIndex(n => {
-      if (!isNaN(slugOrId)) {
-        return n.id === parseInt(slugOrId);
-      }
-      return n.slug === slugOrId;
-    });
-    
-    console.log('[NOTICIAS/SLUG] Found at index:', noticiaIndex);
-    
-    if (noticiaIndex === -1) {
-      console.log('[NOTICIAS/SLUG] Noticia not found');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Noticia no encontrada'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const noticiaActual = noticias[noticiaIndex];
-    
-    // Validar galería (máximo 20 imágenes)
-    if (body.gallery && Array.isArray(body.gallery) && body.gallery.length > 20) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'La galería no puede tener más de 20 imágenes'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Actualizar los campos de la noticia
-    const noticiaActualizada = {
-      ...noticiaActual,
-      title: body.title || noticiaActual.title,
-      slug: body.slug || noticiaActual.slug,
-      excerpt: body.excerpt || noticiaActual.excerpt,
-      content: body.content || noticiaActual.content,
-      featured_image: body.featured_image !== undefined ? body.featured_image : noticiaActual.featured_image,
-      gallery: body.gallery !== undefined ? body.gallery : noticiaActual.gallery,
-      video_url: body.video_url !== undefined ? body.video_url : noticiaActual.video_url,
-      category: body.category || noticiaActual.category,
-      tags: body.tags || noticiaActual.tags,
-      status: body.status || noticiaActual.status,
-      is_featured: body.is_featured !== undefined ? body.is_featured : noticiaActual.is_featured,
-      commentsEnabled: body.commentsEnabled !== undefined ? body.commentsEnabled : noticiaActual.commentsEnabled,
-      updated_at: new Date().toISOString()
-    };
-    
-    // Reemplazar la noticia en el array
-    noticias[noticiaIndex] = noticiaActualizada;
-    
-    // Guardar el array actualizado
-    await env.ACA_KV.put('noticias:all', JSON.stringify(noticias));
-    
-    // Actualizar también la entrada individual
-    await env.ACA_KV.put(`noticia:${noticiaActualizada.id}`, JSON.stringify(noticiaActualizada));
-
-    console.log(`[NOTICIAS/SLUG] Noticia actualizada: ${noticiaActualizada.title}`);
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: noticiaActualizada,
-      message: 'Noticia actualizada correctamente'
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-  } catch (error) {
-    console.error('[NOTICIAS/SLUG] Error al actualizar:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}
-
-// DELETE /api/noticias/[slug] - Eliminar noticia
 export async function onRequestDelete(context) {
   const { request, env, params } = context;
-
   try {
-    console.log('[NOTICIAS/SLUG] DELETE request for slug:', params.slug);
-
-    // Verificar autenticación usando JWT
     let authUser;
-    try {
-      authUser = await requireAuth(request, env);
-      console.log('[NOTICIAS/SLUG] Auth user:', JSON.stringify({
-        id: authUser.id,
-        email: authUser.email,
-        role: authUser.role,
-        roles: authUser.roles
-      }));
-    } catch (error) {
-      console.log('[NOTICIAS/SLUG] Auth error:', error.message);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No autorizado - ' + error.message
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
+    try { authUser = await requireAuth(request, env); } 
+    catch (error) {
+      return new Response(JSON.stringify({ success: false, error: 'No autorizado' }), {
+        status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    const isAdmin = authUser.role === 'admin' || (Array.isArray(authUser.roles) && authUser.roles.includes('admin'));
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ success: false, error: 'No tienes permisos' }), {
+        status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    if (!params.slug) {
+      return new Response(JSON.stringify({ success: false, error: 'Slug requerido' }), {
+        status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    let query, binding;
+    if (!isNaN(params.slug)) {
+      query = 'SELECT id FROM news_articles WHERE id = ? AND deleted_at IS NULL';
+      binding = parseInt(params.slug);
+    } else {
+      query = 'SELECT id FROM news_articles WHERE slug = ? AND deleted_at IS NULL';
+      binding = params.slug;
+    }
+    const article = await env.DB.prepare(query).bind(binding).first();
+    if (!article) {
+      return new Response(JSON.stringify({ success: false, error: 'Noticia no encontrada' }), {
+        status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    const now = new Date().toISOString();
+    await env.DB.prepare('UPDATE news_articles SET deleted_at = ?, status = ? WHERE id = ?').bind(now, 'archived', article.id).run();
+    return new Response(JSON.stringify({ success: true, message: 'Noticia movida a la papelera' }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    console.error('[NOTICIAS/SLUG] DELETE Error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Error al eliminar noticia' }), {
+      status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+export async function onRequestPut(context) {
+  const { request, env, params } = context;
+  try {
+    console.log('[NOTICIAS/SLUG] PUT request for:', params.slug);
+    
+    // Verificar autenticación
+    let authUser;
+    try { authUser = await requireAuth(request, env); }
+    catch (error) {
+      return new Response(JSON.stringify({ success: false, error: 'No autorizado' }), {
+        status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
     
-    // Verificar que el usuario sea admin (verificar tanto role como roles array)
-    const isAdmin = authUser.role === 'admin' || 
-                    (Array.isArray(authUser.roles) && authUser.roles.includes('admin'));
-    
-    console.log('[NOTICIAS/SLUG] Is admin:', isAdmin);
-    
+    // Verificar permisos de admin
+    const isAdmin = authUser.role === 'admin' || (Array.isArray(authUser.roles) && authUser.roles.includes('admin'));
     if (!isAdmin) {
-      console.log('[NOTICIAS/SLUG] User is not admin, role:', authUser.role, 'roles:', authUser.roles);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No tienes permisos para eliminar noticias. Se requiere rol de administrador.'
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ success: false, error: 'No tienes permisos para actualizar noticias' }), {
+        status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
     if (!params.slug) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Slug requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ success: false, error: 'Slug requerido' }), {
+        status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    // Obtener todas las noticias
-    const noticiasData = await env.ACA_KV.get('noticias:all');
-    if (!noticiasData) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No hay noticias disponibles'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
+    const body = await request.json();
+    console.log('[NOTICIAS/SLUG] Update data:', body.title);
+
+    // Buscar artículo existente
+    let query, binding;
+    if (!isNaN(params.slug)) {
+      query = 'SELECT * FROM news_articles WHERE id = ? AND deleted_at IS NULL';
+      binding = parseInt(params.slug);
+    } else {
+      query = 'SELECT * FROM news_articles WHERE slug = ? AND deleted_at IS NULL';
+      binding = params.slug;
+    }
+
+    const article = await env.DB.prepare(query).bind(binding).first();
+    if (!article) {
+      return new Response(JSON.stringify({ success: false, error: 'Noticia no encontrada' }), {
+        status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
 
-    const noticias = JSON.parse(noticiasData);
-    
-    // Buscar la noticia a eliminar - puede ser por slug o por ID
-    const slugOrId = params.slug;
-    console.log('[NOTICIAS/SLUG] Searching for:', slugOrId);
-    
-    const noticiaIndex = noticias.findIndex(n => {
-      // Si el parámetro es numérico, buscar por ID
-      if (!isNaN(slugOrId)) {
-        return n.id === parseInt(slugOrId);
-      }
-      // Si no, buscar por slug
-      return n.slug === slugOrId;
-    });
-    
-    console.log('[NOTICIAS/SLUG] Found at index:', noticiaIndex);
-    
-    if (noticiaIndex === -1) {
-      console.log('[NOTICIAS/SLUG] Noticia not found, available IDs:', noticias.map(n => n.id));
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Noticia no encontrada'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    // Actualizar en D1
+    const now = new Date().toISOString();
+    const updateQuery = `
+      UPDATE news_articles 
+      SET title = ?, slug = ?, excerpt = ?, content = ?, featured_image = ?,
+          gallery = ?, video_url = ?, category_id = ?, status = ?, is_featured = ?, updated_at = ?
+      WHERE id = ?
+    `;
+
+    // Extraer category_id del objeto category si viene
+    let categoryId = article.category_id;
+    if (body.category) {
+      categoryId = typeof body.category === 'object' ? body.category.id : body.category;
+    } else if (body.category_id) {
+      categoryId = body.category_id;
     }
 
-    const noticia = noticias[noticiaIndex];
-    console.log('[NOTICIAS/SLUG] Found noticia:', noticia.title, 'ID:', noticia.id);
-    
-    // SOFT DELETE: Marcar como eliminada en lugar de borrar
-    noticia.deleted_at = new Date().toISOString();
-    noticia.status = 'archived'; // Cambiar a archived para que no aparezca en público
-    
-    // Actualizar la noticia en el array
-    noticias[noticiaIndex] = noticia;
-    
-    // Guardar el array actualizado
-    await env.ACA_KV.put('noticias:all', JSON.stringify(noticias));
-    
-    // Actualizar también la entrada individual
-    await env.ACA_KV.put(`noticia:${noticia.id}`, JSON.stringify(noticia));
+    // Convertir gallery a JSON string si es un array
+    let galleryJson = article.gallery;
+    if (body.gallery !== undefined) {
+      galleryJson = Array.isArray(body.gallery) ? JSON.stringify(body.gallery) : body.gallery;
+    }
 
-    console.log(`[NOTICIAS/SLUG] Noticia movida a papelera: ${noticia.title}`);
+    await env.DB.prepare(updateQuery).bind(
+      body.title || article.title,
+      body.slug || article.slug,
+      body.excerpt !== undefined ? body.excerpt : article.excerpt,
+      body.content || article.content,
+      body.featured_image !== undefined ? body.featured_image : article.featured_image,
+      galleryJson,
+      body.video_url !== undefined ? body.video_url : article.video_url,
+      categoryId,
+      body.status || article.status,
+      body.is_featured !== undefined ? (body.is_featured ? 1 : 0) : article.is_featured,
+      now,
+      article.id
+    ).run();
+
+    // Obtener artículo actualizado
+    const updated = await env.DB.prepare('SELECT * FROM news_articles WHERE id = ?').bind(article.id).first();
+    
+    console.log('[NOTICIAS/SLUG] Article updated:', updated.title);
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Noticia movida a la papelera. Se eliminará permanentemente en 30 días.',
-      data: noticia
+      data: formatArticle(updated),
+      message: 'Noticia actualizada exitosamente'
     }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
 
   } catch (error) {
-    console.error('[NOTICIAS/SLUG] Error al eliminar:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Error interno del servidor',
-      details: env.ENVIRONMENT === 'development' ? error.message : undefined
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+    console.error('[NOTICIAS/SLUG] PUT Error:', error);
+    return new Response(JSON.stringify({ success: false, error: 'Error al actualizar noticia: ' + error.message }), {
+      status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
   }
 }
