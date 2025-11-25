@@ -79,10 +79,34 @@ export async function onRequestGet(context) {
         status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
-    await env.DB.prepare('UPDATE news_articles SET view_count = view_count + 1 WHERE id = ?').bind(article.id).run();
+    
+    // Generar visitor_id único basado en IP + User-Agent
+    const ip = context.request.headers.get('CF-Connecting-IP') || 
+               context.request.headers.get('X-Forwarded-For') || 
+               'unknown';
+    const userAgent = context.request.headers.get('User-Agent') || 'unknown';
+    const visitorId = `${ip}_${userAgent.substring(0, 50)}`;
+    
+    // Intentar registrar la visita única
+    try {
+      await env.DB.prepare(
+        'INSERT INTO article_views (article_id, visitor_id, viewed_at) VALUES (?, ?, datetime("now"))'
+      ).bind(article.id, visitorId).run();
+      
+      // Solo incrementar si se pudo insertar (visita nueva)
+      await env.DB.prepare(
+        'UPDATE news_articles SET view_count = view_count + 1 WHERE id = ?'
+      ).bind(article.id).run();
+      
+      article.view_count = article.view_count + 1;
+    } catch (error) {
+      // Si el error es por UNIQUE constraint, significa que ya visitó (no incrementar)
+      if (!error.message.includes('UNIQUE constraint')) {
+        console.error('Error registrando visita:', error);
+      }
+    }
+    
     const formatted = formatArticle(article);
-    formatted.view_count = article.view_count + 1;
-    formatted.views = article.view_count + 1;
     return new Response(JSON.stringify({ success: true, data: formatted }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
