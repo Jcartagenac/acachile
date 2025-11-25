@@ -198,28 +198,30 @@ export default function GuestbookPage() {
   });
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [hasTranslated, setHasTranslated] = useState(false);
 
   useEffect(() => {
     loadEntries();
   }, []);
 
+  // Efecto separado solo para el cambio de idioma
   useEffect(() => {
     if (entries.length === 0) return;
     
     if (language === 'es') {
       // Clear translations when in Spanish
-      if (entries[0]?.translatedTitle) {
-        setEntries(prev => prev.map(entry => ({
-          ...entry,
-          translatedTitle: undefined,
-          translatedMessage: undefined
-        })));
-      }
+      setEntries(prev => prev.map(entry => ({
+        ...entry,
+        translatedTitle: undefined,
+        translatedMessage: undefined
+      })));
+      setHasTranslated(false);
     } else {
-      // Translate to target language
+      // Translate to target language only once
+      setHasTranslated(false); // Reset flag to allow translation
       translateEntries();
     }
-  }, [language, entries.length]);
+  }, [language]); // Solo cuando cambia el idioma, NO entries.length
 
   const translateText = async (text: string, targetLang: Language): Promise<string> => {
     if (targetLang === 'es') return text;
@@ -315,7 +317,13 @@ export default function GuestbookPage() {
   };
 
   const translateEntries = async () => {
+    if (hasTranslated) {
+      console.log('Already translated, skipping...');
+      return;
+    }
+    
     setTranslating(true);
+    setHasTranslated(true);
     console.log('Starting translation to', language, 'for', entries.length, 'entries');
     
     try {
@@ -348,6 +356,7 @@ export default function GuestbookPage() {
       setEntries(translatedEntries);
     } catch (error) {
       console.error('Error translating entries:', error);
+      setHasTranslated(false); // Reset on error to allow retry
     } finally {
       setTranslating(false);
     }
@@ -390,6 +399,12 @@ export default function GuestbookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (submitting) {
+      console.log('Already submitting, ignoring...');
+      return;
+    }
+
     if (!formData.name.trim()) {
       alert(t.alertName);
       return;
@@ -422,6 +437,8 @@ export default function GuestbookPage() {
 
     try {
       setSubmitting(true);
+      console.log('Submitting guestbook entry...', formData.title);
+      
       const response = await fetch('/api/guestbook', {
         method: 'POST',
         headers: {
@@ -431,6 +448,7 @@ export default function GuestbookPage() {
       });
 
       const data = await response.json();
+      console.log('Submit response:', data);
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Error al enviar el mensaje');
@@ -438,7 +456,7 @@ export default function GuestbookPage() {
 
       alert(t.successMessage);
       
-      // Limpiar formulario
+      // Limpiar formulario primero
       setFormData({
         name: '',
         email: '',
@@ -450,8 +468,12 @@ export default function GuestbookPage() {
       });
       setShowForm(false);
       
+      // Esperar un poco antes de recargar para asegurar que el servidor procesó
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Recargar entradas
-      loadEntries();
+      console.log('Reloading entries after submit...');
+      await loadEntries();
 
     } catch (error) {
       console.error('Error submitting:', error);
