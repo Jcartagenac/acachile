@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, Facebook, Instagram, Twitter, Linkedin, User, MessageSquare, Image as ImageIcon, Loader2, Globe } from 'lucide-react';
+import { Send, Facebook, Instagram, Twitter, Linkedin, User, MessageSquare, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useImageService } from '../hooks/useImageService';
 
 interface GuestbookEntry {
@@ -181,7 +181,6 @@ export default function GuestbookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [language, setLanguage] = useState<Language>('es');
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [translating, setTranslating] = useState(false);
   const imageService = useImageService();
 
@@ -438,54 +437,44 @@ export default function GuestbookPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Language Selector - Top Right */}
-        <div className="flex justify-end mb-4">
-          <div className="relative">
-            <button
-              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <Globe className="h-5 w-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                {LANGUAGES.find(l => l.code === language)?.flag} {LANGUAGES.find(l => l.code === language)?.label}
-              </span>
-            </button>
-            
-            {showLanguageMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      setLanguage(lang.code);
-                      setShowLanguageMenu(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center gap-2 ${
-                      language === lang.code ? 'bg-red-50 text-red-600 font-medium' : 'text-gray-700'
-                    } ${lang.code === 'es' ? 'rounded-t-lg' : ''} ${lang.code === 'pt' ? 'rounded-b-lg' : ''}`}
-                  >
-                    <span className="text-xl">{lang.flag}</span>
-                    <span>{lang.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
             <img 
               src="https://images.acachile.com/home/img-1764027992246-i023ig.jpg" 
               alt={t.title} 
-              className="h-64 w-64 sm:h-80 sm:w-80 object-cover rounded-full shadow-lg"
+              className="h-48 w-48 sm:h-56 sm:w-56 object-cover rounded-full shadow-lg"
             />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{t.title}</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{t.title}</h1>
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto mb-6">
             {t.subtitle}
           </p>
+        </div>
+
+        {/* Language Selector - Flags Only */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-md border border-gray-200">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`relative group transition-all duration-200 ${
+                  language === lang.code 
+                    ? 'scale-125' 
+                    : 'scale-100 opacity-60 hover:opacity-100 hover:scale-110'
+                }`}
+                title={lang.label}
+              >
+                <span className="text-3xl sm:text-4xl cursor-pointer">
+                  {lang.flag}
+                </span>
+                {language === lang.code && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-600 rounded-full"></div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Botón para mostrar formulario */}
