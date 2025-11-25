@@ -14,6 +14,11 @@ interface GuestbookEntry {
   created_at: string;
 }
 
+interface TranslatedEntry extends GuestbookEntry {
+  translatedTitle?: string;
+  translatedMessage?: string;
+}
+
 type Language = 'es' | 'en' | 'de' | 'pt';
 
 const TRANSLATIONS = {
@@ -171,12 +176,13 @@ const getSocialNetworks = (lang: Language) => [
 ];
 
 export default function GuestbookPage() {
-  const [entries, setEntries] = useState<GuestbookEntry[]>([]);
+  const [entries, setEntries] = useState<TranslatedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [language, setLanguage] = useState<Language>('es');
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const imageService = useImageService();
 
   const t = TRANSLATIONS[language];
@@ -197,6 +203,67 @@ export default function GuestbookPage() {
   useEffect(() => {
     loadEntries();
   }, []);
+
+  useEffect(() => {
+    if (language !== 'es' && entries.length > 0 && !entries[0]?.translatedTitle) {
+      translateEntries();
+    } else if (language === 'es' && entries.length > 0 && entries[0]?.translatedTitle) {
+      // Clear translations when switching back to Spanish
+      setEntries(prev => prev.map(entry => ({
+        ...entry,
+        translatedTitle: undefined,
+        translatedMessage: undefined
+      })));
+    }
+  }, [language]);
+
+  const translateText = async (text: string, targetLang: Language): Promise<string> => {
+    if (targetLang === 'es') return text;
+    
+    try {
+      const langPair = `es|${targetLang}`;
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
+      );
+      const data = await response.json();
+      
+      if (data.responseData && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      }
+      return text;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  };
+
+  const translateEntries = async () => {
+    setTranslating(true);
+    
+    try {
+      const translatedEntries = await Promise.all(
+        entries.map(async (entry) => {
+          // Translate title and message
+          const [translatedTitle, translatedMessage] = await Promise.all([
+            translateText(entry.title, language),
+            translateText(entry.message, language)
+          ]);
+
+          return {
+            ...entry,
+            translatedTitle,
+            translatedMessage
+          };
+        })
+      );
+
+      setEntries(translatedEntries);
+    } catch (error) {
+      console.error('Error translating entries:', error);
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const loadEntries = async () => {
     try {
@@ -597,7 +664,10 @@ export default function GuestbookPage() {
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 break-words">
-                          {entry.title}
+                          {entry.translatedTitle || entry.title}
+                          {translating && language !== 'es' && !entry.translatedTitle && (
+                            <Loader2 className="inline h-5 w-5 ml-2 text-gray-400 animate-spin" />
+                          )}
                         </h3>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-sm text-gray-600">
                           <span className="font-medium truncate">{entry.name}</span>
@@ -620,7 +690,7 @@ export default function GuestbookPage() {
                     <div className="w-full bg-gray-100">
                       <img 
                         src={entry.image_url} 
-                        alt={entry.title}
+                        alt={entry.translatedTitle || entry.title}
                         className="w-full h-auto object-contain"
                       />
                     </div>
@@ -629,7 +699,10 @@ export default function GuestbookPage() {
                   {/* Mensaje */}
                   <div className="p-4 sm:p-6">
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap break-words">
-                      {entry.message}
+                      {entry.translatedMessage || entry.message}
+                      {translating && language !== 'es' && !entry.translatedMessage && (
+                        <Loader2 className="inline h-5 w-5 ml-2 text-gray-400 animate-spin" />
+                      )}
                     </p>
                   </div>
                 </div>
