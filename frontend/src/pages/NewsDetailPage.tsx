@@ -90,7 +90,7 @@ const NewsDetailPage: React.FC = () => {
     if (!article) return;
     
     try {
-      const response = await commentsService.getComments(article.slug, 'noticia');
+      const response = await commentsService.getComments(article.id, 'noticia');
       if (response.success && response.data) {
         setComments(response.data);
       }
@@ -279,7 +279,7 @@ const NewsDetailPage: React.FC = () => {
     try {
       setSubmittingComment(true);
       const response = await commentsService.createComment({
-        article_id: article.slug,
+        article_id: article.id,
         type: 'noticia',
         ...commentForm
       });

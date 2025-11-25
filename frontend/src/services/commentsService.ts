@@ -48,7 +48,7 @@ class CommentsService {
   }
 
   // Obtener comentarios de un artículo
-  async getComments(articleId: string, type: string = 'noticia'): Promise<CommentsResponse> {
+  async getComments(articleId: number, type: string = 'noticia'): Promise<CommentsResponse> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/comments?article_id=${articleId}&type=${type}`,
@@ -78,7 +78,7 @@ class CommentsService {
 
   // Crear nuevo comentario
   async createComment(commentData: {
-    article_id: string;
+    article_id: number;
     type?: string;
     author_name: string;
     author_email: string;
