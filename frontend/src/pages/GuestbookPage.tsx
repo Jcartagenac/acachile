@@ -204,17 +204,22 @@ export default function GuestbookPage() {
   }, []);
 
   useEffect(() => {
-    if (language !== 'es' && entries.length > 0 && !entries[0]?.translatedTitle) {
+    if (entries.length === 0) return;
+    
+    if (language === 'es') {
+      // Clear translations when in Spanish
+      if (entries[0]?.translatedTitle) {
+        setEntries(prev => prev.map(entry => ({
+          ...entry,
+          translatedTitle: undefined,
+          translatedMessage: undefined
+        })));
+      }
+    } else {
+      // Translate to target language
       translateEntries();
-    } else if (language === 'es' && entries.length > 0 && entries[0]?.translatedTitle) {
-      // Clear translations when switching back to Spanish
-      setEntries(prev => prev.map(entry => ({
-        ...entry,
-        translatedTitle: undefined,
-        translatedMessage: undefined
-      })));
     }
-  }, [language]);
+  }, [language, entries.length]);
 
   const translateText = async (text: string, targetLang: Language): Promise<string> => {
     if (targetLang === 'es') return text;
@@ -311,15 +316,25 @@ export default function GuestbookPage() {
 
   const translateEntries = async () => {
     setTranslating(true);
+    console.log('Starting translation to', language, 'for', entries.length, 'entries');
     
     try {
       const translatedEntries = await Promise.all(
-        entries.map(async (entry) => {
+        entries.map(async (entry, index) => {
+          console.log(`Translating entry ${index + 1}/${entries.length}`, entry.title.substring(0, 30));
+          
           // Translate title and message
           const [translatedTitle, translatedMessage] = await Promise.all([
             translateText(entry.title, language),
             translateText(entry.message, language)
           ]);
+
+          console.log(`Translated entry ${index + 1}:`, {
+            originalTitle: entry.title.substring(0, 30),
+            translatedTitle: translatedTitle.substring(0, 30),
+            originalMessage: entry.message.substring(0, 30),
+            translatedMessage: translatedMessage.substring(0, 30)
+          });
 
           return {
             ...entry,
@@ -329,6 +344,7 @@ export default function GuestbookPage() {
         })
       );
 
+      console.log('Translation complete, updating entries');
       setEntries(translatedEntries);
     } catch (error) {
       console.error('Error translating entries:', error);
