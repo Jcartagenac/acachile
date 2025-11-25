@@ -219,18 +219,65 @@ export default function GuestbookPage() {
 
   const translateText = async (text: string, targetLang: Language): Promise<string> => {
     if (targetLang === 'es') return text;
+    if (!text || text.trim().length === 0) return text;
+    
+    const MAX_CHUNK_SIZE = 450; // Limit to 450 chars per chunk (safe margin)
     
     try {
-      const langPair = `es|${targetLang}`;
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
-      );
-      const data = await response.json();
-      
-      if (data.responseData && data.responseData.translatedText) {
-        return data.responseData.translatedText;
+      // If text is short enough, translate directly
+      if (text.length <= MAX_CHUNK_SIZE) {
+        const langPair = `es|${targetLang}`;
+        const response = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
+        );
+        const data = await response.json();
+        
+        if (data.responseData && data.responseData.translatedText) {
+          return data.responseData.translatedText;
+        }
+        return text;
       }
-      return text;
+      
+      // Split long text into chunks by sentences or paragraphs
+      const sentences = text.match(/[^.!?\n]+[.!?\n]+/g) || [text];
+      const chunks: string[] = [];
+      let currentChunk = '';
+      
+      for (const sentence of sentences) {
+        if ((currentChunk + sentence).length <= MAX_CHUNK_SIZE) {
+          currentChunk += sentence;
+        } else {
+          if (currentChunk) chunks.push(currentChunk);
+          currentChunk = sentence;
+        }
+      }
+      if (currentChunk) chunks.push(currentChunk);
+      
+      // Translate each chunk with delay to avoid rate limiting
+      const translatedChunks: string[] = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        if (!chunk) continue;
+        
+        if (i > 0) {
+          // Add delay between requests
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        const langPair = `es|${targetLang}`;
+        const response = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=${langPair}`
+        );
+        const data = await response.json();
+        
+        if (data.responseData && data.responseData.translatedText) {
+          translatedChunks.push(data.responseData.translatedText);
+        } else {
+          translatedChunks.push(chunk);
+        }
+      }
+      
+      return translatedChunks.join('');
     } catch (error) {
       console.error('Translation error:', error);
       return text;
