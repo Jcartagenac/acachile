@@ -206,10 +206,16 @@ export default function GuestbookPage() {
 
   // Efecto separado solo para el cambio de idioma
   useEffect(() => {
-    if (entries.length === 0) return;
+    console.log('Language changed to:', language, 'entries:', entries.length);
+    
+    if (entries.length === 0) {
+      console.log('No entries yet, skipping translation');
+      return;
+    }
     
     if (language === 'es') {
       // Clear translations when in Spanish
+      console.log('Clearing translations (Spanish selected)');
       setEntries(prev => prev.map(entry => ({
         ...entry,
         translatedTitle: undefined,
@@ -217,9 +223,13 @@ export default function GuestbookPage() {
       })));
       setHasTranslated(false);
     } else {
-      // Translate to target language only once
-      setHasTranslated(false); // Reset flag to allow translation
-      translateEntries();
+      // Translate to target language
+      console.log('Need to translate to:', language);
+      setHasTranslated(false); // Reset flag to allow new translation
+      // Use setTimeout to ensure state update completed
+      setTimeout(() => {
+        translateEntries();
+      }, 100);
     }
   }, [language]); // Solo cuando cambia el idioma, NO entries.length
 
@@ -317,19 +327,19 @@ export default function GuestbookPage() {
   };
 
   const translateEntries = async () => {
-    if (hasTranslated) {
-      console.log('Already translated, skipping...');
+    // Prevent concurrent translations
+    if (translating) {
+      console.log('Translation already in progress, skipping...');
       return;
     }
     
     setTranslating(true);
-    setHasTranslated(true);
     console.log('Starting translation to', language, 'for', entries.length, 'entries');
     
     try {
       const translatedEntries = await Promise.all(
         entries.map(async (entry, index) => {
-          console.log(`Translating entry ${index + 1}/${entries.length}`, entry.title.substring(0, 30));
+          console.log(`Translating entry ${index + 1}/${entries.length}:`, entry.title.substring(0, 30));
           
           // Translate title and message
           const [translatedTitle, translatedMessage] = await Promise.all([
@@ -337,11 +347,9 @@ export default function GuestbookPage() {
             translateText(entry.message, language)
           ]);
 
-          console.log(`Translated entry ${index + 1}:`, {
-            originalTitle: entry.title.substring(0, 30),
-            translatedTitle: translatedTitle.substring(0, 30),
-            originalMessage: entry.message.substring(0, 30),
-            translatedMessage: translatedMessage.substring(0, 30)
+          console.log(`✓ Translated entry ${index + 1}:`, {
+            title: `"${entry.title.substring(0, 20)}" → "${translatedTitle.substring(0, 20)}"`,
+            message: `"${entry.message.substring(0, 20)}" → "${translatedMessage.substring(0, 20)}"`
           });
 
           return {
@@ -352,11 +360,16 @@ export default function GuestbookPage() {
         })
       );
 
-      console.log('Translation complete, updating entries');
+      console.log('✓ Translation complete! Updating', translatedEntries.length, 'entries');
+      console.log('Sample translated entry:', {
+        title: translatedEntries[0]?.translatedTitle,
+        message: translatedEntries[0]?.translatedMessage?.substring(0, 50)
+      });
+      
       setEntries(translatedEntries);
+      setHasTranslated(true);
     } catch (error) {
-      console.error('Error translating entries:', error);
-      setHasTranslated(false); // Reset on error to allow retry
+      console.error('❌ Error translating entries:', error);
     } finally {
       setTranslating(false);
     }
