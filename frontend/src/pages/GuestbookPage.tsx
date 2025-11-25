@@ -220,19 +220,36 @@ export default function GuestbookPage() {
     if (targetLang === 'es') return text;
     if (!text || text.trim().length === 0) return text;
     
-    const MAX_CHUNK_SIZE = 450; // Limit to 450 chars per chunk (safe margin)
+    // Map language codes to LibreTranslate format
+    const langMap: Record<Language, string> = {
+      'es': 'es',
+      'en': 'en',
+      'de': 'de',
+      'pt': 'pt'
+    };
+    
+    const MAX_CHUNK_SIZE = 4000; // LibreTranslate allows up to 5000 chars
     
     try {
       // If text is short enough, translate directly
       if (text.length <= MAX_CHUNK_SIZE) {
-        const langPair = `es|${targetLang}`;
-        const response = await fetch(
-          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
-        );
+        const response = await fetch('https://libretranslate.com/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            q: text,
+            source: langMap['es'],
+            target: langMap[targetLang],
+            format: 'text'
+          })
+        });
+        
         const data = await response.json();
         
-        if (data.responseData && data.responseData.translatedText) {
-          return data.responseData.translatedText;
+        if (data.translatedText) {
+          return data.translatedText;
         }
         return text;
       }
@@ -260,17 +277,26 @@ export default function GuestbookPage() {
         
         if (i > 0) {
           // Add delay between requests
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        const langPair = `es|${targetLang}`;
-        const response = await fetch(
-          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=${langPair}`
-        );
+        const response = await fetch('https://libretranslate.com/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            q: chunk,
+            source: langMap['es'],
+            target: langMap[targetLang],
+            format: 'text'
+          })
+        });
+        
         const data = await response.json();
         
-        if (data.responseData && data.responseData.translatedText) {
-          translatedChunks.push(data.responseData.translatedText);
+        if (data.translatedText) {
+          translatedChunks.push(data.translatedText);
         } else {
           translatedChunks.push(chunk);
         }
