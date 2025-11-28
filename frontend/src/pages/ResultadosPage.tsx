@@ -92,6 +92,7 @@ export default function ResultadosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('overall');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<TeamResult | null>(null);
 
   // Filtrar y ordenar resultados
   const filteredResults = useMemo(() => {
@@ -122,6 +123,109 @@ export default function ResultadosPage() {
 
   return (
     <div className="min-h-screen bg-soft-gradient-light py-12 sm:py-16 lg:py-20">
+      {/* Modal de detalles del equipo */}
+      {selectedTeam && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setSelectedTeam(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del modal */}
+            <div className="bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-6 text-white">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1">
+                      <span className="text-sm font-bold">Posición #{selectedTeam.position}</span>
+                    </div>
+                    {getPositionBadge(selectedTeam.position) && (
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                        {(() => {
+                          const badge = getPositionBadge(selectedTeam.position);
+                          const Icon = badge!.icon;
+                          return <Icon className="h-5 w-5" />;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">{selectedTeam.team}</h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold">{selectedTeam.overall.toFixed(3)}</span>
+                    <span className="text-white/80">puntos totales</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedTeam(null)}
+                  className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido del modal - Categorías */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              <h4 className="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary-600" />
+                Puntuación por Categoría
+              </h4>
+              
+              <div className="grid gap-4">
+                {CATEGORIES.filter(cat => cat.key !== 'overall').map((category) => {
+                  const Icon = category.icon;
+                  const score = selectedTeam[category.key];
+                  const maxScore = 50; // Puntaje máximo teórico
+                  const percentage = (score / maxScore) * 100;
+                  
+                  return (
+                    <div 
+                      key={category.key}
+                      className="bg-neutral-50 rounded-2xl p-4 hover:bg-neutral-100 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-primary-100 rounded-xl p-2">
+                            <Icon className="h-5 w-5 text-primary-600" />
+                          </div>
+                          <span className="font-semibold text-neutral-900">{category.label}</span>
+                        </div>
+                        <span className="text-2xl font-bold text-primary-600">
+                          {score.toFixed(3)}
+                        </span>
+                      </div>
+                      
+                      {/* Barra de progreso */}
+                      <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-500 text-right">
+                        {percentage.toFixed(1)}% del máximo
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer del modal */}
+            <div className="border-t border-neutral-200 px-6 py-4 bg-neutral-50">
+              <button
+                onClick={() => setSelectedTeam(null)}
+                className="w-full px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-primary-600 transition-all shadow-soft-md hover:shadow-soft-lg"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -300,7 +404,12 @@ export default function ResultadosPage() {
                   return (
                     <tr 
                       key={team.position}
-                      className="hover:bg-neutral-50 transition-colors"
+                      onClick={() => selectedCategory === 'overall' && setSelectedTeam(team)}
+                      className={`transition-all ${
+                        selectedCategory === 'overall' 
+                          ? 'hover:bg-primary-50 cursor-pointer hover:shadow-soft-sm' 
+                          : 'hover:bg-neutral-50'
+                      }`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -316,7 +425,14 @@ export default function ResultadosPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-neutral-900">{team.team}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="font-semibold text-neutral-900">{team.team}</div>
+                          {selectedCategory === 'overall' && (
+                            <div className="text-neutral-400 ml-2">
+                              <ChevronDown className="h-5 w-5 rotate-[-90deg]" />
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="text-lg font-bold text-primary-600">
