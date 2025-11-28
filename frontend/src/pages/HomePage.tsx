@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { Evento } from '@shared/index';
 import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
 import type { NewsArticle } from '../services/newsService';
+import { SEOHelmet } from '../components/SEOHelmet';
 
 type SectionDisplay = SiteSection & {
   display_title: string;
@@ -530,12 +531,20 @@ const HomePage: React.FC = () => {
   const otherSections = resolvedSections.slice(1);
 
   return (
-    <div className="min-h-screen bg-soft-gradient-light">
-      <HeroSection section={heroSection} loading={loading} />
-      {otherSections.map((section, index) => (
-        <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />
-      ))}
-    </div>
+    <>
+      <SEOHelmet
+        title="ACA Chile - Asociación Chilena de Asadores"
+        description="Asociación Chilena de Asadores A.G. - Comunidad de asadores profesionales y aficionados en Chile. Eventos, campeonatos, noticias y más."
+        url="https://acachile.com/"
+      />
+      
+      <div className="min-h-screen bg-soft-gradient-light">
+        <HeroSection section={heroSection} loading={loading} />
+        {otherSections.map((section, index) => (
+          <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />
+        ))}
+      </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Trophy, Medal, Award, Search, Filter, X, ChevronDown, BarChart3 } from 'lucide-react';
+import { SEOHelmet } from '../components/SEOHelmet';
 
 type Language = 'es' | 'en' | 'de' | 'pt';
 
@@ -262,9 +263,17 @@ export default function ResultadosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-soft-gradient-light py-8 sm:py-10 lg:py-12">
-      {/* Modal de detalles del equipo */}
-      {selectedTeam && (
+    <>
+      <SEOHelmet
+        title="Resultados WBQA International BBQ Championship Chile 2025 - ACA Chile"
+        description="Resultados oficiales del WBQA International BBQ Championship Chile 2025. Consulta las posiciones, puntajes y clasificaciones completas de todos los equipos participantes."
+        url="https://acachile.com/resultados"
+        image="https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg"
+      />
+      
+      <div className="min-h-screen bg-soft-gradient-light py-8 sm:py-10 lg:py-12">
+        {/* Modal de detalles del equipo */}
+        {selectedTeam && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setSelectedTeam(null)}
@@ -623,5 +632,6 @@ export default function ResultadosPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
