@@ -56,6 +56,7 @@ const AdminTrash = lazy(() => import('./components/admin/AdminTrash'));
 const GuestbookPage = lazy(() => import('./pages/GuestbookPage'));
 const AdminGuestbook = lazy(() => import('./components/admin/AdminGuestbook'));
 const AdminGuestbookTrash = lazy(() => import('./components/admin/AdminGuestbookTrash'));
+const ResultadosPage = lazy(() => import('./pages/ResultadosPage'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -70,6 +71,7 @@ function App() {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/resultados" element={<ResultadosPage />} />
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
           
