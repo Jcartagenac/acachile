@@ -198,7 +198,7 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-24 lg:py-32 bg-soft-gradient-light">
+    <section className="relative overflow-hidden py-12 sm:py-20 lg:py-28 bg-soft-gradient-light">
       {/* Elementos decorativos animados de fondo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute right-0 top-0 w-[600px] h-[600px] bg-gradient-to-br from-primary-100/40 to-primary-200/30 rounded-full blur-3xl animate-float"></div>
@@ -206,121 +206,46 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
         <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-gradient-to-tl from-pastel-orange/30 to-pastel-yellow/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="relative px-4 py-8 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 z-10">
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 lg:items-center">
-          {/* Título - siempre primero en mobile y desktop */}
-          <div className="lg:hidden mb-6">
-            <div className="inline-block px-4 py-2 bg-primary-50 rounded-full mb-4">
+      <div className="relative px-4 py-8 sm:py-12 mx-auto max-w-7xl sm:px-6 lg:px-8 z-10">
+        {/* Layout vertical: Título → Imagen → Texto */}
+        <div className="flex flex-col space-y-10 sm:space-y-12 lg:space-y-16">
+          
+          {/* 1. TÍTULO - Ocupa todo el ancho */}
+          <div className="text-center animate-slide-up">
+            <div className="inline-block px-4 py-2 bg-primary-50 rounded-full mb-6">
               <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">Bienvenido</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-neutral-900 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-neutral-900 tracking-tight mb-6">
               {section.display_title}
             </h1>
-            <div className="mt-4 h-1.5 w-24 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-full"></div>
+            <div className="mx-auto h-2 w-28 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-full"></div>
           </div>
 
-          {/* Columna izquierda en desktop: Título y Texto */}
-          <div className="space-y-8 lg:space-y-10 order-2 lg:order-1">
-            {/* Badge y Título - solo visible en desktop */}
-            <div className="hidden lg:block">
-              <div className="inline-block px-4 py-2 bg-primary-50 rounded-full mb-6 animate-slide-in-left">
-                <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">Bienvenido</span>
-              </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-neutral-900 tracking-tight mb-6 animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
-                {section.display_title}
-              </h1>
-              <div className="h-2 w-28 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-full animate-slide-in-left" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-            
-            {/* Texto y CTA */}
-            <div className="animate-slide-in-left" style={{ animationDelay: '0.3s' }}>
-              {hasHTML ? (
-                <div 
-                  className="prose prose-xl max-w-none text-neutral-700
-                    prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight
-                    prose-p:text-neutral-700 prose-p:text-xl prose-p:leading-relaxed 
-                    prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline
-                    prose-strong:text-neutral-900 prose-strong:font-bold
-                    prose-ul:text-neutral-700 prose-ul:space-y-3
-                    prose-ol:text-neutral-700 prose-ol:space-y-3
-                    prose-li:marker:text-primary-500"
-                  dangerouslySetInnerHTML={{ __html: section.display_content }}
-                />
-              ) : (
-                <div className="text-lg sm:text-xl text-neutral-700 leading-relaxed space-y-4 sm:space-y-5">
-                  {blocks.length === 0 ? (
-                    <p className="text-xl">{section.display_content}</p>
-                  ) : (
-                    blocks.map((block, index) =>
-                      block.type === 'paragraph' ? (
-                        <p key={index} className="text-xl leading-relaxed">{block.text}</p>
-                      ) : (
-                        <ul key={index} className="space-y-3 pl-6">
-                          {block.items.map((item, itemIndex) => (
-                            <li key={itemIndex} className="relative pl-3 before:content-[''] before:absolute before:left-[-1.25rem] before:top-[0.7rem] before:w-2.5 before:h-2.5 before:bg-primary-500 before:rounded-full">
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      )
-                    )
-                  )}
-                </div>
-              )}
-              
-              {section.display_cta_label && section.display_cta_url ? (
-                <div className="mt-10 sm:mt-12 animate-slide-in-left" style={{ animationDelay: '0.4s' }}>
-                  <a
-                    href={section.display_cta_url}
-                    className="group relative inline-flex items-center justify-center gap-4 px-10 py-5 sm:px-12 sm:py-6 rounded-2xl sm:rounded-3xl text-white font-bold text-lg sm:text-xl transition-all duration-500 transform hover:scale-105 active:scale-95 shadow-soft-colored-red hover:shadow-2xl overflow-hidden"
-                    style={{
-                      background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
-                    }}
-                  >
-                    {/* Efecto de brillo en hover */}
-                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
-                    
-                    <span className="relative z-10">{section.display_cta_label}</span>
-                    <svg 
-                      className="relative z-10 w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:translate-x-2" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </a>
-                </div>
-              ) : null}
-            </div>
-          </div>
-          
-          {/* Columna derecha en desktop: Imágenes - segundo en mobile (después del título) */}
-          {(section.display_image || section.display_image_2) ? (
-            <div className="order-1 lg:order-2 mb-8 lg:mb-0">
-              <div className="space-y-4 sm:space-y-6">
-                {/* Primera imagen */}
-                {section.display_image && (
-                  <div className="relative group animate-slide-in-right">
-                    {/* Efecto de brillo de fondo */}
-                    <div className="absolute -inset-6 bg-gradient-to-r from-primary-200/50 via-primary-300/50 to-primary-400/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
-                    
-                    {/* Contenedor de imagen */}
-                    <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
-                      <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                        <img
-                          src={section.display_image}
-                          alt={section.display_title}
-                          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
-                        />
+          {/* 2. IMAGEN(ES) - Ocupa todo el ancho */}
+          {(section.display_image || section.display_image_2) && (
+            <div className="w-full animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              {section.display_image_2 ? (
+                /* Si hay 2 imágenes, mostrarlas en grid */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                  {section.display_image && (
+                    <div className="relative group">
+                      {/* Efecto de brillo de fondo */}
+                      <div className="absolute -inset-6 bg-gradient-to-r from-primary-200/50 via-primary-300/50 to-primary-400/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
+                      
+                      {/* Contenedor de imagen */}
+                      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
+                        <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                          <img
+                            src={section.display_image}
+                            alt={section.display_title}
+                            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                {/* Segunda imagen */}
-                {section.display_image_2 && (
-                  <div className="relative group animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+                  )}
+                  
+                  <div className="relative group">
                     {/* Efecto de brillo de fondo */}
                     <div className="absolute -inset-6 bg-gradient-to-l from-pastel-purple/50 via-pastel-blue/50 to-primary-200/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
                     
@@ -335,10 +260,94 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
                       </div>
                     </div>
                   </div>
+                </div>
+              ) : (
+                /* Si solo hay 1 imagen, mostrarla centrada con max-width */
+                section.display_image && (
+                  <div className="max-w-5xl mx-auto">
+                    <div className="relative group">
+                      {/* Efecto de brillo de fondo */}
+                      <div className="absolute -inset-6 bg-gradient-to-r from-primary-200/50 via-primary-300/50 to-primary-400/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
+                      
+                      {/* Contenedor de imagen */}
+                      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
+                        <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                          <img
+                            src={section.display_image}
+                            alt={section.display_title}
+                            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {/* 3. TEXTO Y CTA - Ocupa todo el ancho */}
+          <div className="max-w-5xl mx-auto w-full animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            {hasHTML ? (
+              <div 
+                className="prose prose-xl max-w-none text-neutral-700
+                  prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-center
+                  prose-p:text-neutral-700 prose-p:text-xl prose-p:leading-relaxed prose-p:text-center
+                  prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline
+                  prose-strong:text-neutral-900 prose-strong:font-bold
+                  prose-ul:text-neutral-700 prose-ul:space-y-3 prose-ul:max-w-3xl prose-ul:mx-auto
+                  prose-ol:text-neutral-700 prose-ol:space-y-3 prose-ol:max-w-3xl prose-ol:mx-auto
+                  prose-li:marker:text-primary-500"
+                dangerouslySetInnerHTML={{ __html: section.display_content }}
+              />
+            ) : (
+              <div className="text-lg sm:text-xl text-neutral-700 leading-relaxed space-y-4 sm:space-y-5 text-center">
+                {blocks.length === 0 ? (
+                  <p className="text-xl">{section.display_content}</p>
+                ) : (
+                  blocks.map((block, index) =>
+                    block.type === 'paragraph' ? (
+                      <p key={index} className="text-xl leading-relaxed">{block.text}</p>
+                    ) : (
+                      <ul key={index} className="space-y-3 max-w-3xl mx-auto text-left">
+                        {block.items.map((item, itemIndex) => (
+                          <li key={itemIndex} className="relative pl-8 before:content-[''] before:absolute before:left-0 before:top-[0.7rem] before:w-2.5 before:h-2.5 before:bg-primary-500 before:rounded-full">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    )
+                  )
                 )}
               </div>
-            </div>
-          ) : null}
+            )}
+            
+            {section.display_cta_label && section.display_cta_url && (
+              <div className="mt-10 sm:mt-12 text-center">
+                <a
+                  href={section.display_cta_url}
+                  className="group relative inline-flex items-center justify-center gap-4 px-10 py-5 sm:px-12 sm:py-6 rounded-2xl sm:rounded-3xl text-white font-bold text-lg sm:text-xl transition-all duration-500 transform hover:scale-105 active:scale-95 shadow-soft-colored-red hover:shadow-2xl overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
+                  }}
+                >
+                  {/* Efecto de brillo en hover */}
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
+                  
+                  <span className="relative z-10">{section.display_cta_label}</span>
+                  <svg 
+                    className="relative z-10 w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:translate-x-2" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </a>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </section>
