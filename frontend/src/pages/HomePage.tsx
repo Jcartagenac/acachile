@@ -71,8 +71,14 @@ const parseContentBlocks = (content: string) => {
   return blocks;
 };
 
+const isHTML = (content: string): boolean => {
+  // Detectar si el contenido contiene etiquetas HTML
+  return /<\/?[a-z][\s\S]*>/i.test(content);
+};
+
 const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = ({ section, reverse }) => {
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
+  const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-soft-gradient-light relative overflow-hidden">
@@ -96,24 +102,31 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
             
             {/* Texto y CTA */}
             <div>
-              <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
-                {blocks.length === 0 ? (
-                  <p>{section.display_content}</p>
-                ) : (
-                  blocks.map((block, blockIndex) => {
-                    if (block.type === 'paragraph') {
-                      return <p key={blockIndex}>{block.text}</p>;
-                    }
-                    return (
-                      <ul key={blockIndex} className="list-disc pl-5 space-y-1">
-                        {block.items.map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
-                        ))}
-                      </ul>
-                    );
-                  })
-                )}
-              </div>
+              {hasHTML ? (
+                <div 
+                  className="prose prose-lg max-w-none text-neutral-600 prose-headings:text-neutral-900 prose-p:text-neutral-600 prose-a:text-primary-600 prose-strong:text-neutral-900 prose-ul:text-neutral-600 prose-ol:text-neutral-600"
+                  dangerouslySetInnerHTML={{ __html: section.display_content }}
+                />
+              ) : (
+                <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
+                  {blocks.length === 0 ? (
+                    <p>{section.display_content}</p>
+                  ) : (
+                    blocks.map((block, blockIndex) => {
+                      if (block.type === 'paragraph') {
+                        return <p key={blockIndex}>{block.text}</p>;
+                      }
+                      return (
+                        <ul key={blockIndex} className="list-disc pl-5 space-y-1">
+                          {block.items.map((item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
+                          ))}
+                        </ul>
+                      );
+                    })
+                  )}
+                </div>
+              )}
               {section.display_cta_label && section.display_cta_url ? (
                 <div className="mt-6">
                   <a
@@ -145,8 +158,9 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
   );
 };
 
-const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ section, loading }) => {
+const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ section }) => {
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
+  const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
 
   return (
     <section className="relative overflow-hidden py-2 sm:py-20 bg-soft-gradient-light">
@@ -168,23 +182,30 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
             
             {/* Texto y CTA */}
             <div>
-              <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4">
-                {blocks.length === 0 ? (
-                  <p>{section.display_content}</p>
-                ) : (
-                  blocks.map((block, index) =>
-                    block.type === 'paragraph' ? (
-                      <p key={index}>{block.text}</p>
-                    ) : (
-                      <ul key={index} className="list-disc pl-5 space-y-1">
-                        {block.items.map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
-                        ))}
-                      </ul>
+              {hasHTML ? (
+                <div 
+                  className="prose prose-xl max-w-none text-neutral-600 prose-headings:text-neutral-900 prose-p:text-neutral-600 prose-a:text-primary-600 prose-strong:text-neutral-900 prose-ul:text-neutral-600 prose-ol:text-neutral-600"
+                  dangerouslySetInnerHTML={{ __html: section.display_content }}
+                />
+              ) : (
+                <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4">
+                  {blocks.length === 0 ? (
+                    <p>{section.display_content}</p>
+                  ) : (
+                    blocks.map((block, index) =>
+                      block.type === 'paragraph' ? (
+                        <p key={index}>{block.text}</p>
+                      ) : (
+                        <ul key={index} className="list-disc pl-5 space-y-1">
+                          {block.items.map((item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
+                          ))}
+                        </ul>
+                      )
                     )
-                  )
-                )}
-              </div>
+                  )}
+                </div>
+              )}
               
               {section.display_cta_label && section.display_cta_url ? (
                 <div className="mt-8 sm:mt-10">
