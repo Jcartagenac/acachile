@@ -262,7 +262,7 @@ export default function ResultadosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-soft-gradient-light py-12 sm:py-16 lg:py-20">
+    <div className="min-h-screen bg-soft-gradient-light py-8 sm:py-10 lg:py-12">
       {/* Modal de detalles del equipo */}
       {selectedTeam && (
         <div 
@@ -367,8 +367,8 @@ export default function ResultadosPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Language Selector */}
-        <div className="flex justify-center mb-8 animate-slide-up">
-          <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-soft-md border border-neutral-200">
+        <div className="flex justify-center mb-6 animate-slide-up">
+          <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-full shadow-soft-md border border-neutral-200">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
@@ -380,7 +380,7 @@ export default function ResultadosPage() {
                 }`}
                 title={lang.label}
               >
-                <span className="text-3xl sm:text-4xl cursor-pointer">
+                <span className="text-2xl sm:text-3xl cursor-pointer">
                   {lang.flag}
                 </span>
                 {language === lang.code && (
@@ -392,26 +392,26 @@ export default function ResultadosPage() {
         </div>
 
         {/* Header */}
-        <div className="text-center mb-12 lg:mb-16 animate-slide-up">
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-50 rounded-full mb-6">
-            <Trophy className="h-5 w-5 text-primary-600" />
-            <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">{t.officialResults}</span>
+        <div className="text-center mb-8 lg:mb-10 animate-slide-up">
+          <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-primary-50 rounded-full mb-4">
+            <Trophy className="h-4 w-4 text-primary-600" />
+            <span className="text-xs font-semibold text-primary-700 tracking-wide uppercase">{t.officialResults}</span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-neutral-900 tracking-tight mb-3">
             {t.championship}
           </h1>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-primary-600 mb-6">
+          <h2 className="text-xl sm:text-2xl font-semibold text-primary-600 mb-4">
             {t.chile2025}
           </h2>
           
-          <p className="text-lg text-neutral-600 max-w-3xl mx-auto">
+          <p className="text-base text-neutral-600 max-w-3xl mx-auto">
             {t.subtitle} {RESULTS_DATA.filter(team => team.overall > 0).length} {t.teamsParticipating}
           </p>
         </div>
 
         {/* Filtros y búsqueda */}
-        <div className="bg-white rounded-2xl shadow-soft-lg p-6 mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="bg-white rounded-2xl shadow-soft-lg p-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Búsqueda */}
             <div className="flex-1">
@@ -422,7 +422,7 @@ export default function ResultadosPage() {
                   placeholder={t.searchTeam}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 />
                 {searchTerm && (
                   <button
@@ -438,7 +438,7 @@ export default function ResultadosPage() {
             {/* Botón filtros mobile */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden flex items-center justify-center gap-2 px-6 py-3 bg-primary-50 text-primary-700 rounded-xl font-semibold hover:bg-primary-100 transition-colors"
+              className="lg:hidden flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-50 text-primary-700 rounded-xl font-semibold hover:bg-primary-100 transition-colors"
             >
               <Filter className="h-5 w-5" />
               {t.filterByCategory}
@@ -447,8 +447,8 @@ export default function ResultadosPage() {
           </div>
 
           {/* Filtros de categoría */}
-          <div className={`mt-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <label className="block text-sm font-semibold text-neutral-700 mb-3">
+          <div className={`mt-4 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <label className="block text-sm font-semibold text-neutral-700 mb-2">
               {t.category}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -475,8 +475,8 @@ export default function ResultadosPage() {
 
         {/* Podio - Top 3 */}
         {!searchTerm && topThree.length >= 3 && (
-          <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <h3 className="text-2xl font-bold text-neutral-900 mb-6 text-center">
+          <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <h3 className="text-xl font-bold text-neutral-900 mb-4 text-center">
               {t.podium} - {CATEGORIES.find(c => c.key === selectedCategory)?.label}
             </h3>
             
@@ -484,16 +484,16 @@ export default function ResultadosPage() {
               {/* Segundo lugar */}
               {topThree[1] && (
                 <div className="md:order-1 order-2">
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border-2 border-gray-300 shadow-soft-lg hover:shadow-soft-xl transition-all transform hover:scale-105">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-300 shadow-soft-lg hover:shadow-soft-xl transition-all transform hover:scale-105">
                     <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full mb-4 shadow-lg">
-                        <span className="text-2xl font-bold text-white">2</span>
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full mb-3 shadow-lg">
+                        <span className="text-xl font-bold text-white">2</span>
                       </div>
-                      <h4 className="font-bold text-lg text-neutral-900 mb-2">{topThree[1].team}</h4>
-                      <div className="text-3xl font-bold text-gray-600 mb-1">
+                      <h4 className="font-bold text-base text-neutral-900 mb-2 line-clamp-2">{topThree[1].team}</h4>
+                      <div className="text-2xl font-bold text-gray-600 mb-1">
                         {topThree[1][selectedCategory].toFixed(3)}
                       </div>
-                      <div className="text-sm text-neutral-600">{t.points}</div>
+                      <div className="text-xs text-neutral-600">{t.points}</div>
                     </div>
                   </div>
                 </div>
@@ -502,14 +502,14 @@ export default function ResultadosPage() {
               {/* Primer lugar */}
               {topThree[0] && (
                 <div className="md:order-2 order-1">
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-8 border-2 border-yellow-400 shadow-soft-2xl hover:shadow-2xl transition-all transform hover:scale-105 md:-mt-4">
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-5 border-2 border-yellow-400 shadow-soft-2xl hover:shadow-2xl transition-all transform hover:scale-105 md:-mt-2">
                     <div className="text-center">
-                      <Trophy className="h-20 w-20 text-yellow-600 mx-auto mb-4" />
-                      <h4 className="font-bold text-xl text-neutral-900 mb-3">{topThree[0].team}</h4>
-                      <div className="text-4xl font-bold text-yellow-600 mb-2">
+                      <Trophy className="h-14 w-14 text-yellow-600 mx-auto mb-3" />
+                      <h4 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2">{topThree[0].team}</h4>
+                      <div className="text-3xl font-bold text-yellow-600 mb-1">
                         {topThree[0][selectedCategory].toFixed(3)}
                       </div>
-                      <div className="text-sm text-neutral-600 font-semibold">{t.champion}</div>
+                      <div className="text-xs text-neutral-600 font-semibold">{t.champion}</div>
                     </div>
                   </div>
                 </div>
@@ -518,16 +518,16 @@ export default function ResultadosPage() {
               {/* Tercer lugar */}
               {topThree[2] && (
                 <div className="md:order-3 order-3">
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border-2 border-orange-300 shadow-soft-lg hover:shadow-soft-xl transition-all transform hover:scale-105">
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-4 border-2 border-orange-300 shadow-soft-lg hover:shadow-soft-xl transition-all transform hover:scale-105">
                     <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full mb-4 shadow-lg">
-                        <span className="text-2xl font-bold text-white">3</span>
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full mb-3 shadow-lg">
+                        <span className="text-xl font-bold text-white">3</span>
                       </div>
-                      <h4 className="font-bold text-lg text-neutral-900 mb-2">{topThree[2].team}</h4>
-                      <div className="text-3xl font-bold text-orange-600 mb-1">
+                      <h4 className="font-bold text-base text-neutral-900 mb-2 line-clamp-2">{topThree[2].team}</h4>
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
                         {topThree[2][selectedCategory].toFixed(3)}
                       </div>
-                      <div className="text-sm text-neutral-600">{t.points}</div>
+                      <div className="text-xs text-neutral-600">{t.points}</div>
                     </div>
                   </div>
                 </div>
