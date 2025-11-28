@@ -81,45 +81,64 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
   const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-soft-gradient-light relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-16 sm:py-20 lg:py-28 bg-soft-gradient-light relative overflow-hidden">
+      {/* Elementos decorativos de fondo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute ${reverse ? 'left-0' : 'right-0'} top-1/4 w-96 h-96 bg-primary-100/30 rounded-full blur-3xl`}></div>
+        <div className={`absolute ${reverse ? 'right-0' : 'left-0'} bottom-1/4 w-80 h-80 bg-pastel-blue/40 rounded-full blur-3xl`}></div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Mobile: orden natural - Título, Imagen, Texto */}
         {/* Desktop: usar grid de 2 columnas como hero */}
-        <div className={`flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-16 lg:items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}>
+        <div className={`flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 lg:items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}>
           {/* Título - siempre primero en mobile */}
-          <div className="lg:hidden mb-4">
-            <h2 className="text-2xl sm:text-4xl font-bold text-neutral-900 leading-tight">
+          <div className="lg:hidden mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight tracking-tight">
               {section.display_title}
             </h2>
+            <div className="mt-3 h-1 w-20 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
           </div>
 
           {/* Columna izquierda en desktop: Título y Texto */}
           <div className={`space-y-6 sm:space-y-8 order-3 lg:order-none ${reverse ? 'lg:col-start-2' : 'lg:col-start-1'}`}>
             {/* Título - solo visible en desktop */}
-            <h2 className="hidden lg:block text-2xl sm:text-4xl font-bold text-neutral-900 leading-tight">
-              {section.display_title}
-            </h2>
+            <div className="hidden lg:block">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight tracking-tight mb-4">
+                {section.display_title}
+              </h2>
+              <div className="h-1.5 w-24 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
+            </div>
             
             {/* Texto y CTA */}
-            <div>
+            <div className="mt-8">
               {hasHTML ? (
                 <div 
-                  className="prose prose-lg max-w-none text-neutral-600 prose-headings:text-neutral-900 prose-p:text-neutral-600 prose-a:text-primary-600 prose-strong:text-neutral-900 prose-ul:text-neutral-600 prose-ol:text-neutral-600"
+                  className="prose prose-lg max-w-none text-neutral-700 
+                    prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight
+                    prose-p:text-neutral-700 prose-p:leading-relaxed 
+                    prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline
+                    prose-strong:text-neutral-900 prose-strong:font-bold
+                    prose-ul:text-neutral-700 prose-ul:space-y-2
+                    prose-ol:text-neutral-700 prose-ol:space-y-2
+                    prose-li:marker:text-primary-500"
                   dangerouslySetInnerHTML={{ __html: section.display_content }}
                 />
               ) : (
-                <div className="space-y-3 sm:space-y-4 text-neutral-600 text-base sm:text-lg leading-relaxed">
+                <div className="space-y-4 sm:space-y-5 text-neutral-700 text-base sm:text-lg leading-relaxed">
                   {blocks.length === 0 ? (
-                    <p>{section.display_content}</p>
+                    <p className="text-lg">{section.display_content}</p>
                   ) : (
                     blocks.map((block, blockIndex) => {
                       if (block.type === 'paragraph') {
-                        return <p key={blockIndex}>{block.text}</p>;
+                        return <p key={blockIndex} className="text-lg leading-relaxed">{block.text}</p>;
                       }
                       return (
-                        <ul key={blockIndex} className="list-disc pl-5 space-y-1">
+                        <ul key={blockIndex} className="space-y-3 pl-6">
                           {block.items.map((item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
+                            <li key={itemIndex} className="relative pl-2 before:content-[''] before:absolute before:left-[-1.25rem] before:top-[0.6rem] before:w-2 before:h-2 before:bg-primary-500 before:rounded-full">
+                              {item}
+                            </li>
                           ))}
                         </ul>
                       );
@@ -128,12 +147,20 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
                 </div>
               )}
               {section.display_cta_label && section.display_cta_url ? (
-                <div className="mt-6">
+                <div className="mt-8">
                   <a
                     href={section.display_cta_url}
-                    className="inline-flex items-center px-5 py-3 sm:px-6 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300"
+                    className="group inline-flex items-center gap-3 px-7 py-4 sm:px-8 sm:py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-soft-colored-red shadow-soft-lg"
                   >
-                    {section.display_cta_label}
+                    <span>{section.display_cta_label}</span>
+                    <svg 
+                      className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
                   </a>
                 </div>
               ) : null}
@@ -143,12 +170,20 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
           {/* Columna derecha en desktop: Imagen - segundo en mobile (después del título) */}
           {section.display_image ? (
             <div className={`order-2 lg:order-none mb-8 lg:mb-0 ${reverse ? 'lg:col-start-1 lg:row-start-1' : 'lg:col-start-2'}`}>
-              <div className="relative bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/60 shadow-soft-lg overflow-hidden">
-                <img
-                  src={section.display_image}
-                  alt={section.display_title}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-                />
+              <div className="relative group">
+                {/* Fondo decorativo */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary-200/50 to-primary-300/50 rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-40 group-hover:opacity-60"></div>
+                
+                {/* Contenedor de imagen */}
+                <div className="relative bg-white/60 backdrop-blur-md rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-white/80 shadow-soft-xl overflow-hidden">
+                  <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                    <img
+                      src={section.display_image}
+                      alt={section.display_title}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ) : null}
@@ -163,42 +198,68 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
 
   return (
-    <section className="relative overflow-hidden py-2 sm:py-20 bg-soft-gradient-light">
-      <div className="relative px-4 py-2 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-24">
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-2 lg:gap-16 lg:items-center">
+    <section className="relative overflow-hidden py-12 sm:py-24 lg:py-32 bg-soft-gradient-light">
+      {/* Elementos decorativos animados de fondo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute right-0 top-0 w-[600px] h-[600px] bg-gradient-to-br from-primary-100/40 to-primary-200/30 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute left-0 bottom-0 w-[500px] h-[500px] bg-gradient-to-tr from-pastel-blue/50 to-pastel-purple/40 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-gradient-to-tl from-pastel-orange/30 to-pastel-yellow/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="relative px-4 py-8 sm:py-16 mx-auto max-w-7xl sm:px-6 lg:px-8 z-10">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 lg:items-center">
           {/* Título - siempre primero en mobile y desktop */}
-          <div className="lg:hidden mb-1">
-            <h1 className="text-3xl sm:text-5xl font-bold leading-tight text-neutral-900">
+          <div className="lg:hidden mb-6">
+            <div className="inline-block px-4 py-2 bg-primary-50 rounded-full mb-4">
+              <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">Bienvenido</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-neutral-900 tracking-tight">
               {section.display_title}
             </h1>
+            <div className="mt-4 h-1.5 w-24 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-full"></div>
           </div>
 
           {/* Columna izquierda en desktop: Título y Texto */}
-          <div className="space-y-8 order-2 lg:order-1">
-            {/* Título - solo visible en desktop */}
-            <h1 className="hidden lg:block text-3xl sm:text-5xl md:text-6xl font-bold leading-tight text-neutral-900">
-              {section.display_title}
-            </h1>
+          <div className="space-y-8 lg:space-y-10 order-2 lg:order-1">
+            {/* Badge y Título - solo visible en desktop */}
+            <div className="hidden lg:block">
+              <div className="inline-block px-4 py-2 bg-primary-50 rounded-full mb-6 animate-slide-in-left">
+                <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">Bienvenido</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-neutral-900 tracking-tight mb-6 animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
+                {section.display_title}
+              </h1>
+              <div className="h-2 w-28 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-full animate-slide-in-left" style={{ animationDelay: '0.2s' }}></div>
+            </div>
             
             {/* Texto y CTA */}
-            <div>
+            <div className="animate-slide-in-left" style={{ animationDelay: '0.3s' }}>
               {hasHTML ? (
                 <div 
-                  className="prose prose-xl max-w-none text-neutral-600 prose-headings:text-neutral-900 prose-p:text-neutral-600 prose-a:text-primary-600 prose-strong:text-neutral-900 prose-ul:text-neutral-600 prose-ol:text-neutral-600"
+                  className="prose prose-xl max-w-none text-neutral-700
+                    prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight
+                    prose-p:text-neutral-700 prose-p:text-xl prose-p:leading-relaxed 
+                    prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline
+                    prose-strong:text-neutral-900 prose-strong:font-bold
+                    prose-ul:text-neutral-700 prose-ul:space-y-3
+                    prose-ol:text-neutral-700 prose-ol:space-y-3
+                    prose-li:marker:text-primary-500"
                   dangerouslySetInnerHTML={{ __html: section.display_content }}
                 />
               ) : (
-                <div className="text-base sm:text-xl text-neutral-600 font-light leading-relaxed space-y-3 sm:space-y-4">
+                <div className="text-lg sm:text-xl text-neutral-700 leading-relaxed space-y-4 sm:space-y-5">
                   {blocks.length === 0 ? (
-                    <p>{section.display_content}</p>
+                    <p className="text-xl">{section.display_content}</p>
                   ) : (
                     blocks.map((block, index) =>
                       block.type === 'paragraph' ? (
-                        <p key={index}>{block.text}</p>
+                        <p key={index} className="text-xl leading-relaxed">{block.text}</p>
                       ) : (
-                        <ul key={index} className="list-disc pl-5 space-y-1">
+                        <ul key={index} className="space-y-3 pl-6">
                           {block.items.map((item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
+                            <li key={itemIndex} className="relative pl-3 before:content-[''] before:absolute before:left-[-1.25rem] before:top-[0.7rem] before:w-2.5 before:h-2.5 before:bg-primary-500 before:rounded-full">
+                              {item}
+                            </li>
                           ))}
                         </ul>
                       )
@@ -208,19 +269,20 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
               )}
               
               {section.display_cta_label && section.display_cta_url ? (
-                <div className="mt-8 sm:mt-10">
+                <div className="mt-10 sm:mt-12 animate-slide-in-left" style={{ animationDelay: '0.4s' }}>
                   <a
                     href={section.display_cta_url}
-                    className="group inline-flex items-center justify-center gap-3 px-8 py-4 sm:px-10 sm:py-5 rounded-2xl sm:rounded-3xl text-white font-bold text-lg sm:text-xl transition-all duration-500 transform hover:scale-105 hover:shadow-2xl active:scale-95 shadow-xl"
+                    className="group relative inline-flex items-center justify-center gap-4 px-10 py-5 sm:px-12 sm:py-6 rounded-2xl sm:rounded-3xl text-white font-bold text-lg sm:text-xl transition-all duration-500 transform hover:scale-105 active:scale-95 shadow-soft-colored-red hover:shadow-2xl overflow-hidden"
                     style={{
                       background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
                     }}
                   >
-                    <span className="relative">
-                      {section.display_cta_label}
-                    </span>
+                    {/* Efecto de brillo en hover */}
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
+                    
+                    <span className="relative z-10">{section.display_cta_label}</span>
                     <svg 
-                      className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:translate-x-1" 
+                      className="relative z-10 w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:translate-x-2" 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -235,30 +297,42 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
           
           {/* Columna derecha en desktop: Imágenes - segundo en mobile (después del título) */}
           {(section.display_image || section.display_image_2) ? (
-            <div className="order-1 lg:order-2 mb-1 lg:mb-0">
-              <div className="space-y-2 sm:space-y-6">
+            <div className="order-1 lg:order-2 mb-8 lg:mb-0">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Primera imagen */}
                 {section.display_image && (
-                  <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
-                    <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                      <img
-                        src={section.display_image}
-                        alt={section.display_title}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-                      />
+                  <div className="relative group animate-slide-in-right">
+                    {/* Efecto de brillo de fondo */}
+                    <div className="absolute -inset-6 bg-gradient-to-r from-primary-200/50 via-primary-300/50 to-primary-400/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
+                    
+                    {/* Contenedor de imagen */}
+                    <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
+                      <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                        <img
+                          src={section.display_image}
+                          alt={section.display_title}
+                          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
                 
                 {/* Segunda imagen */}
                 {section.display_image_2 && (
-                  <div className="relative bg-white/20 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-soft-xl border border-white/40">
-                    <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                      <img
-                        src={section.display_image_2}
-                        alt={`${section.display_title} - Imagen 2`}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-                      />
+                  <div className="relative group animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+                    {/* Efecto de brillo de fondo */}
+                    <div className="absolute -inset-6 bg-gradient-to-l from-pastel-purple/50 via-pastel-blue/50 to-primary-200/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
+                    
+                    {/* Contenedor de imagen */}
+                    <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
+                      <div className="overflow-hidden rounded-xl sm:rounded-2xl">
+                        <img
+                          src={section.display_image_2}
+                          alt={`${section.display_title} - Imagen 2`}
+                          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:-rotate-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
