@@ -265,8 +265,8 @@ export default function ResultadosPage() {
   return (
     <>
       <SEOHelmet
-        title="Resultados WBQA International BBQ Championship Chile 2025 - ACA Chile"
-        description="Resultados oficiales del WBQA International BBQ Championship Chile 2025. Consulta las posiciones, puntajes y clasificaciones completas de todos los equipos participantes."
+        title="Resultados WBQA Championship Chile 2025 🏆 ACA Chile"
+        description="🏆 Resultados oficiales WBQA International BBQ Championship Chile 2025. 58 equipos participantes. Consulta posiciones y puntajes completos."
         url="https://acachile.com/resultados"
         image="https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg"
       />

@@ -68,3 +68,10 @@
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
+  
+# Headers específicos para compartir en redes sociales
+/
+  Link: <https://acachile.com/>; rel="canonical"
+  
+/resultados
+  Link: <https://acachile.com/resultados>; rel="canonical"

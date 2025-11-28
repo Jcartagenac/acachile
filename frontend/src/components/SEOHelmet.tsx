@@ -17,9 +17,11 @@ export function SEOHelmet({ title, description, image, url }: SEOHelmetProps) {
   const defaultImage = 'https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg';
   
   const finalTitle = title || defaultTitle;
-  const finalDescription = description || defaultDescription;
-  const finalImage = image || defaultImage;
   const finalUrl = url || `${baseUrl}${location.pathname}`;
+  // Agregar URL al final de la descripción para WhatsApp móvil
+  const baseDescription = description || defaultDescription;
+  const finalDescription = `${baseDescription} 🔗 ${finalUrl}`;
+  const finalImage = image || defaultImage;
 
   useEffect(() => {
     // Update document title
@@ -49,6 +51,10 @@ export function SEOHelmet({ title, description, image, url }: SEOHelmetProps) {
     updateMetaTag('og:title', finalTitle);
     updateMetaTag('og:description', finalDescription);
     updateMetaTag('og:image', finalImage);
+    updateMetaTag('og:image:width', '1200');
+    updateMetaTag('og:image:height', '630');
+    updateMetaTag('og:image:alt', finalTitle);
+    updateMetaTag('og:image:type', 'image/jpeg');
     updateMetaTag('og:site_name', 'ACA Chile');
 
     // Twitter

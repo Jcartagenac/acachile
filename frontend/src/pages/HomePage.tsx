@@ -534,7 +534,7 @@ const HomePage: React.FC = () => {
     <>
       <SEOHelmet
         title="ACA Chile - Asociación Chilena de Asadores"
-        description="Asociación Chilena de Asadores A.G. - Comunidad de asadores profesionales y aficionados en Chile. Eventos, campeonatos, noticias y más."
+        description="Asociación Chilena de Asadores A.G. 🔥 Comunidad de asadores profesionales en Chile. Eventos BBQ, campeonatos y más."
         url="https://acachile.com/"
       />
       
