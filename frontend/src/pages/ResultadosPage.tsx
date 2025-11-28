@@ -1,6 +1,142 @@
 import { useState, useMemo } from 'react';
 import { Trophy, Medal, Award, Search, Filter, X, ChevronDown, BarChart3 } from 'lucide-react';
 
+type Language = 'es' | 'en' | 'de' | 'pt';
+
+const TRANSLATIONS = {
+  es: {
+    officialResults: 'Resultados Oficiales',
+    championship: 'WBQA International BBQ Championship',
+    chile2025: 'Chile 2025',
+    subtitle: 'Resultados completos del campeonato internacional de BBQ con',
+    teamsParticipating: 'equipos participantes',
+    searchTeam: 'Buscar equipo...',
+    filterByCategory: 'Filtrar por categoría',
+    category: 'Categoría:',
+    overall: 'Overall',
+    chicken: 'Chicken',
+    beef: 'Beef',
+    porkWithBone: 'Pork w/bone',
+    porkWithoutBone: 'Pork wo/bone',
+    fish: 'Fish',
+    rabbit: 'Rabbit',
+    vegetarian: 'Vegetarian',
+    podium: '🏆 Podio',
+    champion: '🥇 CAMPEÓN',
+    points: 'puntos',
+    totalPoints: 'puntos totales',
+    completeClassification: 'Clasificación Completa',
+    teams: 'equipos',
+    position: 'Pos',
+    team: 'Equipo',
+    noResults: 'No se encontraron resultados',
+    tryAnother: 'Intenta con otro término de búsqueda',
+    close: 'Cerrar',
+    scoreByCategory: 'Puntuación por Categoría',
+    ofMaximum: 'del máximo',
+  },
+  en: {
+    officialResults: 'Official Results',
+    championship: 'WBQA International BBQ Championship',
+    chile2025: 'Chile 2025',
+    subtitle: 'Complete results of the international BBQ championship with',
+    teamsParticipating: 'participating teams',
+    searchTeam: 'Search team...',
+    filterByCategory: 'Filter by category',
+    category: 'Category:',
+    overall: 'Overall',
+    chicken: 'Chicken',
+    beef: 'Beef',
+    porkWithBone: 'Pork w/bone',
+    porkWithoutBone: 'Pork wo/bone',
+    fish: 'Fish',
+    rabbit: 'Rabbit',
+    vegetarian: 'Vegetarian',
+    podium: '🏆 Podium',
+    champion: '🥇 CHAMPION',
+    points: 'points',
+    totalPoints: 'total points',
+    completeClassification: 'Complete Classification',
+    teams: 'teams',
+    position: 'Pos',
+    team: 'Team',
+    noResults: 'No results found',
+    tryAnother: 'Try another search term',
+    close: 'Close',
+    scoreByCategory: 'Score by Category',
+    ofMaximum: 'of maximum',
+  },
+  de: {
+    officialResults: 'Offizielle Ergebnisse',
+    championship: 'WBQA International BBQ Championship',
+    chile2025: 'Chile 2025',
+    subtitle: 'Vollständige Ergebnisse der internationalen BBQ-Meisterschaft mit',
+    teamsParticipating: 'teilnehmenden Teams',
+    searchTeam: 'Team suchen...',
+    filterByCategory: 'Nach Kategorie filtern',
+    category: 'Kategorie:',
+    overall: 'Gesamt',
+    chicken: 'Hähnchen',
+    beef: 'Rindfleisch',
+    porkWithBone: 'Schwein m/Knochen',
+    porkWithoutBone: 'Schwein o/Knochen',
+    fish: 'Fisch',
+    rabbit: 'Kaninchen',
+    vegetarian: 'Vegetarisch',
+    podium: '🏆 Podium',
+    champion: '🥇 CHAMPION',
+    points: 'Punkte',
+    totalPoints: 'Gesamtpunkte',
+    completeClassification: 'Vollständige Klassifizierung',
+    teams: 'Teams',
+    position: 'Pos',
+    team: 'Team',
+    noResults: 'Keine Ergebnisse gefunden',
+    tryAnother: 'Versuchen Sie einen anderen Suchbegriff',
+    close: 'Schließen',
+    scoreByCategory: 'Punktzahl nach Kategorie',
+    ofMaximum: 'vom Maximum',
+  },
+  pt: {
+    officialResults: 'Resultados Oficiais',
+    championship: 'WBQA International BBQ Championship',
+    chile2025: 'Chile 2025',
+    subtitle: 'Resultados completos do campeonato internacional de churrasco com',
+    teamsParticipating: 'equipes participantes',
+    searchTeam: 'Buscar equipe...',
+    filterByCategory: 'Filtrar por categoria',
+    category: 'Categoria:',
+    overall: 'Geral',
+    chicken: 'Frango',
+    beef: 'Carne',
+    porkWithBone: 'Porco c/osso',
+    porkWithoutBone: 'Porco s/osso',
+    fish: 'Peixe',
+    rabbit: 'Coelho',
+    vegetarian: 'Vegetariano',
+    podium: '🏆 Pódio',
+    champion: '🥇 CAMPEÃO',
+    points: 'pontos',
+    totalPoints: 'pontos totais',
+    completeClassification: 'Classificação Completa',
+    teams: 'equipes',
+    position: 'Pos',
+    team: 'Equipe',
+    noResults: 'Nenhum resultado encontrado',
+    tryAnother: 'Tente outro termo de busca',
+    close: 'Fechar',
+    scoreByCategory: 'Pontuação por Categoria',
+    ofMaximum: 'do máximo',
+  }
+};
+
+const LANGUAGES = [
+  { code: 'es' as Language, label: 'Español', flag: '🇪🇸' },
+  { code: 'en' as Language, label: 'English', flag: '🇬🇧' },
+  { code: 'de' as Language, label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'pt' as Language, label: 'Português', flag: '🇵🇹' },
+];
+
 interface TeamResult {
   position: number;
   team: string;
@@ -75,24 +211,28 @@ const RESULTS_DATA: TeamResult[] = [
   { position: 58, team: "Asadores del Valhala", overall: 160.500, chicken: 13.500, beef: 32.100, porkWithBone: 28.600, porkWithoutBone: 31.900, fish: 26.950, rabbit: 38.150, vegetarian: 27.450 },
 ];
 
-const CATEGORIES = [
-  { key: 'overall', label: 'Overall', icon: Trophy },
-  { key: 'chicken', label: 'Chicken', icon: Medal },
-  { key: 'beef', label: 'Beef', icon: Award },
-  { key: 'porkWithBone', label: 'Pork w/bone', icon: Medal },
-  { key: 'porkWithoutBone', label: 'Pork wo/bone', icon: Medal },
-  { key: 'fish', label: 'Fish', icon: Award },
-  { key: 'rabbit', label: 'Rabbit', icon: Medal },
-  { key: 'vegetarian', label: 'Vegetarian', icon: Award },
-] as const;
+type CategoryKey = 'overall' | 'chicken' | 'beef' | 'porkWithBone' | 'porkWithoutBone' | 'fish' | 'rabbit' | 'vegetarian';
 
-type CategoryKey = typeof CATEGORIES[number]['key'];
+const getCategories = (lang: Language) => [
+  { key: 'overall' as CategoryKey, label: TRANSLATIONS[lang].overall, icon: Trophy },
+  { key: 'chicken' as CategoryKey, label: TRANSLATIONS[lang].chicken, icon: Medal },
+  { key: 'beef' as CategoryKey, label: TRANSLATIONS[lang].beef, icon: Award },
+  { key: 'porkWithBone' as CategoryKey, label: TRANSLATIONS[lang].porkWithBone, icon: Medal },
+  { key: 'porkWithoutBone' as CategoryKey, label: TRANSLATIONS[lang].porkWithoutBone, icon: Medal },
+  { key: 'fish' as CategoryKey, label: TRANSLATIONS[lang].fish, icon: Award },
+  { key: 'rabbit' as CategoryKey, label: TRANSLATIONS[lang].rabbit, icon: Medal },
+  { key: 'vegetarian' as CategoryKey, label: TRANSLATIONS[lang].vegetarian, icon: Award },
+];
 
 export default function ResultadosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('overall');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<TeamResult | null>(null);
+  const [language, setLanguage] = useState<Language>('es');
+
+  const t = TRANSLATIONS[language];
+  const CATEGORIES = getCategories(language);
 
   // Filtrar y ordenar resultados
   const filteredResults = useMemo(() => {
@@ -136,44 +276,42 @@ export default function ResultadosPage() {
             {/* Header del modal */}
             <div className="bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-6 text-white">
               <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1">
-                      <span className="text-sm font-bold">Posición #{selectedTeam.position}</span>
-                    </div>
-                    {getPositionBadge(selectedTeam.position) && (
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
-                        {(() => {
-                          const badge = getPositionBadge(selectedTeam.position);
-                          const Icon = badge!.icon;
-                          return <Icon className="h-5 w-5" />;
-                        })()}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1">
+                        <span className="text-sm font-bold">{t.position} #{selectedTeam.position}</span>
                       </div>
-                    )}
+                      {getPositionBadge(selectedTeam.position) && (
+                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                          {(() => {
+                            const badge = getPositionBadge(selectedTeam.position);
+                            const Icon = badge!.icon;
+                            return <Icon className="h-5 w-5" />;
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-bold mb-2">{selectedTeam.team}</h3>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold">{selectedTeam.overall.toFixed(3)}</span>
+                      <span className="text-white/80">{t.totalPoints}</span>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">{selectedTeam.team}</h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">{selectedTeam.overall.toFixed(3)}</span>
-                    <span className="text-white/80">puntos totales</span>
-                  </div>
+                  <button
+                    onClick={() => setSelectedTeam(null)}
+                    className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSelectedTeam(null)}
-                  className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
-                >
-                  <X className="h-6 w-6" />
-                </button>
               </div>
-            </div>
 
-            {/* Contenido del modal - Categorías */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-              <h4 className="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary-600" />
-                Puntuación por Categoría
-              </h4>
-              
-              <div className="grid gap-4">
+              {/* Contenido del modal - Categorías */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                <h4 className="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary-600" />
+                  {t.scoreByCategory}
+                </h4>              <div className="grid gap-4">
                 {CATEGORIES.filter(cat => cat.key !== 'overall').map((category) => {
                   const Icon = category.icon;
                   const score = selectedTeam[category.key];
@@ -205,7 +343,7 @@ export default function ResultadosPage() {
                         />
                       </div>
                       <div className="mt-1 text-xs text-neutral-500 text-right">
-                        {percentage.toFixed(1)}% del máximo
+                        {percentage.toFixed(1)}% {t.ofMaximum}
                       </div>
                     </div>
                   );
@@ -219,7 +357,7 @@ export default function ResultadosPage() {
                 onClick={() => setSelectedTeam(null)}
                 className="w-full px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-primary-600 transition-all shadow-soft-md hover:shadow-soft-lg"
               >
-                Cerrar
+                {t.close}
               </button>
             </div>
           </div>
@@ -228,22 +366,47 @@ export default function ResultadosPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
+        {/* Language Selector */}
+        <div className="flex justify-center mb-8 animate-slide-up">
+          <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-soft-md border border-neutral-200">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`relative group transition-all duration-200 ${
+                  language === lang.code 
+                    ? 'scale-125' 
+                    : 'scale-100 opacity-60 hover:opacity-100 hover:scale-110'
+                }`}
+                title={lang.label}
+              >
+                <span className="text-3xl sm:text-4xl cursor-pointer">
+                  {lang.flag}
+                </span>
+                {language === lang.code && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary-600 rounded-full"></div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16 animate-slide-up">
           <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-50 rounded-full mb-6">
             <Trophy className="h-5 w-5 text-primary-600" />
-            <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">Resultados Oficiales</span>
+            <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">{t.officialResults}</span>
           </div>
           
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight mb-4">
-            WBQA International BBQ Championship
+            {t.championship}
           </h1>
           <h2 className="text-2xl sm:text-3xl font-semibold text-primary-600 mb-6">
-            Chile 2025
+            {t.chile2025}
           </h2>
           
           <p className="text-lg text-neutral-600 max-w-3xl mx-auto">
-            Resultados completos del campeonato internacional de BBQ con {RESULTS_DATA.filter(t => t.overall > 0).length} equipos participantes
+            {t.subtitle} {RESULTS_DATA.filter(team => team.overall > 0).length} {t.teamsParticipating}
           </p>
         </div>
 
@@ -256,7 +419,7 @@ export default function ResultadosPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
                 <input
                   type="text"
-                  placeholder="Buscar equipo..."
+                  placeholder={t.searchTeam}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
@@ -278,7 +441,7 @@ export default function ResultadosPage() {
               className="lg:hidden flex items-center justify-center gap-2 px-6 py-3 bg-primary-50 text-primary-700 rounded-xl font-semibold hover:bg-primary-100 transition-colors"
             >
               <Filter className="h-5 w-5" />
-              Filtrar por categoría
+              {t.filterByCategory}
               <ChevronDown className={`h-5 w-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             </button>
           </div>
@@ -286,7 +449,7 @@ export default function ResultadosPage() {
           {/* Filtros de categoría */}
           <div className={`mt-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
             <label className="block text-sm font-semibold text-neutral-700 mb-3">
-              Categoría:
+              {t.category}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
               {CATEGORIES.map((category) => {
@@ -314,7 +477,7 @@ export default function ResultadosPage() {
         {!searchTerm && topThree.length >= 3 && (
           <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <h3 className="text-2xl font-bold text-neutral-900 mb-6 text-center">
-              🏆 Podio - {CATEGORIES.find(c => c.key === selectedCategory)?.label}
+              {t.podium} - {CATEGORIES.find(c => c.key === selectedCategory)?.label}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -330,7 +493,7 @@ export default function ResultadosPage() {
                       <div className="text-3xl font-bold text-gray-600 mb-1">
                         {topThree[1][selectedCategory].toFixed(3)}
                       </div>
-                      <div className="text-sm text-neutral-600">puntos</div>
+                      <div className="text-sm text-neutral-600">{t.points}</div>
                     </div>
                   </div>
                 </div>
@@ -346,7 +509,7 @@ export default function ResultadosPage() {
                       <div className="text-4xl font-bold text-yellow-600 mb-2">
                         {topThree[0][selectedCategory].toFixed(3)}
                       </div>
-                      <div className="text-sm text-neutral-600 font-semibold">🥇 CAMPEÓN</div>
+                      <div className="text-sm text-neutral-600 font-semibold">{t.champion}</div>
                     </div>
                   </div>
                 </div>
@@ -364,7 +527,7 @@ export default function ResultadosPage() {
                       <div className="text-3xl font-bold text-orange-600 mb-1">
                         {topThree[2][selectedCategory].toFixed(3)}
                       </div>
-                      <div className="text-sm text-neutral-600">puntos</div>
+                      <div className="text-sm text-neutral-600">{t.points}</div>
                     </div>
                   </div>
                 </div>
@@ -378,10 +541,10 @@ export default function ResultadosPage() {
           <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200 flex items-center gap-3">
             <BarChart3 className="h-6 w-6 text-primary-600" />
             <h3 className="text-xl font-bold text-neutral-900">
-              Clasificación Completa
+              {t.completeClassification}
             </h3>
             <span className="ml-auto text-sm text-neutral-600">
-              {filteredResults.length} equipos
+              {filteredResults.length} {t.teams}
             </span>
           </div>
 
@@ -389,8 +552,8 @@ export default function ResultadosPage() {
             <table className="w-full">
               <thead className="bg-neutral-50 border-b-2 border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-700 uppercase tracking-wide">Pos</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-700 uppercase tracking-wide">Equipo</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-700 uppercase tracking-wide">{t.position}</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-700 uppercase tracking-wide">{t.team}</th>
                   <th className="px-6 py-4 text-right text-sm font-bold text-neutral-700 uppercase tracking-wide">
                     {CATEGORIES.find(c => c.key === selectedCategory)?.label}
                   </th>
@@ -450,10 +613,10 @@ export default function ResultadosPage() {
             <div className="px-6 py-12 text-center">
               <Search className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-                No se encontraron resultados
+                {t.noResults}
               </h3>
               <p className="text-neutral-600">
-                Intenta con otro término de búsqueda
+                {t.tryAnother}
               </p>
             </div>
           )}
