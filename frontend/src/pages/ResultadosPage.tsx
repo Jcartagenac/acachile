@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Trophy, Medal, Award, Search, Filter, X, ChevronDown, BarChart3 } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
+import { getChampionshipResults, type TeamResult as TeamResultType } from '../services/championshipService';
 
 type Language = 'es' | 'en' | 'de' | 'pt';
 
@@ -138,80 +139,8 @@ const LANGUAGES = [
   { code: 'pt' as Language, label: 'Português', flag: '🇵🇹' },
 ];
 
-interface TeamResult {
-  position: number;
-  team: string;
-  overall: number;
-  chicken: number;
-  beef: number;
-  porkWithBone: number;
-  porkWithoutBone: number;
-  fish: number;
-  rabbit: number;
-  vegetarian: number;
-}
-
-const RESULTS_DATA: TeamResult[] = [
-  { position: 1, team: "Brazilian Barbecue Team 1", overall: 222.450, chicken: 34.600, beef: 43.150, porkWithBone: 36.800, porkWithoutBone: 35.750, fish: 40.200, rabbit: 33.050, vegetarian: 31.950 },
-  { position: 2, team: "BBQ Paraguay", overall: 222.300, chicken: 29.300, beef: 39.100, porkWithBone: 28.500, porkWithoutBone: 45.400, fish: 37.800, rabbit: 44.450, vegetarian: 42.200 },
-  { position: 3, team: "Grill On Fire", overall: 216.800, chicken: 36.000, beef: 37.650, porkWithBone: 35.350, porkWithoutBone: 34.650, fish: 33.700, rabbit: 37.150, vegetarian: 39.450 },
-  { position: 4, team: "Fuego & Fogo", overall: 214.850, chicken: 34.700, beef: 36.750, porkWithBone: 32.750, porkWithoutBone: 33.750, fish: 37.950, rabbit: 36.500, vegetarian: 38.950 },
-  { position: 5, team: "GrillHub NX", overall: 212.950, chicken: 35.150, beef: 35.250, porkWithBone: 38.300, porkWithoutBone: 35.950, fish: 36.100, rabbit: 29.150, vegetarian: 32.200 },
-  { position: 6, team: "Eventos de Fuego", overall: 212.000, chicken: 29.100, beef: 37.450, porkWithBone: 32.950, porkWithoutBone: 33.600, fish: 42.250, rabbit: 37.900, vegetarian: 36.650 },
-  { position: 7, team: "GUATEMALA 1", overall: 211.000, chicken: 35.050, beef: 33.450, porkWithBone: 40.300, porkWithoutBone: 34.650, fish: 32.550, rabbit: 29.450, vegetarian: 35.000 },
-  { position: 8, team: "Escuela Costarricense de Parrilleros", overall: 209.800, chicken: 35.250, beef: 33.550, porkWithBone: 41.850, porkWithoutBone: 34.900, fish: 31.950, rabbit: 36.200, vegetarian: 32.300 },
-  { position: 9, team: "Guardianes de la Parrilla", overall: 208.800, chicken: 37.400, beef: 33.450, porkWithBone: 25.600, porkWithoutBone: 44.050, fish: 34.450, rabbit: 32.100, vegetarian: 33.850 },
-  { position: 10, team: "Black Pearl BBQ Crew", overall: 208.050, chicken: 33.050, beef: 30.250, porkWithBone: 48.100, porkWithoutBone: 32.050, fish: 36.250, rabbit: 35.750, vegetarian: 28.350 },
-  { position: 11, team: "Brasas Peruanas", overall: 208.050, chicken: 33.350, beef: 34.550, porkWithBone: 38.100, porkWithoutBone: 33.600, fish: 34.250, rabbit: 33.900, vegetarian: 34.200 },
-  { position: 12, team: "Brazilian Barbecue Team 2", overall: 207.900, chicken: 37.550, beef: 39.400, porkWithBone: 31.000, porkWithoutBone: 34.350, fish: 35.450, rabbit: 40.450, vegetarian: 30.150 },
-  { position: 13, team: "ICATMOR", overall: 207.750, chicken: 34.750, beef: 41.550, porkWithBone: 33.450, porkWithoutBone: 33.950, fish: 31.850, rabbit: 36.550, vegetarian: 32.200 },
-  { position: 14, team: "Steiramen BBQ", overall: 207.400, chicken: 34.700, beef: 35.350, porkWithBone: 42.050, porkWithoutBone: 27.500, fish: 34.650, rabbit: 33.050, vegetarian: 33.150 },
-  { position: 15, team: "Parrilleros de élite", overall: 207.400, chicken: 33.400, beef: 36.700, porkWithBone: 33.850, porkWithoutBone: 36.400, fish: 35.350, rabbit: 32.250, vegetarian: 31.700 },
-  { position: 16, team: "A Modo Mio", overall: 206.550, chicken: 36.450, beef: 34.950, porkWithBone: 29.900, porkWithoutBone: 31.000, fish: 37.900, rabbit: 46.500, vegetarian: 36.350 },
-  { position: 17, team: "Swiss Fire Devils BBQ", overall: 206.050, chicken: 31.300, beef: 39.300, porkWithBone: 21.850, porkWithoutBone: 48.450, fish: 33.450, rabbit: 34.350, vegetarian: 31.700 },
-  { position: 18, team: "Bros & Fire PTY", overall: 205.800, chicken: 35.100, beef: 32.550, porkWithBone: 38.450, porkWithoutBone: 30.900, fish: 29.600, rabbit: 31.050, vegetarian: 39.200 },
-  { position: 19, team: "Guayabos Grill", overall: 205.200, chicken: 33.050, beef: 35.000, porkWithBone: 34.400, porkWithoutBone: 32.900, fish: 35.450, rabbit: 38.350, vegetarian: 34.400 },
-  { position: 20, team: "Parrillas y Espadas", overall: 204.700, chicken: 34.350, beef: 33.050, porkWithBone: 28.350, porkWithoutBone: 33.350, fish: 37.800, rabbit: 39.050, vegetarian: 37.800 },
-  { position: 21, team: "West Smoke BBQ", overall: 204.700, chicken: 38.250, beef: 36.500, porkWithBone: 33.450, porkWithoutBone: 31.850, fish: 36.100, rabbit: 33.800, vegetarian: 28.550 },
-  { position: 22, team: "La Pandilla Parrillera", overall: 204.650, chicken: 29.550, beef: 33.200, porkWithBone: 49.050, porkWithoutBone: 31.700, fish: 35.000, rabbit: 34.800, vegetarian: 26.150 },
-  { position: 23, team: "Barbakùa", overall: 204.550, chicken: 34.500, beef: 30.550, porkWithBone: 19.050, porkWithoutBone: 51.050, fish: 33.150, rabbit: 34.750, vegetarian: 36.250 },
-  { position: 24, team: "La Mesa del Laurel", overall: 204.500, chicken: 31.650, beef: 34.700, porkWithBone: 43.100, porkWithoutBone: 29.050, fish: 34.100, rabbit: 33.550, vegetarian: 31.900 },
-  { position: 25, team: "Fuego del Achibueno", overall: 204.100, chicken: 36.050, beef: 38.800, porkWithBone: 31.900, porkWithoutBone: 33.050, fish: 30.150, rabbit: 29.850, vegetarian: 34.150 },
-  { position: 26, team: "ACONCAGUA GRILL", overall: 203.750, chicken: 42.950, beef: 34.400, porkWithBone: 28.100, porkWithoutBone: 29.100, fish: 37.850, rabbit: 22.000, vegetarian: 31.350 },
-  { position: 27, team: "Grillholics Mx", overall: 202.900, chicken: 33.200, beef: 35.000, porkWithBone: 31.250, porkWithoutBone: 38.300, fish: 35.950, rabbit: 34.550, vegetarian: 29.200 },
-  { position: 28, team: "Forjadores de Sabor", overall: 202.750, chicken: 37.150, beef: 34.700, porkWithBone: 32.150, porkWithoutBone: 34.050, fish: 32.150, rabbit: 28.150, vegetarian: 32.550 },
-  { position: 29, team: "Condores de Fuego", overall: 201.550, chicken: 37.100, beef: 34.700, porkWithBone: 23.550, porkWithoutBone: 38.100, fish: 37.500, rabbit: 35.450, vegetarian: 30.600 },
-  { position: 30, team: "Peaky Blinders", overall: 201.550, chicken: 33.150, beef: 34.500, porkWithBone: 32.400, porkWithoutBone: 35.450, fish: 33.300, rabbit: 33.800, vegetarian: 32.750 },
-  { position: 31, team: "Brasas Biobio", overall: 201.500, chicken: 29.100, beef: 33.150, porkWithBone: 21.700, porkWithoutBone: 49.800, fish: 34.800, rabbit: 30.450, vegetarian: 32.950 },
-  { position: 32, team: "Andes Grill", overall: 200.950, chicken: 28.000, beef: 45.700, porkWithBone: 28.450, porkWithoutBone: 31.700, fish: 37.150, rabbit: 30.600, vegetarian: 29.950 },
-  { position: 33, team: "La Bodega del Asador", overall: 200.150, chicken: 35.250, beef: 37.000, porkWithBone: 33.350, porkWithoutBone: 27.650, fish: 37.150, rabbit: 35.700, vegetarian: 29.750 },
-  { position: 34, team: "OJO DE BIFFE", overall: 199.850, chicken: 36.950, beef: 37.700, porkWithBone: 28.450, porkWithoutBone: 30.950, fish: 35.350, rabbit: 31.850, vegetarian: 30.450 },
-  { position: 35, team: "LUMBERJACK BBQ", overall: 199.050, chicken: 34.050, beef: 30.450, porkWithBone: 33.250, porkWithoutBone: 32.250, fish: 35.300, rabbit: 37.950, vegetarian: 33.750 },
-  { position: 36, team: "Nina Runa Perú", overall: 195.000, chicken: 20.800, beef: 40.050, porkWithBone: 35.050, porkWithoutBone: 36.900, fish: 30.250, rabbit: 34.100, vegetarian: 31.950 },
-  { position: 37, team: "LECHLER Grill Team", overall: 193.650, chicken: 25.500, beef: 33.350, porkWithBone: 35.100, porkWithoutBone: 34.050, fish: 33.000, rabbit: 28.950, vegetarian: 32.650 },
-  { position: 38, team: "Rhoener Heimat Griller", overall: 191.500, chicken: 34.950, beef: 31.150, porkWithBone: 29.450, porkWithoutBone: 35.700, fish: 32.450, rabbit: 29.400, vegetarian: 27.800 },
-  { position: 39, team: "Las Pibas del Fuego", overall: 190.500, chicken: 30.500, beef: 32.650, porkWithBone: 16.850, porkWithoutBone: 41.150, fish: 31.350, rabbit: 30.050, vegetarian: 38.000 },
-  { position: 40, team: "Sociedad Parrillera de Nuevo Laredo.", overall: 189.450, chicken: 25.750, beef: 33.450, porkWithBone: 36.150, porkWithoutBone: 28.900, fish: 32.200, rabbit: 28.700, vegetarian: 33.000 },
-  { position: 41, team: "Wild West BBQ e.V.", overall: 189.100, chicken: 31.400, beef: 34.250, porkWithBone: 33.150, porkWithoutBone: 28.200, fish: 30.800, rabbit: 41.100, vegetarian: 31.300 },
-  { position: 42, team: "Argentina, Fuego y Tradición", overall: 188.900, chicken: 30.600, beef: 31.800, porkWithBone: 23.700, porkWithoutBone: 35.800, fish: 38.000, rabbit: 30.250, vegetarian: 29.000 },
-  { position: 43, team: "Oid mortales del fuego", overall: 188.800, chicken: 27.150, beef: 34.400, porkWithBone: 36.850, porkWithoutBone: 31.500, fish: 31.900, rabbit: 36.400, vegetarian: 27.000 },
-  { position: 44, team: "Malvinas Argentinas", overall: 188.350, chicken: 31.150, beef: 25.400, porkWithBone: 35.400, porkWithoutBone: 33.700, fish: 27.400, rabbit: 32.550, vegetarian: 35.300 },
-  { position: 45, team: "American BBQ", overall: 187.050, chicken: 35.950, beef: 32.300, porkWithBone: 30.200, porkWithoutBone: 42.700, fish: 12.100, rabbit: 37.300, vegetarian: 33.800 },
-  { position: 46, team: "PAYASO PARRILLERO", overall: 186.850, chicken: 0.000, beef: 43.950, porkWithBone: 33.950, porkWithoutBone: 34.650, fish: 40.750, rabbit: 34.450, vegetarian: 33.550 },
-  { position: 47, team: "HEREDEROS DE LA PARRILLA", overall: 186.350, chicken: 33.850, beef: 32.950, porkWithBone: 21.500, porkWithoutBone: 39.200, fish: 32.300, rabbit: 26.450, vegetarian: 26.550 },
-  { position: 48, team: "Humo Parrillada", overall: 183.900, chicken: 33.800, beef: 32.550, porkWithBone: 19.850, porkWithoutBone: 32.350, fish: 31.400, rabbit: 29.150, vegetarian: 33.950 },
-  { position: 49, team: "WBQA Mexico Center", overall: 182.600, chicken: 26.900, beef: 33.550, porkWithBone: 33.700, porkWithoutBone: 29.800, fish: 33.800, rabbit: 30.950, vegetarian: 24.850 },
-  { position: 50, team: "Humo Norteno", overall: 182.350, chicken: 32.850, beef: 28.650, porkWithBone: 41.500, porkWithoutBone: 28.600, fish: 28.800, rabbit: 37.050, vegetarian: 21.950 },
-  { position: 51, team: "Caballeros de la Parrilla", overall: 182.250, chicken: 25.700, beef: 35.500, porkWithBone: 24.500, porkWithoutBone: 28.150, fish: 36.450, rabbit: 31.800, vegetarian: 31.950 },
-  { position: 52, team: "Sabor Canario Uruguay", overall: 180.750, chicken: 29.200, beef: 31.100, porkWithBone: 27.150, porkWithoutBone: 36.300, fish: 25.750, rabbit: 26.900, vegetarian: 31.250 },
-  { position: 53, team: "Sabores y fuegos argentinos", overall: 179.450, chicken: 29.700, beef: 30.400, porkWithBone: 29.750, porkWithoutBone: 31.700, fish: 28.350, rabbit: 31.500, vegetarian: 29.550 },
-  { position: 54, team: "DIVINO FOGO", overall: 178.350, chicken: 31.250, beef: 32.600, porkWithBone: 29.200, porkWithoutBone: 24.500, fish: 28.450, rabbit: 38.450, vegetarian: 32.350 },
-  { position: 55, team: "Mau's Grill", overall: 177.650, chicken: 32.200, beef: 26.300, porkWithBone: 27.650, porkWithoutBone: 32.650, fish: 29.600, rabbit: 34.850, vegetarian: 29.250 },
-  { position: 56, team: "Sangre Charrua Uruguay", overall: 171.450, chicken: 16.000, beef: 29.950, porkWithBone: 27.700, porkWithoutBone: 34.800, fish: 30.300, rabbit: 35.600, vegetarian: 32.700 },
-  { position: 57, team: "Argentina, Fuego Sagrado", overall: 167.250, chicken: 4.400, beef: 33.900, porkWithBone: 31.300, porkWithoutBone: 31.250, fish: 32.950, rabbit: 27.150, vegetarian: 33.450 },
-  { position: 58, team: "Asadores del Valhala", overall: 160.500, chicken: 13.500, beef: 32.100, porkWithBone: 28.600, porkWithoutBone: 31.900, fish: 26.950, rabbit: 38.150, vegetarian: 27.450 },
-];
-
+// Use TeamResult from service
+type TeamResult = TeamResultType;
 type CategoryKey = 'overall' | 'chicken' | 'beef' | 'porkWithBone' | 'porkWithoutBone' | 'fish' | 'rabbit' | 'vegetarian';
 
 const getCategories = (lang: Language) => [
@@ -231,26 +160,47 @@ export default function ResultadosPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<TeamResult | null>(null);
   const [language, setLanguage] = useState<Language>('es');
+  const [resultsData, setResultsData] = useState<TeamResult[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const t = TRANSLATIONS[language];
   const CATEGORIES = getCategories(language);
 
+  // Load championship results from API
+  useEffect(() => {
+    async function loadResults() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await getChampionshipResults(undefined, 2025);
+        setResultsData(data);
+      } catch (err) {
+        console.error('Failed to load championship results:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load results');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadResults();
+  }, []);
+
   // Filtrar y ordenar resultados
   const filteredResults = useMemo(() => {
-    let results = RESULTS_DATA.filter(team => team.overall > 0); // Excluir equipos sin puntaje
+    let results = resultsData.filter((team: TeamResult) => team.overall > 0); // Excluir equipos sin puntaje
     
     // Filtrar por búsqueda
     if (searchTerm) {
-      results = results.filter(team => 
+      results = results.filter((team: TeamResult) => 
         team.team.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Ordenar por categoría seleccionada
-    results.sort((a, b) => b[selectedCategory] - a[selectedCategory]);
+    results.sort((a: TeamResult, b: TeamResult) => b[selectedCategory] - a[selectedCategory]);
 
     return results;
-  }, [searchTerm, selectedCategory]);
+  }, [resultsData, searchTerm, selectedCategory]);
 
   // Obtener top 3 de la categoría seleccionada
   const topThree = filteredResults.slice(0, 3);
@@ -261,6 +211,55 @@ export default function ResultadosPage() {
     if (position === 3) return { icon: Award, color: 'text-orange-600 bg-orange-50' };
     return null;
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <>
+        <SEOHelmet
+          title="Resultados WBQA Championship Chile 2025 🏆 ACA Chile"
+          description="🏆 Resultados oficiales WBQA International BBQ Championship Chile 2025. 58 equipos participantes. Consulta posiciones y puntajes completos."
+          url="https://acachile.com/resultados"
+          image="https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg"
+        />
+        <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-primary-50 py-12 px-4 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white rounded-full shadow-lg mb-4">
+              <div className="h-5 w-5 border-3 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-neutral-700 font-medium">Cargando resultados...</span>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <>
+        <SEOHelmet
+          title="Error - Resultados WBQA Championship Chile 2025"
+          description="Error al cargar los resultados del campeonato."
+          url="https://acachile.com/resultados"
+        />
+        <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-primary-50 py-12 px-4 flex items-center justify-center">
+          <div className="max-w-md w-full">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center shadow-lg">
+              <div className="text-red-600 text-lg font-semibold mb-2">Error al cargar resultados</div>
+              <p className="text-red-700 mb-4">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -415,7 +414,7 @@ export default function ResultadosPage() {
           </h2>
           
           <p className="text-base text-neutral-600 max-w-3xl mx-auto">
-            {t.subtitle} {RESULTS_DATA.filter(team => team.overall > 0).length} {t.teamsParticipating}
+            {t.subtitle} {resultsData.filter((team: TeamResult) => team.overall > 0).length} {t.teamsParticipating}
           </p>
         </div>
 
