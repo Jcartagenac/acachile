@@ -57,6 +57,9 @@ const GuestbookPage = lazy(() => import('./pages/GuestbookPage'));
 const AdminGuestbook = lazy(() => import('./components/admin/AdminGuestbook'));
 const AdminGuestbookTrash = lazy(() => import('./components/admin/AdminGuestbookTrash'));
 const ResultadosPage = lazy(() => import('./pages/ResultadosPage'));
+const ShopPage = lazy(() => import('./pages/ShopPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -74,6 +77,11 @@ function App() {
           <Route path="/resultados" element={<ResultadosPage />} />
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
+          
+          {/* Tienda */}
+          <Route path="/shop" element={<ShopPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/cart/payment/:orderNumber" element={<PaymentPage />} />
           
           {/* Eventos */}
           <Route path="/eventos" element={<EventProviderWrapper><EventsPage /></EventProviderWrapper>} />
