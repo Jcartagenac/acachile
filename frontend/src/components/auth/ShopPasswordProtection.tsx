@@ -7,6 +7,8 @@ interface ShopPasswordProtectionProps {
 
 const SHOP_PASSWORD = 'Acachile.2010';
 const SHOP_ACCESS_KEY = 'aca_shop_access';
+const SHOP_ACCESS_EXPIRY_KEY = 'aca_shop_access_expiry';
+const ACCESS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
 export const ShopPasswordProtection: React.FC<ShopPasswordProtectionProps> = ({ children }) => {
   const [hasAccess, setHasAccess] = useState(false);
@@ -16,10 +18,22 @@ export const ShopPasswordProtection: React.FC<ShopPasswordProtectionProps> = ({ 
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check if user has already entered the password
-    const accessGranted = sessionStorage.getItem(SHOP_ACCESS_KEY);
-    if (accessGranted === 'true') {
-      setHasAccess(true);
+    // Check if user has already entered the password and if it hasn't expired
+    const accessGranted = localStorage.getItem(SHOP_ACCESS_KEY);
+    const expiryTime = localStorage.getItem(SHOP_ACCESS_EXPIRY_KEY);
+    
+    if (accessGranted === 'true' && expiryTime) {
+      const now = Date.now();
+      const expiry = parseInt(expiryTime, 10);
+      
+      if (now < expiry) {
+        // Access is still valid
+        setHasAccess(true);
+      } else {
+        // Access has expired, clean up
+        localStorage.removeItem(SHOP_ACCESS_KEY);
+        localStorage.removeItem(SHOP_ACCESS_EXPIRY_KEY);
+      }
     }
     setIsChecking(false);
   }, []);
@@ -29,7 +43,9 @@ export const ShopPasswordProtection: React.FC<ShopPasswordProtectionProps> = ({ 
     setError('');
 
     if (password === SHOP_PASSWORD) {
-      sessionStorage.setItem(SHOP_ACCESS_KEY, 'true');
+      const expiryTime = Date.now() + ACCESS_DURATION_MS;
+      localStorage.setItem(SHOP_ACCESS_KEY, 'true');
+      localStorage.setItem(SHOP_ACCESS_EXPIRY_KEY, expiryTime.toString());
       setHasAccess(true);
     } else {
       setError('Clave incorrecta. Por favor intenta nuevamente.');
@@ -113,7 +129,10 @@ export const ShopPasswordProtection: React.FC<ShopPasswordProtectionProps> = ({ 
 
             {/* Footer */}
             <div className="mt-6 pt-6 border-t border-neutral-200">
-              <p className="text-xs text-neutral-500 text-center">
+              <p className="text-xs text-neutral-500 text-center mb-2">
+                El acceso será válido por 24 horas
+              </p>
+              <p className="text-xs text-neutral-400 text-center">
                 Si no conoces la clave de acceso, contacta con ACA Chile
               </p>
             </div>
