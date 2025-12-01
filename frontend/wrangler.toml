@@ -45,7 +45,7 @@ ENVIRONMENT = "production"
 CORS_ORIGIN = "https://acachile.com"
 FRONTEND_URL = "https://acachile.com"
 R2_PUBLIC_URL = "https://images.acachile.com"
-FROM_EMAIL = "noreply@mail.juancartagena.cl"
+FROM_EMAIL = "noreply@acachile.com"
 ADMIN_EMAIL = "admin@acachile.cl"
 
 # Variables para build de Vite (frontend)
