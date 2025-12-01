@@ -1,5 +1,5 @@
 const PBKDF2_PREFIX = 'pbkdf2';
-const PBKDF2_ITERATIONS = 150000;
+const PBKDF2_ITERATIONS = 100000; // Cloudflare Workers limit
 const PBKDF2_SALT_BYTES = 16;
 const PBKDF2_KEY_BYTES = 32;
 const LEGACY_SALT = 'salt_aca_chile_2024';
