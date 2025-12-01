@@ -109,12 +109,7 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900 mb-2">Gestión de Órdenes</h1>
-        <p className="text-neutral-600">Administra las órdenes de compra de la tienda</p>
-      </div>
-
+    <div>
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6 flex gap-4">
         <div className="flex-1">

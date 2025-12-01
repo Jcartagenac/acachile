@@ -18,7 +18,6 @@ import {
   Gift,
   Trash2,
   BookOpen,
-  Package,
   ShoppingCart,
 } from 'lucide-react';
 
@@ -83,22 +82,11 @@ const menuGroups: MenuGroup[] = [
         icon: BookOpen,
         description: 'Gestionar mensajes',
       },
-    ],
-  },
-  {
-    label: 'Ecommerce',
-    items: [
       {
-        path: '/panel-admin/products',
-        label: 'Productos',
-        icon: Package,
-        description: 'Gestionar SKUs',
-      },
-      {
-        path: '/panel-admin/orders',
-        label: 'Órdenes',
+        path: '/panel-admin/ecommerce',
+        label: 'Ecommerce',
         icon: ShoppingCart,
-        description: 'Ver pedidos',
+        description: 'Productos y órdenes',
       },
     ],
   },

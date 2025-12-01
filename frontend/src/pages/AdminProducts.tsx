@@ -172,15 +172,11 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Gestión de Productos (SKUs)</h1>
-          <p className="text-neutral-600">Administra el catálogo de la tienda</p>
-        </div>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors ml-auto"
         >
           <Plus className="h-5 w-5" />
           Nuevo Producto
