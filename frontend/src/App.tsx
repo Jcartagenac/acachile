@@ -58,6 +58,7 @@ const AdminGuestbook = lazy(() => import('./components/admin/AdminGuestbook'));
 const AdminGuestbookTrash = lazy(() => import('./components/admin/AdminGuestbookTrash'));
 const ResultadosPage = lazy(() => import('./pages/ResultadosPage'));
 const ShopPage = lazy(() => import('./pages/ShopPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const AdminEcommerce = lazy(() => import('./pages/AdminEcommerce'));
@@ -81,6 +82,7 @@ function App() {
           
           {/* Tienda */}
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/shop/:sku" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/cart/payment/:orderNumber" element={<PaymentPage />} />
           

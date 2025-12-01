@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
 import { getProducts, addToCart, getCartItemCount, type Product } from '../services/shopService';
@@ -160,10 +160,13 @@ export default function ShopPage() {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group"
               >
-                {/* Product Image */}
-                <div className="relative h-48 bg-gradient-to-br from-neutral-100 to-neutral-200">
+                {/* Product Image - Clickeable */}
+                <Link 
+                  to={`/shop/${product.sku}`}
+                  className="block relative h-48 bg-gradient-to-br from-neutral-100 to-neutral-200"
+                >
                   {product.image_url ? (
                     <img
                       src={product.image_url}
@@ -183,7 +186,7 @@ export default function ShopPage() {
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-md">
                     <span className="text-xs font-semibold text-neutral-600">{product.sku}</span>
                   </div>
-                </div>
+                </Link>
 
                 {/* Product Info */}
                 <div className="p-6">
@@ -229,28 +232,37 @@ export default function ShopPage() {
                     </div>
                   </div>
 
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={addedToCart[product.id]}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all ${
-                      addedToCart[product.id]
-                        ? 'bg-green-500 text-white'
-                        : 'bg-primary-600 hover:bg-primary-700 text-white'
-                    }`}
-                  >
-                    {addedToCart[product.id] ? (
-                      <span className="inline-flex items-center gap-2">
-                        <Check className="h-5 w-5" />
-                        Agregado al carrito
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2">
-                        <ShoppingCart className="h-5 w-5" />
-                        Agregar al carrito
-                      </span>
-                    )}
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
+                    <Link
+                      to={`/shop/${product.sku}`}
+                      className="w-full py-3 rounded-xl font-semibold transition-all bg-neutral-100 hover:bg-neutral-200 text-neutral-900 flex items-center justify-center gap-2"
+                    >
+                      Ver detalles
+                    </Link>
+                    
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      disabled={addedToCart[product.id]}
+                      className={`w-full py-3 rounded-xl font-semibold transition-all ${
+                        addedToCart[product.id]
+                          ? 'bg-green-500 text-white'
+                          : 'bg-primary-600 hover:bg-primary-700 text-white'
+                      }`}
+                    >
+                      {addedToCart[product.id] ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Check className="h-5 w-5" />
+                          Agregado al carrito
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <ShoppingCart className="h-5 w-5" />
+                          Agregar al carrito
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

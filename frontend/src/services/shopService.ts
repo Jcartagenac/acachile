@@ -3,9 +3,11 @@ export interface Product {
   sku: string;
   name: string;
   description: string | null;
+  detailed_description?: string | null;
   price: number;
   inventory?: number;
   image_url: string | null;
+  gallery_images?: string[] | null;
   is_active: number;
   created_at?: string;
   updated_at?: string;
@@ -117,6 +119,25 @@ export async function getProduct(id: number): Promise<Product> {
     return data.data;
   } catch (error) {
     console.error('Error fetching product:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get single product by SKU
+ */
+export async function getProductBySku(sku: string): Promise<Product> {
+  try {
+    const response = await fetch(`/api/shop/products/sku/${encodeURIComponent(sku)}`);
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch product');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching product by SKU:', error);
     throw error;
   }
 }
