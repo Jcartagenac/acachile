@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, AlertCircle, Truck } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, AlertCircle } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
 import {
   getCartFromStorage,
@@ -11,9 +11,11 @@ import {
   clearCart,
   createOrder,
   getShippingRates,
+  getComunasByRegion,
   type CartItem,
   type CreateOrderRequest,
-  type ShippingRate
+  type ShippingRate,
+  type Comuna
 } from '../services/shopService';
 
 export default function CartPage() {
@@ -24,6 +26,8 @@ export default function CartPage() {
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [selectedRegion, setSelectedRegion] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
+  const [comunas, setComunas] = useState<Comuna[]>([]);
+  const [loadingComunas, setLoadingComunas] = useState(false);
 
   // Form state
   const [customerName, setCustomerName] = useState('');
@@ -31,6 +35,7 @@ export default function CartPage() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
+  const [customerComuna, setCustomerComuna] = useState('');
 
   useEffect(() => {
     setCart(getCartFromStorage());
@@ -46,10 +51,27 @@ export default function CartPage() {
     }
   };
 
-  const handleRegionChange = (regionCode: string) => {
+  const handleRegionChange = async (regionCode: string) => {
     setSelectedRegion(regionCode);
+    setCustomerComuna(''); // Reset comuna when region changes
     const rate = shippingRates.find(r => r.region_code === regionCode);
     setShippingCost(rate ? rate.rate : 0);
+
+    // Load comunas for selected region
+    if (regionCode) {
+      setLoadingComunas(true);
+      try {
+        const comunasData = await getComunasByRegion(regionCode);
+        setComunas(comunasData);
+      } catch (error) {
+        console.error('Error loading comunas:', error);
+        setComunas([]);
+      } finally {
+        setLoadingComunas(false);
+      }
+    } else {
+      setComunas([]);
+    }
   };
 
   const handleQuantityChange = (productId: number, newQuantity: number) => {
@@ -117,6 +139,10 @@ export default function CartPage() {
       setError('Debes seleccionar una región para calcular el envío');
       return false;
     }
+    if (!customerComuna.trim()) {
+      setError('La comuna es obligatoria');
+      return false;
+    }
     return true;
   };
 
@@ -146,6 +172,7 @@ export default function CartPage() {
         customer_email: customerEmail.trim(),
         customer_phone: customerPhone.trim(),
         customer_address: customerAddress.trim(),
+        customer_comuna: customerComuna.trim(),
         shipping_region: selectedRegion,
         shipping_cost: shippingCost
       };
@@ -386,7 +413,7 @@ export default function CartPage() {
                         onChange={(e) => setCustomerAddress(e.target.value)}
                         rows={3}
                         className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="Calle Ejemplo 123, Comuna, Ciudad"
+                        placeholder="Calle Ejemplo 123, Depto/Casa"
                       />
                     </div>
 
@@ -412,6 +439,31 @@ export default function CartPage() {
                           Costo de envío: <span className="font-semibold text-primary-600">{formatCurrency(shippingCost)}</span>
                         </p>
                       )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">
+                        Comuna <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={customerComuna}
+                        onChange={(e) => setCustomerComuna(e.target.value)}
+                        disabled={!selectedRegion || loadingComunas}
+                        className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-neutral-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">
+                          {!selectedRegion 
+                            ? 'Primero selecciona una región' 
+                            : loadingComunas 
+                            ? 'Cargando comunas...' 
+                            : 'Selecciona tu comuna'}
+                        </option>
+                        {comunas.map((comuna) => (
+                          <option key={comuna.id} value={comuna.comuna_name}>
+                            {comuna.comuna_name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <button

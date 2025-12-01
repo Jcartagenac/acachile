@@ -43,6 +43,7 @@ export interface CreateOrderRequest {
   customer_email: string;
   customer_phone: string;
   customer_address: string;
+  customer_comuna: string;
   shipping_region: string;
   shipping_cost: number;
   payment_method?: 'webpay' | 'transfer';
@@ -79,6 +80,12 @@ export interface ShippingRate {
   region_name: string;
   rate: number;
   estimated_days: string;
+}
+
+export interface Comuna {
+  id: number;
+  region_code: string;
+  comuna_name: string;
 }
 
 export interface PaymentConfig {
@@ -253,6 +260,25 @@ export async function getShippingRates(): Promise<ShippingRate[]> {
     return data;
   } catch (error) {
     console.error('Error fetching shipping rates:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get comunas by region
+ */
+export async function getComunasByRegion(regionCode: string): Promise<Comuna[]> {
+  try {
+    const response = await fetch(`/api/shop/comunas?region=${encodeURIComponent(regionCode)}`);
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch comunas');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching comunas:', error);
     throw error;
   }
 }

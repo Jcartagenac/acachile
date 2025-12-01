@@ -14,6 +14,7 @@ interface CreateOrderRequest {
   customer_email: string;
   customer_phone: string;
   customer_address: string;
+  customer_comuna: string;
   shipping_region: string;
   shipping_cost: number;
   payment_method?: 'webpay' | 'transfer';
@@ -35,10 +36,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     if (!body.customer_name || !body.customer_rut || !body.customer_email || 
-        !body.customer_phone || !body.customer_address || !body.shipping_region) {
+        !body.customer_phone || !body.customer_address || !body.customer_comuna || 
+        !body.shipping_region) {
       return jsonResponse({
         success: false,
-        error: 'All customer information is required: name, rut, email, phone, address, shipping_region'
+        error: 'All customer information is required: name, rut, email, phone, address, comuna, shipping_region'
       }, 400);
     }
 
@@ -113,9 +115,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const orderResult = await context.env.DB.prepare(`
       INSERT INTO shop_orders (
         order_number, customer_name, customer_rut, customer_email, 
-        customer_phone, customer_address, shipping_region, shipping_cost, 
-        subtotal, total, status, payment_method
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        customer_phone, customer_address, customer_comuna, shipping_region, 
+        shipping_cost, subtotal, total, status, payment_method
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       orderNumber,
       body.customer_name,
@@ -123,6 +125,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       body.customer_email,
       body.customer_phone,
       body.customer_address,
+      body.customer_comuna,
       body.shipping_region,
       shippingCost,
       subtotal,

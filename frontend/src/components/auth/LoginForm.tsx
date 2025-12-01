@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, LogIn, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { logger } from '../../utils/logger';
@@ -23,11 +23,88 @@ interface LoginFormProps {
   onSuccess?: () => void;
 }
 
+// Constants for brute force protection
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+const STORAGE_KEY = 'login_attempts';
+
+interface LoginAttempt {
+  count: number;
+  lockedUntil?: number;
+}
+
 export const LoginForm: React.FC<LoginFormProps> = ({ 
   onSuccess
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState<LoginAttempt>({ count: 0 });
+  const [remainingTime, setRemainingTime] = useState<number>(0);
   const { login, isLoading, error, clearError } = useAuth();
+
+  // Load login attempts from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const attempts: LoginAttempt = JSON.parse(stored);
+      if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
+        setLoginAttempts(attempts);
+        setRemainingTime(attempts.lockedUntil - Date.now());
+      } else {
+        // Lockout expired, reset
+        localStorage.removeItem(STORAGE_KEY);
+        setLoginAttempts({ count: 0 });
+      }
+    }
+  }, []);
+
+  // Update remaining time countdown
+  useEffect(() => {
+    if (remainingTime > 0) {
+      const interval = setInterval(() => {
+        const newRemaining = loginAttempts.lockedUntil ? loginAttempts.lockedUntil - Date.now() : 0;
+        if (newRemaining <= 0) {
+          localStorage.removeItem(STORAGE_KEY);
+          setLoginAttempts({ count: 0 });
+          setRemainingTime(0);
+        } else {
+          setRemainingTime(newRemaining);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [remainingTime, loginAttempts.lockedUntil]);
+
+  const isLocked = Boolean(loginAttempts.lockedUntil && loginAttempts.lockedUntil > Date.now());
+
+  const formatTimeRemaining = (ms: number): string => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleFailedAttempt = () => {
+    const newCount = loginAttempts.count + 1;
+    
+    if (newCount >= MAX_LOGIN_ATTEMPTS) {
+      const lockedUntil = Date.now() + LOCKOUT_DURATION;
+      const newAttempts = { count: newCount, lockedUntil };
+      setLoginAttempts(newAttempts);
+      setRemainingTime(LOCKOUT_DURATION);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newAttempts));
+      logger.auth.warn(`🔒 Cuenta bloqueada temporalmente por ${MAX_LOGIN_ATTEMPTS} intentos fallidos`);
+    } else {
+      const newAttempts = { count: newCount };
+      setLoginAttempts(newAttempts);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newAttempts));
+      logger.auth.warn(`⚠️ Intento de login fallido ${newCount}/${MAX_LOGIN_ATTEMPTS}`);
+    }
+  };
+
+  const handleSuccessfulLogin = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setLoginAttempts({ count: 0 });
+    setRemainingTime(0);
+  };
 
   const {
     register,
@@ -39,6 +116,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    // Check if account is locked
+    if (isLocked) {
+      logger.auth.warn('🔒 Intento de login bloqueado - cuenta temporalmente bloqueada');
+      return;
+    }
+
     try {
       logger.auth.info('🔐 Iniciando proceso de login', { email: data.email });
       clearError();
@@ -48,11 +131,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       logger.timeEnd('login-form-submit');
       
       logger.auth.info('✅ Login exitoso desde formulario');
+      handleSuccessfulLogin();
       reset();
       onSuccess?.();
     } catch (error) {
       logger.auth.error('❌ Error en login desde formulario:', error);
       console.error('Error en login:', error);
+      handleFailedAttempt();
     }
   };
 
@@ -75,9 +160,28 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             </div>
           </div>
 
-          {error && (
-            <div className="mb-6 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-600">
-              {error}
+          {isLocked && (
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Cuenta bloqueada temporalmente</p>
+                  <p className="text-sm text-red-700 mt-1">
+                    Demasiados intentos fallidos. Intenta nuevamente en: <span className="font-mono font-bold">{formatTimeRemaining(remainingTime)}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isLocked && error && (
+            <div className="mb-6 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3">
+              <p className="text-sm text-primary-600">{error}</p>
+              {loginAttempts.count > 0 && (
+                <p className="text-xs text-primary-500 mt-1">
+                  Intentos fallidos: {loginAttempts.count}/{MAX_LOGIN_ATTEMPTS}
+                </p>
+              )}
             </div>
           )}
 
@@ -134,10 +238,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
             <button
               type="submit"
-              disabled={isLoading}
-              className={`w-full rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-primary-200/70 transition hover:from-primary-600 hover:to-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isLoading ? 'cursor-not-allowed opacity-80' : ''}`}
+              disabled={isLoading || isLocked}
+              className={`w-full rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-primary-200/70 transition hover:from-primary-600 hover:to-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isLoading || isLocked ? 'cursor-not-allowed opacity-80' : ''}`}
             >
-              {isLoading ? (
+              {isLocked ? (
+                'Cuenta bloqueada'
+              ) : isLoading ? (
                 <div className="flex items-center justify-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Iniciando sesión...
