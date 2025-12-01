@@ -26,78 +26,103 @@ interface PanelAdminLayoutProps {
   children: React.ReactNode;
 }
 
-const menuItems = [
+interface MenuItem {
+  path: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
+
+interface MenuGroup {
+  label?: string;
+  items: MenuItem[];
+}
+
+const menuGroups: MenuGroup[] = [
   {
-    path: '/panel-admin',
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    description: 'Vista general',
+    items: [
+      {
+        path: '/panel-admin',
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+        description: 'Vista general',
+      },
+      {
+        path: '/panel-admin/postulantes',
+        label: 'Postulantes',
+        icon: UserCheck,
+        description: 'Revisión y aprobación',
+      },
+      {
+        path: '/panel-admin/users',
+        label: 'Gestión de Socios',
+        icon: Users,
+        description: 'Administrar socios',
+      },
+      {
+        path: '/panel-admin/payments',
+        label: 'Gestión de Cuotas',
+        icon: CreditCard,
+        description: 'Pagos y cuotas',
+      },
+      {
+        path: '/panel-admin/content',
+        label: 'Gestión de Contenido',
+        icon: FileText,
+        description: 'Eventos y noticias',
+      },
+      {
+        path: '/panel-admin/news',
+        label: 'Comunicados',
+        icon: Megaphone,
+        description: 'Anuncios y avisos',
+      },
+      {
+        path: '/panel-admin/guestbook',
+        label: 'Libro de Visitas',
+        icon: BookOpen,
+        description: 'Gestionar mensajes',
+      },
+    ],
   },
   {
-    path: '/panel-admin/postulantes',
-    label: 'Postulantes',
-    icon: UserCheck,
-    description: 'Revisión y aprobación',
+    label: 'Ecommerce',
+    items: [
+      {
+        path: '/panel-admin/products',
+        label: 'Productos',
+        icon: Package,
+        description: 'Gestionar SKUs',
+      },
+      {
+        path: '/panel-admin/orders',
+        label: 'Órdenes',
+        icon: ShoppingCart,
+        description: 'Ver pedidos',
+      },
+    ],
   },
   {
-    path: '/panel-admin/users',
-    label: 'Gestión de Socios',
-    icon: Users,
-    description: 'Administrar socios',
-  },
-  {
-    path: '/panel-admin/payments',
-    label: 'Gestión de Cuotas',
-    icon: CreditCard,
-    description: 'Pagos y cuotas',
-  },
-  {
-    path: '/panel-admin/content',
-    label: 'Gestión de Contenido',
-    icon: FileText,
-    description: 'Eventos y noticias',
-  },
-  {
-    path: '/panel-admin/news',
-    label: 'Comunicados',
-    icon: Megaphone,
-    description: 'Anuncios y avisos',
-  },
-  {
-    path: '/panel-admin/guestbook',
-    label: 'Libro de Visitas',
-    icon: BookOpen,
-    description: 'Gestionar mensajes',
-  },
-  {
-    path: '/panel-admin/products',
-    label: 'Productos (SKUs)',
-    icon: Package,
-    description: 'Gestionar productos',
-  },
-  {
-    path: '/panel-admin/orders',
-    label: 'Órdenes de Compra',
-    icon: ShoppingCart,
-    description: 'Ver órdenes',
-  },
-  {
-    path: '/panel-admin/papelera',
-    label: 'Papelera',
-    icon: Trash2,
-    description: 'Noticias eliminadas',
-  },
-  {
-    path: '/panel-admin/guestbook/trash',
-    label: 'Papelera Visitas',
-    icon: Trash2,
-    description: 'Visitas eliminadas',
-  },
-  {
-    path: '/panel-admin/participantes',
-    label: 'Participantes Sorteo',
-    icon: Gift,
-    description: 'Lista de participantes',
+    items: [
+      {
+        path: '/panel-admin/papelera',
+        label: 'Papelera',
+        icon: Trash2,
+        description: 'Noticias eliminadas',
+      },
+      {
+        path: '/panel-admin/guestbook/trash',
+        label: 'Papelera Visitas',
+        icon: Trash2,
+        description: 'Visitas eliminadas',
+      },
+      {
+        path: '/panel-admin/participantes',
+        label: 'Participantes Sorteo',
+        icon: Gift,
+        description: 'Lista de participantes',
+      },
+    ],
   },
 ];
 
@@ -113,44 +138,57 @@ export default function PanelAdminLayout({ children }: PanelAdminLayoutProps) {
   };
 
   const renderMenuItems = (onNavigate?: () => void) => (
-    <ul className="space-y-2">
-      {menuItems.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(item.path);
+    <div className="space-y-6">
+      {menuGroups.map((group, groupIndex) => (
+        <div key={groupIndex}>
+          {group.label && (
+            <div className="px-3 mb-2">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {group.label}
+              </h3>
+            </div>
+          )}
+          <ul className="space-y-2">
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
 
-        return (
-          <li key={item.path}>
-            <Link
-              to={item.path}
-              onClick={() => {
-                onNavigate?.();
-              }}
-              className={`flex items-start p-3 rounded-lg transition-all ${
-                active
-                  ? 'bg-red-50 text-red-600 border border-red-200'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-red-600'
-              }`}
-            >
-              <Icon
-                className={`h-5 w-5 mt-0.5 mr-3 flex-shrink-0 ${
-                  active ? 'text-red-600' : 'text-gray-400'
-                }`}
-              />
-              <div className="flex-1 min-w-0">
-                <div
-                  className={`text-sm font-medium ${
-                    active ? 'text-red-600' : 'text-gray-900'
-                  }`}
-                >
-                  {item.label}
-                </div>
-                <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
-              </div>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              return (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    onClick={() => {
+                      onNavigate?.();
+                    }}
+                    className={`flex items-start p-3 rounded-lg transition-all ${
+                      active
+                        ? 'bg-red-50 text-red-600 border border-red-200'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-red-600'
+                    }`}
+                  >
+                    <Icon
+                      className={`h-5 w-5 mt-0.5 mr-3 flex-shrink-0 ${
+                        active ? 'text-red-600' : 'text-gray-400'
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className={`text-sm font-medium ${
+                          active ? 'text-red-600' : 'text-gray-900'
+                        }`}
+                      >
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 
   const closeSidebar = () => setIsSidebarOpen(false);
