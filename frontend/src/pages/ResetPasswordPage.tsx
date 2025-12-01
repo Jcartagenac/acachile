@@ -64,7 +64,8 @@ const ResetPasswordPage: React.FC = () => {
         },
         body: JSON.stringify({
           token,
-          newPassword: data.newPassword
+          password: data.newPassword,
+          confirmPassword: data.confirmPassword
         }),
       });
 
