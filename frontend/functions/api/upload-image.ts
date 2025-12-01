@@ -33,8 +33,8 @@ async function processImage(file: File, folder: string): Promise<{ buffer: Array
 }
 
 // Validaciones de seguridad (usando nombres en español para consistencia)
-const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones'];
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones', 'shop-products', 'payment-proofs'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 // Configuración de compresión por tipo de carpeta
@@ -43,7 +43,9 @@ const COMPRESSION_CONFIG = {
   home: { maxWidth: 1200, maxHeight: 800, quality: 0.85 },
   eventos: { maxWidth: 800, maxHeight: 600, quality: 0.8 },
   noticias: { maxWidth: 600, maxHeight: 400, quality: 0.8 },
-  gallery: { maxWidth: 1920, maxHeight: 1080, quality: 0.9 }
+  gallery: { maxWidth: 1920, maxHeight: 1080, quality: 0.9 },
+  'shop-products': { maxWidth: 800, maxHeight: 800, quality: 0.85 },
+  'payment-proofs': { maxWidth: 1200, maxHeight: 1600, quality: 0.9 }
 };
 
 // Función para subir imagen a R2

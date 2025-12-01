@@ -100,9 +100,16 @@ export default function AdminProducts() {
 
       // Upload image if new file selected
       if (imageFile) {
+        console.log('📤 Subiendo imagen de producto:', imageFile.name);
         const uploaded = await imageService.uploadImage(imageFile, { folder: 'shop-products' });
+        console.log('📥 Respuesta de subida:', uploaded);
+        
         if (uploaded.success && uploaded.data) {
           imageUrl = uploaded.data.url;
+          console.log('✅ URL de imagen guardada:', imageUrl);
+        } else {
+          console.error('❌ Error al subir imagen:', uploaded.error);
+          throw new Error(uploaded.error || 'Error al subir imagen');
         }
       }
 
@@ -115,6 +122,8 @@ export default function AdminProducts() {
         image_url: imageUrl,
         is_active: formData.is_active
       };
+      
+      console.log('💾 Guardando producto con datos:', productData);
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
@@ -201,6 +210,14 @@ export default function AdminProducts() {
                       src={product.image_url} 
                       alt={product.name}
                       className="w-12 h-12 object-cover rounded"
+                      onError={(e) => {
+                        console.error('Error cargando imagen:', product.image_url);
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        const parent = (e.target as HTMLImageElement).parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<div class="w-12 h-12 bg-red-100 rounded flex items-center justify-center" title="Error: ${product.image_url}"><svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`;
+                        }
+                      }}
                     />
                   ) : (
                     <div className="w-12 h-12 bg-neutral-100 rounded flex items-center justify-center">
