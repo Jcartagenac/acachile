@@ -54,7 +54,10 @@ const ResetPasswordPage: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, {
+      // Usar la URL base correcta (sin VITE_API_URL)
+      const apiUrl = '/api/auth/reset-password';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,6 +67,12 @@ const ResetPasswordPage: React.FC = () => {
           newPassword: data.newPassword
         }),
       });
+
+      // Verificar si la respuesta es JSON antes de parsear
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('La respuesta del servidor no es JSON. Por favor, contacta al administrador.');
+      }
 
       const result = await response.json();
 
@@ -79,6 +88,7 @@ const ResetPasswordPage: React.FC = () => {
       }, 3000);
 
     } catch (err: any) {
+      console.error('Error en reset password:', err);
       setError(err.message || 'Error de conexión');
     } finally {
       setIsLoading(false);
