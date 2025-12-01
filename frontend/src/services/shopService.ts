@@ -443,12 +443,42 @@ export async function getProductsAdmin(): Promise<Product[]> {
 
 /**
  * Cart management in localStorage
+ * Each user has their own unique cart stored separately
  */
-const CART_STORAGE_KEY = 'aca_shop_cart';
+const CART_STORAGE_PREFIX = 'aca_shop_cart_';
+
+/**
+ * Get the cart storage key for the current user
+ * Uses the user ID from cookies/localStorage to ensure each user has their own cart
+ */
+function getCartStorageKey(): string {
+  try {
+    // Try to get user from localStorage (set by AuthContext)
+    const userStr = localStorage.getItem('auth_user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user && user.id) {
+        return `${CART_STORAGE_PREFIX}${user.id}`;
+      }
+    }
+  } catch (error) {
+    console.error('Error getting user for cart key:', error);
+  }
+  
+  // Fallback: use a session-based key (not recommended but better than nothing)
+  // This should never happen in ProtectedRoute, but provides a fallback
+  let sessionId = sessionStorage.getItem('cart_session_id');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('cart_session_id', sessionId);
+  }
+  return `${CART_STORAGE_PREFIX}${sessionId}`;
+}
 
 export function getCartFromStorage(): CartItem[] {
   try {
-    const cart = localStorage.getItem(CART_STORAGE_KEY);
+    const cartKey = getCartStorageKey();
+    const cart = localStorage.getItem(cartKey);
     return cart ? JSON.parse(cart) : [];
   } catch (error) {
     console.error('Error reading cart from storage:', error);
@@ -458,7 +488,8 @@ export function getCartFromStorage(): CartItem[] {
 
 export function saveCartToStorage(cart: CartItem[]): void {
   try {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    const cartKey = getCartStorageKey();
+    localStorage.setItem(cartKey, JSON.stringify(cart));
   } catch (error) {
     console.error('Error saving cart to storage:', error);
   }
@@ -466,7 +497,8 @@ export function saveCartToStorage(cart: CartItem[]): void {
 
 export function clearCart(): void {
   try {
-    localStorage.removeItem(CART_STORAGE_KEY);
+    const cartKey = getCartStorageKey();
+    localStorage.removeItem(cartKey);
   } catch (error) {
     console.error('Error clearing cart:', error);
   }

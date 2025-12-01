@@ -313,9 +313,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [dispatch]);
 
   const performLogout = useCallback(() => {
+    // Clear cart for the current user before logout
+    try {
+      if (state.user?.id) {
+        const cartKey = `aca_shop_cart_${state.user.id}`;
+        localStorage.removeItem(cartKey);
+      }
+    } catch (error) {
+      logger.auth.warn('⚠️ AuthContext: Error al limpiar carrito en logout', { error });
+    }
+    
     clearPersistedAuth();
     dispatch({ type: 'LOGOUT' });
-  }, [dispatch]);
+  }, [dispatch, state.user?.id]);
 
   const verifyAndRefresh = useCallback(async (token: string) => {
     try {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ShoppingCart, ArrowLeft, Package, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getProductBySku, type Product } from '../services/shopService';
+import { getProductBySku, addToCart, type Product } from '../services/shopService';
 import { SEOHelmet } from '../components/SEOHelmet';
 
 export default function ProductDetailPage() {
@@ -47,25 +47,8 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
     
-    // Get existing cart from localStorage
-    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
-    // Check if product already in cart
-    const existingItemIndex = existingCart.findIndex((item: any) => item.id === product.id);
-    
-    if (existingItemIndex >= 0) {
-      // Update quantity
-      existingCart[existingItemIndex].quantity += quantity;
-    } else {
-      // Add new item
-      existingCart.push({
-        ...product,
-        quantity
-      });
-    }
-    
-    // Save to localStorage
-    localStorage.setItem('cart', JSON.stringify(existingCart));
+    // Use the shopService functions to ensure user-specific cart
+    addToCart(product, quantity);
     
     // Redirect to cart
     navigate('/cart');

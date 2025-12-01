@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
-import { getProducts, addToCart, getCartItemCount, type Product } from '../services/shopService';
+import { getProducts, addToCart, getCartItemCount, getCartFromStorage, type Product } from '../services/shopService';
 
 export default function ShopPage() {
   const navigate = useNavigate();
@@ -41,7 +41,8 @@ export default function ShopPage() {
   };
 
   const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem('aca_shop_cart') || '[]');
+    // Use user-specific cart
+    const cart = getCartFromStorage();
     const count = getCartItemCount(cart);
     setCartItemCount(count);
   };
