@@ -16,6 +16,7 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
+import { SEOHelmet } from '../components/SEOHelmet';
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -76,9 +77,11 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
+      <>
+        <SEOHelmet title="Panel Administrativo - acachile.com" />
+        <div className="min-h-screen bg-gray-50 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[...Array(4)].map((_, i) => (
@@ -92,11 +95,14 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   if (error) {
     return (
+      <>
+        <SEOHelmet title="Panel Administrativo - acachile.com" />
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -112,11 +118,14 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <>
+      <SEOHelmet title="Panel Administrativo - acachile.com" />
+      <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -327,6 +336,7 @@ const AdminDashboard: React.FC = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
