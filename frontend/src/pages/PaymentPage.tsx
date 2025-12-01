@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CreditCard, Building2, Check, Copy, ExternalLink, ArrowLeft } from 'lucide-react';
+import { CreditCard, Building2, Check, Copy, ExternalLink, ArrowLeft, Upload, FileCheck } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
-import { getPaymentConfig, getOrderByNumber, type PaymentConfig, type Order } from '../services/shopService';
+import { 
+  getPaymentConfig, 
+  getOrderByNumber, 
+  uploadPaymentProof, 
+  updateOrderPaymentProof,
+  type PaymentConfig, 
+  type Order 
+} from '../services/shopService';
 
 export default function PaymentPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -13,6 +20,9 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [proofUploaded, setProofUploaded] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -51,6 +61,48 @@ export default function PaymentPage() {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleProofUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !orderNumber) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setUploadError('Solo se permiten archivos JPG, PNG o PDF');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('El archivo no debe superar los 5MB');
+      return;
+    }
+
+    setIsUploadingProof(true);
+    setUploadError(null);
+
+    try {
+      // Upload file to R2
+      const { url } = await uploadPaymentProof(orderNumber, file);
+      
+      // Update order with proof URL
+      await updateOrderPaymentProof(orderNumber, url);
+      
+      setProofUploaded(true);
+      setUploadError(null);
+      
+      // Update local order state
+      if (order) {
+        setOrder({ ...order, payment_proof_url: url });
+      }
+    } catch (error) {
+      console.error('Error uploading proof:', error);
+      setUploadError('Error al subir el comprobante. Por favor intenta nuevamente.');
+    } finally {
+      setIsUploadingProof(false);
+    }
   };
 
   const webpayMethod = paymentMethods.find((m: PaymentConfig) => m.type === 'webpay');
@@ -126,7 +178,7 @@ export default function PaymentPage() {
             {/* Order Items Summary */}
             <div className="border-t border-neutral-200 pt-4">
               <h3 className="text-sm font-semibold text-neutral-700 mb-2">Resumen de productos:</h3>
-              <div className="space-y-2">
+              <div className="space-y-2 mb-3">
                 {order.items.map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
                     <span className="text-neutral-600">
@@ -138,6 +190,18 @@ export default function PaymentPage() {
                   </div>
                 ))}
               </div>
+              
+              {/* Shipping Info */}
+              {order.shipping_region && (
+                <div className="mt-3 pt-3 border-t border-neutral-200">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Envío a {order.shipping_region}</span>
+                    <span className="font-semibold text-neutral-900">
+                      {formatCurrency(order.shipping_cost)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Customer Info */}
@@ -363,8 +427,54 @@ export default function PaymentPage() {
 
                           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
                             <p className="text-sm text-yellow-800">
-                              <strong>Importante:</strong> Una vez realizada la transferencia, envía el comprobante a uno de los correos indicados incluyendo tu número de orden: <strong>{order.order_number}</strong>
+                              <strong>Importante:</strong> Una vez realizada la transferencia, sube el comprobante a continuación o envíalo a uno de los correos indicados incluyendo tu número de orden: <strong>{order.order_number}</strong>
                             </p>
+                          </div>
+
+                          {/* Upload Payment Proof */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                            <h5 className="font-semibold text-neutral-900 mb-2 flex items-center gap-2">
+                              <Upload className="h-4 w-4" />
+                              Subir Comprobante de Pago
+                            </h5>
+                            
+                            {order.payment_proof_url || proofUploaded ? (
+                              <div className="flex items-center gap-2 text-green-700">
+                                <FileCheck className="h-5 w-5" />
+                                <span className="text-sm font-semibold">Comprobante recibido ✓</span>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-sm text-neutral-600 mb-3">
+                                  Sube tu comprobante de transferencia (JPG, PNG o PDF, máx. 5MB)
+                                </p>
+                                <div className="relative">
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/jpg,image/png,application/pdf"
+                                    onChange={handleProofUpload}
+                                    disabled={isUploadingProof}
+                                    className="block w-full text-sm text-neutral-600
+                                      file:mr-4 file:py-2 file:px-4
+                                      file:rounded-lg file:border-0
+                                      file:text-sm file:font-semibold
+                                      file:bg-primary-50 file:text-primary-700
+                                      hover:file:bg-primary-100
+                                      file:cursor-pointer
+                                      disabled:opacity-50 disabled:cursor-not-allowed"
+                                  />
+                                </div>
+                                {isUploadingProof && (
+                                  <div className="mt-2 flex items-center gap-2 text-sm text-primary-600">
+                                    <div className="h-4 w-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                                    Subiendo comprobante...
+                                  </div>
+                                )}
+                                {uploadError && (
+                                  <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>

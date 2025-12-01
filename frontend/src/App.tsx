@@ -60,6 +60,8 @@ const ResultadosPage = lazy(() => import('./pages/ResultadosPage'));
 const ShopPage = lazy(() => import('./pages/ShopPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const AdminProducts = lazy(() => import('./pages/AdminProducts'));
+const AdminOrders = lazy(() => import('./pages/AdminOrders'));
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -135,6 +137,8 @@ function App() {
           <Route path="/panel-admin/participantes" element={<PanelAdminLayout><AdminParticipantes /></PanelAdminLayout>} />
           <Route path="/panel-admin/guestbook" element={<PanelAdminLayout><AdminGuestbook /></PanelAdminLayout>} />
           <Route path="/panel-admin/guestbook/trash" element={<PanelAdminLayout><AdminGuestbookTrash /></PanelAdminLayout>} />
+          <Route path="/panel-admin/products" element={<PanelAdminLayout><AdminProducts /></PanelAdminLayout>} />
+          <Route path="/panel-admin/orders" element={<PanelAdminLayout><AdminOrders /></PanelAdminLayout>} />
           
           {/* Perfil de Usuario */}
           <Route path="/perfil" element={<ProfilePage />} />

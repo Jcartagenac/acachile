@@ -4,6 +4,7 @@ export interface Product {
   name: string;
   description: string | null;
   price: number;
+  inventory?: number;
   image_url: string | null;
   is_active: number;
   created_at?: string;
@@ -27,6 +28,8 @@ export interface CreateOrderRequest {
   customer_email: string;
   customer_phone: string;
   customer_address: string;
+  shipping_region: string;
+  shipping_cost: number;
   payment_method?: 'webpay' | 'transfer';
 }
 
@@ -38,10 +41,13 @@ export interface Order {
   customer_email: string;
   customer_phone: string;
   customer_address: string;
+  shipping_region: string | null;
+  shipping_cost: number;
   subtotal: number;
   total: number;
   status: 'pending' | 'paid' | 'completed' | 'cancelled';
   payment_method: 'webpay' | 'transfer' | null;
+  payment_proof_url: string | null;
   created_at: string;
   items: Array<{
     id: number;
@@ -51,6 +57,13 @@ export interface Order {
     quantity: number;
     subtotal: number;
   }>;
+}
+
+export interface ShippingRate {
+  region_code: string;
+  region_name: string;
+  rate: number;
+  estimated_days: string;
 }
 
 export interface PaymentConfig {
@@ -192,6 +205,204 @@ export async function getPaymentConfig(): Promise<PaymentConfig[]> {
     return data.data;
   } catch (error) {
     console.error('Error fetching payment config:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get shipping rates
+ */
+export async function getShippingRates(): Promise<ShippingRate[]> {
+  try {
+    const response = await fetch('/api/shop/shipping-rates');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching shipping rates:', error);
+    throw error;
+  }
+}
+
+/**
+ * Upload payment proof for an order
+ */
+export async function uploadPaymentProof(orderNumber: string, file: File): Promise<{ url: string }> {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('orderNumber', orderNumber);
+    formData.append('category', 'payment-proofs');
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to upload payment proof');
+    }
+
+    return { url: data.url };
+  } catch (error) {
+    console.error('Error uploading payment proof:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update order with payment proof URL
+ */
+export async function updateOrderPaymentProof(orderNumber: string, proofUrl: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/shop/orders/${orderNumber}/payment-proof`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ payment_proof_url: proofUrl }),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to update payment proof');
+    }
+  } catch (error) {
+    console.error('Error updating payment proof:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all orders (admin)
+ */
+export async function getAllOrders(): Promise<Order[]> {
+  try {
+    const response = await fetch('/api/shop/orders/all');
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch orders');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching all orders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update order status (admin)
+ */
+export async function updateOrderStatus(orderId: number, status: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/shop/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to update order status');
+    }
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create product (admin)
+ */
+export async function createProduct(productData: Partial<Product>): Promise<Product> {
+  try {
+    const response = await fetch('/api/shop/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(productData),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to create product');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update product (admin)
+ */
+export async function updateProduct(productId: number, productData: Partial<Product>): Promise<void> {
+  try {
+    const response = await fetch(`/api/shop/products/${productId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(productData),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to update product');
+    }
+  } catch (error) {
+    console.error('Error updating product:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete product (admin)
+ */
+export async function deleteProduct(productId: number): Promise<void> {
+  try {
+    const response = await fetch(`/api/shop/products/${productId}`, {
+      method: 'DELETE',
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to delete product');
+    }
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all products including inventory (admin)
+ */
+export async function getProductsAdmin(): Promise<Product[]> {
+  try {
+    const response = await fetch('/api/shop/products?includeInactive=true&includeInventory=true');
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch products');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
     throw error;
   }
 }

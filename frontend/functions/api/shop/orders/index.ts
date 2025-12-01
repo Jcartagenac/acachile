@@ -14,6 +14,8 @@ interface CreateOrderRequest {
   customer_email: string;
   customer_phone: string;
   customer_address: string;
+  shipping_region: string;
+  shipping_cost: number;
   payment_method?: 'webpay' | 'transfer';
 }
 
@@ -33,10 +35,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     if (!body.customer_name || !body.customer_rut || !body.customer_email || 
-        !body.customer_phone || !body.customer_address) {
+        !body.customer_phone || !body.customer_address || !body.shipping_region) {
       return jsonResponse({
         success: false,
-        error: 'All customer information is required: name, rut, email, phone, address'
+        error: 'All customer information is required: name, rut, email, phone, address, shipping_region'
       }, 400);
     }
 
@@ -104,14 +106,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
-    const total = subtotal; // Aquí se pueden agregar impuestos o descuentos si es necesario
+    const shippingCost = body.shipping_cost || 0;
+    const total = subtotal + shippingCost;
 
     // Iniciar transacción: crear orden y items
     const orderResult = await context.env.DB.prepare(`
       INSERT INTO shop_orders (
         order_number, customer_name, customer_rut, customer_email, 
-        customer_phone, customer_address, subtotal, total, status, payment_method
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        customer_phone, customer_address, shipping_region, shipping_cost, 
+        subtotal, total, status, payment_method
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       orderNumber,
       body.customer_name,
@@ -119,6 +123,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       body.customer_email,
       body.customer_phone,
       body.customer_address,
+      body.shipping_region,
+      shippingCost,
       subtotal,
       total,
       'pending',
@@ -162,6 +168,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         order_id: orderId,
         order_number: orderNumber,
         subtotal,
+        shipping_cost: shippingCost,
         total,
         items: orderItems
       }

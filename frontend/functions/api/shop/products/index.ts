@@ -23,9 +23,18 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const { searchParams } = new URL(context.request.url);
     const includeInactive = searchParams.get('includeInactive') === 'true';
 
-    let query = 'SELECT id, sku, name, description, price, image_url, is_active, created_at, updated_at FROM shop_products';
+    const includeInventory = searchParams.get('includeInventory') === 'true';
+
+    let fields = 'id, sku, name, description, price, image_url, is_active, created_at, updated_at';
     
-    // Public API only shows active products (hide inventory)
+    // Admin API includes inventory
+    if (includeInventory) {
+      fields = 'id, sku, name, description, price, inventory, image_url, is_active, created_at, updated_at';
+    }
+
+    let query = `SELECT ${fields} FROM shop_products`;
+    
+    // Public API only shows active products
     if (!includeInactive) {
       query += ' WHERE is_active = 1';
     }

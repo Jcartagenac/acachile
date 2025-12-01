@@ -3,7 +3,7 @@ import { AppUser } from '../../../shared';
 import { buildAuthHeaders } from '../utils/authToken';
 
 export interface ImageUploadOptions {
-  folder: 'avatars' | 'home' | 'eventos' | 'noticias' | 'gallery' | 'postulaciones';
+  folder: 'avatars' | 'home' | 'eventos' | 'noticias' | 'gallery' | 'postulaciones' | 'shop-products' | 'payment-proofs';
   maxSize?: number; // en bytes, default: 10MB
   allowedTypes?: string[]; // default: image/*
   resize?: {

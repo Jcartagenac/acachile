@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, AlertCircle, Truck } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
 import {
   getCartFromStorage,
@@ -10,8 +10,10 @@ import {
   getCartItemCount,
   clearCart,
   createOrder,
+  getShippingRates,
   type CartItem,
-  type CreateOrderRequest
+  type CreateOrderRequest,
+  type ShippingRate
 } from '../services/shopService';
 
 export default function CartPage() {
@@ -19,6 +21,9 @@ export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [shippingCost, setShippingCost] = useState(0);
 
   // Form state
   const [customerName, setCustomerName] = useState('');
@@ -29,7 +34,23 @@ export default function CartPage() {
 
   useEffect(() => {
     setCart(getCartFromStorage());
+    loadShippingRates();
   }, []);
+
+  const loadShippingRates = async () => {
+    try {
+      const rates = await getShippingRates();
+      setShippingRates(rates);
+    } catch (error) {
+      console.error('Error loading shipping rates:', error);
+    }
+  };
+
+  const handleRegionChange = (regionCode: string) => {
+    setSelectedRegion(regionCode);
+    const rate = shippingRates.find(r => r.region_code === regionCode);
+    setShippingCost(rate ? rate.rate : 0);
+  };
 
   const handleQuantityChange = (productId: number, newQuantity: number) => {
     const updatedCart = updateCartItemQuantity(productId, newQuantity);
@@ -92,6 +113,10 @@ export default function CartPage() {
       setError('La dirección es obligatoria');
       return false;
     }
+    if (!selectedRegion) {
+      setError('Debes seleccionar una región para calcular el envío');
+      return false;
+    }
     return true;
   };
 
@@ -120,7 +145,9 @@ export default function CartPage() {
         customer_rut: customerRut.trim(),
         customer_email: customerEmail.trim(),
         customer_phone: customerPhone.trim(),
-        customer_address: customerAddress.trim()
+        customer_address: customerAddress.trim(),
+        shipping_region: selectedRegion,
+        shipping_cost: shippingCost
       };
 
       const result = await createOrder(orderData);
@@ -270,13 +297,17 @@ export default function CartPage() {
                   </h2>
                   <div className="space-y-2 mb-4 pb-4 border-b border-neutral-200">
                     <div className="flex justify-between text-neutral-600">
-                      <span>Subtotal:</span>
+                      <span>Subtotal productos:</span>
                       <span>{formatCurrency(cartTotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-neutral-600">
+                      <span>Envío:</span>
+                      <span>{shippingCost > 0 ? formatCurrency(shippingCost) : 'Por calcular'}</span>
                     </div>
                   </div>
                   <div className="flex justify-between text-lg font-bold text-neutral-900">
                     <span>Total:</span>
-                    <span className="text-primary-600">{formatCurrency(cartTotal)}</span>
+                    <span className="text-primary-600">{formatCurrency(cartTotal + shippingCost)}</span>
                   </div>
                 </div>
 
@@ -357,6 +388,30 @@ export default function CartPage() {
                         className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="Calle Ejemplo 123, Comuna, Ciudad"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">
+                        Región de Envío <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={selectedRegion}
+                        onChange={(e) => handleRegionChange(e.target.value)}
+                        className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option value="">Selecciona tu región</option>
+                        {shippingRates.map((rate) => (
+                          <option key={rate.region_code} value={rate.region_code}>
+                            {rate.region_name} - {formatCurrency(rate.rate)} ({rate.estimated_days})
+                          </option>
+                        ))}
+                      </select>
+                      {selectedRegion && (
+                        <p className="mt-2 text-sm text-neutral-600 flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary-600" />
+                          Costo de envío: <span className="font-semibold text-primary-600">{formatCurrency(shippingCost)}</span>
+                        </p>
+                      )}
                     </div>
 
                     <button

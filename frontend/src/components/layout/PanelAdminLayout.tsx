@@ -18,6 +18,8 @@ import {
   Gift,
   Trash2,
   BookOpen,
+  Package,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface PanelAdminLayoutProps {
@@ -66,6 +68,18 @@ const menuItems = [
     label: 'Libro de Visitas',
     icon: BookOpen,
     description: 'Gestionar mensajes',
+  },
+  {
+    path: '/panel-admin/products',
+    label: 'Productos (SKUs)',
+    icon: Package,
+    description: 'Gestionar productos',
+  },
+  {
+    path: '/panel-admin/orders',
+    label: 'Órdenes de Compra',
+    icon: ShoppingCart,
+    description: 'Ver órdenes',
   },
   {
     path: '/panel-admin/papelera',
