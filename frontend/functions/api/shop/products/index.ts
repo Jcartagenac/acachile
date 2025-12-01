@@ -27,9 +27,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     let fields = 'id, sku, name, description, price, image_url, is_active, created_at, updated_at';
     
-    // Admin API includes inventory
+    // Admin API includes inventory and gallery fields
     if (includeInventory) {
-      fields = 'id, sku, name, description, price, inventory, image_url, is_active, created_at, updated_at';
+      fields = 'id, sku, name, description, detailed_description, price, inventory, image_url, gallery_images, is_active, created_at, updated_at';
     }
 
     let query = `SELECT ${fields} FROM shop_products`;
@@ -79,9 +79,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       sku: string;
       name: string;
       description?: string;
+      detailed_description?: string;
       price: number;
       inventory: number;
       image_url?: string;
+      gallery_images?: string;
       is_active?: boolean;
     };
 
@@ -107,15 +109,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Insertar producto
     const result = await context.env.DB.prepare(`
-      INSERT INTO shop_products (sku, name, description, price, inventory, image_url, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO shop_products (sku, name, description, detailed_description, price, inventory, image_url, gallery_images, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       body.sku,
       body.name,
       body.description || null,
+      body.detailed_description || null,
       body.price,
       body.inventory,
       body.image_url || null,
+      body.gallery_images || null,
       body.is_active !== false ? 1 : 0
     ).run();
 

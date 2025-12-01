@@ -54,9 +54,11 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       sku?: string;
       name?: string;
       description?: string;
+      detailed_description?: string;
       price?: number;
       inventory?: number;
       image_url?: string;
+      gallery_images?: string;
       is_active?: boolean;
     };
 
@@ -102,6 +104,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       updates.push('description = ?');
       values.push(body.description);
     }
+    if (body.detailed_description !== undefined) {
+      updates.push('detailed_description = ?');
+      values.push(body.detailed_description);
+    }
     if (body.price !== undefined) {
       updates.push('price = ?');
       values.push(body.price);
@@ -113,6 +119,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     if (body.image_url !== undefined) {
       updates.push('image_url = ?');
       values.push(body.image_url);
+    }
+    if (body.gallery_images !== undefined) {
+      updates.push('gallery_images = ?');
+      values.push(body.gallery_images);
     }
     if (body.is_active !== undefined) {
       updates.push('is_active = ?');

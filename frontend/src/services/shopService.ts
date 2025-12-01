@@ -13,6 +13,19 @@ export interface Product {
   updated_at?: string;
 }
 
+// Type for sending product data to API (gallery_images as JSON string)
+export interface ProductApiPayload {
+  sku: string;
+  name: string;
+  description?: string | null;
+  detailed_description?: string | null;
+  price: number;
+  inventory: number;
+  image_url: string | null;
+  gallery_images?: string | null; // JSON string
+  is_active: number;
+}
+
 export interface CartItem extends Product {
   quantity: number;
 }
@@ -342,7 +355,7 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
 /**
  * Create product (admin)
  */
-export async function createProduct(productData: Partial<Product>): Promise<Product> {
+export async function createProduct(productData: Partial<ProductApiPayload>): Promise<Product> {
   try {
     const response = await fetch('/api/shop/products', {
       method: 'POST',
@@ -368,7 +381,7 @@ export async function createProduct(productData: Partial<Product>): Promise<Prod
 /**
  * Update product (admin)
  */
-export async function updateProduct(productId: number, productData: Partial<Product>): Promise<void> {
+export async function updateProduct(productId: number, productData: Partial<ProductApiPayload>): Promise<void> {
   try {
     const response = await fetch(`/api/shop/products/${productId}`, {
       method: 'PUT',

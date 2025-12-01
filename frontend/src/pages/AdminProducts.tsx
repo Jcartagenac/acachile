@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Package, DollarSign, Hash, Image as ImageIcon, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, DollarSign, Hash, Image as ImageIcon, Check, X } from 'lucide-react';
 import { 
   getProductsAdmin, 
   createProduct, 
@@ -22,6 +22,7 @@ export default function AdminProducts() {
     sku: '',
     name: '',
     description: '',
+    detailed_description: '',
     price: '',
     inventory: '',
     image_url: '',
@@ -29,6 +30,9 @@ export default function AdminProducts() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [existingGallery, setExistingGallery] = useState<string[]>([]);
 
   useEffect(() => {
     loadProducts();
@@ -54,24 +58,32 @@ export default function AdminProducts() {
         sku: product.sku,
         name: product.name,
         description: product.description || '',
+        detailed_description: product.detailed_description || '',
         price: product.price.toString(),
         inventory: product.inventory?.toString() || '0',
         image_url: product.image_url || '',
         is_active: product.is_active
       });
       setImagePreview(product.image_url);
+      setExistingGallery(product.gallery_images || []);
+      setGalleryFiles([]);
+      setGalleryPreviews([]);
     } else {
       setEditingProduct(null);
       setFormData({
         sku: '',
         name: '',
         description: '',
+        detailed_description: '',
         price: '',
         inventory: '0',
         image_url: '',
         is_active: 1
       });
       setImagePreview(null);
+      setExistingGallery([]);
+      setGalleryFiles([]);
+      setGalleryPreviews([]);
     }
     setImageFile(null);
     setIsModalOpen(true);
@@ -87,6 +99,36 @@ export default function AdminProducts() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const totalImages = existingGallery.length + galleryFiles.length + files.length;
+    
+    if (totalImages > 10) {
+      alert('Máximo 10 imágenes en la galería');
+      return;
+    }
+
+    setGalleryFiles(prev => [...prev, ...files]);
+    
+    // Generate previews
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setGalleryPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeGalleryImage = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      setExistingGallery(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+      setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -113,13 +155,31 @@ export default function AdminProducts() {
         }
       }
 
+      // Upload gallery images
+      const uploadedGalleryUrls: string[] = [];
+      for (const file of galleryFiles) {
+        console.log('📤 Subiendo imagen de galería:', file.name);
+        const uploaded = await imageService.uploadImage(file, { folder: 'shop-products' });
+        if (uploaded.success && uploaded.data) {
+          uploadedGalleryUrls.push(uploaded.data.url);
+          console.log('✅ Imagen de galería subida:', uploaded.data.url);
+        } else {
+          console.error('❌ Error al subir imagen de galería:', uploaded.error);
+        }
+      }
+
+      // Combine existing gallery with new uploads
+      const allGalleryUrls = [...existingGallery, ...uploadedGalleryUrls];
+
       const productData = {
         sku: formData.sku,
         name: formData.name,
         description: formData.description || null,
+        detailed_description: formData.detailed_description || null,
         price: parseFloat(formData.price),
         inventory: parseInt(formData.inventory),
         image_url: imageUrl,
+        gallery_images: allGalleryUrls.length > 0 ? JSON.stringify(allGalleryUrls) : null,
         is_active: formData.is_active
       };
       
@@ -353,7 +413,20 @@ export default function AdminProducts() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
                     className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    placeholder="Descripción detallada del producto"
+                    placeholder="Descripción breve del producto"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    Descripción Detallada
+                  </label>
+                  <textarea
+                    value={formData.detailed_description}
+                    onChange={(e) => setFormData({ ...formData, detailed_description: e.target.value })}
+                    rows={6}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Información adicional que se mostrará en la página de detalle..."
                   />
                 </div>
 
@@ -374,7 +447,7 @@ export default function AdminProducts() {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Imagen del Producto
+                    Imagen Principal del Producto
                   </label>
                   <input
                     type="file"
@@ -388,6 +461,66 @@ export default function AdminProducts() {
                       alt="Preview" 
                       className="mt-2 w-32 h-32 object-cover rounded"
                     />
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    Galería de Imágenes <span className="text-xs text-neutral-500">({existingGallery.length + galleryFiles.length} de 10)</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryChange}
+                    disabled={existingGallery.length + galleryFiles.length >= 10}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg disabled:bg-neutral-100"
+                  />
+                  
+                  {(existingGallery.length > 0 || galleryPreviews.length > 0) && (
+                    <div className="mt-3 grid grid-cols-4 gap-3">
+                      {/* Existing gallery images */}
+                      {existingGallery.map((url, index) => (
+                        <div key={`existing-${index}`} className="relative group">
+                          <img 
+                            src={url} 
+                            alt={`Gallery ${index + 1}`}
+                            className="w-full h-24 object-cover rounded border-2 border-neutral-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeGalleryImage(index, true)}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                      
+                      {/* New gallery images */}
+                      {galleryPreviews.map((preview, index) => (
+                        <div key={`new-${index}`} className="relative group">
+                          <img 
+                            src={preview} 
+                            alt={`New ${index + 1}`}
+                            className="w-full h-24 object-cover rounded border-2 border-primary-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeGalleryImage(index, false)}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {existingGallery.length + galleryFiles.length >= 10 && (
+                    <p className="mt-2 text-sm text-amber-600">
+                      Se alcanzó el límite máximo de 10 imágenes en la galería
+                    </p>
                   )}
                 </div>
 
