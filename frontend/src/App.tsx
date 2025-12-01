@@ -63,6 +63,8 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const AdminEcommerce = lazy(() => import('./pages/AdminEcommerce'));
 
+import { ProtectedRoute } from './components/auth';
+
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
     <div className="text-sm text-gray-500">Cargando contenido…</div>
@@ -80,11 +82,11 @@ function App() {
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
           
-          {/* Tienda */}
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/shop/:sku" element={<ProductDetailPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/cart/payment/:orderNumber" element={<PaymentPage />} />
+          {/* Tienda - Solo para usuarios autenticados */}
+          <Route path="/shop" element={<ProtectedRoute><ShopPage /></ProtectedRoute>} />
+          <Route path="/shop/:sku" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="/cart/payment/:orderNumber" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
           
           {/* Eventos */}
           <Route path="/eventos" element={<EventProviderWrapper><EventsPage /></EventProviderWrapper>} />
