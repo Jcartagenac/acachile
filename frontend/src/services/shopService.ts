@@ -443,36 +443,33 @@ export async function getProductsAdmin(): Promise<Product[]> {
 
 /**
  * Cart management in localStorage
- * Each user has their own unique cart stored separately
+ * Each browser session has its own unique cart
  */
-const CART_STORAGE_PREFIX = 'aca_shop_cart_';
+const CART_STORAGE_KEY = 'aca_shop_cart';
+const CART_SESSION_ID_KEY = 'aca_shop_session_id';
 
 /**
- * Get the cart storage key for the current user
- * Uses the user ID from cookies/localStorage to ensure each user has their own cart
+ * Get or create a unique session ID for this browser session
+ * This ensures each browser session has its own cart
  */
-function getCartStorageKey(): string {
-  try {
-    // Try to get user from localStorage (set by AuthContext)
-    const userStr = localStorage.getItem('auth_user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user && user.id) {
-        return `${CART_STORAGE_PREFIX}${user.id}`;
-      }
-    }
-  } catch (error) {
-    console.error('Error getting user for cart key:', error);
+function getOrCreateSessionId(): string {
+  let sessionId = sessionStorage.getItem(CART_SESSION_ID_KEY);
+  
+  if (!sessionId) {
+    // Create a new session ID unique to this browser session
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem(CART_SESSION_ID_KEY, sessionId);
   }
   
-  // Fallback: use a session-based key (not recommended but better than nothing)
-  // This should never happen in ProtectedRoute, but provides a fallback
-  let sessionId = sessionStorage.getItem('cart_session_id');
-  if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('cart_session_id', sessionId);
-  }
-  return `${CART_STORAGE_PREFIX}${sessionId}`;
+  return sessionId;
+}
+
+/**
+ * Get the cart storage key for the current browser session
+ */
+function getCartStorageKey(): string {
+  const sessionId = getOrCreateSessionId();
+  return `${CART_STORAGE_KEY}_${sessionId}`;
 }
 
 export function getCartFromStorage(): CartItem[] {

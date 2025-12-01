@@ -63,7 +63,7 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const AdminEcommerce = lazy(() => import('./pages/AdminEcommerce'));
 
-import { ProtectedRoute } from './components/auth';
+import { ShopPasswordProtection } from './components/auth';
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -82,11 +82,11 @@ function App() {
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
           
-          {/* Tienda - Solo para usuarios autenticados */}
-          <Route path="/shop" element={<ProtectedRoute><ShopPage /></ProtectedRoute>} />
-          <Route path="/shop/:sku" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-          <Route path="/cart/payment/:orderNumber" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+          {/* Tienda - Protegida con clave de acceso */}
+          <Route path="/shop" element={<ShopPasswordProtection><ShopPage /></ShopPasswordProtection>} />
+          <Route path="/shop/:sku" element={<ShopPasswordProtection><ProductDetailPage /></ShopPasswordProtection>} />
+          <Route path="/cart" element={<ShopPasswordProtection><CartPage /></ShopPasswordProtection>} />
+          <Route path="/cart/payment/:orderNumber" element={<ShopPasswordProtection><PaymentPage /></ShopPasswordProtection>} />
           
           {/* Eventos */}
           <Route path="/eventos" element={<EventProviderWrapper><EventsPage /></EventProviderWrapper>} />
