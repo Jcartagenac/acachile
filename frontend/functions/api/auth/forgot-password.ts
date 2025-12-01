@@ -162,15 +162,41 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     if (!emailSent) {
       console.error('[AUTH/FORGOT-PASSWORD] Failed to send email to:', email);
-      return errorResponse('Error enviando email de recuperación', 500);
+      console.error('[AUTH/FORGOT-PASSWORD] Reset token (email failed):', resetToken);
+      
+      // En desarrollo, devolver el token si falla el email
+      if (env.ENVIRONMENT === 'development') {
+        return jsonResponse({
+          success: true,
+          message: successMessage,
+          resetToken: resetToken, // Para desarrollo
+          resetUrl: resetUrl,
+          warning: 'Email no enviado - usando modo desarrollo'
+        });
+      }
+      
+      // En producción, devolver éxito de todas formas por seguridad
+      // No revelamos que el email no se envió para no dar información a atacantes
+      return jsonResponse({
+        success: true,
+        message: successMessage
+      });
     }
 
     console.log('[AUTH/FORGOT-PASSWORD] Reset email sent successfully to:', email);
 
-    return jsonResponse({
+    // En desarrollo, incluir el token en la respuesta
+    const response: any = {
       success: true,
       message: successMessage
-    });
+    };
+
+    if (env.ENVIRONMENT === 'development') {
+      response.resetToken = resetToken;
+      response.resetUrl = resetUrl;
+    }
+
+    return jsonResponse(response);
 
   } catch (error) {
     console.error('[AUTH/FORGOT-PASSWORD] Error:', error);
