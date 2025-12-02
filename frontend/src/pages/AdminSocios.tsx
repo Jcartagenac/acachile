@@ -689,7 +689,6 @@ function ImportCSVModal({ onClose, onImportComplete }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<any[]>([]);
-  const [overwriteExisting, setOverwriteExisting] = useState(false);
   const [results, setResults] = useState<{
     success: number;
     updated: number;
@@ -820,10 +819,11 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             });
 
             // Validar que los campos mínimos requeridos no estén vacíos
-            if (!socioData.nombre || !socioData.apellido || !socioData.email) {
+            // RUT es obligatorio para usar como clave única
+            if (!socioData.nombre || !socioData.apellido || !socioData.email || !socioData.rut) {
               errors.push({ 
                 row: i + 1, 
-                error: `Campos requeridos vacíos: nombre="${socioData.nombre}", apellido="${socioData.apellido}", email="${socioData.email}"` 
+                error: `Campos requeridos vacíos: nombre="${socioData.nombre}", apellido="${socioData.apellido}", email="${socioData.email}", rut="${socioData.rut}"` 
               });
               continue;
             }
@@ -857,36 +857,27 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
               password: socioData.password?.trim() || generatePassword(),
             };
 
-            // Si está habilitado sobrescribir, intentar buscar socio existente por email
-            if (overwriteExisting) {
-              // Buscar si existe un socio con ese email
-              const existingResponse = await sociosService.getSocios({ search: socioData.email });
-              const existingSocio = existingResponse.data?.socios.find(s => s.email === socioData.email);
-              
-              if (existingSocio) {
-                // Actualizar socio existente
-                const updateResponse = await sociosService.updateSocio(existingSocio.id, socioPayload);
-                if (updateResponse.success) {
-                  updatedCount++;
-                } else {
-                  errors.push({ row: i + 1, error: updateResponse.error || 'Error al actualizar' });
-                }
+            // SIEMPRE buscar por RUT (clave única)
+            // Si el RUT existe: actualizar, si no existe: crear
+            const rutToSearch = socioData.rut.trim();
+            const existingResponse = await sociosService.getSocios({ search: rutToSearch });
+            const existingSocio = existingResponse.data?.socios.find(s => s.rut === rutToSearch);
+            
+            if (existingSocio) {
+              // Actualizar socio existente (por RUT)
+              const updateResponse = await sociosService.updateSocio(existingSocio.id, socioPayload);
+              if (updateResponse.success) {
+                updatedCount++;
               } else {
-                // Crear nuevo socio
-                const createResponse = await sociosService.createSocio(socioPayload);
-                if (createResponse.success) {
-                  successCount++;
-                } else {
-                  errors.push({ row: i + 1, error: createResponse.error || 'Error al crear' });
-                }
+                errors.push({ row: i + 1, error: updateResponse.error || 'Error al actualizar' });
               }
             } else {
-              // Solo crear (modo por defecto)
-              const response = await sociosService.createSocio(socioPayload);
-              if (response.success) {
+              // Crear nuevo socio (RUT no existe)
+              const createResponse = await sociosService.createSocio(socioPayload);
+              if (createResponse.success) {
                 successCount++;
               } else {
-                errors.push({ row: i + 1, error: response.error || 'Error desconocido' });
+                errors.push({ row: i + 1, error: createResponse.error || 'Error al crear' });
               }
             }
           } catch (err) {
@@ -937,8 +928,10 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
                 <h3 className="font-semibold text-blue-900 mb-2">Instrucciones:</h3>
                 <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                   <li>El archivo debe ser formato CSV (separado por comas)</li>
-                  <li>Columnas <strong>requeridas</strong>: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email</code></li>
-                  <li>Columnas <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, rut, direccion, ciudad, comuna, region, fecha_nacimiento, red_social, valor_cuota, fecha_ingreso, password, estado_socio</code></li>
+                  <li>Columnas <strong>requeridas</strong>: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email, rut</code></li>
+                  <li>Columnas <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, direccion, ciudad, comuna, region, fecha_nacimiento, red_social, valor_cuota, fecha_ingreso, password, estado_socio</code></li>
+                  <li><strong>⚠️ IMPORTANTE:</strong> El <code className="bg-blue-100 px-1 rounded">RUT</code> es la clave única. Si el RUT ya existe, se actualizarán sus datos. Si no existe, se creará un nuevo socio.</li>
+                  <li>Múltiples socios <strong>pueden tener el mismo email</strong>, pero cada uno debe tener un RUT único.</li>
                   <li>Si <code className="bg-blue-100 px-1 rounded">password</code> está vacío, se generará uno automáticamente (aleatorio de 10 caracteres)</li>
                   <li>Si <code className="bg-blue-100 px-1 rounded">valor_cuota</code> está vacío, se usará 6500 por defecto</li>
                   <li>Si <code className="bg-blue-100 px-1 rounded">fecha_ingreso</code> está vacío, se usará la fecha actual</li>
@@ -946,7 +939,6 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
                   <li>La columna <code className="bg-blue-100 px-1 rounded">red_social</code> debe contener la URL completa (ej: https://instagram.com/usuario)</li>
                   <li>La primera fila debe contener los nombres de las columnas</li>
                   <li>Si la dirección contiene comas, enciérrala entre comillas: <code className="bg-blue-100 px-1 rounded">"Calle 123, Depto 4"</code></li>
-                  <li>El modo <strong>sobrescribir</strong> buscará por email y actualizará los socios existentes</li>
                 </ul>
               </div>
             </div>
@@ -963,25 +955,22 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             </button>
           </div>
 
-          {/* Opción de sobrescribir */}
-          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-            <label className="flex items-start cursor-pointer">
-              <input
-                type="checkbox"
-                checked={overwriteExisting}
-                onChange={(e) => setOverwriteExisting(e.target.checked)}
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mt-1 flex-shrink-0"
-              />
-              <div className="ml-3">
-                <span className="text-sm font-medium text-gray-900">
-                  Sobrescribir datos existentes
+          {/* Información sobre el funcionamiento */}
+          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded">
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="text-sm font-medium text-green-900 block mb-1">
+                  Modo de Importación: Upsert por RUT
                 </span>
-                <p className="text-xs text-gray-600 mt-1">
-                  Si está marcado, buscará socios por email y actualizará sus datos si ya existen. 
-                  Si no existe, lo creará como nuevo socio.
+                <p className="text-xs text-green-800">
+                  El sistema usa el <strong>RUT como clave única</strong>. Por cada fila del CSV:
+                  <br />• Si el RUT ya existe → Se <strong>actualizan</strong> todos los campos del socio
+                  <br />• Si el RUT no existe → Se <strong>crea</strong> un nuevo socio
+                  <br />• Los emails pueden repetirse entre diferentes socios
                 </p>
               </div>
-            </label>
+            </div>
           </div>
 
           {/* Error */}
