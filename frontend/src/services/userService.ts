@@ -117,6 +117,11 @@ class UserService {
           if (data.success && data.data) {
             // Mapear la respuesta de la API al formato UserProfile
             const apiUser = data.data;
+            console.log('🔍 UserService: API user data received:', apiUser);
+            console.log('🔍 UserService: comuna from API:', apiUser.comuna);
+            console.log('🔍 UserService: fecha_nacimiento from API:', apiUser.fecha_nacimiento);
+            console.log('🔍 UserService: red_social from API:', apiUser.red_social);
+            
             const profile: UserProfile = {
               id: apiUser.id.toString(),
               firstName: apiUser.nombre || '',
@@ -140,6 +145,9 @@ class UserService {
             };
 
             console.log('✅ UserService: Mapped profile from API:', profile);
+            console.log('✅ UserService: comuna mapped:', profile.comuna);
+            console.log('✅ UserService: fechaNacimiento mapped:', profile.fechaNacimiento);
+            console.log('✅ UserService: redSocial mapped:', profile.redSocial);
             return { success: true, data: profile };
           }
         } else {

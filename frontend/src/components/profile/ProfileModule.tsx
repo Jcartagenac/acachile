@@ -98,11 +98,16 @@ export const ProfileModule: React.FC = () => {
       console.log('📊 ProfileModule: Profile response:', response);
       
       if (response.success && response.data) {
+        console.log('🔍 ProfileModule: Raw response.data:', response.data);
+        console.log('🔍 ProfileModule: comuna from response:', response.data.comuna);
+        console.log('🔍 ProfileModule: fechaNacimiento from response:', response.data.fechaNacimiento);
+        console.log('🔍 ProfileModule: redSocial from response:', response.data.redSocial);
+        
         setProfile(response.data);
         // Priorizar avatar persistido sobre el del perfil
         const avatarToUse = persistedAvatarUrl || response.data.avatar || '';
         
-        setFormData({
+        const newFormData = {
           firstName: response.data.firstName,
           lastName: response.data.lastName,
           email: response.data.email,
@@ -115,8 +120,15 @@ export const ProfileModule: React.FC = () => {
           redSocial: response.data.redSocial || '',
           rut: response.data.rut || '',
           ciudad: response.data.ciudad || ''
-        });
-        console.log('✅ ProfileModule: Profile loaded successfully', response.data);
+        };
+        
+        console.log('🔍 ProfileModule: New formData:', newFormData);
+        console.log('🔍 ProfileModule: formData.comuna:', newFormData.comuna);
+        console.log('🔍 ProfileModule: formData.fechaNacimiento:', newFormData.fechaNacimiento);
+        console.log('🔍 ProfileModule: formData.redSocial:', newFormData.redSocial);
+        
+        setFormData(newFormData);
+        console.log('✅ ProfileModule: Profile loaded successfully');
       } else {
         setMessage({ type: 'error', text: response.error || 'Error cargando perfil' });
         console.error('❌ ProfileModule: Error loading profile:', response.error);
