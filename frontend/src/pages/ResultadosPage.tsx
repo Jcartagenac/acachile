@@ -183,12 +183,23 @@ const RANKING_ACA_2025 = [
 
 type RankingTab = 'wbqa' | 'aca2025';
 
+interface EquipoACA {
+  equipo: string;
+  nvaImperial: number;
+  rgf: number;
+  talca: number;
+  sgf: number;
+  promedio: number;
+  lugar: number;
+}
+
 export default function ResultadosPage() {
   const [activeTab, setActiveTab] = useState<RankingTab>('wbqa');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('overall');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<TeamResult | null>(null);
+  const [selectedEquipoACA, setSelectedEquipoACA] = useState<EquipoACA | null>(null);
   const [language, setLanguage] = useState<Language>('es');
   const [resultsData, setResultsData] = useState<TeamResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -735,7 +746,8 @@ export default function ResultadosPage() {
                     return (
                       <tr 
                         key={equipo.equipo}
-                        className={`transition-all hover:bg-neutral-50 ${
+                        onClick={() => setSelectedEquipoACA(equipo)}
+                        className={`transition-all hover:bg-neutral-50 cursor-pointer hover:shadow-md ${
                           isPodium ? 'bg-gradient-to-r from-yellow-50/50 to-transparent' : ''
                         }`}
                       >
@@ -840,6 +852,163 @@ export default function ResultadosPage() {
               </div>
             </div>
           </div>
+
+          {/* Modal de detalle de equipo ACA 2025 */}
+          {selectedEquipoACA && (
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+              onClick={() => setSelectedEquipoACA(null)}
+            >
+              <div 
+                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header del modal */}
+                <div className="sticky top-0 bg-gradient-to-br from-primary-600 to-primary-700 text-white px-6 py-5 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {selectedEquipoACA.lugar === 1 && <Trophy className="h-7 w-7 text-yellow-300" />}
+                      {selectedEquipoACA.lugar === 2 && <Medal className="h-7 w-7 text-gray-300" />}
+                      {selectedEquipoACA.lugar === 3 && <Award className="h-7 w-7 text-orange-400" />}
+                      <div>
+                        <h2 className="text-2xl font-bold">{selectedEquipoACA.equipo}</h2>
+                        <p className="text-sm text-primary-100 mt-1">
+                          Puesto #{selectedEquipoACA.lugar} • Promedio: {selectedEquipoACA.promedio.toFixed(1)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedEquipoACA(null)}
+                      className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Contenido del modal */}
+                <div className="p-6 space-y-6">
+                  {/* Resumen */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                      <div className="text-sm text-neutral-600 mb-1">Mejor Resultado</div>
+                      <div className="text-3xl font-bold text-primary-600">
+                        {Math.min(
+                          selectedEquipoACA.nvaImperial === 23 ? Infinity : selectedEquipoACA.nvaImperial,
+                          selectedEquipoACA.rgf === 23 ? Infinity : selectedEquipoACA.rgf,
+                          selectedEquipoACA.talca === 23 ? Infinity : selectedEquipoACA.talca,
+                          selectedEquipoACA.sgf === 23 ? Infinity : selectedEquipoACA.sgf
+                        )}°
+                      </div>
+                    </div>
+                    <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                      <div className="text-sm text-neutral-600 mb-1">Eventos Participados</div>
+                      <div className="text-3xl font-bold text-primary-600">
+                        {[selectedEquipoACA.nvaImperial, selectedEquipoACA.rgf, selectedEquipoACA.talca, selectedEquipoACA.sgf]
+                          .filter(pos => pos !== 23).length} / 4
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detalle de torneos */}
+                  <div>
+                    <h3 className="text-lg font-bold text-neutral-900 mb-4">Resultados por Torneo</h3>
+                    <div className="space-y-3">
+                      {/* Nueva Imperial */}
+                      <div className={`rounded-xl p-4 border-2 ${
+                        selectedEquipoACA.nvaImperial === 23 
+                          ? 'border-neutral-200 bg-neutral-50' 
+                          : selectedEquipoACA.nvaImperial <= 3
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-primary-200 bg-primary-50'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-neutral-900">Nueva Imperial</div>
+                            <div className="text-sm text-neutral-600">Primer torneo del año</div>
+                          </div>
+                          <div className={`text-3xl font-bold ${
+                            selectedEquipoACA.nvaImperial === 23 ? 'text-neutral-400' : 'text-neutral-900'
+                          }`}>
+                            {selectedEquipoACA.nvaImperial === 23 ? 'N/P' : `${selectedEquipoACA.nvaImperial}°`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RGF */}
+                      <div className={`rounded-xl p-4 border-2 ${
+                        selectedEquipoACA.rgf === 23 
+                          ? 'border-neutral-200 bg-neutral-50' 
+                          : selectedEquipoACA.rgf <= 3
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-primary-200 bg-primary-50'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-neutral-900">RGF (Reñaca)</div>
+                            <div className="text-sm text-neutral-600">Regional Grill Fest</div>
+                          </div>
+                          <div className={`text-3xl font-bold ${
+                            selectedEquipoACA.rgf === 23 ? 'text-neutral-400' : 'text-neutral-900'
+                          }`}>
+                            {selectedEquipoACA.rgf === 23 ? 'N/P' : `${selectedEquipoACA.rgf}°`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Talca */}
+                      <div className={`rounded-xl p-4 border-2 ${
+                        selectedEquipoACA.talca === 23 
+                          ? 'border-neutral-200 bg-neutral-50' 
+                          : selectedEquipoACA.talca <= 3
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-primary-200 bg-primary-50'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-neutral-900">Talca</div>
+                            <div className="text-sm text-neutral-600">Campeonato en Talca</div>
+                          </div>
+                          <div className={`text-3xl font-bold ${
+                            selectedEquipoACA.talca === 23 ? 'text-neutral-400' : 'text-neutral-900'
+                          }`}>
+                            {selectedEquipoACA.talca === 23 ? 'N/P' : `${selectedEquipoACA.talca}°`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* SGF */}
+                      <div className={`rounded-xl p-4 border-2 ${
+                        selectedEquipoACA.sgf === 23 
+                          ? 'border-neutral-200 bg-neutral-50' 
+                          : selectedEquipoACA.sgf <= 3
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-primary-200 bg-primary-50'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-neutral-900">SGF (Santiago)</div>
+                            <div className="text-sm text-neutral-600">Santiago Grill Fest</div>
+                          </div>
+                          <div className={`text-3xl font-bold ${
+                            selectedEquipoACA.sgf === 23 ? 'text-neutral-400' : 'text-neutral-900'
+                          }`}>
+                            {selectedEquipoACA.sgf === 23 ? 'N/P' : `${selectedEquipoACA.sgf}°`}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nota */}
+                  <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-900">
+                    <strong>Nota:</strong> N/P indica que el equipo no participó en ese evento. 
+                    El promedio se calcula considerando la posición 23 para eventos no participados.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </>
         )}
       </div>
