@@ -17,6 +17,9 @@ export interface Socio {
   rut: string | null;
   direccion: string | null;
   ciudad: string | null;
+  comuna: string | null;
+  region: string | null;
+  fechaNacimiento: string | null;
   fotoUrl: string | null;
   valorCuota: number;
   estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
@@ -40,9 +43,12 @@ export interface CreateSocioData {
   rut?: string;
   direccion?: string;
   ciudad?: string;
-  valorCuota: number;
-  estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
-  fechaIngreso: string;
+  comuna?: string;
+  region?: string;
+  fechaNacimiento?: string;
+  valorCuota?: number;
+  estadoSocio?: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
+  fechaIngreso?: string;
   listaNegra?: boolean;
   motivoListaNegra?: string;
   password: string;
@@ -70,17 +76,7 @@ export interface Cuota {
   };
 }
 
-export interface CreateSocioData {
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono?: string;
-  rut?: string;
-  direccion?: string;
-  ciudad?: string;
-  valorCuota?: number;
-  password: string;
-}
+
 
 class SociosService {
   private getAuthHeaders(): Headers {

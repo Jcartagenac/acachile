@@ -20,6 +20,8 @@ export interface UserProfile {
   direccion?: string;
   avatar?: string;
   region?: string;
+  comuna?: string;
+  fechaNacimiento?: string;
   rut?: string;
   ciudad?: string;
   fechaIngreso?: string;
@@ -38,6 +40,8 @@ export interface UpdateProfileRequest {
   direccion?: string | null;
   avatar?: string;
   region?: string | null;
+  comuna?: string | null;
+  fechaNacimiento?: string | null;
   rut?: string | null;
   ciudad?: string | null;
 }

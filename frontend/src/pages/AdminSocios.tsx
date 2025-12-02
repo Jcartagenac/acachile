@@ -689,8 +689,10 @@ function ImportCSVModal({ onClose, onImportComplete }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<any[]>([]);
+  const [overwriteExisting, setOverwriteExisting] = useState(false);
   const [results, setResults] = useState<{
     success: number;
+    updated: number;
     errors: Array<{ row: number; error: string }>;
   } | null>(null);
 
@@ -719,9 +721,10 @@ function ImportCSVModal({ onClose, onImportComplete }: {
   };
 
   const downloadTemplate = () => {
-    const template = `nombre,apellido,email,telefono,rut,direccion,ciudad,valor_cuota,password,estado_socio
-Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,6500,password123,activo
-María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,6500,password456,activo`;
+    const template = `nombre,apellido,email,telefono,rut,direccion,ciudad,valor_cuota,fecha_ingreso,password,estado_socio
+Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,6500,2024-01-15,password123,activo
+María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,6500,2024-02-20,,activo
+Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Viña del Mar,,2024-03-10,,activo`;
     
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -773,6 +776,8 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
 
         // Parse rows
         const errors: Array<{ row: number; error: string }> = [];
+        let successCount = 0;
+        let updatedCount = 0;
 
         for (let i = 1; i < lines.length; i++) {
           const line = lines[i];
@@ -789,36 +794,96 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
               if (char === '"') {
                 inQuotes = !inQuotes;
               } else if (char === ',' && !inQuotes) {
-                values.push(current.trim());
+                values.push(current.trim().replace(/^"|"$/g, '')); // Remove surrounding quotes
                 current = '';
               } else {
                 current += char;
               }
             }
-            values.push(current.trim());
+            values.push(current.trim().replace(/^"|"$/g, '')); // Remove surrounding quotes
 
             const socioData: any = {};
             headers.forEach((header, index) => {
-              socioData[header] = values[index] || '';
+              const value = values[index] || '';
+              socioData[header] = value.trim();
             });
 
-            // Create socio
-            const response = await sociosService.createSocio({
+            // Debug: Log para ver qué está llegando
+            console.log(`Fila ${i + 1}:`, {
+              headers,
+              values,
+              socioData,
               nombre: socioData.nombre,
               apellido: socioData.apellido,
               email: socioData.email,
-              telefono: socioData.telefono || undefined,
-              rut: socioData.rut || undefined,
-              direccion: socioData.direccion || undefined,
-              ciudad: socioData.ciudad || undefined,
-              valorCuota: socioData.valor_cuota ? parseInt(socioData.valor_cuota) : 6500,
-              estadoSocio: 'activo',
-              fechaIngreso: new Date().toISOString().split('T')[0],
-              password: socioData.password,
+              password: socioData.password ? '***' : '(vacío)'
             });
 
-            if (!response.success) {
-              errors.push({ row: i + 1, error: response.error || 'Error desconocido' });
+            // Validar que los campos mínimos requeridos no estén vacíos
+            if (!socioData.nombre || !socioData.apellido || !socioData.email) {
+              errors.push({ 
+                row: i + 1, 
+                error: `Campos requeridos vacíos: nombre="${socioData.nombre}", apellido="${socioData.apellido}", email="${socioData.email}"` 
+              });
+              continue;
+            }
+
+            // Generar password automático si no se proporciona
+            const generatePassword = () => {
+              const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+              let password = '';
+              for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+              }
+              return password;
+            };
+
+            // Preparar datos del socio
+            const socioPayload = {
+              nombre: socioData.nombre.trim(),
+              apellido: socioData.apellido.trim(),
+              email: socioData.email.trim(),
+              telefono: socioData.telefono?.trim() || undefined,
+              rut: socioData.rut?.trim() || undefined,
+              direccion: socioData.direccion?.trim() || undefined,
+              ciudad: socioData.ciudad?.trim() || undefined,
+              valorCuota: socioData.valor_cuota?.trim() ? parseInt(socioData.valor_cuota) : 6500,
+              estadoSocio: socioData.estado_socio?.trim() || 'activo',
+              fechaIngreso: socioData.fecha_ingreso?.trim() || new Date().toISOString().split('T')[0],
+              password: socioData.password?.trim() || generatePassword(),
+            };
+
+            // Si está habilitado sobrescribir, intentar buscar socio existente por email
+            if (overwriteExisting) {
+              // Buscar si existe un socio con ese email
+              const existingResponse = await sociosService.getSocios({ search: socioData.email });
+              const existingSocio = existingResponse.data?.socios.find(s => s.email === socioData.email);
+              
+              if (existingSocio) {
+                // Actualizar socio existente
+                const updateResponse = await sociosService.updateSocio(existingSocio.id, socioPayload);
+                if (updateResponse.success) {
+                  updatedCount++;
+                } else {
+                  errors.push({ row: i + 1, error: updateResponse.error || 'Error al actualizar' });
+                }
+              } else {
+                // Crear nuevo socio
+                const createResponse = await sociosService.createSocio(socioPayload);
+                if (createResponse.success) {
+                  successCount++;
+                } else {
+                  errors.push({ row: i + 1, error: createResponse.error || 'Error al crear' });
+                }
+              }
+            } else {
+              // Solo crear (modo por defecto)
+              const response = await sociosService.createSocio(socioPayload);
+              if (response.success) {
+                successCount++;
+              } else {
+                errors.push({ row: i + 1, error: response.error || 'Error desconocido' });
+              }
             }
           } catch (err) {
             errors.push({ 
@@ -829,7 +894,8 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
         }
 
         setResults({
-          success: lines.length - 1 - errors.length,
+          success: successCount,
+          updated: updatedCount,
           errors,
         });
 
@@ -867,10 +933,15 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
                 <h3 className="font-semibold text-blue-900 mb-2">Instrucciones:</h3>
                 <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                   <li>El archivo debe ser formato CSV (separado por comas)</li>
-                  <li>Columnas requeridas: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email, password</code></li>
-                  <li>Columnas opcionales: <code className="bg-blue-100 px-1 rounded">telefono, rut, direccion, ciudad, valor_cuota, estado_socio</code></li>
+                  <li>Columnas <strong>requeridas</strong>: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email</code></li>
+                  <li>Columnas <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, rut, direccion, ciudad, valor_cuota, fecha_ingreso, password, estado_socio</code></li>
+                  <li>Si <code className="bg-blue-100 px-1 rounded">password</code> está vacío, se generará uno automáticamente (aleatorio de 10 caracteres)</li>
+                  <li>Si <code className="bg-blue-100 px-1 rounded">valor_cuota</code> está vacío, se usará 6500 por defecto</li>
+                  <li>Si <code className="bg-blue-100 px-1 rounded">fecha_ingreso</code> está vacío, se usará la fecha actual</li>
+                  <li>La columna <code className="bg-blue-100 px-1 rounded">fecha_ingreso</code> debe estar en formato <code className="bg-blue-100 px-1 rounded">YYYY-MM-DD</code> (ejemplo: 2024-01-15)</li>
                   <li>La primera fila debe contener los nombres de las columnas</li>
                   <li>Si la dirección contiene comas, enciérrala entre comillas: <code className="bg-blue-100 px-1 rounded">"Calle 123, Depto 4"</code></li>
+                  <li>El modo <strong>sobrescribir</strong> buscará por email y actualizará los socios existentes</li>
                 </ul>
               </div>
             </div>
@@ -885,6 +956,27 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
               <Download className="h-5 w-5 mr-2" />
               Descargar Plantilla CSV
             </button>
+          </div>
+
+          {/* Opción de sobrescribir */}
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <label className="flex items-start cursor-pointer">
+              <input
+                type="checkbox"
+                checked={overwriteExisting}
+                onChange={(e) => setOverwriteExisting(e.target.checked)}
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mt-1 flex-shrink-0"
+              />
+              <div className="ml-3">
+                <span className="text-sm font-medium text-gray-900">
+                  Sobrescribir datos existentes
+                </span>
+                <p className="text-xs text-gray-600 mt-1">
+                  Si está marcado, buscará socios por email y actualizará sus datos si ya existen. 
+                  Si no existe, lo creará como nuevo socio.
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Error */}
@@ -903,9 +995,15 @@ María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Princ
               <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded mb-4">
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
-                  <p className="text-green-700 font-semibold">
-                    {results.success} socios importados exitosamente
-                  </p>
+                  <div className="text-green-700">
+                    <p className="font-semibold">
+                      Importación completada exitosamente
+                    </p>
+                    <p className="text-sm mt-1">
+                      {results.success} socios creados
+                      {results.updated > 0 && `, ${results.updated} socios actualizados`}
+                    </p>
+                  </div>
                 </div>
               </div>
 

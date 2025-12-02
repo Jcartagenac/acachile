@@ -67,6 +67,8 @@ export const ProfileModule: React.FC = () => {
     direccion: '',
     avatar: '',
     region: '',
+    comuna: '',
+    fechaNacimiento: '',
     rut: '',
     ciudad: ''
   });
@@ -106,6 +108,8 @@ export const ProfileModule: React.FC = () => {
           direccion: response.data.direccion || '',
           avatar: avatarToUse,
           region: response.data.region || '',
+          comuna: response.data.comuna || '',
+          fechaNacimiento: response.data.fechaNacimiento || '',
           rut: response.data.rut || '',
           ciudad: response.data.ciudad || ''
         });
@@ -173,6 +177,8 @@ export const ProfileModule: React.FC = () => {
         phone: cleanFormValue(formData.phone),
         rut: cleanFormValue(formData.rut),
         ciudad: cleanFormValue(formData.ciudad),
+        comuna: cleanFormValue(formData.comuna),
+        fechaNacimiento: cleanFormValue(formData.fechaNacimiento),
         direccion: cleanFormValue(formData.direccion),
         region: cleanFormValue(formData.region),
       };
@@ -188,6 +194,8 @@ export const ProfileModule: React.FC = () => {
         phone: cleanedData.phone,
         rut: cleanedData.rut,
         ciudad: cleanedData.ciudad,
+        comuna: cleanedData.comuna,
+        fechaNacimiento: cleanedData.fechaNacimiento,
         direccion: cleanedData.direccion
       };
 
@@ -236,6 +244,8 @@ export const ProfileModule: React.FC = () => {
         direccion: profile.direccion || '',
         avatar: profile.avatar || '',
         region: profile.region || '',
+        comuna: profile.comuna || '',
+        fechaNacimiento: profile.fechaNacimiento || '',
         rut: profile.rut || '',
         ciudad: profile.ciudad || ''
       });
@@ -363,7 +373,7 @@ export const ProfileModule: React.FC = () => {
     }
 
     console.log('💾 Profile Phone final value:', `"${formattedValue}"`);
-    setFormData({ ...formData, telefono: formattedValue });
+    setFormData({ ...formData, phone: formattedValue });
 
     // Mantener el foco en el input después de actualizar el estado
     setTimeout(() => {
@@ -375,12 +385,12 @@ export const ProfileModule: React.FC = () => {
 
   const handlePhoneBlur = () => {
     // Validar completamente al perder foco
-    if (formData.telefono.trim()) {
+    if (formData.phone.trim()) {
       try {
-        console.log('🔍 Profile validating phone on blur:', formData.telefono);
-        const normalizedPhone = normalizePhone(formData.telefono);
+        console.log('🔍 Profile validating phone on blur:', formData.phone);
+        const normalizedPhone = normalizePhone(formData.phone);
         console.log('✅ Profile phone normalized final:', normalizedPhone);
-        setFormData(prev => ({ ...prev, telefono: normalizedPhone }));
+        setFormData(prev => ({ ...prev, phone: normalizedPhone }));
         setValidationErrors(prev => ({ ...prev, telefono: '' }));
       } catch (err) {
         console.error('❌ Profile error validating phone final:', err);
@@ -389,7 +399,7 @@ export const ProfileModule: React.FC = () => {
           telefono: err instanceof Error ? err.message : 'Teléfono inválido'
         }));
         // Si es inválido, limpiar el campo
-        setFormData(prev => ({ ...prev, telefono: '' }));
+        setFormData(prev => ({ ...prev, phone: '' }));
       }
     }
   };
@@ -731,6 +741,49 @@ export const ProfileModule: React.FC = () => {
                         : 'cursor-not-allowed opacity-75'
                     }`}
                     placeholder="Santiago, Valparaíso, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Comuna */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Comuna
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="text"
+                    value={formData.comuna}
+                    onChange={(e) => setFormData({ ...formData, comuna: e.target.value })}
+                    disabled={!isEditing}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing 
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                        : 'cursor-not-allowed opacity-75'
+                    }`}
+                    placeholder="Las Condes, Providencia, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Fecha de Nacimiento */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Fecha de Nacimiento
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="date"
+                    value={formData.fechaNacimiento}
+                    onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
+                    disabled={!isEditing}
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing 
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                        : 'cursor-not-allowed opacity-75'
+                    }`}
                   />
                 </div>
               </div>
