@@ -52,32 +52,32 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Parsear body
-    const body = await request.json() as { email: string; password: string };
-    const { email, password } = body;
+    const body = await request.json() as { rut: string; password: string };
+    const { rut, password } = body;
 
     // Validaciones
-    if (!email || !password) {
-      console.log('[AUTH/LOGIN] Missing email or password');
-      return errorResponse('Email y contraseña son requeridos');
+    if (!rut || !password) {
+      console.log('[AUTH/LOGIN] Missing RUT or password');
+      return errorResponse('RUT y contraseña son requeridos');
     }
 
-    console.log('[AUTH/LOGIN] Attempting login for:', email);
+    console.log('[AUTH/LOGIN] Attempting login for RUT:', rut);
 
-    // Buscar usuario en la base de datos
+    // Buscar usuario en la base de datos por RUT
     const user = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, telefono, rut, ciudad, role, activo, password_hash, created_at, last_login
-      FROM usuarios WHERE email = ? AND activo = 1
-    `).bind(email.toLowerCase()).first();
+      FROM usuarios WHERE rut = ? AND activo = 1
+    `).bind(rut.trim()).first();
 
     if (!user) {
-      console.log('[AUTH/LOGIN] User not found or inactive:', email);
+      console.log('[AUTH/LOGIN] User not found or inactive with RUT:', rut);
       return errorResponse('Credenciales inválidas', 401);
     }
 
     // Verificar contraseña
     const verification = await verifyPassword(password, user.password_hash as string);
     if (!verification.valid) {
-      console.log('[AUTH/LOGIN] Invalid password for user:', email);
+      console.log('[AUTH/LOGIN] Invalid password for RUT:', rut);
       return errorResponse('Credenciales inválidas', 401);
     }
 

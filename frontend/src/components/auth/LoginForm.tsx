@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, LogIn, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Fingerprint, Lock, LogIn, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { logger } from '../../utils/logger';
 
 const loginSchema = z.object({
-  email: z
+  rut: z
     .string()
-    .min(1, 'El email es requerido')
-    .email('Email inválido'),
+    .min(1, 'El RUT es requerido')
+    .regex(/^[0-9]+[-]?[0-9kK]{1}$/, 'RUT inválido (formato: 12345678-9)'),
   password: z
     .string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres'),
@@ -123,7 +123,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
 
     try {
-      logger.auth.info('🔐 Iniciando proceso de login', { email: data.email });
+      logger.auth.info('🔐 Iniciando proceso de login', { rut: data.rut });
       clearError();
       
       logger.time('login-form-submit');
@@ -188,20 +188,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">
-                Email
+                RUT
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <Fingerprint className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
-                  {...register('email')}
-                  type="email"
-                  placeholder="tu-email@ejemplo.com"
-                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100 ${errors.email ? 'border-primary-300 focus:border-primary-400 focus:ring-primary-200' : ''}`}
-                  autoComplete="email"
+                  {...register('rut')}
+                  type="text"
+                  placeholder="12345678-9"
+                  className={`w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100 ${errors.rut ? 'border-primary-300 focus:border-primary-400 focus:ring-primary-200' : ''}`}
+                  autoComplete="username"
                 />
               </div>
-              {errors.email && (
-                <p className="text-sm text-primary-500">{errors.email.message}</p>
+              {errors.rut && (
+                <p className="text-sm text-primary-500">{errors.rut.message}</p>
               )}
             </div>
 

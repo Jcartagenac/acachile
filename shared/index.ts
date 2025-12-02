@@ -212,7 +212,7 @@ export interface AppUser {
 }
 
 export interface LoginRequest {
-  email: string;
+  rut: string;
   password: string;
 }
 

@@ -345,7 +345,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [handleAuthSuccess, performLogout]);
 
   const login = async (credentials: LoginRequest) => {
-    logger.auth.info('🔄 AuthContext: Iniciando login', { email: credentials.email });
+    logger.auth.info('🔄 AuthContext: Iniciando login', { rut: credentials.rut });
     dispatch({ type: 'AUTH_START' });
 
     try {
