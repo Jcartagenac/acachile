@@ -731,10 +731,22 @@ export default function ResultadosPage() {
                   <tr>
                     <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide">Lugar</th>
                     <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide">Equipo</th>
-                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden sm:table-cell">Nva Imperial</th>
-                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden sm:table-cell">RGF</th>
-                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden md:table-cell">Talca</th>
-                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden md:table-cell">SGF</th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden sm:table-cell">
+                      <div>Nva Imperial</div>
+                      <div className="text-[10px] font-normal text-neutral-500 normal-case">1° Fecha</div>
+                    </th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden sm:table-cell">
+                      <div>Rancagua GF</div>
+                      <div className="text-[10px] font-normal text-neutral-500 normal-case">2° Fecha</div>
+                    </th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden md:table-cell">
+                      <div>Talca</div>
+                      <div className="text-[10px] font-normal text-neutral-500 normal-case">3° Fecha</div>
+                    </th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden md:table-cell">
+                      <div>SGF</div>
+                      <div className="text-[10px] font-normal text-neutral-500 normal-case">4° Fecha</div>
+                    </th>
                     <th className="px-4 py-4 text-center text-xs sm:text-sm font-bold text-primary-700 uppercase tracking-wide">Final</th>
                   </tr>
                 </thead>
@@ -933,7 +945,7 @@ export default function ResultadosPage() {
                       }`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold text-neutral-900">Nueva Imperial</div>
+                            <div className="font-semibold text-neutral-900">Nueva Imperial - 1° Fecha</div>
                             <div className="text-sm text-neutral-600">Primer torneo del año</div>
                           </div>
                           <div className={`text-3xl font-bold ${
@@ -954,8 +966,8 @@ export default function ResultadosPage() {
                       }`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold text-neutral-900">RGF (Reñaca)</div>
-                            <div className="text-sm text-neutral-600">Regional Grill Fest</div>
+                            <div className="font-semibold text-neutral-900">Rancagua Grill Festival - 2° Fecha</div>
+                            <div className="text-sm text-neutral-600">Rancagua Grill Festival</div>
                           </div>
                           <div className={`text-3xl font-bold ${
                             selectedEquipoACA.rgf === 23 ? 'text-neutral-400' : 'text-neutral-900'
@@ -975,7 +987,7 @@ export default function ResultadosPage() {
                       }`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold text-neutral-900">Talca</div>
+                            <div className="font-semibold text-neutral-900">Talca - 3° Fecha</div>
                             <div className="text-sm text-neutral-600">Campeonato en Talca</div>
                           </div>
                           <div className={`text-3xl font-bold ${
@@ -996,7 +1008,7 @@ export default function ResultadosPage() {
                       }`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold text-neutral-900">SGF (Santiago)</div>
+                            <div className="font-semibold text-neutral-900">SGF (Santiago) - 4° Fecha</div>
                             <div className="text-sm text-neutral-600">Santiago Grill Fest</div>
                           </div>
                           <div className={`text-3xl font-bold ${
