@@ -129,7 +129,42 @@ export async function onRequestPut(context) {
     // Parsear datos del body
     const data = await request.json();
 
-    // Campos permitidos para actualizar
+    // Normalizar campos camelCase a snake_case para la base de datos
+    const normalizedData = { ...data };
+    if (data.fechaNacimiento !== undefined) {
+      normalizedData.fecha_nacimiento = data.fechaNacimiento;
+      delete normalizedData.fechaNacimiento;
+    }
+    if (data.redSocial !== undefined) {
+      normalizedData.red_social = data.redSocial;
+      delete normalizedData.redSocial;
+    }
+    if (data.valorCuota !== undefined) {
+      normalizedData.valor_cuota = data.valorCuota;
+      delete normalizedData.valorCuota;
+    }
+    if (data.estadoSocio !== undefined) {
+      normalizedData.estado_socio = data.estadoSocio;
+      delete normalizedData.estadoSocio;
+    }
+    if (data.fechaIngreso !== undefined) {
+      normalizedData.fecha_ingreso = data.fechaIngreso;
+      delete normalizedData.fechaIngreso;
+    }
+    if (data.listaNegra !== undefined) {
+      normalizedData.lista_negra = data.listaNegra;
+      delete normalizedData.listaNegra;
+    }
+    if (data.motivoListaNegra !== undefined) {
+      normalizedData.motivo_lista_negra = data.motivoListaNegra;
+      delete normalizedData.motivoListaNegra;
+    }
+    if (data.fotoUrl !== undefined) {
+      normalizedData.foto_url = data.fotoUrl;
+      delete normalizedData.fotoUrl;
+    }
+
+    // Campos permitidos para actualizar (nombres en snake_case como en DB)
     const allowedFields = [
       'nombre',
       'apellido',
@@ -142,6 +177,7 @@ export async function onRequestPut(context) {
       'fecha_nacimiento',
       'red_social',
       'direccion',
+      'foto_url',
       'valor_cuota',
       'estado_socio',
       'fecha_ingreso',
@@ -155,9 +191,9 @@ export async function onRequestPut(context) {
     const queryParams = [];
 
     for (const field of allowedFields) {
-      if (data[field] !== undefined) {
+      if (normalizedData[field] !== undefined) {
         updates.push(`${field} = ?`);
-        queryParams.push(data[field]);
+        queryParams.push(normalizedData[field]);
       }
     }
 
