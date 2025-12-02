@@ -189,6 +189,7 @@ export default function AdminSocios() {
       const response = await sociosService.getSocios({
         search: searchTerm || undefined,
         estado: estadoFilter || undefined,
+        limit: 10000, // Cargar todos los socios (límite alto para evitar paginación del servidor)
       });
 
       if (response.success && response.data) {
