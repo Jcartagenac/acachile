@@ -18,7 +18,8 @@ import {
   X,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Instagram
 } from 'lucide-react';
 
 /**
@@ -69,6 +70,7 @@ export const ProfileModule: React.FC = () => {
     region: '',
     comuna: '',
     fechaNacimiento: '',
+    redSocial: '',
     rut: '',
     ciudad: ''
   });
@@ -110,6 +112,7 @@ export const ProfileModule: React.FC = () => {
           region: response.data.region || '',
           comuna: response.data.comuna || '',
           fechaNacimiento: response.data.fechaNacimiento || '',
+          redSocial: response.data.redSocial || '',
           rut: response.data.rut || '',
           ciudad: response.data.ciudad || ''
         });
@@ -179,6 +182,7 @@ export const ProfileModule: React.FC = () => {
         ciudad: cleanFormValue(formData.ciudad),
         comuna: cleanFormValue(formData.comuna),
         fechaNacimiento: cleanFormValue(formData.fechaNacimiento),
+        redSocial: cleanFormValue(formData.redSocial),
         direccion: cleanFormValue(formData.direccion),
         region: cleanFormValue(formData.region),
       };
@@ -196,6 +200,7 @@ export const ProfileModule: React.FC = () => {
         ciudad: cleanedData.ciudad,
         comuna: cleanedData.comuna,
         fechaNacimiento: cleanedData.fechaNacimiento,
+        redSocial: cleanedData.redSocial,
         direccion: cleanedData.direccion
       };
 
@@ -246,6 +251,7 @@ export const ProfileModule: React.FC = () => {
         region: profile.region || '',
         comuna: profile.comuna || '',
         fechaNacimiento: profile.fechaNacimiento || '',
+        redSocial: profile.redSocial || '',
         rut: profile.rut || '',
         ciudad: profile.ciudad || ''
       });
@@ -786,6 +792,39 @@ export const ProfileModule: React.FC = () => {
                     }`}
                   />
                 </div>
+              </div>
+
+              {/* Red Social */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Red Social (Instagram, Facebook, etc.)
+                </label>
+                <div className="relative">
+                  <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="url"
+                    value={formData.redSocial}
+                    onChange={(e) => setFormData({ ...formData, redSocial: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="https://instagram.com/tu_usuario"
+                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                      isEditing 
+                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                        : 'cursor-not-allowed opacity-75'
+                    }`}
+                  />
+                </div>
+                {!isEditing && formData.redSocial && (
+                  <a
+                    href={formData.redSocial}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    <Instagram className="w-4 h-4 mr-1" />
+                    Ver perfil social
+                  </a>
+                )}
               </div>
             </div>
 

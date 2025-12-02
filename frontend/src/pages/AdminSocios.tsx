@@ -721,10 +721,10 @@ function ImportCSVModal({ onClose, onImportComplete }: {
   };
 
   const downloadTemplate = () => {
-    const template = `nombre,apellido,email,telefono,rut,direccion,ciudad,valor_cuota,fecha_ingreso,password,estado_socio
-Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,6500,2024-01-15,password123,activo
-María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,6500,2024-02-20,,activo
-Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Viña del Mar,,2024-03-10,,activo`;
+    const template = `nombre,apellido,email,telefono,rut,direccion,ciudad,comuna,region,fecha_nacimiento,red_social,valor_cuota,fecha_ingreso,password,estado_socio
+Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,Las Condes,Metropolitana,1985-03-15,https://instagram.com/juanperez,6500,2024-01-15,password123,activo
+María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,Valparaíso,Valparaíso,1990-07-20,https://instagram.com/mariagonzalez,6500,2024-02-20,,activo
+Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Viña del Mar,Viña del Mar,Valparaíso,1988-11-10,,,,activo`;
     
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -847,6 +847,10 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
               rut: socioData.rut?.trim() || undefined,
               direccion: socioData.direccion?.trim() || undefined,
               ciudad: socioData.ciudad?.trim() || undefined,
+              comuna: socioData.comuna?.trim() || undefined,
+              region: socioData.region?.trim() || undefined,
+              fechaNacimiento: socioData.fecha_nacimiento?.trim() || undefined,
+              redSocial: socioData.red_social?.trim() || undefined,
               valorCuota: socioData.valor_cuota?.trim() ? parseInt(socioData.valor_cuota) : 6500,
               estadoSocio: socioData.estado_socio?.trim() || 'activo',
               fechaIngreso: socioData.fecha_ingreso?.trim() || new Date().toISOString().split('T')[0],
@@ -934,11 +938,12 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
                 <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                   <li>El archivo debe ser formato CSV (separado por comas)</li>
                   <li>Columnas <strong>requeridas</strong>: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email</code></li>
-                  <li>Columnas <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, rut, direccion, ciudad, valor_cuota, fecha_ingreso, password, estado_socio</code></li>
+                  <li>Columnas <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, rut, direccion, ciudad, comuna, region, fecha_nacimiento, red_social, valor_cuota, fecha_ingreso, password, estado_socio</code></li>
                   <li>Si <code className="bg-blue-100 px-1 rounded">password</code> está vacío, se generará uno automáticamente (aleatorio de 10 caracteres)</li>
                   <li>Si <code className="bg-blue-100 px-1 rounded">valor_cuota</code> está vacío, se usará 6500 por defecto</li>
                   <li>Si <code className="bg-blue-100 px-1 rounded">fecha_ingreso</code> está vacío, se usará la fecha actual</li>
-                  <li>La columna <code className="bg-blue-100 px-1 rounded">fecha_ingreso</code> debe estar en formato <code className="bg-blue-100 px-1 rounded">YYYY-MM-DD</code> (ejemplo: 2024-01-15)</li>
+                  <li>Las columnas de fecha deben estar en formato <code className="bg-blue-100 px-1 rounded">YYYY-MM-DD</code> (ejemplo: 2024-01-15)</li>
+                  <li>La columna <code className="bg-blue-100 px-1 rounded">red_social</code> debe contener la URL completa (ej: https://instagram.com/usuario)</li>
                   <li>La primera fila debe contener los nombres de las columnas</li>
                   <li>Si la dirección contiene comas, enciérrala entre comillas: <code className="bg-blue-100 px-1 rounded">"Calle 123, Depto 4"</code></li>
                   <li>El modo <strong>sobrescribir</strong> buscará por email y actualizará los socios existentes</li>

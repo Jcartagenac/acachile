@@ -20,6 +20,7 @@ export interface Socio {
   comuna: string | null;
   region: string | null;
   fechaNacimiento: string | null;
+  redSocial: string | null;
   fotoUrl: string | null;
   valorCuota: number;
   estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
@@ -46,6 +47,7 @@ export interface CreateSocioData {
   comuna?: string;
   region?: string;
   fechaNacimiento?: string;
+  redSocial?: string;
   valorCuota?: number;
   estadoSocio?: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
   fechaIngreso?: string;

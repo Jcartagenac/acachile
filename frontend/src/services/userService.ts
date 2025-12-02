@@ -22,6 +22,7 @@ export interface UserProfile {
   region?: string;
   comuna?: string;
   fechaNacimiento?: string;
+  redSocial?: string;
   rut?: string;
   ciudad?: string;
   fechaIngreso?: string;
@@ -42,6 +43,7 @@ export interface UpdateProfileRequest {
   region?: string | null;
   comuna?: string | null;
   fechaNacimiento?: string | null;
+  redSocial?: string | null;
   rut?: string | null;
   ciudad?: string | null;
 }
