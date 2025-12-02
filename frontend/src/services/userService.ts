@@ -86,6 +86,9 @@ class UserService {
       direccion: user.direccion || undefined,
       avatar: user.avatar || undefined,
       region: typeof user.region === 'string' ? user.region : undefined,
+      comuna: user.comuna || undefined,
+      fechaNacimiento: user.fechaNacimiento || undefined,
+      redSocial: user.redSocial || undefined,
       fechaIngreso: user.createdAt || undefined,
       acaMembership: {
         yearsActive: 2,
@@ -100,57 +103,74 @@ class UserService {
     try {
       console.log('🔍 UserService: Fetching profile from API /api/user/me');
       
-      // Hacer llamada a la API para obtener los datos actualizados desde la BD
-      const response = await fetch('/api/user/me', {
-        method: 'GET',
-        headers: this.getAuthHeaders('application/json')
-      });
+      // Intentar obtener de la API primero
+      try {
+        const response = await fetch('/api/user/me', {
+          method: 'GET',
+          headers: this.getAuthHeaders('application/json')
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('❌ UserService: API error:', errorData);
-        return { 
-          success: false, 
-          error: errorData.error || 'Error obteniendo perfil de usuario' 
-        };
-      }
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ UserService: API response:', data);
 
-      const data = await response.json();
-      console.log('✅ UserService: API response:', data);
+          if (data.success && data.data) {
+            // Mapear la respuesta de la API al formato UserProfile
+            const apiUser = data.data;
+            const profile: UserProfile = {
+              id: apiUser.id.toString(),
+              firstName: apiUser.nombre || '',
+              lastName: apiUser.apellido || '',
+              email: apiUser.email,
+              phone: apiUser.telefono || undefined,
+              rut: apiUser.rut || undefined,
+              ciudad: apiUser.ciudad || undefined,
+              direccion: apiUser.direccion || undefined,
+              avatar: apiUser.avatar || undefined,
+              region: apiUser.region || undefined,
+              comuna: apiUser.comuna || undefined,
+              fechaNacimiento: apiUser.fecha_nacimiento || undefined,
+              redSocial: apiUser.red_social || undefined,
+              fechaIngreso: apiUser.created_at || undefined,
+              acaMembership: {
+                yearsActive: 2,
+                membershipNumber: `ACA-${apiUser.id.toString().slice(-4)}`,
+                status: 'active' as const
+              }
+            };
 
-      if (!data.success || !data.data) {
-        return { success: false, error: 'Respuesta inválida del servidor' };
-      }
-
-      // Mapear la respuesta de la API al formato UserProfile
-      const apiUser = data.data;
-      const profile: UserProfile = {
-        id: apiUser.id.toString(),
-        firstName: apiUser.nombre || '',
-        lastName: apiUser.apellido || '',
-        email: apiUser.email,
-        phone: apiUser.telefono || undefined,
-        rut: apiUser.rut || undefined,
-        ciudad: apiUser.ciudad || undefined,
-        direccion: apiUser.direccion || undefined,
-        avatar: apiUser.avatar || undefined,
-        region: apiUser.region || undefined,
-        comuna: apiUser.comuna || undefined,
-        fechaNacimiento: apiUser.fecha_nacimiento || undefined,
-        redSocial: apiUser.red_social || undefined,
-        fechaIngreso: apiUser.created_at || undefined,
-        acaMembership: {
-          yearsActive: 2,
-          membershipNumber: `ACA-${apiUser.id.toString().slice(-4)}`,
-          status: 'active' as const
+            console.log('✅ UserService: Mapped profile from API:', profile);
+            return { success: true, data: profile };
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.warn('⚠️ UserService: API error, falling back to AuthContext:', errorData);
         }
-      };
+      } catch (apiError) {
+        console.warn('⚠️ UserService: API call failed, falling back to AuthContext:', apiError);
+      }
 
-      console.log('✅ UserService: Mapped profile:', profile);
-      return { success: true, data: profile };
+      // Fallback: usar AuthContext si la API falla
+      if (this.authContext?.user) {
+        console.log('🔄 UserService: Using AuthContext fallback');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const profile = this.mapAppUserToProfile(this.authContext.user);
+        console.log('✅ UserService: Mapped profile from AuthContext:', profile);
+        return { success: true, data: profile };
+      }
+
+      return { success: false, error: 'No se pudo obtener el perfil del usuario' };
 
     } catch (error) {
       console.error('❌ UserService: Exception getting profile:', error);
+      
+      // Último fallback: AuthContext
+      if (this.authContext?.user) {
+        console.log('🔄 UserService: Exception fallback to AuthContext');
+        const profile = this.mapAppUserToProfile(this.authContext.user);
+        return { success: true, data: profile };
+      }
+      
       return { success: false, error: 'Error obteniendo perfil de usuario' };
     }
   }

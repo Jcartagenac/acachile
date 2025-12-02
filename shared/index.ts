@@ -186,6 +186,11 @@ export interface AuthApiUser {
   rut?: string | null;
   ciudad?: string | null;
   direccion?: string | null;
+  comuna?: string | null;
+  region?: string | null;
+  fecha_nacimiento?: string | null;
+  red_social?: string | null;
+  avatar?: string | null;
   role: UserRole;
   activo: boolean;
   created_at: string;
@@ -204,7 +209,10 @@ export interface AppUser {
   rut?: string | null;
   ciudad?: string | null;
   direccion?: string | null;
+  comuna?: string | null;
   region?: RegionName | string | null;
+  fechaNacimiento?: string | null;
+  redSocial?: string | null;
   membershipType?: string | null;
   isActive: boolean;
   createdAt: string;
