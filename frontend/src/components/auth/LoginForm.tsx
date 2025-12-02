@@ -21,6 +21,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
+  onClose?: () => void;
 }
 
 // Constants for brute force protection
@@ -34,7 +35,8 @@ interface LoginAttempt {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ 
-  onSuccess
+  onSuccess,
+  onClose
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState<LoginAttempt>({ count: 0 });
@@ -268,6 +270,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               <div>
                 <Link
                   to="/forgot-password"
+                  onClick={onClose}
                   className="font-medium text-slate-500 transition hover:text-slate-700"
                 >
                   ¿Olvidaste tu contraseña?

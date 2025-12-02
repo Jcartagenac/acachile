@@ -61,7 +61,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Form Content */}
         <div className="animate-fade-in space-y-6">
-          <LoginForm onSuccess={handleSuccess} />
+          <LoginForm onSuccess={handleSuccess} onClose={onClose} />
           <div className="text-center text-sm text-slate-500">
             ¿No tienes acceso todavía?{' '}
             <button
