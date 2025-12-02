@@ -87,6 +87,10 @@ export async function onRequestGet(context) {
         u.telefono,
         u.rut,
         u.ciudad,
+        u.comuna,
+        u.region,
+        u.fecha_nacimiento,
+        u.red_social,
         u.direccion,
         u.foto_url,
         u.valor_cuota,
@@ -169,6 +173,10 @@ export async function onRequestGet(context) {
       telefono: socio.telefono,
       rut: socio.rut,
       ciudad: socio.ciudad,
+      comuna: socio.comuna,
+      region: socio.region,
+      fechaNacimiento: socio.fecha_nacimiento,
+      redSocial: socio.red_social,
       direccion: socio.direccion,
       fotoUrl: socio.foto_url,
       valorCuota: socio.valor_cuota || 6500,
@@ -247,6 +255,10 @@ export async function onRequestPost(context) {
       telefono,
       rut,
       ciudad,
+      comuna,
+      region,
+      fechaNacimiento,
+      redSocial,
       direccion,
       fotoUrl,
       valorCuota = 6500,
@@ -291,10 +303,14 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Verificar si el email ya existe (activo o inactivo)
-    const existingUser = await env.DB.prepare(`
-      SELECT id, activo FROM usuarios WHERE email = ?
-    `).bind(email.toLowerCase()).first();
+    // Verificar si el RUT ya existe (activo o inactivo)
+    // RUT es la clave única, emails pueden duplicarse
+    let existingUser = null;
+    if (rut && rut.trim()) {
+      existingUser = await env.DB.prepare(`
+        SELECT id, activo FROM usuarios WHERE rut = ?
+      `).bind(rut.trim()).first();
+    }
 
     // Hash de la contraseña con SHA-256 + salt
     const passwordHash = await hashPassword(password);
@@ -305,31 +321,37 @@ export async function onRequestPost(context) {
 
     if (existingUser) {
       if (existingUser.activo === 1) {
-        // Usuario activo ya existe
+        // Usuario activo ya existe con ese RUT
         return new Response(JSON.stringify({
           success: false,
-          error: 'Ya existe un socio activo con este email'
+          error: `Ya existe un socio activo con el RUT: ${rut}`
         }), {
           status: 409,
           headers: { 'Content-Type': 'application/json' }
         });
       } else {
         // Usuario existe pero está inactivo - REACTIVAR
-        console.log('[ADMIN SOCIOS] Reactivando socio eliminado:', email);
+        console.log('[ADMIN SOCIOS] Reactivando socio eliminado con RUT:', rut);
 
         const updateResult = await env.DB.prepare(`
           UPDATE usuarios 
-          SET nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, direccion = ?,
+          SET email = ?, nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, 
+              comuna = ?, region = ?, fecha_nacimiento = ?, red_social = ?, direccion = ?,
               foto_url = ?, valor_cuota = ?, estado_socio = ?, fecha_ingreso = ?,
               lista_negra = ?, motivo_lista_negra = ?,
               password_hash = ?, role = ?, activo = 1, updated_at = ?
           WHERE id = ?
         `).bind(
+          email.toLowerCase(),
           nombre,
           apellido,
           telefono || null,
           rut || null,
           ciudad || null,
+          comuna || null,
+          region || null,
+          fechaNacimiento || null,
+          redSocial || null,
           direccion || null,
           fotoUrl || null,
           valorCuota,
@@ -355,11 +377,11 @@ export async function onRequestPost(context) {
       // Usuario no existe - CREAR NUEVO
       const result = await env.DB.prepare(`
         INSERT INTO usuarios (
-          email, nombre, apellido, telefono, rut, ciudad, direccion, 
-          foto_url, valor_cuota, estado_socio, fecha_ingreso,
-          lista_negra, motivo_lista_negra,
+          email, nombre, apellido, telefono, rut, ciudad, comuna, region,
+          fecha_nacimiento, red_social, direccion, foto_url, valor_cuota, 
+          estado_socio, fecha_ingreso, lista_negra, motivo_lista_negra,
           password_hash, role, activo, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
       `).bind(
         email.toLowerCase(),
         nombre,
@@ -367,6 +389,10 @@ export async function onRequestPost(context) {
         telefono || null,
         rut || null,
         ciudad || null,
+        comuna || null,
+        region || null,
+        fechaNacimiento || null,
+        redSocial || null,
         direccion || null,
         fotoUrl || null,
         valorCuota,
@@ -391,9 +417,9 @@ export async function onRequestPost(context) {
     // Obtener socio creado o reactivado
     newSocio = await env.DB.prepare(`
       SELECT 
-        id, email, nombre, apellido, telefono, rut, ciudad, direccion,
-        foto_url, valor_cuota, fecha_ingreso, estado_socio, 
-        lista_negra, motivo_lista_negra, role, created_at
+        id, email, nombre, apellido, telefono, rut, ciudad, comuna, region,
+        fecha_nacimiento, red_social, direccion, foto_url, valor_cuota, 
+        fecha_ingreso, estado_socio, lista_negra, motivo_lista_negra, role, created_at
       FROM usuarios 
       WHERE id = ?
     `).bind(socioId).first();
@@ -412,6 +438,10 @@ export async function onRequestPost(context) {
         telefono: newSocio.telefono,
         rut: newSocio.rut,
         ciudad: newSocio.ciudad,
+        comuna: newSocio.comuna,
+        region: newSocio.region,
+        fechaNacimiento: newSocio.fecha_nacimiento,
+        redSocial: newSocio.red_social,
         direccion: newSocio.direccion,
         fotoUrl: newSocio.foto_url,
         valorCuota: newSocio.valor_cuota,
