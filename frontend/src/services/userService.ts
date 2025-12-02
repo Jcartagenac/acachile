@@ -282,6 +282,9 @@ class UserService {
           direccion: backendUser.direccion,
           avatar: backendUser.avatar,
           region: backendUser.region,
+          comuna: backendUser.comuna,
+          fechaNacimiento: backendUser.fecha_nacimiento,
+          redSocial: backendUser.red_social,
         };
         
         // Actualizar nombre completo
