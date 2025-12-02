@@ -21,7 +21,7 @@ interface User {
   region?: string;
   fecha_nacimiento?: string;
   red_social?: string;
-  avatar?: string;
+  foto_url?: string;
   role: 'admin' | 'editor' | 'user';
   activo: boolean;
   created_at: string;
@@ -72,7 +72,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Buscar usuario en la base de datos por RUT
     const user = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, telefono, rut, ciudad, direccion, comuna, region, 
-             fecha_nacimiento, red_social, avatar, role, activo, password_hash, created_at, last_login
+             fecha_nacimiento, red_social, foto_url, role, activo, password_hash, created_at, last_login
       FROM usuarios WHERE rut = ? AND activo = 1
     `).bind(rut.trim()).first();
 
@@ -134,7 +134,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       region: user.region as string,
       fecha_nacimiento: user.fecha_nacimiento as string,
       red_social: user.red_social as string,
-      avatar: user.avatar as string,
+      foto_url: user.foto_url as string,
       role: user.role as 'admin' | 'editor' | 'user',
       activo: Boolean(user.activo),
       created_at: user.created_at as string,

@@ -190,7 +190,7 @@ export interface AuthApiUser {
   region?: string | null;
   fecha_nacimiento?: string | null;
   red_social?: string | null;
-  avatar?: string | null;
+  foto_url?: string | null;
   role: UserRole;
   activo: boolean;
   created_at: string;

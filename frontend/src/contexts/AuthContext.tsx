@@ -67,7 +67,7 @@ const mapApiUserToAppUser = (apiUser: AuthApiUser, overrides?: Partial<AppUser>)
     lastName,
     name: [firstName, lastName].filter(Boolean).join(' ').trim() || apiUser.email,
     roles: [mappedRole],
-    avatar: apiUser.avatar ?? null,
+    avatar: apiUser.foto_url ?? null,
     phone: apiUser.telefono ?? null,
     rut: apiUser.rut ?? null,
     ciudad: apiUser.ciudad ?? null,

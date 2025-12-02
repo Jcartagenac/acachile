@@ -15,7 +15,7 @@ interface User {
   region?: string;
   fecha_nacimiento?: string;
   red_social?: string;
-  avatar?: string;
+  foto_url?: string;
   role: 'admin' | 'editor' | 'user';
   activo: boolean;
   created_at: string;
@@ -62,7 +62,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     // Buscar usuario en la base de datos
     const user = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, telefono, rut, ciudad, direccion, comuna, region, 
-             fecha_nacimiento, red_social, avatar, role, activo, created_at, last_login
+             fecha_nacimiento, red_social, foto_url, role, activo, created_at, last_login
       FROM usuarios WHERE id = ? AND activo = 1
     `).bind(payload.userId).first();
 
@@ -85,7 +85,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       region: user.region as string || undefined,
       fecha_nacimiento: user.fecha_nacimiento as string || undefined,
       red_social: user.red_social as string || undefined,
-      avatar: user.avatar as string || undefined,
+      foto_url: user.foto_url as string || undefined,
       role: user.role as 'admin' | 'editor' | 'user',
       activo: Boolean(user.activo),
       created_at: user.created_at as string,
@@ -259,7 +259,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     // Obtener usuario actualizado
     const updatedUser = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, telefono, rut, ciudad, direccion, comuna, region, 
-             fecha_nacimiento, red_social, avatar, role, activo, created_at, last_login
+             fecha_nacimiento, red_social, foto_url, role, activo, created_at, last_login
       FROM usuarios WHERE id = ?
     `).bind(payload.userId).first();
 
@@ -280,7 +280,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       region: updatedUser.region as string || undefined,
       fecha_nacimiento: updatedUser.fecha_nacimiento as string || undefined,
       red_social: updatedUser.red_social as string || undefined,
-      avatar: updatedUser.avatar as string || undefined,
+      foto_url: updatedUser.foto_url as string || undefined,
       role: updatedUser.role as 'admin' | 'editor' | 'user',
       activo: Boolean(updatedUser.activo),
       created_at: updatedUser.created_at as string,
