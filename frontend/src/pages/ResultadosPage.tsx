@@ -714,6 +714,51 @@ export default function ResultadosPage() {
         {/* Contenido Ranking ACA 2025 */}
         {activeTab === 'aca2025' && (
         <>
+          {/* Leyenda informativa */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-soft-lg p-6 mb-6 border border-blue-200 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-start gap-3 mb-4">
+              <BarChart3 className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-lg font-bold text-neutral-900 mb-2">Metodología del Ranking</h3>
+                <div className="space-y-3 text-sm text-neutral-700">
+                  <p className="leading-relaxed">
+                    El universo considerado corresponde a los <strong className="text-neutral-900">23 equipos</strong> que participaron en al menos un torneo oficial durante 2025.
+                  </p>
+                  
+                  <div className="bg-white/70 rounded-lg p-4 border border-blue-100">
+                    <p className="font-semibold text-neutral-900 mb-2">Sistema de puntaje:</p>
+                    <p className="leading-relaxed">
+                      A cada posición obtenida en cada torneo se le asignó un puntaje correspondiente a su lugar:<br />
+                      <span className="inline-flex items-center gap-2 mt-2 text-xs">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded font-medium">1° lugar → 1 punto</span>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded font-medium">2° lugar → 2 puntos</span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded font-medium">3° lugar → 3 puntos</span>
+                        <span className="text-neutral-500">... y así sucesivamente</span>
+                      </span>
+                    </p>
+                  </div>
+
+                  <p className="leading-relaxed">
+                    Los equipos que <strong className="text-neutral-900">no participaron</strong> en un torneo específico recibieron el puntaje máximo de <strong className="text-red-600">23 puntos</strong>, equivalente a quedar últimos dentro de los 23 equipos posibles.
+                  </p>
+
+                  <p className="leading-relaxed">
+                    Para cada equipo se calculó el <strong className="text-neutral-900">promedio aritmético</strong> de todos los puntajes obtenidos durante el año. El ranking se ordena de menor a mayor promedio; es decir, <strong className="text-primary-600">mientras menor es el promedio, mejor es la posición</strong>.
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-blue-100 mt-3">
+                    <span className="text-xs text-neutral-600">
+                      ¿Dudas, comentarios o solicitud de revisión del cálculo? Escríbenos a{' '}
+                      <a href="mailto:competencias@acachile.com" className="text-primary-600 hover:text-primary-700 font-medium underline">
+                        competencias@acachile.com
+                      </a>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white rounded-2xl shadow-soft-lg overflow-hidden animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200 flex items-center gap-3">
               <Award className="h-6 w-6 text-primary-600" />
