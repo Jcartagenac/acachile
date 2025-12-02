@@ -154,7 +154,37 @@ const getCategories = (lang: Language) => [
   { key: 'vegetarian' as CategoryKey, label: TRANSLATIONS[lang].vegetarian, icon: Award },
 ];
 
+// Ranking ACA 2025 data
+const RANKING_ACA_2025 = [
+  { equipo: 'FORJADORES DEL SABOR', nvaImperial: 1, rgf: 6, talca: 12, sgf: 5, promedio: 6.0, lugar: 1 },
+  { equipo: 'GUARDIANES DE LA PARRILLA', nvaImperial: 5, rgf: 9, talca: 4, sgf: 6, promedio: 6.0, lugar: 1 },
+  { equipo: 'PARRILLAS Y ESPADAS', nvaImperial: 6, rgf: 7, talca: 2, sgf: 9, promedio: 6.0, lugar: 1 },
+  { equipo: 'FUEGO Y FOGO', nvaImperial: 23, rgf: 2, talca: 1, sgf: 3, promedio: 7.3, lugar: 2 },
+  { equipo: 'CÓNDORES DE FUEGO', nvaImperial: 3, rgf: 5, talca: 6, sgf: 23, promedio: 9.3, lugar: 3 },
+  { equipo: 'PAYASO PARRILLERO', nvaImperial: 23, rgf: 3, talca: 14, sgf: 4, promedio: 11.0, lugar: 4 },
+  { equipo: 'DIVINO FOGO', nvaImperial: 23, rgf: 4, talca: 7, sgf: 11, promedio: 11.3, lugar: 5 },
+  { equipo: 'PEAKY BLINDERS', nvaImperial: 23, rgf: 11, talca: 5, sgf: 8, promedio: 11.8, lugar: 6 },
+  { equipo: 'BRASAS BIO BIO', nvaImperial: 2, rgf: 14, talca: 11, sgf: 23, promedio: 12.5, lugar: 7 },
+  { equipo: 'EVENTOS DE FUEGO', nvaImperial: 23, rgf: 1, talca: 3, sgf: 23, promedio: 12.5, lugar: 8 },
+  { equipo: 'OJO DE BIFFE', nvaImperial: 23, rgf: 17, talca: 13, sgf: 1, promedio: 13.5, lugar: 9 },
+  { equipo: 'AMERICAN BBQ', nvaImperial: 23, rgf: 23, talca: 8, sgf: 2, promedio: 14.0, lugar: 10 },
+  { equipo: 'FLOR DE NOTRO', nvaImperial: 23, rgf: 13, talca: 17, sgf: 10, promedio: 15.8, lugar: 11 },
+  { equipo: 'BODEGA DEL ASADOR', nvaImperial: 4, rgf: 23, talca: 16, sgf: 23, promedio: 16.5, lugar: 12 },
+  { equipo: 'HEREDEROS DE LA PARRILLA', nvaImperial: 23, rgf: 12, talca: 10, sgf: 23, promedio: 17.0, lugar: 13 },
+  { equipo: 'CARNES DELUXE', nvaImperial: 23, rgf: 8, talca: 15, sgf: 23, promedio: 17.3, lugar: 14 },
+  { equipo: 'LUMBERJACK BBQ', nvaImperial: 23, rgf: 15, talca: 9, sgf: 23, promedio: 17.5, lugar: 15 },
+  { equipo: 'CABALLEROS DE LA PARRILLA', nvaImperial: 23, rgf: 23, talca: 19, sgf: 7, promedio: 18.0, lugar: 16 },
+  { equipo: 'ANDES GRILL', nvaImperial: 23, rgf: 10, talca: 18, sgf: 23, promedio: 18.5, lugar: 17 },
+  { equipo: 'FUEGOS INDOMITOS', nvaImperial: 7, rgf: 23, talca: 23, sgf: 23, promedio: 19.0, lugar: 18 },
+  { equipo: 'FUEGO DEL VALHALLA', nvaImperial: 23, rgf: 23, talca: 23, sgf: 12, promedio: 20.3, lugar: 19 },
+  { equipo: 'PARRILLEROS DE ELITE', nvaImperial: 23, rgf: 23, talca: 23, sgf: 13, promedio: 20.5, lugar: 20 },
+  { equipo: 'FUEGO AUSTRAL', nvaImperial: 23, rgf: 16, talca: 23, sgf: 23, promedio: 21.3, lugar: 21 },
+];
+
+type RankingTab = 'wbqa' | 'aca2025';
+
 export default function ResultadosPage() {
+  const [activeTab, setActiveTab] = useState<RankingTab>('wbqa');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('overall');
   const [showFilters, setShowFilters] = useState(false);
@@ -407,17 +437,55 @@ export default function ResultadosPage() {
           </div>
           
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-neutral-900 tracking-tight mb-3">
-            {t.championship}
+            Rankings Oficiales
           </h1>
           <h2 className="text-xl sm:text-2xl font-semibold text-primary-600 mb-4">
             {t.chile2025}
           </h2>
           
           <p className="text-base text-neutral-600 max-w-3xl mx-auto">
-            {t.subtitle} {resultsData.filter((team: TeamResult) => team.overall > 0).length} {t.teamsParticipating}
+            Consulta los resultados de los principales campeonatos de BBQ en Chile
           </p>
         </div>
 
+        {/* Tabs de Rankings */}
+        <div className="mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <div className="bg-white rounded-2xl shadow-soft-lg p-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={() => setActiveTab('wbqa')}
+                className={`flex-1 px-6 py-4 rounded-xl font-semibold text-sm sm:text-base transition-all ${
+                  activeTab === 'wbqa'
+                    ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-soft-md'
+                    : 'text-neutral-700 hover:bg-neutral-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  <span>WBQA International BBQ Championship</span>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('aca2025')}
+                className={`flex-1 px-6 py-4 rounded-xl font-semibold text-sm sm:text-base transition-all ${
+                  activeTab === 'aca2025'
+                    ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-soft-md'
+                    : 'text-neutral-700 hover:bg-neutral-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Award className="h-5 w-5" />
+                  <span>Ranking ACA 2025</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Contenido WBQA */}
+        {activeTab === 'wbqa' && (
+        <>
         {/* Filtros y búsqueda */}
         <div className="bg-white rounded-2xl shadow-soft-lg p-4 mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex flex-col lg:flex-row gap-4">
@@ -629,6 +697,151 @@ export default function ResultadosPage() {
             </div>
           )}
         </div>
+        </>
+        )}
+
+        {/* Contenido Ranking ACA 2025 */}
+        {activeTab === 'aca2025' && (
+        <>
+          <div className="bg-white rounded-2xl shadow-soft-lg overflow-hidden animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200 flex items-center gap-3">
+              <Award className="h-6 w-6 text-primary-600" />
+              <h3 className="text-xl font-bold text-neutral-900">
+                Ranking ACA 2025
+              </h3>
+              <span className="ml-auto text-sm text-neutral-600">
+                {RANKING_ACA_2025.length} equipos
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-neutral-50 border-b-2 border-neutral-200">
+                  <tr>
+                    <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide">Lugar</th>
+                    <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide">Equipo</th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden sm:table-cell">Nva Imperial</th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden sm:table-cell">RGF</th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden md:table-cell">Talca</th>
+                    <th className="px-3 py-4 text-center text-xs sm:text-sm font-bold text-neutral-700 uppercase tracking-wide hidden md:table-cell">SGF</th>
+                    <th className="px-4 py-4 text-center text-xs sm:text-sm font-bold text-primary-700 uppercase tracking-wide">Promedio</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {RANKING_ACA_2025.map((equipo) => {
+                    const isPodium = equipo.lugar <= 3;
+                    const isChampion = equipo.lugar === 1;
+                    
+                    return (
+                      <tr 
+                        key={equipo.equipo}
+                        className={`transition-all hover:bg-neutral-50 ${
+                          isPodium ? 'bg-gradient-to-r from-yellow-50/50 to-transparent' : ''
+                        }`}
+                      >
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            {equipo.lugar === 1 && (
+                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-50">
+                                <Trophy className="h-5 w-5" />
+                              </div>
+                            )}
+                            {equipo.lugar === 2 && (
+                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 text-gray-50">
+                                <Medal className="h-5 w-5" />
+                              </div>
+                            )}
+                            {equipo.lugar === 3 && (
+                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-orange-50">
+                                <Award className="h-5 w-5" />
+                              </div>
+                            )}
+                            {equipo.lugar > 3 && (
+                              <div className="w-10 h-10 flex items-center justify-center">
+                                <span className="text-lg font-bold text-neutral-600">{equipo.lugar}</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className={`font-semibold ${isChampion ? 'text-yellow-700' : 'text-neutral-900'}`}>
+                            {equipo.equipo}
+                          </div>
+                        </td>
+                        <td className="px-3 py-4 text-center hidden sm:table-cell">
+                          <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-lg text-sm font-semibold ${
+                            equipo.nvaImperial === 23 
+                              ? 'bg-neutral-100 text-neutral-400' 
+                              : equipo.nvaImperial <= 3
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-neutral-50 text-neutral-700'
+                          }`}>
+                            {equipo.nvaImperial}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 text-center hidden sm:table-cell">
+                          <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-lg text-sm font-semibold ${
+                            equipo.rgf === 23 
+                              ? 'bg-neutral-100 text-neutral-400' 
+                              : equipo.rgf <= 3
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-neutral-50 text-neutral-700'
+                          }`}>
+                            {equipo.rgf}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 text-center hidden md:table-cell">
+                          <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-lg text-sm font-semibold ${
+                            equipo.talca === 23 
+                              ? 'bg-neutral-100 text-neutral-400' 
+                              : equipo.talca <= 3
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-neutral-50 text-neutral-700'
+                          }`}>
+                            {equipo.talca}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 text-center hidden md:table-cell">
+                          <span className={`inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-lg text-sm font-semibold ${
+                            equipo.sgf === 23 
+                              ? 'bg-neutral-100 text-neutral-400' 
+                              : equipo.sgf <= 3
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-neutral-50 text-neutral-700'
+                          }`}>
+                            {equipo.sgf}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <div className={`text-lg font-bold ${
+                            isChampion ? 'text-yellow-600' : 'text-primary-600'
+                          }`}>
+                            {equipo.promedio.toFixed(1)}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Leyenda */}
+            <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200">
+              <div className="flex flex-wrap gap-4 text-xs text-neutral-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-green-100"></div>
+                  <span>Top 3 en evento</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-neutral-100"></div>
+                  <span>No participó (23 = posición por defecto)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+        )}
       </div>
     </div>
     </>
