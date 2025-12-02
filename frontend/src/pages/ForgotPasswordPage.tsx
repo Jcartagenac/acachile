@@ -3,10 +3,14 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, AlertCircle, Fingerprint } from 'lucide-react';
 
 // Esquema de validación
 const forgotPasswordSchema = z.object({
+  rut: z
+    .string()
+    .min(1, 'El RUT es requerido')
+    .regex(/^[0-9]+[-]?[0-9kK]{1}$/, 'RUT inválido (formato: 12345678-9)'),
   email: z.string().email('Email inválido').min(1, 'Email es requerido'),
 });
 
@@ -27,6 +31,7 @@ const ForgotPasswordPage: React.FC = () => {
     resolver: zodResolver(forgotPasswordSchema)
   });
 
+  const rut = watch('rut');
   const email = watch('email');
 
   const onSubmit = async (data: ForgotPasswordData) => {
@@ -82,7 +87,7 @@ const ForgotPasswordPage: React.FC = () => {
               Revisa tu Email
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Si existe una cuenta con el email <strong>{email}</strong>, 
+              Si existe una cuenta con el RUT <strong>{rut}</strong> y el email <strong>{email}</strong> coinciden, 
               recibirás un enlace para restablecer tu contraseña.
             </p>
           </div>
@@ -137,7 +142,7 @@ const ForgotPasswordPage: React.FC = () => {
               ¿Olvidaste tu contraseña?
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
+              Ingresa tu RUT y confirma tu email para recibir un enlace de recuperación
             </p>
           </div>
         </div>
@@ -158,6 +163,27 @@ const ForgotPasswordPage: React.FC = () => {
           )}
 
           <div>
+            <label htmlFor="rut" className="sr-only">
+              RUT
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Fingerprint className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                {...register('rut')}
+                type="text"
+                autoComplete="username"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200"
+                placeholder="Tu RUT (12345678-9)"
+              />
+            </div>
+            {errors.rut && (
+              <p className="mt-2 text-sm text-red-600">{errors.rut.message}</p>
+            )}
+          </div>
+
+          <div>
             <label htmlFor="email" className="sr-only">
               Email
             </label>
@@ -170,7 +196,7 @@ const ForgotPasswordPage: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200"
-                placeholder="Tu email"
+                placeholder="Confirma tu email"
               />
             </div>
             {errors.email && (

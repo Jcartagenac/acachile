@@ -67,13 +67,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Parsear body
-    const body = await request.json() as { email: string };
-    const { email } = body;
+    const body = await request.json() as { rut: string; email: string };
+    const { rut, email } = body;
 
     // Validaciones
-    if (!email) {
-      console.log('[AUTH/FORGOT-PASSWORD] Missing email');
-      return errorResponse('Email es requerido');
+    if (!rut || !email) {
+      console.log('[AUTH/FORGOT-PASSWORD] Missing RUT or email');
+      return errorResponse('RUT y email son requeridos');
     }
 
     // Validar formato de email
@@ -83,19 +83,20 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return errorResponse('Formato de email inválido');
     }
 
-    console.log('[AUTH/FORGOT-PASSWORD] Processing request for:', email);
+    console.log('[AUTH/FORGOT-PASSWORD] Processing request for RUT:', rut);
 
-    // Buscar usuario
+    // Buscar usuario por RUT y email (ambos deben coincidir)
     const user = await env.DB.prepare(`
-      SELECT id, email, nombre, apellido FROM usuarios WHERE email = ? AND activo = 1
-    `).bind(email.toLowerCase()).first();
+      SELECT id, email, nombre, apellido, rut FROM usuarios 
+      WHERE rut = ? AND email = ? AND activo = 1
+    `).bind(rut.trim(), email.toLowerCase()).first();
 
     // Por seguridad, siempre devolvemos el mismo mensaje
-    const successMessage = 'Si el email existe, recibirás un enlace para restablecer tu contraseña';
+    const successMessage = 'Si el RUT y email coinciden con una cuenta activa, recibirás un enlace para restablecer tu contraseña';
 
     if (!user) {
-      console.log('[AUTH/FORGOT-PASSWORD] User not found:', email);
-      // Por seguridad, no revelamos que el usuario no existe
+      console.log('[AUTH/FORGOT-PASSWORD] User not found or RUT/email mismatch - RUT:', rut, 'Email:', email);
+      // Por seguridad, no revelamos que el usuario no existe o que los datos no coinciden
       return jsonResponse({
         success: true,
         message: successMessage
