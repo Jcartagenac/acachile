@@ -98,38 +98,59 @@ class UserService {
   // Obtener perfil completo del usuario
   async getProfile(): Promise<ApiResponse<UserProfile>> {
     try {
-      // Use real user data from AuthContext if available
-      if (this.authContext?.user) {
-        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
-        console.log('🔍 UserService: AuthContext user data:', this.authContext.user);
-        const profile = this.mapAppUserToProfile(this.authContext.user);
-        console.log('🔍 UserService: Mapped profile:', profile);
-        return { success: true, data: profile };
+      console.log('🔍 UserService: Fetching profile from API /api/user/me');
+      
+      // Hacer llamada a la API para obtener los datos actualizados desde la BD
+      const response = await fetch('/api/user/me', {
+        method: 'GET',
+        headers: this.getAuthHeaders('application/json')
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ UserService: API error:', errorData);
+        return { 
+          success: false, 
+          error: errorData.error || 'Error obteniendo perfil de usuario' 
+        };
       }
 
-      // Fallback to mock data if no auth context (shouldn't happen in production)
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const mockProfile: UserProfile = {
-        id: '1',
-        firstName: 'Juan',
-        lastName: 'Pérez',
-        email: 'juan.perez@email.com',
-        phone: '+56912345678',
-        direccion: 'Las Condes, Santiago',
-        region: 'Región Metropolitana',
-        avatar: '/avatars/juan.jpg',
-        fechaIngreso: '2020-03-15',
+      const data = await response.json();
+      console.log('✅ UserService: API response:', data);
+
+      if (!data.success || !data.data) {
+        return { success: false, error: 'Respuesta inválida del servidor' };
+      }
+
+      // Mapear la respuesta de la API al formato UserProfile
+      const apiUser = data.data;
+      const profile: UserProfile = {
+        id: apiUser.id.toString(),
+        firstName: apiUser.nombre || '',
+        lastName: apiUser.apellido || '',
+        email: apiUser.email,
+        phone: apiUser.telefono || undefined,
+        rut: apiUser.rut || undefined,
+        ciudad: apiUser.ciudad || undefined,
+        direccion: apiUser.direccion || undefined,
+        avatar: apiUser.avatar || undefined,
+        region: apiUser.region || undefined,
+        comuna: apiUser.comuna || undefined,
+        fechaNacimiento: apiUser.fecha_nacimiento || undefined,
+        redSocial: apiUser.red_social || undefined,
+        fechaIngreso: apiUser.created_at || undefined,
         acaMembership: {
-          yearsActive: 4,
-          membershipNumber: 'ACA-2020-001',
-          status: 'active'
+          yearsActive: 2,
+          membershipNumber: `ACA-${apiUser.id.toString().slice(-4)}`,
+          status: 'active' as const
         }
       };
 
-      return { success: true, data: mockProfile };
+      console.log('✅ UserService: Mapped profile:', profile);
+      return { success: true, data: profile };
+
     } catch (error) {
-      console.error('Error getting profile:', error);
+      console.error('❌ UserService: Exception getting profile:', error);
       return { success: false, error: 'Error obteniendo perfil de usuario' };
     }
   }
@@ -208,17 +229,10 @@ class UserService {
         return { success: false, error: 'No hay token de autenticación' };
       }
 
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch('/api/user/me', {
         method: 'PUT',
         headers,
-        body: JSON.stringify({
-          nombre: profileData.firstName || null,
-          apellido: profileData.lastName || null,
-          telefono: profileData.phone || null,
-          rut: profileData.rut || null,
-          ciudad: profileData.ciudad || null,
-          direccion: profileData.direccion || null
-        })
+        body: JSON.stringify(profileData)
       });
 
       if (!response.ok) {
@@ -229,7 +243,6 @@ class UserService {
       const result = await response.json();
       
       // Usar los datos del backend para actualizar el AuthContext
-      // El backend devuelve los datos en formato API (nombre, apellido, etc.)
       if (result.data) {
         const backendUser = result.data;
         const userUpdates: Partial<AppUser> = {
@@ -239,6 +252,8 @@ class UserService {
           rut: backendUser.rut,
           ciudad: backendUser.ciudad,
           direccion: backendUser.direccion,
+          avatar: backendUser.avatar,
+          region: backendUser.region,
         };
         
         // Actualizar nombre completo
@@ -252,8 +267,28 @@ class UserService {
         console.log('🔄 UserService: Updating AuthContext with backend data:', userUpdates);
         this.authContext.updateUser(userUpdates);
 
-        const updatedUser = { ...this.authContext.user, ...userUpdates };
-        const updatedProfile = this.mapAppUserToProfile(updatedUser);
+        // Mapear correctamente la respuesta a UserProfile
+        const updatedProfile: UserProfile = {
+          id: backendUser.id.toString(),
+          firstName: backendUser.nombre || '',
+          lastName: backendUser.apellido || '',
+          email: backendUser.email,
+          phone: backendUser.telefono || undefined,
+          rut: backendUser.rut || undefined,
+          ciudad: backendUser.ciudad || undefined,
+          direccion: backendUser.direccion || undefined,
+          avatar: backendUser.avatar || undefined,
+          region: backendUser.region || undefined,
+          comuna: backendUser.comuna || undefined,
+          fechaNacimiento: backendUser.fecha_nacimiento || undefined,
+          redSocial: backendUser.red_social || undefined,
+          fechaIngreso: backendUser.created_at || undefined,
+          acaMembership: {
+            yearsActive: 2,
+            membershipNumber: `ACA-${backendUser.id.toString().slice(-4)}`,
+            status: 'active' as const
+          }
+        };
 
         return { 
           success: true, 

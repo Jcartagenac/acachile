@@ -18,7 +18,8 @@ import {
   ChevronRight,
   TrendingUp,
   AlertTriangle,
-  FileDown
+  FileDown,
+  Upload
 } from 'lucide-react';
 
 const MESES = [
@@ -45,6 +46,7 @@ export default function AdminCuotas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showGenerarModal, setShowGenerarModal] = useState(false);
+  const [showImportarModal, setShowImportarModal] = useState(false);
   const [selectedSocio, setSelectedSocio] = useState<SocioConEstado | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'al-dia' | 'atrasado'>('todos');
@@ -296,6 +298,13 @@ export default function AdminCuotas() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowImportarModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Importar Pagos CSV
+            </button>
+            <button
               onClick={() => setShowGenerarModal(true)}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
             >
@@ -521,6 +530,14 @@ export default function AdminCuotas() {
           año={añoSeleccionado}
           onClose={() => setShowGenerarModal(false)}
           onGenerate={loadData}
+        />
+      )}
+
+      {/* Modal de importar pagos CSV */}
+      {showImportarModal && (
+        <ImportarPagosCSVModal
+          onClose={() => setShowImportarModal(false)}
+          onImport={loadData}
         />
       )}
     </div>
@@ -1410,6 +1427,422 @@ function GenerarCuotasModal({ año, onClose, onGenerate }: GenerarCuotasModalPro
                 </>
               )}
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal para importar pagos desde CSV
+function ImportarPagosCSVModal({
+  onClose,
+  onImport,
+}: {
+  onClose: () => void;
+  onImport: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [results, setResults] = useState<{
+    success: number;
+    errors: string[];
+    total: number;
+  } | null>(null);
+
+  const generateTemplate = () => {
+    const headers = [
+      'rut',
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+      'proximo_pago'
+    ];
+    
+    const exampleRows = [
+      ['12345678-9', 'si', 'si', '', '', '', '', '', '', '', '', '', '', '2025-03-05'],
+      ['98765432-1', '2025-01-15', '2025-02-10', 'si', '', '', '', '', '', '', '', '', '', '2025-04-05'],
+      ['11111111-1', '', '', '', '', '', '', '', '', '', '', '', '', '2025-01-05']
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...exampleRows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `plantilla_pagos_${new Date().getFullYear()}.csv`;
+    link.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (!selectedFile.name.endsWith('.csv')) {
+        setError('Por favor selecciona un archivo CSV válido');
+        return;
+      }
+      setFile(selectedFile);
+      setError('');
+      setResults(null);
+    }
+  };
+
+  const parseCSV = (text: string): string[][] => {
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const values: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current.trim());
+      return values;
+    });
+  };
+
+  const handleImport = async () => {
+    if (!file) {
+      setError('Por favor selecciona un archivo CSV');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setResults(null);
+
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      
+      if (rows.length < 2) {
+        throw new Error('El archivo CSV está vacío o no tiene datos');
+      }
+
+      const headersRow = rows[0];
+      if (!headersRow) {
+        throw new Error('El archivo CSV no tiene encabezados');
+      }
+
+      const headers = headersRow.map(h => h.toLowerCase());
+      const rutIndex = headers.indexOf('rut');
+      const proximoPagoIndex = headers.indexOf('proximo_pago');
+      
+      if (rutIndex === -1) {
+        throw new Error('El CSV debe tener una columna "rut"');
+      }
+
+      const meses = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      
+      const mesesIndices = meses.map(mes => headers.indexOf(mes));
+
+      let successCount = 0;
+      const errorMessages: string[] = [];
+      const currentYear = new Date().getFullYear();
+
+      // Procesar cada fila (excepto headers)
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row) continue;
+
+        const rut = row[rutIndex]?.trim();
+
+        if (!rut) {
+          errorMessages.push(`Fila ${i + 1}: RUT vacío`);
+          continue;
+        }
+
+        try {
+          // Obtener usuario por RUT
+          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rut)}`);
+          if (!response.ok) throw new Error('Error al buscar usuario');
+          
+          const data = await response.json();
+          const usuario = data.socios?.find((s: any) => s.rut === rut);
+          
+          if (!usuario) {
+            errorMessages.push(`Fila ${i + 1}: Usuario con RUT ${rut} no encontrado`);
+            continue;
+          }
+
+          // Procesar cada mes
+          for (let mesIdx = 0; mesIdx < 12; mesIdx++) {
+            const colIdx = mesesIndices[mesIdx];
+            if (colIdx === -1 || colIdx === undefined) continue;
+
+            const valor = row[colIdx]?.trim().toLowerCase();
+            if (!valor || valor === '') continue;
+
+            let fechaPago = '';
+            let shouldPay = false;
+
+            // Determinar si es fecha o "si"
+            if (valor === 'si') {
+              shouldPay = true;
+              fechaPago = `${currentYear}-${String(mesIdx + 1).padStart(2, '0')}-01`;
+            } else if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+              shouldPay = true;
+              fechaPago = valor;
+            }
+
+            if (!shouldPay) continue;
+
+            const año = new Date(fechaPago).getFullYear();
+            const mes = mesIdx + 1;
+
+            // Verificar si ya existe la cuota
+            const cuotasResponse = await fetch(
+              `/api/admin/socios/${usuario.id}/cuotas?año=${año}`
+            );
+            
+            if (!cuotasResponse.ok) {
+              errorMessages.push(`Fila ${i + 1}: Error al obtener cuotas para ${rut}`);
+              continue;
+            }
+
+            const cuotasData = await cuotasResponse.json();
+            const cuotaExistente = cuotasData.cuotas?.find(
+              (c: any) => c.año === año && c.mes === mes
+            );
+
+            if (cuotaExistente) {
+              // Actualizar si no está pagada
+              if (!cuotaExistente.pagado) {
+                await fetch(`/api/admin/socios/${usuario.id}/cuotas/${cuotaExistente.id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    pagado: 1,
+                    fecha_pago: fechaPago,
+                    metodo_pago: 'importacion_csv'
+                  })
+                });
+              }
+            } else {
+              // Crear nueva cuota
+              await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  año,
+                  mes,
+                  valor: usuario.valor_cuota || 6500,
+                  pagado: 1,
+                  fecha_pago: fechaPago,
+                  metodo_pago: 'importacion_csv'
+                })
+              });
+            }
+          }
+
+          // Manejar próximo pago si existe
+          if (proximoPagoIndex !== -1) {
+            const proximoPago = row[proximoPagoIndex]?.trim();
+            if (proximoPago && /^\d{4}-\d{2}-\d{2}$/.test(proximoPago)) {
+              const fechaProxima = new Date(proximoPago);
+              const añoProximo = fechaProxima.getFullYear();
+              
+              // Si el próximo pago es en el futuro, crear cuotas futuras
+              if (añoProximo > currentYear) {
+                const mesesFuturos = Math.ceil((fechaProxima.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
+                
+                for (let m = 1; m <= Math.min(mesesFuturos, 12); m++) {
+                  const mesCrear = ((new Date().getMonth() + m) % 12) + 1;
+                  const añoCrear = new Date().getMonth() + m > 12 ? añoProximo : currentYear;
+                  
+                  const cuotaFutura = await fetch(
+                    `/api/admin/socios/${usuario.id}/cuotas?año=${añoCrear}`
+                  );
+                  const cuotaFuturaData = await cuotaFutura.json();
+                  
+                  const existe = cuotaFuturaData.cuotas?.find(
+                    (c: any) => c.año === añoCrear && c.mes === mesCrear
+                  );
+                  
+                  if (!existe) {
+                    await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        año: añoCrear,
+                        mes: mesCrear,
+                        valor: usuario.valor_cuota || 6500,
+                        pagado: 0,
+                        metodo_pago: null
+                      })
+                    });
+                  }
+                }
+              }
+            }
+          }
+
+          successCount++;
+        } catch (err) {
+          errorMessages.push(
+            `Fila ${i + 1} (${rut}): ${err instanceof Error ? err.message : 'Error desconocido'}`
+          );
+        }
+      }
+
+      setResults({
+        success: successCount,
+        errors: errorMessages,
+        total: rows.length - 1
+      });
+
+      if (successCount > 0) {
+        onImport();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al procesar el archivo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Upload className="h-6 w-6 text-blue-600" />
+              Importar Pagos desde CSV
+            </h3>
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h4 className="font-semibold text-blue-900 mb-2">Formato del CSV:</h4>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• <strong>rut</strong>: RUT del socio (ej: 12345678-9)</li>
+                <li>• <strong>enero-diciembre</strong>: "si" o fecha "YYYY-MM-DD" si pagó ese mes</li>
+                <li>• <strong>proximo_pago</strong>: Fecha del próximo pago esperado (YYYY-MM-DD)</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={generateTemplate}
+              className="w-full px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Descargar Plantilla CSV de Ejemplo
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Seleccionar archivo CSV
+            </label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              disabled={loading}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+            />
+            {file && (
+              <p className="mt-2 text-sm text-gray-600">
+                Archivo seleccionado: <span className="font-medium">{file.name}</span>
+              </p>
+            )}
+          </div>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
+          {results && (
+            <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h4 className="font-semibold text-gray-900 mb-2">Resultados de la Importación:</h4>
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-700">
+                  <strong>Total procesados:</strong> {results.total}
+                </p>
+                <p className="text-green-700">
+                  <strong>Exitosos:</strong> {results.success}
+                </p>
+                {results.errors.length > 0 && (
+                  <div>
+                    <p className="text-red-700 font-medium mb-1">
+                      Errores ({results.errors.length}):
+                    </p>
+                    <div className="max-h-40 overflow-y-auto bg-white rounded border border-red-200 p-2">
+                      {results.errors.map((err, idx) => (
+                        <p key={idx} className="text-xs text-red-600 mb-1">
+                          {err}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+            >
+              {results ? 'Cerrar' : 'Cancelar'}
+            </button>
+            {!results && (
+              <button
+                onClick={handleImport}
+                disabled={loading || !file}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Importar Pagos
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
