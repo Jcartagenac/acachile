@@ -10,7 +10,9 @@ import {
   XCircle,
   AlertCircle,
   User,
-  MapPin
+  MapPin,
+  Cake,
+  Instagram
 } from 'lucide-react';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
 import { roleUtils } from '@shared';
@@ -208,6 +210,19 @@ export default function PerfilSocio() {
                       <span>{socio.direccion}</span>
                     </div>
                   )}
+                  {socio.redSocial && (
+                    <div className="flex items-center gap-2">
+                      <Instagram className="h-4 w-4" />
+                      <a 
+                        href={socio.redSocial} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        Ver Instagram
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -215,7 +230,7 @@ export default function PerfilSocio() {
 
           {/* Información detallada */}
           <div className="px-8 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-gray-500 mb-1">RUT</p>
                 <p className="text-lg font-semibold text-gray-900">
@@ -240,6 +255,33 @@ export default function PerfilSocio() {
                     : 'No registrada'}
                 </p>
               </div>
+              {socio.fechaNacimiento && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1 flex items-center gap-2">
+                    <Cake className="h-4 w-4" />
+                    Fecha de Nacimiento
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {new Date(socio.fechaNacimiento).toLocaleDateString('es-CL', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              )}
+              {socio.comuna && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Comuna</p>
+                  <p className="text-lg font-semibold text-gray-900">{socio.comuna}</p>
+                </div>
+              )}
+              {socio.region && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Región</p>
+                  <p className="text-lg font-semibold text-gray-900">{socio.region}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
