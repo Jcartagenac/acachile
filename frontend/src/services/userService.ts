@@ -7,6 +7,7 @@ export interface PrivacyPreferences {
   showPhone: boolean;
   showRut: boolean;
   showAddress: boolean;
+  showRegionComuna: boolean;
   showBirthdate: boolean;
   showPublicProfile: boolean;
 }
@@ -423,6 +424,7 @@ class UserService {
           showPhone: Boolean(data?.showPhone),
           showRut: Boolean(data?.showRut),
           showAddress: Boolean(data?.showAddress),
+          showRegionComuna: Boolean(data?.showRegionComuna),
           showBirthdate: Boolean(data?.showBirthdate),
           showPublicProfile: data?.showPublicProfile === false ? false : true
         }
@@ -460,6 +462,7 @@ class UserService {
           showPhone: Boolean(data?.showPhone),
           showRut: Boolean(data?.showRut),
           showAddress: Boolean(data?.showAddress),
+          showRegionComuna: Boolean(data?.showRegionComuna),
           showBirthdate: Boolean(data?.showBirthdate),
           showPublicProfile: data?.showPublicProfile === false ? false : true
         },

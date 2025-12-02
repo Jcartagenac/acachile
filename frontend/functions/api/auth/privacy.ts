@@ -6,6 +6,7 @@ interface PrivacyRow {
   show_phone: number | null;
   show_rut: number | null;
   show_address: number | null;
+  show_region_comuna: number | null;
   show_birthdate: number | null;
   show_public_profile: number | null;
 }
@@ -15,6 +16,7 @@ const DEFAULT_PRIVACY: PrivacyRow = {
   show_phone: 0,
   show_rut: 0,
   show_address: 0,
+  show_region_comuna: 0,
   show_birthdate: 0,
   show_public_profile: 1
 };
@@ -66,6 +68,7 @@ const mapRowToResponse = (row: PrivacyRow | null | undefined) => {
     showPhone: toBoolean(source.show_phone),
     showRut: toBoolean(source.show_rut),
     showAddress: toBoolean(source.show_address),
+    showRegionComuna: toBoolean(source.show_region_comuna),
     showBirthdate: toBoolean(source.show_birthdate),
     showPublicProfile: source.show_public_profile === null || source.show_public_profile === undefined ? true : toBoolean(source.show_public_profile)
   };
@@ -92,12 +95,12 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     const selectQuery = hasPublicColumn
       ? `
-        SELECT show_email, show_phone, show_rut, show_address, show_birthdate, show_public_profile
+        SELECT show_email, show_phone, show_rut, show_address, show_region_comuna, show_birthdate, show_public_profile
         FROM user_privacy_settings
         WHERE user_id = ?
       `
       : `
-        SELECT show_email, show_phone, show_rut, show_address, show_birthdate, 1 AS show_public_profile
+        SELECT show_email, show_phone, show_rut, show_address, show_region_comuna, show_birthdate, 1 AS show_public_profile
         FROM user_privacy_settings
         WHERE user_id = ?
       `;
@@ -130,20 +133,22 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       return errorResponse('Base de datos no configurada', 500);
     }
 
-    const body = await request.json<{
+    const body = await request.json() as {
       showEmail?: boolean;
       showPhone?: boolean;
       showRut?: boolean;
       showAddress?: boolean;
+      showRegionComuna?: boolean;
       showBirthdate?: boolean;
       showPublicProfile?: boolean;
-    }>();
+    };
 
     const payload = {
       showEmail: Boolean(body.showEmail),
       showPhone: Boolean(body.showPhone),
       showRut: Boolean(body.showRut),
       showAddress: Boolean(body.showAddress),
+      showRegionComuna: Boolean(body.showRegionComuna),
       showBirthdate: Boolean(body.showBirthdate),
       showPublicProfile: body.showPublicProfile === undefined ? true : Boolean(body.showPublicProfile)
     };
@@ -159,25 +164,27 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     const upsertQuery = hasPublicColumn
       ? `
-        INSERT INTO user_privacy_settings (user_id, show_email, show_phone, show_rut, show_address, show_birthdate, show_public_profile, updated_at)
+        INSERT INTO user_privacy_settings (user_id, show_email, show_phone, show_rut, show_address, show_region_comuna, show_birthdate, show_public_profile, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id) DO UPDATE SET
+          show_email = excluded.show_email,
+          show_phone = excluded.show_phone,
+          show_rut = excluded.show_rut,
+          show_address = excluded.show_address,
+          show_region_comuna = excluded.show_region_comuna,
+          show_birthdate = excluded.show_birthdate,
+          show_public_profile = excluded.show_public_profile,
+          updated_at = CURRENT_TIMESTAMP
+      `
+      : `
+        INSERT INTO user_privacy_settings (user_id, show_email, show_phone, show_rut, show_address, show_region_comuna, show_birthdate, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(user_id) DO UPDATE SET
           show_email = excluded.show_email,
           show_phone = excluded.show_phone,
           show_rut = excluded.show_rut,
           show_address = excluded.show_address,
-          show_birthdate = excluded.show_birthdate,
-          show_public_profile = excluded.show_public_profile,
-          updated_at = CURRENT_TIMESTAMP
-      `
-      : `
-        INSERT INTO user_privacy_settings (user_id, show_email, show_phone, show_rut, show_address, show_birthdate, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(user_id) DO UPDATE SET
-          show_email = excluded.show_email,
-          show_phone = excluded.show_phone,
-          show_rut = excluded.show_rut,
-          show_address = excluded.show_address,
+          show_region_comuna = excluded.show_region_comuna,
           show_birthdate = excluded.show_birthdate,
           updated_at = CURRENT_TIMESTAMP
       `;
@@ -189,6 +196,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
           payload.showPhone ? 1 : 0,
           payload.showRut ? 1 : 0,
           payload.showAddress ? 1 : 0,
+          payload.showRegionComuna ? 1 : 0,
           payload.showBirthdate ? 1 : 0,
           payload.showPublicProfile ? 1 : 0
         ]
@@ -198,6 +206,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
           payload.showPhone ? 1 : 0,
           payload.showRut ? 1 : 0,
           payload.showAddress ? 1 : 0,
+          payload.showRegionComuna ? 1 : 0,
           payload.showBirthdate ? 1 : 0
         ];
 

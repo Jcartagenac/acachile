@@ -60,6 +60,7 @@ export const SettingsModule: React.FC = () => {
     showPhone: false,
     showRut: false,
     showAddress: false,
+    showRegionComuna: false,
     showBirthdate: false,
     showPublicProfile: true
   });
@@ -233,8 +234,14 @@ export const SettingsModule: React.FC = () => {
     },
     {
       key: 'showAddress',
-      label: 'Dirección y ciudad',
-      description: 'Muestra tu ciudad, región y dirección configurada en el perfil.',
+      label: 'Dirección',
+      description: 'Muestra tu dirección completa en tu perfil público.',
+      icon: MapPin
+    },
+    {
+      key: 'showRegionComuna',
+      label: 'Región y Comuna',
+      description: 'Comparte tu región y comuna con la comunidad.',
       icon: MapPin
     },
     {
