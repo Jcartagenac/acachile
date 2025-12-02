@@ -132,9 +132,11 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
       pick('telefono'),
       pick('rut'),
       pick('ciudad'),
+      pick('comuna'),
       pick('region'),
       pick('direccion'),
       pick('fecha_nacimiento'),
+      pick('red_social'),
       pick('fecha_ingreso'),
       pick('foto_url'),
       pick('role'),
@@ -192,11 +194,13 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
     const location = privacy.showAddress
       ? {
           city: sanitizeString(socioRow.ciudad),
+          comuna: sanitizeString(socioRow.comuna),
           region: sanitizeString(socioRow.region),
           address: sanitizeString(socioRow.direccion)
         }
       : {
           city: null,
+          comuna: null,
           region: null,
           address: null
         };
@@ -220,6 +224,7 @@ export const onRequestGet: PagesFunction = async ({ params, env }) => {
       location,
       rut: privacy.showRut ? sanitizeString(socioRow.rut) : null,
       birthdate: privacy.showBirthdate ? sanitizeString(socioRow.fecha_nacimiento) : null,
+      redSocial: sanitizeString(socioRow.red_social),
       privacy
     };
 

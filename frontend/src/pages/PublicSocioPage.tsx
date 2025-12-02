@@ -10,7 +10,8 @@ import {
   UserCircle,
   Home,
   Cake,
-  Fingerprint
+  Fingerprint,
+  Instagram
 } from 'lucide-react';
 
 interface PublicSocioResponse {
@@ -35,6 +36,7 @@ interface ContactInfo {
 
 interface LocationInfo {
   city: string | null;
+  comuna: string | null;
   region: string | null;
   address: string | null;
 }
@@ -53,6 +55,7 @@ interface PublicSocio {
   location: LocationInfo;
   rut: string | null;
   birthdate: string | null;
+  redSocial: string | null;
   privacy: PrivacyFlags;
 }
 
@@ -203,7 +206,7 @@ const PublicSocioPage: React.FC = () => {
   }
 
   const contactVisible = Boolean(socio?.contact?.email || socio?.contact?.phone);
-  const locationVisible = Boolean(socio?.location?.city || socio?.location?.region || socio?.location?.address);
+  const locationVisible = Boolean(socio?.location?.city || socio?.location?.comuna || socio?.location?.region || socio?.location?.address);
   const formattedJoinDate = formatDate(socio?.joinedAt ?? null);
   const formattedBirthdate = formatDate(socio?.birthdate ?? null);
 
@@ -295,11 +298,11 @@ const PublicSocioPage: React.FC = () => {
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ubicación y detalles</h2>
                 {locationVisible ? (
                   <ul className="space-y-3 text-sm text-gray-700">
-                    {(socio?.location?.city || socio?.location?.region) && (
+                    {(socio?.location?.city || socio?.location?.comuna || socio?.location?.region) && (
                       <li className="flex items-center gap-3">
                         <MapPin className="h-4 w-4 text-red-500" />
                         <span>
-                          {[socio?.location?.city, socio?.location?.region].filter(Boolean).join(', ')}
+                          {[socio?.location?.city, socio?.location?.comuna, socio?.location?.region].filter(Boolean).join(', ')}
                         </span>
                       </li>
                     )}
@@ -319,6 +322,19 @@ const PublicSocioPage: React.FC = () => {
                       <li className="flex items-center gap-3">
                         <Fingerprint className="h-4 w-4 text-red-500" />
                         <span>{socio.rut}</span>
+                      </li>
+                    )}
+                    {socio?.redSocial && (
+                      <li className="flex items-center gap-3">
+                        <Instagram className="h-4 w-4 text-red-500" />
+                        <a 
+                          href={socio.redSocial} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-red-600 transition-colors underline"
+                        >
+                          Ver Instagram
+                        </a>
                       </li>
                     )}
                   </ul>
