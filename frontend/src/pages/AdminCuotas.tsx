@@ -1685,10 +1685,7 @@ function ImportarPagosCSVModal({
               if (!cuotaExistente.pagado) {
                 const updateResponse = await fetch(`/api/admin/cuotas/${cuotaExistente.id}`, {
                   method: 'PUT',
-                  headers: {
-                    ...buildAuthHeaders(),
-                    'Content-Type': 'application/json'
-                  },
+                  headers: buildAuthHeaders(undefined, 'application/json'),
                   body: JSON.stringify({
                     pagado: true,
                     fechaPago: fechaPago,
@@ -1704,10 +1701,7 @@ function ImportarPagosCSVModal({
               // Crear nueva cuota (primero crear, luego marcar como pagada)
               const createResponse = await fetch(`/api/admin/cuotas`, {
                 method: 'POST',
-                headers: {
-                  ...buildAuthHeaders(),
-                  'Content-Type': 'application/json'
-                },
+                headers: buildAuthHeaders(undefined, 'application/json'),
                 body: JSON.stringify({
                   usuarioId: usuario.id,
                   año,
@@ -1724,10 +1718,7 @@ function ImportarPagosCSVModal({
                 if (nuevaCuotaId) {
                   const updateResponse = await fetch(`/api/admin/cuotas/${nuevaCuotaId}`, {
                     method: 'PUT',
-                    headers: {
-                      ...buildAuthHeaders(),
-                      'Content-Type': 'application/json'
-                    },
+                    headers: buildAuthHeaders(undefined, 'application/json'),
                     body: JSON.stringify({
                       pagado: 1,
                       fechaPago: fechaPago,
@@ -1778,10 +1769,7 @@ function ImportarPagosCSVModal({
                   if (!existe) {
                     await fetch(`/api/admin/cuotas`, {
                       method: 'POST',
-                      headers: {
-                        ...buildAuthHeaders(),
-                        'Content-Type': 'application/json'
-                      },
+                      headers: buildAuthHeaders(undefined, 'application/json'),
                       body: JSON.stringify({
                         usuarioId: usuario.id,
                         año: añoCrear,
