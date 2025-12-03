@@ -102,6 +102,19 @@ export default function AdminCuotas() {
 
     return sociosList.map(socio => {
       const cuotasSocio = cuotasList.filter(c => c.usuarioId === socio.id);
+      
+      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro (RUT: 12679495-9)
+      if (socio.rut === '12679495-9') {
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Socio encontrado:', {
+          id: socio.id,
+          nombre: socio.nombreCompleto,
+          rut: socio.rut
+        });
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Total cuotas en la lista general:', cuotasList.length);
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Cuotas filtradas para este socio:', cuotasSocio.length);
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Detalle cuotas del socio:', cuotasSocio);
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Año seleccionado en el filtro:', añoSeleccionado);
+      }
 
       // Calcular cuotas vencidas (pasado el día 5 del mes)
       const cuotasVencidas = cuotasSocio.filter(c => {
@@ -137,6 +150,19 @@ export default function AdminCuotas() {
       let estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos' = 'sin-pagos';
       if (mesesPagados > 0 || cuotasVencidasSinPagar === 0) {
         estadoPago = cuotasVencidasSinPagar === 0 ? 'al-dia' : 'atrasado';
+      }
+      
+      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro (RUT: 12679495-9)
+      if (socio.rut === '12679495-9') {
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Estadísticas calculadas:', {
+          mesesPagados,
+          mesesAtrasados: cuotasVencidasSinPagar,
+          cuotasVencidas: totalCuotasVencidas,
+          cuotasPagadasVencidas,
+          mesesPagadosUltimoAño,
+          ultimoPago,
+          estadoPago
+        });
       }
 
       return {

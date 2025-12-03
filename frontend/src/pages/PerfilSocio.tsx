@@ -63,11 +63,33 @@ export default function PerfilSocio() {
       // Cargar cuotas del último año
       const añoActual = new Date().getFullYear();
       console.log('[PerfilSocio] Loading cuotas for year:', añoActual);
+      
+      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro (RUT: 12679495-9)
+      if (socioResponse.data.rut === '12679495-9') {
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Usuario ID:', socioId);
+        console.log('🔍 [DEBUG JUAN ACEVEDO] RUT:', socioResponse.data.rut);
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Año a consultar:', añoActual);
+      }
+      
       const cuotasResponse = await sociosService.getCuotas({ 
         año: añoActual,
         socioId: socioId
       });
       console.log('[PerfilSocio] Cuotas response:', cuotasResponse);
+      
+      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro
+      if (socioResponse.data.rut === '12679495-9') {
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Cuotas recibidas:', cuotasResponse.data?.cuotas);
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Cantidad de cuotas:', cuotasResponse.data?.cuotas?.length || 0);
+        if (cuotasResponse.data?.cuotas) {
+          const cuotasPagadas = cuotasResponse.data.cuotas.filter(c => c.pagado);
+          console.log('🔍 [DEBUG JUAN ACEVEDO] Cuotas PAGADAS:', cuotasPagadas);
+          console.log('🔍 [DEBUG JUAN ACEVEDO] Total cuotas pagadas:', cuotasPagadas.length);
+          cuotasResponse.data.cuotas.forEach(c => {
+            console.log(`🔍 [DEBUG JUAN ACEVEDO] Mes ${c.mes}/${c.año}: pagado=${c.pagado}, valor=${c.valor}`);
+          });
+        }
+      }
 
       if (cuotasResponse.success && cuotasResponse.data) {
         setCuotas(cuotasResponse.data.cuotas || []);
