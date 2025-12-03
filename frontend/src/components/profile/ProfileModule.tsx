@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserProfile } from '../../services/userService';
 import { useUserService } from '../../hooks/useUserService';
 import { useImageService } from '../../hooks/useImageService';
-import { normalizeRut, normalizePhone, formatRut, formatPhone } from '@shared/utils/validators';
+import { normalizeRut, normalizePhone, formatPhone } from '@shared/utils/validators';
 import { AddressInput } from '../ui/AddressInput';
 import {
   User,
@@ -21,26 +21,6 @@ import {
   AlertCircle,
   Instagram
 } from 'lucide-react';
-
-/**
- * Formatea un RUT chileno al formato XX.XXX.XXX-X
- */
-const formatRUT = (rut: string): string => {
-  // Eliminar puntos, guiones y espacios
-  const cleanRUT = rut.replace(/[.\-\s]/g, '');
-  
-  // Si está vacío, retornar vacío
-  if (!cleanRUT) return '';
-  
-  // Extraer cuerpo y dígito verificador
-  const body = cleanRUT.slice(0, -1);
-  const dv = cleanRUT.slice(-1).toUpperCase();
-  
-  // Formatear el cuerpo con puntos
-  const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  
-  return `${formattedBody}-${dv}`;
-};
 
 /**
  * Limpia un valor de formulario: convierte strings vacíos en null
@@ -315,30 +295,36 @@ export const ProfileModule: React.FC = () => {
       setValidationErrors(prev => ({ ...prev, rut: '' }));
     }
 
-    // Permitir números, K/k, puntos y guiones
-    const allowedChars = value.replace(/[^0-9kK.\-]/g, '');
-    console.log('🔤 Profile RUT allowed chars:', `"${allowedChars}"`);
+    // Remover puntos automáticamente - solo permitir números, K/k y guiones
+    const cleanedValue = value.replace(/\./g, '').replace(/[^0-9kK\-]/g, '');
+    console.log('🔤 Profile RUT cleaned (no dots):', `"${cleanedValue}"`);
 
-    // Formatear en tiempo real mientras escribe (sin validar)
-    let formattedValue = allowedChars;
-    if (allowedChars.trim()) {
+    // Normalizar en tiempo real al formato 12345678-9 (sin puntos)
+    let normalizedValue = cleanedValue;
+    if (cleanedValue.trim()) {
       try {
-        formattedValue = formatRut(allowedChars);
-        console.log('📝 Profile RUT formatted:', `"${formattedValue}"`);
+        // Remover guiones existentes para limpiar
+        const withoutDash = cleanedValue.replace(/\-/g, '');
+        if (withoutDash.length > 1) {
+          // Agregar guión antes del último dígito
+          const body = withoutDash.slice(0, -1);
+          const dv = withoutDash.slice(-1).toUpperCase();
+          normalizedValue = `${body}-${dv}`;
+        }
+        console.log('📝 Profile RUT normalized:', `"${normalizedValue}"`);
       } catch (err) {
-        console.error('❌ Error formatting RUT live:', err);
-        // Si hay error, mantener el valor limpio
-        formattedValue = allowedChars;
+        console.error('❌ Error normalizing RUT live:', err);
+        normalizedValue = cleanedValue;
       }
     }
 
-    console.log('💾 Profile RUT final value:', `"${formattedValue}"`);
-    setFormData({ ...formData, rut: formattedValue });
+    console.log('💾 Profile RUT final value:', `"${normalizedValue}"`);
+    setFormData({ ...formData, rut: normalizedValue });
 
     // Mantener el foco en el input después de actualizar el estado
     setTimeout(() => {
       const input = e.target as HTMLInputElement;
-      const len = formattedValue.length;
+      const len = normalizedValue.length;
       input.setSelectionRange(len, len);
     }, 0);
   };
@@ -718,7 +704,7 @@ export const ProfileModule: React.FC = () => {
               {/* RUT */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  RUT
+                  RUT (sin puntos)
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -733,12 +719,17 @@ export const ProfileModule: React.FC = () => {
                         ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm'
                         : 'cursor-not-allowed opacity-75'
                     } ${validationErrors.rut ? 'border-red-500' : 'border-white/30'}`}
-                    placeholder="12.345.678-9"
+                    placeholder="12345678-9"
                   />
                   {validationErrors.rut && (
                     <p className="mt-1 text-sm text-red-600">{validationErrors.rut}</p>
                   )}
                 </div>
+                {isEditing && (
+                  <p className="mt-1 text-xs text-neutral-500">
+                    ⚠️ Importante: Ingresa tu RUT sin puntos, solo con guión (ej: 12345678-9)
+                  </p>
+                )}
               </div>
 
               {/* Región */}
