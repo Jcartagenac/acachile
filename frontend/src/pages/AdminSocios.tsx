@@ -55,6 +55,30 @@ export default function AdminSocios() {
   const isCreateRoute = location.pathname.endsWith('/createuser');
   const isEditRoute = location.pathname.endsWith('/edituser');
 
+  // Definir loadSocios antes de usarlo en useEffect
+  const loadSocios = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await sociosService.getSocios({
+        search: searchTerm || undefined,
+        estado: estadoFilter || undefined,
+        limit: 10000, // Cargar todos los socios (límite alto para evitar paginación del servidor)
+      });
+
+      if (response.success && response.data) {
+        setSocios(response.data.socios);
+        setCurrentPage(1); // Reset a primera página al recargar
+      } else {
+        setError(response.error || 'Error al cargar socios');
+      }
+    } catch (err) {
+      setError('Error al cargar socios');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, estadoFilter]);
+
   // Debounce para búsqueda: espera 500ms después del último carácter
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -187,29 +211,6 @@ export default function AdminSocios() {
       cancelled = true;
     };
   }, [isEditRoute, socioId, socios, closeEditModal]);
-
-  const loadSocios = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await sociosService.getSocios({
-        search: searchTerm || undefined,
-        estado: estadoFilter || undefined,
-        limit: 10000, // Cargar todos los socios (límite alto para evitar paginación del servidor)
-      });
-
-      if (response.success && response.data) {
-        setSocios(response.data.socios);
-        setCurrentPage(1); // Reset a primera página al recargar
-      } else {
-        setError(response.error || 'Error al cargar socios');
-      }
-    } catch (err) {
-      setError('Error al cargar socios');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchTerm, estadoFilter]);
 
   // Calcular paginación
   const totalPages = Math.ceil(socios.length / itemsPerPage);
