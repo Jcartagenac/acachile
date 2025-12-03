@@ -267,11 +267,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   Únete a ACA
                 </a>
               </p>
-              <div>
+              <div className="pt-2">
                 <Link
                   to="/forgot-password"
                   onClick={onClose}
-                  className="font-medium text-slate-500 transition hover:text-slate-700"
+                  className="inline-flex items-center justify-center w-full px-6 py-3 text-base font-semibold text-primary-600 bg-primary-50 border-2 border-primary-200 rounded-xl shadow-soft-sm hover:bg-primary-100 hover:border-primary-300 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
