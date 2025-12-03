@@ -91,9 +91,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // Verificar autenticación
     let authUser;
     try {
+      console.log('[AUTH/CHANGE-PASSWORD] Attempting to verify auth...');
       authUser = await requireAuth(request, env);
+      console.log('[AUTH/CHANGE-PASSWORD] Auth successful, userId:', authUser.userId);
     } catch (error) {
-      console.log('[AUTH/CHANGE-PASSWORD] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('[AUTH/CHANGE-PASSWORD] Authentication failed:', error instanceof Error ? error.message : 'Unknown error');
       return errorResponse('Autenticación requerida', 401);
     }
 
