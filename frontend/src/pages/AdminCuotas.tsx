@@ -1452,38 +1452,54 @@ function ImportarPagosCSVModal({
   } | null>(null);
 
   const generateTemplate = () => {
-    const headers = [
-      'rut',
-      'enero',
-      'febrero',
-      'marzo',
-      'abril',
-      'mayo',
-      'junio',
-      'julio',
-      'agosto',
-      'septiembre',
-      'octubre',
-      'noviembre',
-      'diciembre',
-      'proximo_pago'
+    const currentYear = new Date().getFullYear();
+    const monthNames = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
     
-    const exampleRows = [
-      ['12345678-9', 'si', 'si', '', '', '', '', '', '', '', '', '', '', '2025-03-05'],
-      ['98765432-1', '2025-01-15', '2025-02-10', 'si', '', '', '', '', '', '', '', '', '', '2025-04-05'],
-      ['11111111-1', '', '', '', '', '', '', '', '', '', '', '', '', '2025-01-05']
-    ];
+    // Generar headers para 36 meses (año actual + 2 años completos)
+    const headers = ['rut'];
+    for (let year = currentYear; year <= currentYear + 2; year++) {
+      for (const month of monthNames) {
+        headers.push(`${month}_${year}`);
+      }
+    }
+    headers.push('proximo_pago');
+    
+    // Ejemplos con el nuevo formato
+    const exampleRow1 = ['12345678-9'];
+    for (let i = 0; i < 36; i++) {
+      exampleRow1.push(i < 2 ? 'si' : ''); // Solo primeros 2 meses pagados
+    }
+    exampleRow1.push(`${currentYear}-03-05`);
+    
+    const exampleRow2 = ['98765432-1'];
+    for (let i = 0; i < 36; i++) {
+      if (i === 0) exampleRow2.push(`${currentYear}-01-15`);
+      else if (i === 1) exampleRow2.push(`${currentYear}-02-10`);
+      else if (i === 2) exampleRow2.push('si');
+      else exampleRow2.push('');
+    }
+    exampleRow2.push(`${currentYear}-04-05`);
+    
+    const exampleRow3 = ['11111111-1'];
+    for (let i = 0; i < 36; i++) {
+      exampleRow3.push('');
+    }
+    exampleRow3.push(`${currentYear}-01-05`);
 
     const csvContent = [
       headers.join(','),
-      ...exampleRows.map(row => row.join(','))
+      exampleRow1.join(','),
+      exampleRow2.join(','),
+      exampleRow3.join(',')
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `plantilla_pagos_${new Date().getFullYear()}.csv`;
+    link.download = `plantilla_pagos_${currentYear}_${currentYear + 2}.csv`;
     link.click();
   };
 
@@ -1559,11 +1575,23 @@ function ImportarPagosCSVModal({
         'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
       ];
       
-      const mesesIndices = meses.map(mes => headers.indexOf(mes));
+      // Construir mapa de columnas mes_año → índice de columna
+      const mesAñoMap: { [key: string]: number } = {};
+      const currentYear = new Date().getFullYear();
+      
+      // Buscar todas las columnas que tengan formato mes_año
+      for (let colIdx = 0; colIdx < headers.length; colIdx++) {
+        const header = headers[colIdx];
+        const match = header.match(/^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)_(\d{4})$/);
+        if (match) {
+          const mes = match[1];
+          const año = match[2];
+          mesAñoMap[`${mes}_${año}`] = colIdx;
+        }
+      }
 
       let successCount = 0;
       const errorMessages: string[] = [];
-      const currentYear = new Date().getFullYear();
 
       // Procesar cada fila (excepto headers)
       for (let i = 1; i < rows.length; i++) {
@@ -1590,30 +1618,31 @@ function ImportarPagosCSVModal({
             continue;
           }
 
-          // Procesar cada mes
-          for (let mesIdx = 0; mesIdx < 12; mesIdx++) {
-            const colIdx = mesesIndices[mesIdx];
-            if (colIdx === -1 || colIdx === undefined) continue;
-
+          // Procesar cada columna mes_año encontrada
+          for (const [mesAñoKey, colIdx] of Object.entries(mesAñoMap)) {
             const valor = row[colIdx]?.trim().toLowerCase();
             if (!valor || valor === '') continue;
 
             let fechaPago = '';
             let shouldPay = false;
 
+            // Extraer mes y año del header
+            const [mesNombre, añoStr] = mesAñoKey.split('_');
+            const año = parseInt(añoStr, 10);
+            const mesIdx = meses.indexOf(mesNombre);
+            if (mesIdx === -1) continue;
+            const mes = mesIdx + 1;
+
             // Determinar si es fecha o "si"
             if (valor === 'si') {
               shouldPay = true;
-              fechaPago = `${currentYear}-${String(mesIdx + 1).padStart(2, '0')}-01`;
+              fechaPago = `${año}-${String(mes).padStart(2, '0')}-01`;
             } else if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
               shouldPay = true;
               fechaPago = valor;
             }
 
             if (!shouldPay) continue;
-
-            const año = new Date(fechaPago).getFullYear();
-            const mes = mesIdx + 1;
 
             // Verificar si ya existe la cuota
             const cuotasResponse = await fetch(
