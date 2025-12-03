@@ -8,7 +8,7 @@ const copyHeadersPlugin = () => ({
   name: 'copy-headers',
   closeBundle() {
     try {
-      copyFileSync('_headers', 'dist/_headers')
+      copyFileSync(path.resolve(__dirname, '_headers'), path.resolve(__dirname, 'dist/_headers'))
       console.log('✓ Copied _headers to dist/')
     } catch (error) {
       console.warn('Warning: Could not copy _headers file:', error)

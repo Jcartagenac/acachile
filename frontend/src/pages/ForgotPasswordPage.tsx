@@ -51,8 +51,6 @@ const ForgotPasswordPage: React.FC = () => {
 
   const rut = watch('rut');
 
-  const rut = watch('rut');
-
   // Normalizar RUT mientras el usuario escribe
   const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
