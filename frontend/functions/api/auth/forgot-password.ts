@@ -67,36 +67,29 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Parsear body
-    const body = await request.json() as { rut: string; email: string };
-    const { rut, email } = body;
+    const body = await request.json() as { rut: string };
+    const { rut } = body;
 
     // Validaciones
-    if (!rut || !email) {
-      console.log('[AUTH/FORGOT-PASSWORD] Missing RUT or email');
-      return errorResponse('RUT y email son requeridos');
-    }
-
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      console.log('[AUTH/FORGOT-PASSWORD] Invalid email format:', email);
-      return errorResponse('Formato de email inválido');
+    if (!rut) {
+      console.log('[AUTH/FORGOT-PASSWORD] Missing RUT');
+      return errorResponse('RUT es requerido');
     }
 
     console.log('[AUTH/FORGOT-PASSWORD] Processing request for RUT:', rut);
 
-    // Buscar usuario por RUT y email (ambos deben coincidir)
+    // Buscar usuario por RUT
     const user = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, rut FROM usuarios 
-      WHERE rut = ? AND email = ? AND activo = 1
-    `).bind(rut.trim(), email.toLowerCase()).first();
+      WHERE rut = ? AND activo = 1
+    `).bind(rut.trim()).first();
 
     // Por seguridad, siempre devolvemos el mismo mensaje
-    const successMessage = 'Si el RUT y email coinciden con una cuenta activa, recibirás un enlace para restablecer tu contraseña';
+    const successMessage = 'Si el RUT está asociado a una cuenta activa, recibirás un enlace para restablecer tu contraseña';
 
     if (!user) {
-      console.log('[AUTH/FORGOT-PASSWORD] User not found or RUT/email mismatch - RUT:', rut, 'Email:', email);
-      // Por seguridad, no revelamos que el usuario no existe o que los datos no coinciden
+      console.log('[AUTH/FORGOT-PASSWORD] User not found - RUT:', rut);
+      // Por seguridad, no revelamos que el usuario no existe
       return jsonResponse({
         success: true,
         message: successMessage
@@ -162,7 +155,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     });
 
     if (!emailSent) {
-      console.error('[AUTH/FORGOT-PASSWORD] Failed to send email to:', email);
+      console.error('[AUTH/FORGOT-PASSWORD] Failed to send email to:', user.email);
       console.error('[AUTH/FORGOT-PASSWORD] Reset token (email failed):', resetToken);
       
       // En desarrollo, devolver el token si falla el email
@@ -184,7 +177,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
-    console.log('[AUTH/FORGOT-PASSWORD] Reset email sent successfully to:', email);
+    console.log('[AUTH/FORGOT-PASSWORD] Reset email sent successfully to:', user.email);
 
     // En desarrollo, incluir el token en la respuesta
     const response: any = {

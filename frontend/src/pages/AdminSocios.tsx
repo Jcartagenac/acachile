@@ -55,9 +55,14 @@ export default function AdminSocios() {
   const isCreateRoute = location.pathname.endsWith('/createuser');
   const isEditRoute = location.pathname.endsWith('/edituser');
 
+  // Debounce para búsqueda: espera 500ms después del último carácter
   useEffect(() => {
-    loadSocios();
-  }, [searchTerm, estadoFilter]);
+    const timer = setTimeout(() => {
+      loadSocios();
+    }, 500); // 500ms de delay para dar tiempo al usuario de escribir
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, estadoFilter, loadSocios]);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,7 +188,7 @@ export default function AdminSocios() {
     };
   }, [isEditRoute, socioId, socios, closeEditModal]);
 
-  const loadSocios = async () => {
+  const loadSocios = useCallback(async () => {
     try {
       setLoading(true);
       const response = await sociosService.getSocios({
@@ -204,7 +209,7 @@ export default function AdminSocios() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, estadoFilter]);
 
   // Calcular paginación
   const totalPages = Math.ceil(socios.length / itemsPerPage);

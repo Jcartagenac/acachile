@@ -11,46 +11,102 @@ const forgotPasswordSchema = z.object({
     .string()
     .min(1, 'El RUT es requerido')
     .regex(/^[0-9]+[-]?[0-9kK]{1}$/, 'RUT inválido (formato: 12345678-9)'),
-  email: z.string().email('Email inválido').min(1, 'Email es requerido'),
 });
 
 type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
+
+// Función para normalizar RUT
+const normalizeRut = (rut: string): string => {
+  // Remover puntos, espacios y guiones
+  const cleaned = rut.replace(/[.\s-]/g, '');
+  
+  // Si está vacío, retornar
+  if (!cleaned) return '';
+  
+  // Separar cuerpo y dígito verificador
+  const body = cleaned.slice(0, -1);
+  const dv = cleaned.slice(-1).toUpperCase();
+  
+  // Retornar en formato 12345678-9
+  return `${body}-${dv}`;
+};
 
 const ForgotPasswordPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [resetToken, setResetToken] = useState(''); // Para desarrollo
+  const [userEmail, setUserEmail] = useState(''); // Email del usuario encontrado
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    watch,
+    setValue
   } = useForm<ForgotPasswordData>({
     resolver: zodResolver(forgotPasswordSchema)
   });
 
   const rut = watch('rut');
-  const email = watch('email');
 
-  const onSubmit = async (data: ForgotPasswordData) => {
+  const rut = watch('rut');
+
+  // Normalizar RUT mientras el usuario escribe
+  const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const normalized = normalizeRut(value);
+    setValue('rut', normalized);
+  };
+
+  // Buscar usuario por RUT
+  const handleFindUser = async (data: ForgotPasswordData) => {
     setIsLoading(true);
     setError('');
 
     try {
-      // Usar la URL base correcta (sin VITE_API_URL)
-      const apiUrl = '/api/auth/forgot-password';
-      
-      const response = await fetch(apiUrl, {
+      // Buscar usuario por RUT
+      const response = await fetch(`/api/auth/find-user-by-rut`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ rut: data.rut }),
       });
 
-      // Verificar si la respuesta es JSON antes de parsear
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'No se encontró un usuario con ese RUT');
+      }
+
+      // Mostrar email y confirmación
+      setUserEmail(result.data.email);
+      setShowConfirmation(true);
+
+    } catch (err: any) {
+      console.error('Error buscando usuario:', err);
+      setError(err.message || 'Error de conexión');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Enviar email de recuperación
+  const handleSendReset = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rut }),
+      });
+
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('La respuesta del servidor no es JSON. Por favor, contacta al administrador.');
@@ -77,6 +133,8 @@ const ForgotPasswordPage: React.FC = () => {
     }
   };
 
+  const onSubmit = showConfirmation ? handleSendReset : handleFindUser;
+
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -87,8 +145,8 @@ const ForgotPasswordPage: React.FC = () => {
               Revisa tu Email
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Si existe una cuenta con el RUT <strong>{rut}</strong> y el email <strong>{email}</strong> coinciden, 
-              recibirás un enlace para restablecer tu contraseña.
+              Se ha enviado un enlace de recuperación al email <strong>{userEmail}</strong> asociado 
+              al RUT <strong>{rut}</strong>.
             </p>
           </div>
 
@@ -162,57 +220,80 @@ const ForgotPasswordPage: React.FC = () => {
             </div>
           )}
 
-          <div>
-            <label htmlFor="rut" className="sr-only">
-              RUT
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Fingerprint className="h-5 w-5 text-gray-400" />
+          {!showConfirmation ? (
+            <>
+              <div>
+                <label htmlFor="rut" className="sr-only">
+                  RUT
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Fingerprint className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    {...register('rut')}
+                    type="text"
+                    autoComplete="username"
+                    onChange={handleRutChange}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200"
+                    placeholder="Tu RUT (12345678-9)"
+                  />
+                </div>
+                {errors.rut && (
+                  <p className="mt-2 text-sm text-red-600">{errors.rut.message}</p>
+                )}
               </div>
-              <input
-                {...register('rut')}
-                type="text"
-                autoComplete="username"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200"
-                placeholder="Tu RUT (12345678-9)"
-              />
-            </div>
-            {errors.rut && (
-              <p className="mt-2 text-sm text-red-600">{errors.rut.message}</p>
-            )}
-          </div>
 
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isLoading ? 'Buscando...' : 'Buscar cuenta'}
+                </button>
               </div>
-              <input
-                {...register('email')}
-                type="email"
-                autoComplete="email"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-200"
-                placeholder="Confirma tu email"
-              />
-            </div>
-            {errors.email && (
-              <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
-            )}
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
+                <div className="flex">
+                  <AlertCircle className="h-5 w-5 text-blue-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Confirmación
+                    </h3>
+                    <p className="mt-2 text-sm text-blue-700">
+                      Se enviará un enlace de recuperación al email:
+                    </p>
+                    <p className="mt-1 text-base font-semibold text-blue-900">
+                      {userEmail}
+                    </p>
+                    <p className="mt-2 text-xs text-blue-600">
+                      asociado al RUT: <strong>{rut}</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              {isLoading ? 'Enviando...' : 'Enviar enlace de recuperación'}
-            </button>
-          </div>
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmation(false)}
+                  className="flex-1 py-3 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isLoading ? 'Enviando...' : 'Confirmar y enviar'}
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="text-center">
             <Link
