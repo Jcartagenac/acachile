@@ -1449,6 +1449,8 @@ function ImportarPagosCSVModal({
     success: number;
     errors: string[];
     total: number;
+    cuotasCreadas?: number;
+    cuotasActualizadas?: number;
   } | null>(null);
 
   const generateTemplate = () => {
@@ -1590,7 +1592,13 @@ function ImportarPagosCSVModal({
         }
       }
 
+      console.log('[CSV IMPORT] Headers:', headers);
+      console.log('[CSV IMPORT] Mapa mes_año encontrado:', mesAñoMap);
+      console.log('[CSV IMPORT] Total columnas mes_año:', Object.keys(mesAñoMap).length);
+
       let successCount = 0;
+      let cuotasCreadas = 0;
+      let cuotasActualizadas = 0;
       const errorMessages: string[] = [];
 
       // Procesar cada fila (excepto headers)
@@ -1620,10 +1628,16 @@ function ImportarPagosCSVModal({
             continue;
           }
 
+          let cuotasProcesadasUsuario = 0;
+
+          console.log(`[CSV IMPORT] Procesando usuario RUT: ${rut}, ID: ${usuario.id}`);
+
           // Procesar cada columna mes_año encontrada
           for (const [mesAñoKey, colIdx] of Object.entries(mesAñoMap)) {
             const valor = row[colIdx]?.trim().toLowerCase();
             if (!valor || valor === '') continue;
+
+            console.log(`[CSV IMPORT] ${rut} - Columna ${mesAñoKey}: valor="${valor}"`);
 
             let fechaPago = '';
             let shouldPay = false;
@@ -1643,6 +1657,8 @@ function ImportarPagosCSVModal({
               shouldPay = true;
               fechaPago = valor;
             }
+
+            console.log(`[CSV IMPORT] ${rut} - ${mesAñoKey}: shouldPay=${shouldPay}, fechaPago=${fechaPago}`);
 
             if (!shouldPay) continue;
 
@@ -1667,7 +1683,7 @@ function ImportarPagosCSVModal({
             if (cuotaExistente) {
               // Actualizar si no está pagada
               if (!cuotaExistente.pagado) {
-                await fetch(`/api/admin/socios/${usuario.id}/cuotas/${cuotaExistente.id}`, {
+                const updateResponse = await fetch(`/api/admin/socios/${usuario.id}/cuotas/${cuotaExistente.id}`, {
                   method: 'PUT',
                   headers: {
                     ...buildAuthHeaders(),
@@ -1679,10 +1695,14 @@ function ImportarPagosCSVModal({
                     metodo_pago: 'importacion_csv'
                   })
                 });
+                if (updateResponse.ok) {
+                  cuotasActualizadas++;
+                  cuotasProcesadasUsuario++;
+                }
               }
             } else {
               // Crear nueva cuota
-              await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
+              const createResponse = await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
                 method: 'POST',
                 headers: {
                   ...buildAuthHeaders(),
@@ -1691,13 +1711,21 @@ function ImportarPagosCSVModal({
                 body: JSON.stringify({
                   año,
                   mes,
-                  valor: usuario.valor_cuota || 6500,
+                  valor: usuario.valorCuota || 6500,
                   pagado: 1,
                   fecha_pago: fechaPago,
                   metodo_pago: 'importacion_csv'
                 })
               });
+              if (createResponse.ok) {
+                cuotasCreadas++;
+                cuotasProcesadasUsuario++;
+              }
             }
+          }
+
+          if (cuotasProcesadasUsuario > 0) {
+            successCount++;
           }
 
           // Manejar próximo pago si existe
@@ -1747,8 +1775,6 @@ function ImportarPagosCSVModal({
               }
             }
           }
-
-          successCount++;
         } catch (err) {
           errorMessages.push(
             `Fila ${i + 1} (${rut}): ${err instanceof Error ? err.message : 'Error desconocido'}`
@@ -1759,10 +1785,12 @@ function ImportarPagosCSVModal({
       setResults({
         success: successCount,
         errors: errorMessages,
-        total: rows.length - 1
+        total: rows.length - 1,
+        cuotasCreadas,
+        cuotasActualizadas
       });
 
-      if (successCount > 0) {
+      if (cuotasCreadas > 0 || cuotasActualizadas > 0) {
         onImport();
       }
     } catch (err) {
@@ -1839,10 +1867,16 @@ function ImportarPagosCSVModal({
               <h4 className="font-semibold text-gray-900 mb-2">Resultados de la Importación:</h4>
               <div className="space-y-2 text-sm">
                 <p className="text-gray-700">
-                  <strong>Total procesados:</strong> {results.total}
+                  <strong>Total filas procesadas:</strong> {results.total}
                 </p>
                 <p className="text-green-700">
-                  <strong>Exitosos:</strong> {results.success}
+                  <strong>Usuarios con cuotas procesadas:</strong> {results.success}
+                </p>
+                <p className="text-blue-700">
+                  <strong>Cuotas creadas:</strong> {results.cuotasCreadas || 0}
+                </p>
+                <p className="text-blue-700">
+                  <strong>Cuotas actualizadas:</strong> {results.cuotasActualizadas || 0}
                 </p>
                 {results.errors.length > 0 && (
                   <div>
