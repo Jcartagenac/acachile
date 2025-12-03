@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { LoginForm } from './LoginForm';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -30,8 +32,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSuccess = () => {
     onClose();
-    // Redirigir al usuario a eventos después del login exitoso
-    navigate('/eventos');
+    // Redirigir según el rol del usuario
+    // Administradores van al panel admin, usuarios normales a su perfil
+    const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('director') || user?.roles?.includes('director_editor');
+    navigate(isAdmin ? '/panel-admin' : '/perfil');
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {

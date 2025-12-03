@@ -5,17 +5,21 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   // Redireccionar si ya está autenticado
   React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/eventos');
+    if (isAuthenticated && user) {
+      // Redirigir según el rol del usuario
+      const isAdmin = user.roles?.includes('admin') || user.roles?.includes('director') || user.roles?.includes('director_editor');
+      navigate(isAdmin ? '/panel-admin' : '/perfil');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSuccess = () => {
-    navigate('/eventos');
+    // Redirigir según el rol del usuario
+    const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('director') || user?.roles?.includes('director_editor');
+    navigate(isAdmin ? '/panel-admin' : '/perfil');
   };
 
   if (isAuthenticated) {
