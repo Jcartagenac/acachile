@@ -1606,14 +1606,14 @@ function ImportarPagosCSVModal({
         }
 
         try {
-          // Obtener usuario por RUT
-          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rut)}`, {
+          // Obtener usuario por RUT (búsqueda exacta con límite alto)
+          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rut)}&limit=1000`, {
             headers: buildAuthHeaders()
           });
           if (!response.ok) throw new Error('Error al buscar usuario');
           
-          const data = await response.json();
-          const usuario = data.socios?.find((s: any) => s.rut === rut);
+          const result = await response.json();
+          const usuario = result.data?.socios?.find((s: any) => s.rut === rut);
           
           if (!usuario) {
             errorMessages.push(`Fila ${i + 1}: Usuario con RUT ${rut} no encontrado`);
