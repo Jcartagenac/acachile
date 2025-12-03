@@ -1664,7 +1664,7 @@ function ImportarPagosCSVModal({
 
             // Verificar si ya existe la cuota
             const cuotasResponse = await fetch(
-              `/api/admin/socios/${usuario.id}/cuotas?año=${año}`,
+              `/api/admin/cuotas?usuarioId=${usuario.id}&año=${año}`,
               {
                 headers: buildAuthHeaders()
               }
@@ -1676,23 +1676,23 @@ function ImportarPagosCSVModal({
             }
 
             const cuotasData = await cuotasResponse.json();
-            const cuotaExistente = cuotasData.cuotas?.find(
+            const cuotaExistente = cuotasData.data?.cuotas?.find(
               (c: any) => c.año === año && c.mes === mes
             );
 
             if (cuotaExistente) {
               // Actualizar si no está pagada
               if (!cuotaExistente.pagado) {
-                const updateResponse = await fetch(`/api/admin/socios/${usuario.id}/cuotas/${cuotaExistente.id}`, {
+                const updateResponse = await fetch(`/api/admin/cuotas/${cuotaExistente.id}`, {
                   method: 'PUT',
                   headers: {
                     ...buildAuthHeaders(),
                     'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                    pagado: 1,
-                    fecha_pago: fechaPago,
-                    metodo_pago: 'importacion_csv'
+                    pagado: true,
+                    fechaPago: fechaPago,
+                    metodoPago: 'importacion_csv'
                   })
                 });
                 if (updateResponse.ok) {
@@ -1701,25 +1701,45 @@ function ImportarPagosCSVModal({
                 }
               }
             } else {
-              // Crear nueva cuota
-              const createResponse = await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
+              // Crear nueva cuota (primero crear, luego marcar como pagada)
+              const createResponse = await fetch(`/api/admin/cuotas`, {
                 method: 'POST',
                 headers: {
                   ...buildAuthHeaders(),
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                  usuarioId: usuario.id,
                   año,
                   mes,
-                  valor: usuario.valorCuota || 6500,
-                  pagado: 1,
-                  fecha_pago: fechaPago,
-                  metodo_pago: 'importacion_csv'
+                  valor: usuario.valorCuota || 6500
                 })
               });
+              
               if (createResponse.ok) {
-                cuotasCreadas++;
-                cuotasProcesadasUsuario++;
+                const createData = await createResponse.json();
+                const nuevaCuotaId = createData.data?.cuota?.id;
+                
+                // Ahora marcar como pagada
+                if (nuevaCuotaId) {
+                  const updateResponse = await fetch(`/api/admin/cuotas/${nuevaCuotaId}`, {
+                    method: 'PUT',
+                    headers: {
+                      ...buildAuthHeaders(),
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      pagado: 1,
+                      fechaPago: fechaPago,
+                      metodoPago: 'importacion_csv'
+                    })
+                  });
+                  
+                  if (updateResponse.ok) {
+                    cuotasCreadas++;
+                    cuotasProcesadasUsuario++;
+                  }
+                }
               }
             }
           }
@@ -1744,30 +1764,29 @@ function ImportarPagosCSVModal({
                   const añoCrear = new Date().getMonth() + m > 12 ? añoProximo : currentYear;
                   
                   const cuotaFutura = await fetch(
-                    `/api/admin/socios/${usuario.id}/cuotas?año=${añoCrear}`,
+                    `/api/admin/cuotas?usuarioId=${usuario.id}&año=${añoCrear}`,
                     {
                       headers: buildAuthHeaders()
                     }
                   );
                   const cuotaFuturaData = await cuotaFutura.json();
                   
-                  const existe = cuotaFuturaData.cuotas?.find(
+                  const existe = cuotaFuturaData.data?.cuotas?.find(
                     (c: any) => c.año === añoCrear && c.mes === mesCrear
                   );
                   
                   if (!existe) {
-                    await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
+                    await fetch(`/api/admin/cuotas`, {
                       method: 'POST',
                       headers: {
                         ...buildAuthHeaders(),
                         'Content-Type': 'application/json'
                       },
                       body: JSON.stringify({
+                        usuarioId: usuario.id,
                         año: añoCrear,
                         mes: mesCrear,
-                        valor: usuario.valor_cuota || 6500,
-                        pagado: 0,
-                        metodo_pago: null
+                        valor: usuario.valorCuota || 6500
                       })
                     });
                   }
