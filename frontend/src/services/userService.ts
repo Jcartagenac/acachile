@@ -137,7 +137,7 @@ class UserService {
               comuna: apiUser.comuna || undefined,
               fechaNacimiento: apiUser.fecha_nacimiento || undefined,
               redSocial: apiUser.red_social || undefined,
-              fechaIngreso: apiUser.created_at || undefined,
+              fechaIngreso: apiUser.fecha_ingreso || apiUser.created_at || undefined,
               acaMembership: {
                 yearsActive: 2,
                 membershipNumber: `ACA-${apiUser.id.toString().slice(-4)}`,

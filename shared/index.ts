@@ -191,6 +191,7 @@ export interface AuthApiUser {
   fecha_nacimiento?: string | null;
   red_social?: string | null;
   foto_url?: string | null;
+  fecha_ingreso?: string | null;
   role: UserRole;
   activo: boolean;
   created_at: string;
