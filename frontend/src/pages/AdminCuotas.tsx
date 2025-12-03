@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
+import { buildAuthHeaders } from '../utils/authToken';
 import {
   Calendar,
   CheckCircle,
@@ -779,12 +780,11 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
           console.log('[SocioDetailModal] Desmarcando pago...');
         }
 
-        const token = localStorage.getItem('token');
         const response = await fetch(`/api/admin/cuotas/${cuotaToToggle.id}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
+            ...buildAuthHeaders(),
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             pagado: false,
@@ -1607,7 +1607,9 @@ function ImportarPagosCSVModal({
 
         try {
           // Obtener usuario por RUT
-          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rut)}`);
+          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rut)}`, {
+            headers: buildAuthHeaders()
+          });
           if (!response.ok) throw new Error('Error al buscar usuario');
           
           const data = await response.json();
@@ -1646,7 +1648,10 @@ function ImportarPagosCSVModal({
 
             // Verificar si ya existe la cuota
             const cuotasResponse = await fetch(
-              `/api/admin/socios/${usuario.id}/cuotas?año=${año}`
+              `/api/admin/socios/${usuario.id}/cuotas?año=${año}`,
+              {
+                headers: buildAuthHeaders()
+              }
             );
             
             if (!cuotasResponse.ok) {
@@ -1664,7 +1669,10 @@ function ImportarPagosCSVModal({
               if (!cuotaExistente.pagado) {
                 await fetch(`/api/admin/socios/${usuario.id}/cuotas/${cuotaExistente.id}`, {
                   method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    ...buildAuthHeaders(),
+                    'Content-Type': 'application/json'
+                  },
                   body: JSON.stringify({
                     pagado: 1,
                     fecha_pago: fechaPago,
@@ -1676,7 +1684,10 @@ function ImportarPagosCSVModal({
               // Crear nueva cuota
               await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  ...buildAuthHeaders(),
+                  'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                   año,
                   mes,
@@ -1705,7 +1716,10 @@ function ImportarPagosCSVModal({
                   const añoCrear = new Date().getMonth() + m > 12 ? añoProximo : currentYear;
                   
                   const cuotaFutura = await fetch(
-                    `/api/admin/socios/${usuario.id}/cuotas?año=${añoCrear}`
+                    `/api/admin/socios/${usuario.id}/cuotas?año=${añoCrear}`,
+                    {
+                      headers: buildAuthHeaders()
+                    }
                   );
                   const cuotaFuturaData = await cuotaFutura.json();
                   
@@ -1716,7 +1730,10 @@ function ImportarPagosCSVModal({
                   if (!existe) {
                     await fetch(`/api/admin/socios/${usuario.id}/cuotas`, {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                      headers: {
+                        ...buildAuthHeaders(),
+                        'Content-Type': 'application/json'
+                      },
                       body: JSON.stringify({
                         año: añoCrear,
                         mes: mesCrear,
