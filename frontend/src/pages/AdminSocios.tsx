@@ -3,7 +3,7 @@
  * ACA Chile Frontend
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { sociosService, Socio, CreateSocioData } from '../services/sociosService';
 import { adminService } from '../services/adminService';
@@ -55,10 +55,11 @@ export default function AdminSocios() {
   const isCreateRoute = location.pathname.endsWith('/createuser');
   const isEditRoute = location.pathname.endsWith('/edituser');
 
-  // Definir loadSocios antes de usarlo en useEffect
+  // Definir loadSocios sin dependencias que cambien frecuentemente
   const loadSocios = useCallback(async () => {
     try {
       setLoading(true);
+      // Leer los valores actuales directamente del estado
       const response = await sociosService.getSocios({
         search: searchTerm || undefined,
         estado: estadoFilter || undefined,
@@ -77,7 +78,7 @@ export default function AdminSocios() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, estadoFilter]);
+  }, []); // Sin dependencias para evitar recreación
 
   // Debounce para búsqueda: espera 500ms después del último carácter
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function AdminSocios() {
     }, 500); // 500ms de delay para dar tiempo al usuario de escribir
 
     return () => clearTimeout(timer);
-  }, [searchTerm, estadoFilter, loadSocios]);
+  }, [searchTerm, estadoFilter]); // Solo depender de los valores de búsqueda
 
   useEffect(() => {
     let cancelled = false;
