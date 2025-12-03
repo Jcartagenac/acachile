@@ -51,6 +51,9 @@ export default function AdminSocios() {
   const navigate = useNavigate();
   const location = useLocation();
   const { socioId } = useParams<{ socioId?: string }>();
+  
+  // Ref para mantener el foco en el input de búsqueda
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isCreateRoute = location.pathname.endsWith('/createuser');
   const isEditRoute = location.pathname.endsWith('/edituser');
@@ -58,6 +61,10 @@ export default function AdminSocios() {
   // Definir loadSocios sin dependencias que cambien frecuentemente
   const loadSocios = useCallback(async () => {
     try {
+      // Guardar posición del cursor antes de cargar
+      const activeElement = document.activeElement;
+      const cursorPosition = activeElement instanceof HTMLInputElement ? activeElement.selectionStart : null;
+      
       setLoading(true);
       // Leer los valores actuales directamente del estado
       const response = await sociosService.getSocios({
@@ -67,8 +74,23 @@ export default function AdminSocios() {
       });
 
       if (response.success && response.data) {
+        // Usar una actualización por lotes para evitar múltiples re-renders
         setSocios(response.data.socios);
-        setCurrentPage(1); // Reset a primera página al recargar
+        // Solo resetear a página 1 si estamos en una página que no existe
+        setCurrentPage(prev => {
+          const newTotalPages = Math.ceil(response.data.socios.length / itemsPerPage);
+          return prev > newTotalPages ? 1 : prev;
+        });
+        
+        // Restaurar foco y posición del cursor después de la actualización
+        setTimeout(() => {
+          if (searchInputRef.current && activeElement === searchInputRef.current) {
+            searchInputRef.current.focus();
+            if (cursorPosition !== null) {
+              searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+            }
+          }
+        }, 0);
       } else {
         setError(response.error || 'Error al cargar socios');
       }
@@ -78,7 +100,7 @@ export default function AdminSocios() {
     } finally {
       setLoading(false);
     }
-  }, []); // Sin dependencias para evitar recreación
+  }, [itemsPerPage]); // Solo depender de itemsPerPage que rara vez cambia
 
   // Debounce para búsqueda: espera 500ms después del último carácter
   useEffect(() => {
@@ -342,6 +364,7 @@ export default function AdminSocios() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Buscar por nombre, email o RUT..."
                 value={searchTerm}
