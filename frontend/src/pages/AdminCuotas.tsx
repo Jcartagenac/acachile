@@ -1630,7 +1630,18 @@ function ImportarPagosCSVModal({
 
           let cuotasProcesadasUsuario = 0;
 
-          console.log(`[CSV IMPORT] Procesando usuario RUT: ${rut}, ID: ${usuario.id}`);
+          console.log(`[CSV IMPORT] Procesando usuario:`, {
+            rut,
+            id: usuario.id,
+            nombre: usuario.nombreCompleto || `${usuario.nombre} ${usuario.apellido}`,
+            role: usuario.role,
+            valorCuota: usuario.valorCuota
+          });
+          
+          // Log especial para el usuario de prueba
+          if (rut === '12865793-2') {
+            console.log(`[CSV IMPORT] ⭐⭐⭐ USUARIO DE PRUEBA 12865793-2 con ID: ${usuario.id}`);
+          }
 
           // Procesar cada columna mes_año encontrada
           for (const [mesAñoKey, colIdx] of Object.entries(mesAñoMap)) {
@@ -1676,6 +1687,11 @@ function ImportarPagosCSVModal({
             }
 
             const cuotasData = await cuotasResponse.json();
+            
+            if (rut === '12865793-2') {
+              console.log(`[CSV IMPORT] ⭐ Usuario 12865793-2 - Cuotas existentes para año ${año}:`, cuotasData.data?.cuotas);
+            }
+            
             const cuotaExistente = cuotasData.data?.cuotas?.find(
               (c: any) => c.año === año && c.mes === mes
             );
@@ -1705,6 +1721,15 @@ function ImportarPagosCSVModal({
               }
             } else {
               // Crear nueva cuota (primero crear, luego marcar como pagada)
+              if (rut === '12865793-2') {
+                console.log(`[CSV IMPORT] ⭐ Creando cuota para 12865793-2:`, {
+                  usuarioId: usuario.id,
+                  año,
+                  mes,
+                  valor: usuario.valorCuota || 6500
+                });
+              }
+              
               const createResponse = await fetch(`/api/admin/cuotas`, {
                 method: 'POST',
                 headers: buildAuthHeaders(undefined, 'application/json'),
@@ -1718,34 +1743,45 @@ function ImportarPagosCSVModal({
               
               if (createResponse.ok) {
                 const createData = await createResponse.json();
+                console.log(`[CSV IMPORT] Response de creación:`, createData);
+                
+                if (rut === '12865793-2') {
+                  console.log(`[CSV IMPORT] ⭐ Cuota creada para 12865793-2:`, createData);
+                }
                 const nuevaCuotaId = createData.data?.cuota?.id;
                 
-                console.log(`[CSV IMPORT] Cuota creada ID: ${nuevaCuotaId} para ${rut} - ${mesAñoKey}`);
+                if (!nuevaCuotaId) {
+                  console.error('[CSV IMPORT] No se obtuvo ID de cuota creada. Estructura de respuesta:', createData);
+                  errorMessages.push(`Fila ${i + 1} (${rut}): No se obtuvo ID de cuota para ${mesAñoKey}`);
+                  continue;
+                }
+                
+                console.log(`[CSV IMPORT] ✅ Cuota creada ID: ${nuevaCuotaId} para ${rut} - ${mesAñoKey}`);
                 
                 // Ahora marcar como pagada
-                if (nuevaCuotaId) {
-                  const updateResponse = await fetch(`/api/admin/cuotas/${nuevaCuotaId}`, {
-                    method: 'PUT',
-                    headers: buildAuthHeaders(undefined, 'application/json'),
-                    body: JSON.stringify({
-                      pagado: 1,
-                      fechaPago: fechaPago,
-                      metodoPago: 'importacion_csv'
-                    })
-                  });
-                  
-                  if (updateResponse.ok) {
-                    console.log(`[CSV IMPORT] Cuota ${nuevaCuotaId} marcada como pagada`);
-                    cuotasCreadas++;
-                    cuotasProcesadasUsuario++;
-                  } else {
-                    console.error(`[CSV IMPORT] Error marcando cuota ${nuevaCuotaId} como pagada:`, await updateResponse.text());
-                  }
+                const updateResponse = await fetch(`/api/admin/cuotas/${nuevaCuotaId}`, {
+                  method: 'PUT',
+                  headers: buildAuthHeaders(undefined, 'application/json'),
+                  body: JSON.stringify({
+                    pagado: true,
+                    fechaPago: fechaPago,
+                    metodoPago: 'importacion_csv'
+                  })
+                });
+                
+                if (updateResponse.ok) {
+                  console.log(`[CSV IMPORT] ✅ Cuota ${nuevaCuotaId} marcada como pagada`);
+                  cuotasCreadas++;
+                  cuotasProcesadasUsuario++;
                 } else {
-                  console.error('[CSV IMPORT] No se obtuvo ID de cuota creada:', createData);
+                  const errorText = await updateResponse.text();
+                  console.error(`[CSV IMPORT] ❌ Error marcando cuota ${nuevaCuotaId} como pagada:`, errorText);
+                  errorMessages.push(`Fila ${i + 1} (${rut}): Error al marcar cuota ${mesAñoKey} como pagada`);
                 }
               } else {
-                console.error(`[CSV IMPORT] Error creando cuota para ${rut}:`, await createResponse.text());
+                const errorText = await createResponse.text();
+                console.error(`[CSV IMPORT] ❌ Error creando cuota para ${rut} - ${mesAñoKey}:`, errorText);
+                errorMessages.push(`Fila ${i + 1} (${rut}): Error creando cuota ${mesAñoKey}`);
               }
             }
           }
@@ -1804,13 +1840,19 @@ function ImportarPagosCSVModal({
         }
       }
 
-      console.log('[CSV IMPORT] Resumen final:', {
-        totalFilas: rows.length - 1,
-        usuariosExitosos: successCount,
-        cuotasCreadas,
-        cuotasActualizadas,
-        errores: errorMessages.length
-      });
+      console.log('[CSV IMPORT] ==========================================');
+      console.log('[CSV IMPORT] RESUMEN FINAL DE IMPORTACIÓN');
+      console.log('[CSV IMPORT] ==========================================');
+      console.log('[CSV IMPORT] Total filas procesadas:', rows.length - 1);
+      console.log('[CSV IMPORT] Usuarios exitosos:', successCount);
+      console.log('[CSV IMPORT] Cuotas CREADAS:', cuotasCreadas);
+      console.log('[CSV IMPORT] Cuotas ACTUALIZADAS:', cuotasActualizadas);
+      console.log('[CSV IMPORT] Total errores:', errorMessages.length);
+      console.log('[CSV IMPORT] ==========================================');
+      
+      if (errorMessages.length > 0) {
+        console.error('[CSV IMPORT] Lista de errores:', errorMessages);
+      }
 
       setResults({
         success: successCount,
@@ -1821,10 +1863,10 @@ function ImportarPagosCSVModal({
       });
 
       if (cuotasCreadas > 0 || cuotasActualizadas > 0) {
-        console.log('[CSV IMPORT] Llamando onImport() para recargar datos...');
+        console.log('[CSV IMPORT] ✅ Llamando onImport() para recargar datos...');
         onImport();
       } else {
-        console.warn('[CSV IMPORT] No se procesaron cuotas, no se recarga la vista');
+        console.warn('[CSV IMPORT] ⚠️ No se procesaron cuotas, no se recarga la vista');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al procesar el archivo');
