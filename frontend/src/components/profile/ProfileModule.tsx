@@ -896,7 +896,7 @@ export const ProfileModule: React.FC = () => {
             <MapPin className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-sm font-medium text-purple-700">Región</p>
             <p className="text-lg font-bold text-purple-800">
-              {user?.region || 'No especificada'}
+              {formData.region || profile?.region || 'No especificada'}
             </p>
           </div>
         </div>
