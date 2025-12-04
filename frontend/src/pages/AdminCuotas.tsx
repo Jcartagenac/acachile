@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
 import { buildAuthHeaders } from '../utils/authToken';
 import {
@@ -39,6 +40,8 @@ interface SocioConEstado extends Socio {
 }
 
 export default function AdminCuotas() {
+  const { userId } = useParams<{ userId?: string }>();
+  const navigate = useNavigate();
   const [añoActual] = useState(new Date().getFullYear());
   const [mesActual] = useState(new Date().getMonth() + 1);
   const [añoSeleccionado, setAñoSeleccionado] = useState(añoActual);
@@ -55,6 +58,19 @@ export default function AdminCuotas() {
   useEffect(() => {
     loadData();
   }, [añoSeleccionado]);
+
+  // Cargar socio seleccionado desde URL
+  useEffect(() => {
+    if (userId && socios.length > 0) {
+      const socio = socios.find(s => s.id === parseInt(userId));
+      if (socio) {
+        console.log('🔗 [AdminCuotas] Usuario seleccionado desde URL:', userId, socio);
+        setSelectedSocio(socio);
+      }
+    } else if (!userId && selectedSocio) {
+      setSelectedSocio(null);
+    }
+  }, [userId, socios]);
 
   const loadData = async () => {
     try {
@@ -479,7 +495,7 @@ export default function AdminCuotas() {
                 <div
                   key={socio.id}
                   className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedSocio(socio)}
+                  onClick={() => navigate(`/panel-admin/payments/users/${socio.id}`)}
                 >
                   <div className="flex items-center justify-between">
                     {/* Info del socio */}
@@ -571,7 +587,7 @@ export default function AdminCuotas() {
           cuotas={cuotas.filter(c => c.usuarioId === selectedSocio.id)}
           año={añoSeleccionado}
           mesActual={mesActual}
-          onClose={() => setSelectedSocio(null)}
+          onClose={() => navigate('/panel-admin/payments')}
           onUpdate={loadData}
         />
       )}
