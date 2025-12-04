@@ -1651,6 +1651,7 @@ function ImportarPagosCSVModal({
       // Buscar todas las columnas que tengan formato mes_año
       for (let colIdx = 0; colIdx < headers.length; colIdx++) {
         const header = headers[colIdx];
+        if (!header) continue;
         const match = header.match(/^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)_(\d{4})$/);
         if (match) {
           const mes = match[1];
@@ -1705,9 +1706,13 @@ function ImportarPagosCSVModal({
             valorCuota: usuario.valorCuota
           });
           
-          // Log especial para el usuario de prueba
+          // Log especial para usuarios específicos
           if (rut === '12865793-2') {
             console.log(`[CSV IMPORT] ⭐⭐⭐ USUARIO DE PRUEBA 12865793-2 con ID: ${usuario.id}`);
+          }
+          if (rut === '12679495-9') {
+            console.log(`[CSV IMPORT] 🔍🔍🔍 JUAN ACEVEDO 12679495-9 con ID: ${usuario.id}`);
+            console.log(`[CSV IMPORT] 🔍 Columnas mes_año a procesar:`, Object.keys(mesAñoMap));
           }
 
           // Procesar cada columna mes_año encontrada
@@ -1722,9 +1727,16 @@ function ImportarPagosCSVModal({
 
             // Extraer mes y año del header
             const [mesNombre, añoStr] = mesAñoKey.split('_');
+            if (!mesNombre || !añoStr) {
+              console.error(`[CSV IMPORT] Error: formato inválido en ${mesAñoKey}`);
+              continue;
+            }
             const año = parseInt(añoStr, 10);
             const mesIdx = meses.indexOf(mesNombre);
-            if (mesIdx === -1) continue;
+            if (mesIdx === -1) {
+              console.error(`[CSV IMPORT] Error: mes no reconocido "${mesNombre}" en ${mesAñoKey}`);
+              continue;
+            }
             const mes = mesIdx + 1;
 
             // Determinar si es fecha o "si"
@@ -1736,9 +1748,17 @@ function ImportarPagosCSVModal({
               fechaPago = valor;
             }
 
+            if (rut === '12679495-9') {
+              console.log(`[CSV IMPORT] 🔍 JUAN ACEVEDO - ${mesAñoKey}: año=${año}, mes=${mes}, shouldPay=${shouldPay}, fechaPago=${fechaPago}`);
+            }
             console.log(`[CSV IMPORT] ${rut} - ${mesAñoKey}: shouldPay=${shouldPay}, fechaPago=${fechaPago}`);
 
-            if (!shouldPay) continue;
+            if (!shouldPay) {
+              if (rut === '12679495-9') {
+                console.log(`[CSV IMPORT] 🔍 JUAN ACEVEDO - SALTANDO ${mesAñoKey} porque shouldPay=false`);
+              }
+              continue;
+            }
 
             // Verificar si ya existe la cuota
             const cuotasResponse = await fetch(
