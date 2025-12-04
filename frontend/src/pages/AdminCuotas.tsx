@@ -631,6 +631,10 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
 
   // Función para generar cuotas futuras automáticamente (hasta 12 meses adelante)
   const generarCuotasFuturas = async () => {
+    // TEMPORALMENTE DESHABILITADO - hay problema con cuotas faltantes de 2025
+    console.log('🔧 [Auto-generar] DESHABILITADO temporalmente');
+    return;
+    
     try {
       const hoy = new Date();
       console.log('🔧 [Auto-generar] Fecha actual:', hoy);
