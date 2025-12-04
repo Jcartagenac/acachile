@@ -40,6 +40,7 @@ const PanelAdminDashboard = lazy(() => import('./pages/PanelAdminDashboard'));
 const AdminContent = lazy(() => import('./pages/AdminContent'));
 const AdminNews = lazy(() => import('./pages/AdminNews'));
 const AdminPostulantes = lazy(() => import('./pages/AdminPostulantes'));
+const AdminSocios = lazy(() => import('./pages/AdminSocios'));
 const AdminCuotas = lazy(() => import('./pages/AdminCuotas'));
 const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
 const PanelAdminLayout = lazy(() => import('./components/layout/PanelAdminLayout'));
@@ -127,9 +128,9 @@ function App() {
           
           {/* Panel de Administración Nuevo */}
           <Route path="/panel-admin" element={<PanelAdminLayout><PanelAdminDashboard /></PanelAdminLayout>} />
-          <Route path="/panel-admin/users" element={<PanelAdminLayout><AdminUsers /></PanelAdminLayout>} />
-          <Route path="/panel-admin/users/createuser" element={<PanelAdminLayout><AdminUsers /></PanelAdminLayout>} />
-          <Route path="/panel-admin/users/:socioId/edituser" element={<PanelAdminLayout><AdminUsers /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users/createuser" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
+          <Route path="/panel-admin/users/:socioId/edituser" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
           <Route path="/panel-admin/users/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<EventProviderWrapper><PanelAdminLayout><AdminContent /></PanelAdminLayout></EventProviderWrapper>} />
