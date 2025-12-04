@@ -175,15 +175,15 @@ export default function AdminCuotas() {
         c => c.usuarioId === socio.id && c.año === añoSeleccionado
       );
       
-      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro (RUT: 12679495-9)
-      if (socio.rut === '12679495-9') {
-        console.log('🔍 [DEBUG JUAN ACEVEDO] Procesando socio:', {
+      // 🔍 Debug especial para usuarios específicos
+      if (socio.rut === '12679495-9' || socio.id === 557) {
+        console.log(`🔍 [DEBUG ID:${socio.id}] Procesando socio:`, {
           id: socio.id,
           nombre: socio.nombreCompleto,
           rut: socio.rut,
           añoSeleccionado
         });
-        console.log('🔍 [DEBUG JUAN ACEVEDO] Cuotas del año seleccionado:', cuotasSocioAñoActual.length);
+        console.log(`🔍 [DEBUG ID:${socio.id}] Cuotas del año seleccionado:`, cuotasSocioAñoActual.length);
         cuotasSocioAñoActual.forEach(c => {
           console.log(`  📅 Mes ${c.mes}: pagado=${c.pagado}, vencida=${esCuotaVencidaCalculo(c)}`);
         });
@@ -255,15 +255,24 @@ export default function AdminCuotas() {
         ultimoPago = sorted[0]?.fechaPago || undefined;
       }
 
-      // Determinar estado
+      // Determinar estado basado SOLO en cuotas vencidas
       let estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos' = 'sin-pagos';
-      if (cuotasPagadas.length > 0 || cuotasVencidasCount === 0) {
-        estadoPago = cuotasVencidasCount === 0 ? 'al-dia' : 'atrasado';
+      
+      if (cuotasVencidasCount === 0) {
+        // No tiene cuotas vencidas
+        if (cuotasPagadas.length > 0) {
+          estadoPago = 'al-dia';
+        } else {
+          estadoPago = 'sin-pagos';
+        }
+      } else {
+        // Tiene cuotas vencidas
+        estadoPago = 'atrasado';
       }
       
-      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro
-      if (socio.rut === '12679495-9') {
-        console.log('🔍 [DEBUG JUAN ACEVEDO] Estadísticas:', {
+      // 🔍 Debug especial para usuarios específicos
+      if (socio.rut === '12679495-9' || socio.id === 557) {
+        console.log(`🔍 [DEBUG ID:${socio.id}] Estadísticas:`, {
           cuotasEnLista: cuotasSocioAñoActual.length,
           pagadas: cuotasPagadas.length,
           pendientes: cuotasPendientes.length,
