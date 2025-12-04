@@ -96,7 +96,8 @@ export async function onRequestGet(context) {
     const params = [];
     let query = buildBaseQuery();
     query = applyFilters(query, params, { año, mes, usuarioId, estado });
-    query += ` ORDER BY c.año DESC, c.mes DESC, u.apellido ASC LIMIT ? OFFSET ?`;
+    // Ordenar por usuario primero para asegurar que todas las cuotas de cada usuario estén juntas
+    query += ` ORDER BY c.usuario_id ASC, c.año DESC, c.mes ASC LIMIT ? OFFSET ?`;
     params.push(limit, (page - 1) * limit);
 
     const { results } = await env.DB.prepare(query).bind(...params).all();
