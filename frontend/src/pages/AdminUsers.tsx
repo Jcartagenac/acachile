@@ -130,17 +130,28 @@ export default function AdminUsers() {
       return;
     }
 
+    console.log('🔍 [AdminUsers] Search triggered:', { searchTerm, currentPage, selectedRole });
+    
     // Debounce para el término de búsqueda
     const timeoutId = setTimeout(() => {
+      console.log('🔍 [AdminUsers] Loading users after debounce');
       loadUsers();
     }, searchTerm ? 300 : 0); // 300ms de debounce solo cuando hay término de búsqueda
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      console.log('🔍 [AdminUsers] Cleanup - canceling timeout');
+      clearTimeout(timeoutId);
+    };
   }, [currentPage, searchTerm, selectedRole]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
+      console.log('🔍 [AdminUsers] Calling API with params:', {
+        page: currentPage,
+        search: searchTerm || undefined,
+        role: selectedRole || undefined
+      });
       const response = await adminService.getUsers({
         page: currentPage,
         limit: 20,

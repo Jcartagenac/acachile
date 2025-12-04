@@ -633,6 +633,8 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   const generarCuotasFuturas = async () => {
     try {
       const hoy = new Date();
+      console.log('🔧 [Auto-generar] Fecha actual:', hoy);
+      console.log('🔧 [Auto-generar] Cuotas existentes:', cuotas.map(c => `${c.mes}/${c.año}`).join(', '));
       const cuotasExistentes = new Set(cuotas.map(c => `${c.año}-${c.mes}`));
 
       // Generar hasta 12 meses adelante
@@ -641,12 +643,11 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         const año = fecha.getFullYear();
         const mes = fecha.getMonth() + 1;
         const clave = `${año}-${mes}`;
+        console.log(`🔧 [Auto-generar] Iteración ${i}: calculando ${mes}/${año} (existe: ${cuotasExistentes.has(clave)})`);
 
         // Si no existe la cuota, crearla
         if (!cuotasExistentes.has(clave)) {
-          if (import.meta.env.MODE === 'development') {
-            console.log(`[Auto-generar] Creando cuota para ${mes}/${año}`);
-          }
+          console.log(`🔧 [Auto-generar] Creando cuota para ${mes}/${año}`);
           
           const result = await sociosService.crearCuotaIndividual(
             socio.id,
