@@ -106,7 +106,7 @@ export default function AdminCuotas() {
       
       const [sociosResponse, cuotasResponse] = await Promise.all([
         sociosService.getSocios({ estado: 'activo', limit: 500 }),
-        sociosService.getCuotas({ año: añoSeleccionado, limit: 1000 })
+        sociosService.getCuotas({ año: añoSeleccionado, limit: 5000 })
       ]);
       
       console.log('[AdminCuotas] Cuotas response:', cuotasResponse);
@@ -197,6 +197,31 @@ export default function AdminCuotas() {
       const cuotasPagadas = cuotasSocioAñoActual.filter(c => c.pagado);
       const cuotasPendientes = cuotasSocioAñoActual.filter(c => !c.pagado);
 
+      // Calcular cuántas cuotas DEBERÍAN existir hasta el mes actual
+      const hoy = new Date();
+      const mesActualCalculo = hoy.getMonth() + 1;
+      const añoActualCalculo = hoy.getFullYear();
+      
+      let mesesEsperados = 12; // Por defecto todo el año
+      if (añoSeleccionado === añoActualCalculo) {
+        mesesEsperados = mesActualCalculo; // Solo hasta el mes actual
+      }
+      
+      // Si hay fecha de ingreso, ajustar meses esperados
+      if (socio.fechaIngreso) {
+        const fechaIngreso = new Date(socio.fechaIngreso);
+        const añoIngreso = fechaIngreso.getFullYear();
+        const mesIngreso = fechaIngreso.getMonth() + 1;
+        
+        if (añoSeleccionado === añoIngreso) {
+          // Si es el año de ingreso, contar desde mes de ingreso
+          mesesEsperados = Math.min(mesesEsperados, 12 - mesIngreso + 1);
+        } else if (añoSeleccionado < añoIngreso) {
+          // Si el año es anterior al ingreso, no hay cuotas esperadas
+          mesesEsperados = 0;
+        }
+      }
+
       // Último pago
       let ultimoPago: string | undefined = undefined;
       if (cuotasPagadas.length > 0) {
@@ -215,10 +240,11 @@ export default function AdminCuotas() {
       // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro
       if (socio.rut === '12679495-9') {
         console.log('🔍 [DEBUG JUAN ACEVEDO] Estadísticas:', {
-          totalCuotas: cuotasSocioAñoActual.length,
+          cuotasEnLista: cuotasSocioAñoActual.length,
           pagadas: cuotasPagadas.length,
           pendientes: cuotasPendientes.length,
           vencidas: cuotasVencidasCount,
+          mesesEsperados,
           estadoPago,
           ultimoPago
         });
@@ -228,7 +254,7 @@ export default function AdminCuotas() {
         ...socio,
         mesesPagados: cuotasPagadas.length,
         mesesAtrasados: cuotasVencidasCount,
-        cuotasVencidas: cuotasSocioAñoActual.length, // Total de cuotas del año
+        cuotasVencidas: mesesEsperados, // Cuotas esperadas hasta el mes actual
         cuotasPagadasVencidas: cuotasPagadas.length,
         mesesPagadosUltimoAño: cuotasPagadas.length,
         ultimoPago,
