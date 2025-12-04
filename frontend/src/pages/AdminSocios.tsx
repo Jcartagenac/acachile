@@ -102,7 +102,7 @@ export default function AdminSocios() {
     } finally {
       setLoading(false);
     }
-  }, [itemsPerPage]); // Solo depender de itemsPerPage que rara vez cambia
+  }, [searchTerm, estadoFilter, itemsPerPage]); // Incluir searchTerm y estadoFilter para que capture los valores actuales
 
   // Debounce para búsqueda: espera 300ms después del último carácter
   useEffect(() => {
