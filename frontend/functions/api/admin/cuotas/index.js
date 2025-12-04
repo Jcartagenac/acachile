@@ -90,14 +90,13 @@ export async function onRequestGet(context) {
         : null;
     const estado = url.searchParams.get('estado');
     const page = Number.parseInt(url.searchParams.get('page'), 10) || 1;
-    const limit = Number.parseInt(url.searchParams.get('limit'), 10) || 50;
+    const limit = Number.parseInt(url.searchParams.get('limit'), 10) || 5000; // Aumentado de 50 a 5000 para manejar todos los socios
 
     // Construir query con filtros
     const params = [];
     let query = buildBaseQuery();
     query = applyFilters(query, params, { año, mes, usuarioId, estado });
-    // Ordenar por usuario primero para asegurar que todas las cuotas de cada usuario estén juntas
-    query += ` ORDER BY c.usuario_id ASC, c.año DESC, c.mes ASC LIMIT ? OFFSET ?`;
+    query += ` ORDER BY c.año DESC, c.mes DESC, u.apellido ASC LIMIT ? OFFSET ?`;
     params.push(limit, (page - 1) * limit);
 
     const { results } = await env.DB.prepare(query).bind(...params).all();
