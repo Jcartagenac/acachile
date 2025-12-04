@@ -130,7 +130,12 @@ export default function AdminUsers() {
       return;
     }
 
-    loadUsers();
+    // Debounce para el término de búsqueda
+    const timeoutId = setTimeout(() => {
+      loadUsers();
+    }, searchTerm ? 300 : 0); // 300ms de debounce solo cuando hay término de búsqueda
+
+    return () => clearTimeout(timeoutId);
   }, [currentPage, searchTerm, selectedRole]);
 
   const loadUsers = async () => {
