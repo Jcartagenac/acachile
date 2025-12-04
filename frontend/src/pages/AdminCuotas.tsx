@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
 import { buildAuthHeaders } from '../utils/authToken';
 import {
@@ -40,6 +40,7 @@ interface SocioConEstado extends Socio {
 }
 
 export default function AdminCuotas() {
+  const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const [añoActual] = useState(new Date().getFullYear());
   const [mesActual] = useState(new Date().getMonth() + 1);
@@ -57,6 +58,44 @@ export default function AdminCuotas() {
   useEffect(() => {
     loadData();
   }, [añoSeleccionado]);
+
+  // Cargar socio seleccionado desde URL con sus cuotas específicas
+  useEffect(() => {
+    if (userId && socios.length > 0) {
+      const socioId = parseInt(userId);
+      const socio = socios.find(s => s.id === socioId);
+      if (socio) {
+        console.log('🔗 [AdminCuotas] Usuario seleccionado desde URL:', userId, socio);
+        // Cargar cuotas específicas de este usuario para el año seleccionado
+        loadUserCuotas(socioId, socio);
+      }
+    } else if (!userId && selectedSocio) {
+      setSelectedSocio(null);
+    }
+  }, [userId, socios, añoSeleccionado]);
+
+  const loadUserCuotas = async (socioId: number, socio: SocioConEstado) => {
+    try {
+      console.log('📥 [AdminCuotas] Cargando cuotas específicas para usuario:', socioId, 'año:', añoSeleccionado);
+      const cuotasResponse = await sociosService.getCuotas({ 
+        año: añoSeleccionado,
+        socioId: socioId
+      });
+      console.log('📥 [AdminCuotas] Cuotas específicas recibidas:', cuotasResponse.data?.cuotas?.length || 0);
+      if (cuotasResponse.success && cuotasResponse.data) {
+        const userCuotas = cuotasResponse.data.cuotas || [];
+        console.log('📥 [AdminCuotas] Cuotas para usuario', socioId, ':', userCuotas);
+        // Actualizar las cuotas globales agregando/actualizando las del usuario
+        setCuotas(prevCuotas => {
+          const othersCuotas = prevCuotas.filter(c => c.usuarioId !== socioId);
+          return [...othersCuotas, ...userCuotas];
+        });
+        setSelectedSocio(socio);
+      }
+    } catch (err) {
+      console.error('❌ [AdminCuotas] Error cargando cuotas de usuario:', err);
+    }
+  };
 
   const loadData = async () => {
     try {

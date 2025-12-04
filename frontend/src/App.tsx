@@ -133,7 +133,7 @@ function App() {
           <Route path="/panel-admin/users/:socioId/edituser" element={<PanelAdminLayout><AdminSocios /></PanelAdminLayout>} />
           <Route path="/panel-admin/users/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
           <Route path="/panel-admin/payments" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
-          <Route path="/panel-admin/payments/users/:id" element={<PanelAdminLayout><PerfilSocio /></PanelAdminLayout>} />
+          <Route path="/panel-admin/payments/users/:userId" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<EventProviderWrapper><PanelAdminLayout><AdminContent /></PanelAdminLayout></EventProviderWrapper>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
           <Route path="/panel-admin/papelera" element={<PanelAdminLayout><AdminTrash /></PanelAdminLayout>} />
