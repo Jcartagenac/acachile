@@ -1048,7 +1048,14 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
 
   // Determinar si un mes es válido (desde fecha de ingreso hacia adelante)
   const esMesValido = (mes: number): boolean => {
-    if (!socio.fechaIngreso) return true; // Si no hay fecha de ingreso, todos son válidos
+    // Si el usuario tiene cuotas pagadas, esos meses son válidos independientemente de la fecha de ingreso
+    const cuotaMes = getCuotaMes(mes);
+    if (cuotaMes) {
+      return true; // Si existe la cuota, el mes es válido
+    }
+
+    // Si no hay fecha de ingreso, todos son válidos
+    if (!socio.fechaIngreso) return true;
 
     const fechaIngreso = new Date(socio.fechaIngreso);
     const añoIngreso = fechaIngreso.getFullYear();
