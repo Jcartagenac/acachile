@@ -176,7 +176,7 @@ export default function AdminCuotas() {
       );
       
       // 🔍 Debug especial para usuarios específicos
-      if (socio.rut === '12679495-9' || socio.id === 557) {
+      if (socio.rut === '12679495-9' || socio.id === 557 || socio.id === 647) {
         console.log(`🔍 [DEBUG ID:${socio.id}] Procesando socio:`, {
           id: socio.id,
           nombre: socio.nombreCompleto,
@@ -271,7 +271,7 @@ export default function AdminCuotas() {
       }
       
       // 🔍 Debug especial para usuarios específicos
-      if (socio.rut === '12679495-9' || socio.id === 557) {
+      if (socio.rut === '12679495-9' || socio.id === 557 || socio.id === 647) {
         console.log(`🔍 [DEBUG ID:${socio.id}] Estadísticas:`, {
           cuotasEnLista: cuotasSocioAñoActual.length,
           pagadas: cuotasPagadas.length,
