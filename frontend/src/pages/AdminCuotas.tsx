@@ -199,26 +199,45 @@ export default function AdminCuotas() {
 
       // Calcular cuántas cuotas DEBERÍAN existir hasta el mes actual
       const hoy = new Date();
-      const mesActualCalculo = hoy.getMonth() + 1;
-      const añoActualCalculo = hoy.getFullYear();
+      const mesActualCalculo = hoy.getMonth() + 1; // Diciembre = 12
+      const añoActualCalculo = hoy.getFullYear(); // 2025
       
-      let mesesEsperados = 12; // Por defecto todo el año
-      if (añoSeleccionado === añoActualCalculo) {
-        mesesEsperados = mesActualCalculo; // Solo hasta el mes actual
-      }
+      let mesesEsperados = 0;
       
-      // Si hay fecha de ingreso, ajustar meses esperados
+      // Si hay fecha de ingreso, usarla como base
       if (socio.fechaIngreso) {
         const fechaIngreso = new Date(socio.fechaIngreso);
         const añoIngreso = fechaIngreso.getFullYear();
         const mesIngreso = fechaIngreso.getMonth() + 1;
         
-        if (añoSeleccionado === añoIngreso) {
-          // Si es el año de ingreso, contar desde mes de ingreso
-          mesesEsperados = Math.min(mesesEsperados, 12 - mesIngreso + 1);
-        } else if (añoSeleccionado < añoIngreso) {
-          // Si el año es anterior al ingreso, no hay cuotas esperadas
+        if (añoSeleccionado < añoIngreso) {
+          // Si el año seleccionado es anterior al ingreso, no hay cuotas esperadas
           mesesEsperados = 0;
+        } else if (añoSeleccionado === añoIngreso) {
+          // Si es el año de ingreso, contar desde mes de ingreso
+          if (añoIngreso === añoActualCalculo) {
+            // Año de ingreso = año actual: desde mes ingreso hasta mes actual
+            mesesEsperados = mesActualCalculo - mesIngreso + 1;
+          } else {
+            // Año de ingreso < año actual: desde mes ingreso hasta diciembre
+            mesesEsperados = 12 - mesIngreso + 1;
+          }
+        } else if (añoSeleccionado > añoIngreso) {
+          // Año posterior al ingreso
+          if (añoSeleccionado === añoActualCalculo) {
+            // Año actual: enero hasta mes actual
+            mesesEsperados = mesActualCalculo;
+          } else {
+            // Año completo
+            mesesEsperados = 12;
+          }
+        }
+      } else {
+        // Sin fecha de ingreso: asumir desde enero
+        if (añoSeleccionado === añoActualCalculo) {
+          mesesEsperados = mesActualCalculo;
+        } else {
+          mesesEsperados = 12;
         }
       }
 
