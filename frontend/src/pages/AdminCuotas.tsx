@@ -54,6 +54,8 @@ export default function AdminCuotas() {
   const [selectedSocio, setSelectedSocio] = useState<SocioConEstado | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'al-dia' | 'atrasado'>('todos');
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadData();
@@ -306,6 +308,17 @@ export default function AdminCuotas() {
     return matchSearch && matchEstado;
   });
 
+  // Paginación: calcular inicio y fin para el slice
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const sociosPaginados = sociosFiltrados.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(sociosFiltrados.length / itemsPerPage);
+
+  // Reset a página 1 cuando cambia el filtro o búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filtroEstado, itemsPerPage]);
+
   const getEstadisticas = () => {
     const totalSocios = socios.length;
     const sociosAlDia = socios.filter(s => s.estadoPago === 'al-dia').length;
@@ -539,6 +552,16 @@ export default function AdminCuotas() {
               <option value="atrasado">Atrasados</option>
             </select>
 
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="20">20 por página</option>
+              <option value="50">50 por página</option>
+              <option value="100">100 por página</option>
+            </select>
+
             <button
               onClick={exportarAExcel}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -568,13 +591,14 @@ export default function AdminCuotas() {
                 )}
               </div>
             ) : (
-              sociosFiltrados.map((socio) => (
-                <div
-                  key={socio.id}
-                  className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/panel-admin/payments/users/${socio.id}`)}
-                >
-                  <div className="flex items-center justify-between">
+              <>
+                {sociosPaginados.map((socio) => (
+                  <div
+                    key={socio.id}
+                    className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/panel-admin/payments/users/${socio.id}`)}
+                  >
+                    <div className="flex items-center justify-between">
                     {/* Info del socio */}
                     <div className="flex items-center gap-4 flex-1">
                       {socio.fotoUrl ? (
@@ -639,7 +663,36 @@ export default function AdminCuotas() {
                     </div>
                   </div>
                 </div>
-              ))
+              ))}
+
+              {/* Controles de paginación */}
+              {totalPages > 1 && (
+                <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Mostrando {startIndex + 1}-{Math.min(endIndex, sociosFiltrados.length)} de {sociosFiltrados.length} socios
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <span className="px-3 py-1 text-sm text-gray-600">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
             )}
           </div>
         </div>
