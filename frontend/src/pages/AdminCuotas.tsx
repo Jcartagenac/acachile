@@ -736,13 +736,19 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, onC
     const loadCuotasAño = async () => {
       try {
         setLoading(true);
+        console.log('📥 [Modal] Cargando cuotas para socio:', socio.id, 'año:', añoSeleccionado);
         const response = await sociosService.getCuotas({
           año: añoSeleccionado,
           socioId: socio.id
         });
 
+        console.log('📥 [Modal] Respuesta de cuotas:', response);
+
         if (response.success && response.data) {
-          setCuotas(response.data.cuotas || []);
+          const cuotasCargadas = response.data.cuotas || [];
+          console.log('📥 [Modal] Cuotas recibidas:', cuotasCargadas.length);
+          console.log('📥 [Modal] Detalle cuotas:', cuotasCargadas.map(c => `${c.mes}=${c.pagado ? 'PAGADO' : 'PENDIENTE'}`).join(', '));
+          setCuotas(cuotasCargadas);
 
           // Auto-generar cuotas hasta mes actual si estamos en el año actual
           const añoActual = new Date().getFullYear();
@@ -756,14 +762,14 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, onC
             });
 
             if (reloadResponse.success && reloadResponse.data) {
-              setCuotas(reloadResponse.data.cuotas || []);
+              const cuotasRecargadas = reloadResponse.data.cuotas || [];
+              console.log('📥 [Modal] Cuotas después de generar:', cuotasRecargadas.length);
+              setCuotas(cuotasRecargadas);
             }
           }
         }
       } catch (err) {
-        if (import.meta.env.MODE === 'development') {
-          console.error('Error cargando cuotas:', err);
-        }
+        console.error('❌ [Modal] Error cargando cuotas:', err);
       } finally {
         setLoading(false);
       }
@@ -1153,6 +1159,16 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, onC
               const cuota = getCuotaMes(mes);
               const atrasado = esAtrasado(mes) && (!cuota || !cuota.pagado);
               const mesValido = esMesValido(mes);
+
+              // Debug para Juan Acevedo
+              if (socio.rut === '12679495-9' && mes <= 3) {
+                console.log(`🎯 [Modal Grid] Mes ${mes} (${nombreMes}):`, {
+                  cuota: cuota ? `ID:${cuota.id} pagado:${cuota.pagado}` : 'NO EXISTE',
+                  mesValido,
+                  atrasado,
+                  totalCuotasEnEstado: cuotas.length
+                });
+              }
 
               return (
                 <div
