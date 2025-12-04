@@ -204,39 +204,44 @@ export default function AdminCuotas() {
       
       let mesesEsperados = 0;
       
-      // Si hay fecha de ingreso, usarla como base
-      if (socio.fechaIngreso) {
-        const fechaIngreso = new Date(socio.fechaIngreso);
-        const añoIngreso = fechaIngreso.getFullYear();
-        const mesIngreso = fechaIngreso.getMonth() + 1;
+      // Determinar mes/año de inicio basándose en la primera cuota del usuario
+      let añoInicio = añoSeleccionado;
+      let mesInicio = 1;
+      
+      if (cuotasSocioAñoActual.length > 0) {
+        // Encontrar la cuota más antigua
+        const cuotaOrdenadas = [...cuotasSocioAñoActual].sort((a, b) => {
+          if (a.año !== b.año) return a.año - b.año;
+          return a.mes - b.mes;
+        });
+        const primeraCuota = cuotaOrdenadas[0];
         
-        if (añoSeleccionado < añoIngreso) {
-          // Si el año seleccionado es anterior al ingreso, no hay cuotas esperadas
-          mesesEsperados = 0;
-        } else if (añoSeleccionado === añoIngreso) {
-          // Si es el año de ingreso, contar desde mes de ingreso
-          if (añoIngreso === añoActualCalculo) {
-            // Año de ingreso = año actual: desde mes ingreso hasta mes actual
-            mesesEsperados = mesActualCalculo - mesIngreso + 1;
-          } else {
-            // Año de ingreso < año actual: desde mes ingreso hasta diciembre
-            mesesEsperados = 12 - mesIngreso + 1;
-          }
-        } else if (añoSeleccionado > añoIngreso) {
-          // Año posterior al ingreso
-          if (añoSeleccionado === añoActualCalculo) {
-            // Año actual: enero hasta mes actual
-            mesesEsperados = mesActualCalculo;
-          } else {
-            // Año completo
-            mesesEsperados = 12;
-          }
+        if (primeraCuota) {
+          añoInicio = primeraCuota.año;
+          mesInicio = primeraCuota.mes;
+        }
+      }
+      
+      // Calcular meses esperados desde la primera cuota hasta hoy
+      if (añoSeleccionado < añoInicio) {
+        // Si estamos viendo un año anterior a la primera cuota, no hay meses esperados
+        mesesEsperados = 0;
+      } else if (añoSeleccionado === añoInicio) {
+        // Si es el año de inicio
+        if (añoInicio === añoActualCalculo) {
+          // Año inicio = año actual: desde mes inicio hasta mes actual
+          mesesEsperados = mesActualCalculo - mesInicio + 1;
+        } else {
+          // Año inicio < año actual: desde mes inicio hasta diciembre
+          mesesEsperados = 12 - mesInicio + 1;
         }
       } else {
-        // Sin fecha de ingreso: asumir desde enero
+        // Año posterior al inicio (ya tiene cuotas en años anteriores)
         if (añoSeleccionado === añoActualCalculo) {
+          // Año actual: enero hasta mes actual
           mesesEsperados = mesActualCalculo;
         } else {
+          // Año completo
           mesesEsperados = 12;
         }
       }
