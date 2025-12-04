@@ -631,25 +631,24 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
 
         // Si no existe la cuota, crearla
         if (!cuotasExistentes.has(clave)) {
-          try {
+          if (import.meta.env.MODE === 'development') {
+            console.log(`[Auto-generar] Creando cuota para ${mes}/${año}`);
+          }
+          
+          const result = await sociosService.crearCuotaIndividual(
+            socio.id,
+            año,
+            mes,
+            socio.valorCuota
+          );
+          
+          // Si falla por cuota duplicada, es normal - ignorar silenciosamente
+          if (!result.success && result.error?.includes('Ya existe una cuota')) {
+            // Ignorar silenciosamente - la cuota ya existe
+          } else if (!result.success) {
+            // Otros errores sí los registramos
             if (import.meta.env.MODE === 'development') {
-              console.log(`[Auto-generar] Creando cuota para ${mes}/${año}`);
-            }
-            await sociosService.crearCuotaIndividual(
-              socio.id,
-              año,
-              mes,
-              socio.valorCuota
-            );
-          } catch (createErr) {
-            // Silenciar errores 409 (cuota ya existe) - es normal y esperado
-            if (createErr instanceof Error && createErr.message.includes('Ya existe una cuota')) {
-              // Ignorar silenciosamente - la cuota ya existe
-            } else {
-              // Otros errores sí los registramos
-              if (import.meta.env.MODE === 'development') {
-                console.error(`[Auto-generar] Error creando cuota ${mes}/${año}:`, createErr);
-              }
+              console.error(`[Auto-generar] Error creando cuota ${mes}/${año}:`, result.error);
             }
           }
         }

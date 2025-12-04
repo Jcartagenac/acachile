@@ -253,8 +253,14 @@ class SociosService {
       });
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('[sociosService] Error response crear cuota:', errorData);
-        throw new Error(errorData.error || 'Error al crear cuota');
+        
+        // Para errores 409 (cuota ya existe), no loguear - es esperado
+        if (response.status !== 409) {
+          console.error('[sociosService] Error response crear cuota:', errorData);
+        }
+        
+        // No hacer throw, retornar el error para que el llamador decida qué hacer
+        return { success: false, error: errorData.error || 'Error al crear cuota', data: errorData.data };
       }
 
       const data = await response.json();
