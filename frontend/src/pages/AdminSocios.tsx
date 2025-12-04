@@ -102,14 +102,14 @@ export default function AdminSocios() {
     }
   }, [itemsPerPage]); // Solo depender de itemsPerPage que rara vez cambia
 
-  // Debounce para búsqueda: espera 500ms después del último carácter
+  // Debounce para búsqueda: espera 300ms después del último carácter
   useEffect(() => {
     const timer = setTimeout(() => {
       loadSocios();
-    }, 500); // 500ms de delay para dar tiempo al usuario de escribir
+    }, 300); // 300ms de delay para dar tiempo al usuario de escribir
 
     return () => clearTimeout(timer);
-  }, [searchTerm, estadoFilter]); // Solo depender de los valores de búsqueda
+  }, [searchTerm, estadoFilter, loadSocios]); // Incluir loadSocios en dependencias
 
   useEffect(() => {
     let cancelled = false;
