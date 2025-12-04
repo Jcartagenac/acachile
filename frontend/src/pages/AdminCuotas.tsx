@@ -902,7 +902,7 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
     }
   };
 
-  const confirmCreateCuota = async () => {
+  const confirmCreateCuota = async (marcarComoPagada: boolean = false) => {
     if (mesToCreate === null) return;
 
     try {
@@ -923,24 +923,27 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
         return;
       }
 
-      // Obtener el ID de la cuota recién creada
-      const nuevaCuotaId = crearResponse.data?.cuota?.id;
+      // Si se debe marcar como pagada, hacer el proceso completo
+      if (marcarComoPagada) {
+        // Obtener el ID de la cuota recién creada
+        const nuevaCuotaId = crearResponse.data?.cuota?.id;
 
-      if (!nuevaCuotaId) {
-        setError('No se pudo obtener el ID de la cuota creada');
-        return;
-      }
+        if (!nuevaCuotaId) {
+          setError('No se pudo obtener el ID de la cuota creada');
+          return;
+        }
 
-      const fechaPagoISO = new Date(fechaPago).toISOString();
+        const fechaPagoISO = new Date(fechaPago).toISOString();
 
-      const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuotaId, {
-        metodoPago: 'transferencia',
-        fechaPago: fechaPagoISO
-      });
+        const marcarResponse = await sociosService.marcarCuotaPagada(nuevaCuotaId, {
+          metodoPago: 'transferencia',
+          fechaPago: fechaPagoISO
+        });
 
-      if (!marcarResponse.success) {
-        setError(marcarResponse.error || 'Error al marcar como pagado');
-        return;
+        if (!marcarResponse.success) {
+          setError(marcarResponse.error || 'Error al marcar como pagado');
+          return;
+        }
       }
 
       // Recargar cuotas para mostrar el estado actualizado
@@ -1476,31 +1479,31 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-lg font-bold text-gray-900">
-                  Crear y Marcar Cuota como Pagada
+                  Crear Cuota
                 </h3>
               </div>
             </div>
 
             <p className="text-sm text-gray-600 mb-4">
-              Vas a crear la cuota de <strong>{MESES[mesToCreate - 1]} {añoSeleccionado}</strong> y marcarla como pagada.
+              Vas a crear la cuota de <strong>{MESES[mesToCreate - 1]} {añoSeleccionado}</strong> para este socio.
             </p>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
-              <p className="text-xs text-yellow-800">
-                ⚠️ <strong>Importante:</strong> Una vez creada, la cuota quedará registrada en el sistema.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+              <p className="text-xs text-blue-800">
+                ℹ️ <strong>Opciones:</strong> Puedes crear la cuota pendiente o marcarla como pagada inmediatamente.
                 {new Date().getFullYear() === añoSeleccionado && mesToCreate < (new Date().getMonth() + 1) && (
-                  <span className="block mt-1">Este mes ya pasó, por lo que la cuota aparecerá como atrasada si no la marcas como pagada ahora.</span>
+                  <span className="block mt-1">Este mes ya pasó, por lo que la cuota aparecerá como vencida si no la marcas como pagada.</span>
                 )}
               </p>
             </div>
 
-            {/* Selector de fecha de pago */}
+            {/* Selector de fecha de pago - solo visible si se va a marcar como pagada */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha de Pago
+                Fecha de Pago (opcional)
               </label>
               <input
                 type="date"
@@ -1510,7 +1513,7 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Por defecto es hoy, pero puedes cambiarla si el pago fue en otra fecha
+                Solo se usará si marcas la cuota como pagada
               </p>
             </div>
 
@@ -1526,7 +1529,23 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
                 Cancelar
               </button>
               <button
-                onClick={confirmCreateCuota}
+                onClick={() => confirmCreateCuota(false)}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    Crear Pendiente
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => confirmCreateCuota(true)}
                 disabled={loading}
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
               >
@@ -1537,7 +1556,7 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
                   </>
                 ) : (
                   <>
-                    Crear y Marcar como Pagada
+                    Crear y Marcar Pagada
                   </>
                 )}
               </button>
