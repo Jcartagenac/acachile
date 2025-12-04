@@ -112,8 +112,20 @@ export default function AdminCuotas() {
         });
         console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Total cuotas en la lista general:', cuotasList.length);
         console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Cuotas filtradas para este socio:', cuotasSocio.length);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Detalle cuotas del socio:', cuotasSocio);
         console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Año seleccionado en el filtro:', añoSeleccionado);
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] DETALLE DE CADA CUOTA:');
+        cuotasSocio.forEach(c => {
+          console.log(`  📅 Mes ${c.mes}/${c.año}: pagado=${c.pagado}, valor=${c.valor}, id=${c.id}`);
+        });
+        const cuotasPagadas = cuotasSocio.filter(c => c.pagado);
+        const cuotasPendientes = cuotasSocio.filter(c => !c.pagado);
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Resumen:', {
+          totalCuotas: cuotasSocio.length,
+          pagadas: cuotasPagadas.length,
+          pendientes: cuotasPendientes.length,
+          mesesPagados: cuotasPagadas.map(c => c.mes).join(', '),
+          mesesPendientes: cuotasPendientes.map(c => c.mes).join(', ')
+        });
       }
 
       // Calcular cuotas vencidas (pasado el día 5 del mes)
