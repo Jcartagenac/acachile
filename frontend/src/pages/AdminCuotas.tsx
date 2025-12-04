@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { sociosService, Socio, Cuota } from '../services/sociosService';
 import { buildAuthHeaders } from '../utils/authToken';
 import {
@@ -40,7 +40,6 @@ interface SocioConEstado extends Socio {
 }
 
 export default function AdminCuotas() {
-  const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const [añoActual] = useState(new Date().getFullYear());
   const [mesActual] = useState(new Date().getMonth() + 1);
@@ -58,19 +57,6 @@ export default function AdminCuotas() {
   useEffect(() => {
     loadData();
   }, [añoSeleccionado]);
-
-  // Cargar socio seleccionado desde URL
-  useEffect(() => {
-    if (userId && socios.length > 0) {
-      const socio = socios.find(s => s.id === parseInt(userId));
-      if (socio) {
-        console.log('🔗 [AdminCuotas] Usuario seleccionado desde URL:', userId, socio);
-        setSelectedSocio(socio);
-      }
-    } else if (!userId && selectedSocio) {
-      setSelectedSocio(null);
-    }
-  }, [userId, socios]);
 
   const loadData = async () => {
     try {
