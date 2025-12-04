@@ -124,7 +124,8 @@ export default function AdminUsers() {
   }, []);
 
   useEffect(() => {
-    const userRole = authService.getUserRole();
+    const user = authService.getUser();
+    const userRole = user?.role;
     if (!authService.isAdmin() && userRole !== 'director') {
       setError('Acceso denegado. Se requieren permisos de administrador o director.');
       setLoading(false);
