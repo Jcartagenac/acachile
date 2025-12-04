@@ -141,103 +141,96 @@ export default function AdminCuotas() {
     }
   };
 
-  const procesarEstadoSocios = (sociosList: Socio[], cuotasList: Cuota[]): SocioConEstado[] => {
-    const hoy = new Date();
-    const añoActualCalendario = hoy.getFullYear();
-    const inicioUltimoAño = new Date(añoActualCalendario - 1, 0, 1);
+  // Función auxiliar para verificar si una cuota está vencida (misma lógica que en el modal)
+  const esCuotaVencidaCalculo = (cuota: Cuota): boolean => {
+    if (cuota.pagado) return false;
 
+    const hoy = new Date();
+    const añoActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth() + 1;
+    const diaActual = hoy.getDate();
+
+    // Si es un mes/año futuro, no está vencida
+    if (cuota.año > añoActual || (cuota.año === añoActual && cuota.mes > mesActual)) {
+      return false;
+    }
+
+    // Si es un mes/año pasado, está vencida
+    if (cuota.año < añoActual || (cuota.año === añoActual && cuota.mes < mesActual)) {
+      return true;
+    }
+
+    // Si es el mes actual, está vencida si ya pasó el día 5
+    if (cuota.año === añoActual && cuota.mes === mesActual) {
+      return diaActual > 5;
+    }
+
+    return false;
+  };
+
+  const procesarEstadoSocios = (sociosList: Socio[], cuotasList: Cuota[]): SocioConEstado[] => {
     return sociosList.map(socio => {
-      const cuotasSocio = cuotasList.filter(c => c.usuarioId === socio.id);
+      // Filtrar cuotas del socio para el año seleccionado
+      const cuotasSocioAñoActual = cuotasList.filter(
+        c => c.usuarioId === socio.id && c.año === añoSeleccionado
+      );
       
       // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro (RUT: 12679495-9)
       if (socio.rut === '12679495-9') {
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Socio encontrado:', {
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Procesando socio:', {
           id: socio.id,
           nombre: socio.nombreCompleto,
-          rut: socio.rut
+          rut: socio.rut,
+          añoSeleccionado
         });
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Total cuotas en la lista general:', cuotasList.length);
-        
-        // Ver TODAS las cuotas del año 2025 para este usuario en la lista general
-        const todasCuotasDelSocio = cuotasList.filter(c => c.usuarioId === socio.id);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] TODAS las cuotas del socio en cuotasList:', todasCuotasDelSocio.length);
-        todasCuotasDelSocio.forEach(c => {
-          console.log(`  📋 GENERAL - Mes ${c.mes}/${c.año}: pagado=${c.pagado}, usuarioId=${c.usuarioId}, id=${c.id}`);
-        });
-        
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Cuotas filtradas con filter:', cuotasSocio.length);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Año seleccionado en el filtro:', añoSeleccionado);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] DETALLE DE CADA CUOTA FILTRADA:');
-        cuotasSocio.forEach(c => {
-          console.log(`  📅 Mes ${c.mes}/${c.año}: pagado=${c.pagado}, valor=${c.valor}, id=${c.id}`);
-        });
-        const cuotasPagadas = cuotasSocio.filter(c => c.pagado);
-        const cuotasPendientes = cuotasSocio.filter(c => !c.pagado);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Resumen:', {
-          totalCuotas: cuotasSocio.length,
-          pagadas: cuotasPagadas.length,
-          pendientes: cuotasPendientes.length,
-          mesesPagados: cuotasPagadas.map(c => c.mes).join(', '),
-          mesesPendientes: cuotasPendientes.map(c => c.mes).join(', ')
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Cuotas del año seleccionado:', cuotasSocioAñoActual.length);
+        cuotasSocioAñoActual.forEach(c => {
+          console.log(`  📅 Mes ${c.mes}: pagado=${c.pagado}, vencida=${esCuotaVencidaCalculo(c)}`);
         });
       }
 
-      // Calcular cuotas vencidas (pasado el día 5 del mes)
-      const cuotasVencidas = cuotasSocio.filter(c => {
-        const fechaVencimiento = new Date(c.año, c.mes - 1, 5);
-        return hoy > fechaVencimiento;
-      });
+      // Calcular cuotas vencidas (usando la misma lógica del modal)
+      const cuotasVencidas = cuotasSocioAñoActual.filter(c => esCuotaVencidaCalculo(c));
+      const cuotasVencidasCount = cuotasVencidas.length;
 
-      const cuotasPagadasVencidas = cuotasVencidas.filter(c => c.pagado).length;
-      const totalCuotasVencidas = cuotasVencidas.length;
-      const cuotasVencidasSinPagar = totalCuotasVencidas - cuotasPagadasVencidas;
+      // Cuotas pagadas y pendientes
+      const cuotasPagadas = cuotasSocioAñoActual.filter(c => c.pagado);
+      const cuotasPendientes = cuotasSocioAñoActual.filter(c => !c.pagado);
 
-      // Meses pagados en el último año calendario (últimos 12 meses)
-      const mesesPagadosUltimoAño = cuotasSocio.filter(c => {
-        if (!c.pagado || !c.fechaPago) return false;
-        const fechaPago = new Date(c.fechaPago);
-        return fechaPago >= inicioUltimoAño;
-      }).length;
-
-      // Calcular total de meses pagados
-      const mesesPagados = cuotasSocio.filter(c => c.pagado).length;
-
-      const cuotasPagadas = cuotasSocio.filter(c => c.pagado && c.fechaPago);
+      // Último pago
       let ultimoPago: string | undefined = undefined;
-
       if (cuotasPagadas.length > 0) {
-        const sorted = cuotasPagadas.sort((a, b) =>
-          new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime()
-        );
+        const sorted = cuotasPagadas
+          .filter(c => c.fechaPago)
+          .sort((a, b) => new Date(b.fechaPago!).getTime() - new Date(a.fechaPago!).getTime());
         ultimoPago = sorted[0]?.fechaPago || undefined;
       }
 
-      // Determinar estado basado en cuotas vencidas sin pagar
+      // Determinar estado
       let estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos' = 'sin-pagos';
-      if (mesesPagados > 0 || cuotasVencidasSinPagar === 0) {
-        estadoPago = cuotasVencidasSinPagar === 0 ? 'al-dia' : 'atrasado';
+      if (cuotasPagadas.length > 0 || cuotasVencidasCount === 0) {
+        estadoPago = cuotasVencidasCount === 0 ? 'al-dia' : 'atrasado';
       }
       
-      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro (RUT: 12679495-9)
+      // 🔍 Debug especial para Juan Cristian Acevedo Valdenegro
       if (socio.rut === '12679495-9') {
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Estadísticas calculadas:', {
-          mesesPagados,
-          mesesAtrasados: cuotasVencidasSinPagar,
-          cuotasVencidas: totalCuotasVencidas,
-          cuotasPagadasVencidas,
-          mesesPagadosUltimoAño,
-          ultimoPago,
-          estadoPago
+        console.log('🔍 [DEBUG JUAN ACEVEDO] Estadísticas:', {
+          totalCuotas: cuotasSocioAñoActual.length,
+          pagadas: cuotasPagadas.length,
+          pendientes: cuotasPendientes.length,
+          vencidas: cuotasVencidasCount,
+          estadoPago,
+          ultimoPago
         });
       }
 
       return {
         ...socio,
-        mesesPagados,
-        mesesAtrasados: cuotasVencidasSinPagar,
-        cuotasVencidas: totalCuotasVencidas,
-        cuotasPagadasVencidas,
-        mesesPagadosUltimoAño,
+        mesesPagados: cuotasPagadas.length,
+        mesesAtrasados: cuotasVencidasCount,
+        cuotasVencidas: cuotasSocioAñoActual.length, // Total de cuotas del año
+        cuotasPagadasVencidas: cuotasPagadas.length,
+        mesesPagadosUltimoAño: cuotasPagadas.length,
         ultimoPago,
         estadoPago
       };
@@ -549,10 +542,10 @@ export default function AdminCuotas() {
 
                     {/* Estado de pagos */}
                     <div className="flex items-center gap-6">
-                      {/* Cuotas pagadas/vencidas */}
+                      {/* Cuotas pagadas/totales del año */}
                       <div className="text-right hidden sm:block">
                         <p className="text-sm font-medium text-gray-900">
-                          {socio.cuotasPagadasVencidas}/{socio.cuotasVencidas}
+                          {socio.mesesPagados}/{socio.cuotasVencidas} meses
                         </p>
                         <p className="text-xs text-gray-500">
                           {socio.ultimoPago ? (
@@ -563,7 +556,7 @@ export default function AdminCuotas() {
                         </p>
                       </div>
 
-                      {/* Badge de estado con información relevante */}
+                      {/* Badge de estado: Verde = al día, Amarillo = 1-2 vencidas, Rojo = 3+ vencidas */}
                       <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 ${socio.mesesAtrasados === 0
                         ? 'bg-green-100 text-green-800'
                         : socio.mesesAtrasados <= 2
@@ -573,17 +566,12 @@ export default function AdminCuotas() {
                         {socio.mesesAtrasados === 0 ? (
                           <span className="flex items-center gap-1">
                             <CheckCircle className="h-3 w-3" />
-                            {socio.mesesPagadosUltimoAño} {socio.mesesPagadosUltimoAño === 1 ? 'mes' : 'meses'}
-                          </span>
-                        ) : socio.mesesAtrasados <= 2 ? (
-                          <span className="flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            {socio.mesesAtrasados} {socio.mesesAtrasados === 1 ? 'mes' : 'meses'}
+                            Al día
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
-                            {socio.mesesAtrasados} {socio.mesesAtrasados === 1 ? 'mes' : 'meses'}
+                            {socio.mesesAtrasados} vencida{socio.mesesAtrasados !== 1 ? 's' : ''}
                           </span>
                         )}
                       </div>
@@ -647,7 +635,7 @@ interface SocioDetailModalProps {
   onUpdate: () => void;
 }
 
-function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mesActual, onClose, onUpdate }: SocioDetailModalProps) {
+function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, onClose, onUpdate }: SocioDetailModalProps) {
   const [añoSeleccionado, setAñoSeleccionado] = useState(añoInicial);
   const [cuotas, setCuotas] = useState<Cuota[]>(initialCuotas);
   const [loading, setLoading] = useState(false);
