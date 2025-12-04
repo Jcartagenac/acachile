@@ -502,10 +502,10 @@ export default function AdminCuotas() {
               <div>
                 <p className="text-sm text-gray-600">Recaudado 2025</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${(stats.totalRecaudado / 1000).toFixed(0)}K
+                  ${stats.totalRecaudado.toLocaleString('es-CL')}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Pendiente 2025: ${(stats.totalPendiente / 1000).toFixed(0)}K
+                  Pendiente 2025: ${stats.totalPendiente.toLocaleString('es-CL')}
                 </p>
               </div>
               <TrendingUp className="h-10 w-10 text-green-500" />
