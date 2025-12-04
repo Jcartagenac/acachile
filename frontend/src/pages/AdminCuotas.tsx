@@ -597,7 +597,6 @@ export default function AdminCuotas() {
       {selectedSocio && (
         <SocioDetailModal
           socio={selectedSocio}
-          cuotas={cuotas.filter(c => c.usuarioId === selectedSocio.id)}
           año={añoSeleccionado}
           mesActual={mesActual}
           onClose={() => navigate('/panel-admin/payments')}
@@ -628,17 +627,16 @@ export default function AdminCuotas() {
 // Modal de detalle de socio con gestión de pagos
 interface SocioDetailModalProps {
   socio: SocioConEstado;
-  cuotas: Cuota[];
   año: number;
   mesActual: number;
   onClose: () => void;
   onUpdate: () => void;
 }
 
-function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, onClose, onUpdate }: SocioDetailModalProps) {
+function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: SocioDetailModalProps) {
   const [añoSeleccionado, setAñoSeleccionado] = useState(añoInicial);
-  const [cuotas, setCuotas] = useState<Cuota[]>(initialCuotas);
-  const [loading, setLoading] = useState(false);
+  const [cuotas, setCuotas] = useState<Cuota[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [cuotaToToggle, setCuotaToToggle] = useState<Cuota | null>(null);
