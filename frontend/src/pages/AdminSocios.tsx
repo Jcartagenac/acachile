@@ -65,6 +65,7 @@ export default function AdminSocios() {
       const activeElement = document.activeElement;
       const cursorPosition = activeElement instanceof HTMLInputElement ? activeElement.selectionStart : null;
       
+      console.log('🔍 [AdminSocios] loadSocios called with:', { searchTerm, estadoFilter });
       setLoading(true);
       // Leer los valores actuales directamente del estado
       const response = await sociosService.getSocios({
@@ -72,6 +73,7 @@ export default function AdminSocios() {
         estado: estadoFilter || undefined,
         limit: 10000, // Cargar todos los socios (límite alto para evitar paginación del servidor)
       });
+      console.log('🔍 [AdminSocios] Response received:', response.data?.socios?.length || 0, 'socios');
 
       if (response.success && response.data) {
         // Usar una actualización por lotes para evitar múltiples re-renders
@@ -104,11 +106,16 @@ export default function AdminSocios() {
 
   // Debounce para búsqueda: espera 300ms después del último carácter
   useEffect(() => {
+    console.log('🔍 [AdminSocios] Search changed:', { searchTerm, estadoFilter });
     const timer = setTimeout(() => {
+      console.log('🔍 [AdminSocios] Executing search after debounce');
       loadSocios();
     }, 300); // 300ms de delay para dar tiempo al usuario de escribir
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🔍 [AdminSocios] Clearing debounce timer');
+      clearTimeout(timer);
+    };
   }, [searchTerm, estadoFilter, loadSocios]); // Incluir loadSocios en dependencias
 
   useEffect(() => {
