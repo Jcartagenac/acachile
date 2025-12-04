@@ -61,10 +61,15 @@ export default function AdminCuotas() {
       setLoading(true);
       setError(null);
 
+      console.log('[AdminCuotas] Cargando datos para año:', añoSeleccionado);
+      
       const [sociosResponse, cuotasResponse] = await Promise.all([
         sociosService.getSocios({ estado: 'activo', limit: 500 }),
         sociosService.getCuotas({ año: añoSeleccionado, limit: 1000 })
       ]);
+      
+      console.log('[AdminCuotas] Cuotas response:', cuotasResponse);
+      console.log('[AdminCuotas] Total cuotas recibidas:', cuotasResponse.data?.cuotas?.length || 0);
 
       if (sociosResponse.success && sociosResponse.data) {
         const sociosList = sociosResponse.data.socios || [];
@@ -111,9 +116,17 @@ export default function AdminCuotas() {
           rut: socio.rut
         });
         console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Total cuotas en la lista general:', cuotasList.length);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Cuotas filtradas para este socio:', cuotasSocio.length);
+        
+        // Ver TODAS las cuotas del año 2025 para este usuario en la lista general
+        const todasCuotasDelSocio = cuotasList.filter(c => c.usuarioId === socio.id);
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] TODAS las cuotas del socio en cuotasList:', todasCuotasDelSocio.length);
+        todasCuotasDelSocio.forEach(c => {
+          console.log(`  📋 GENERAL - Mes ${c.mes}/${c.año}: pagado=${c.pagado}, usuarioId=${c.usuarioId}, id=${c.id}`);
+        });
+        
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Cuotas filtradas con filter:', cuotasSocio.length);
         console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] Año seleccionado en el filtro:', añoSeleccionado);
-        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] DETALLE DE CADA CUOTA:');
+        console.log('🔍 [DEBUG JUAN ACEVEDO - AdminCuotas] DETALLE DE CADA CUOTA FILTRADA:');
         cuotasSocio.forEach(c => {
           console.log(`  📅 Mes ${c.mes}/${c.año}: pagado=${c.pagado}, valor=${c.valor}, id=${c.id}`);
         });
