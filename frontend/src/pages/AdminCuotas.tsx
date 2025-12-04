@@ -1791,8 +1791,11 @@ function ImportarPagosCSVModal({
         }
       }
 
+      console.log('[CSV IMPORT] ===== INICIO DE IMPORTACIÓN =====');
+      console.log('[CSV IMPORT] Total filas (incluyendo header):', rows.length);
+      console.log('[CSV IMPORT] Total usuarios a procesar:', rows.length - 1);
       console.log('[CSV IMPORT] Headers:', headers);
-      console.log('[CSV IMPORT] Mapa mes_año encontrado:', mesAñoMap);
+      console.log('[CSV IMPORT] Mapa mes_año encontrado:', Object.keys(mesAñoMap).sort());
       console.log('[CSV IMPORT] Total columnas mes_año:', Object.keys(mesAñoMap).length);
 
       let successCount = 0;
@@ -1813,14 +1816,20 @@ function ImportarPagosCSVModal({
         }
 
         try {
+          // Limpiar RUT (quitar espacios, convertir a minúsculas para comparación)
+          const rutLimpio = rut.trim().replace(/\s+/g, '').toLowerCase();
+          
           // Obtener usuario por RUT (búsqueda exacta con límite alto)
-          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rut)}&limit=1000`, {
+          const response = await fetch(`/api/admin/socios?search=${encodeURIComponent(rutLimpio)}&limit=1000`, {
             headers: buildAuthHeaders()
           });
           if (!response.ok) throw new Error('Error al buscar usuario');
           
           const result = await response.json();
-          const usuario = result.data?.socios?.find((s: any) => s.rut === rut);
+          // Buscar usuario comparando RUTs sin espacios y en minúsculas
+          const usuario = result.data?.socios?.find((s: any) => 
+            s.rut?.trim().replace(/\s+/g, '').toLowerCase() === rutLimpio
+          );
           
           if (!usuario) {
             errorMessages.push(`Fila ${i + 1}: Usuario con RUT ${rut} no encontrado`);
