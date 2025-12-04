@@ -664,57 +664,81 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   const esCuotaVencida = (cuota: Cuota): boolean => {
     if (cuota.pagado) return false;
 
-    const fechaVencimiento = new Date(cuota.año, cuota.mes - 1, 5);
     const hoy = new Date();
+    const añoActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth() + 1; // getMonth() es 0-indexed
+    const diaActual = hoy.getDate();
 
-    return hoy > fechaVencimiento;
+    // Si es un mes/año futuro, no está vencida
+    if (cuota.año > añoActual || (cuota.año === añoActual && cuota.mes > mesActual)) {
+      return false;
+    }
+
+    // Si es un mes/año pasado, está vencida
+    if (cuota.año < añoActual || (cuota.año === añoActual && cuota.mes < mesActual)) {
+      return true;
+    }
+
+    // Si es el mes actual, está vencida si ya pasó el día 5
+    if (cuota.año === añoActual && cuota.mes === mesActual) {
+      return diaActual > 5;
+    }
+
+    return false;
   };
 
-  // Función para generar cuotas futuras automáticamente (hasta 12 meses adelante)
-  const generarCuotasFuturas = async () => {
-    // TEMPORALMENTE DESHABILITADO - hay problema con cuotas faltantes de 2025
-    console.log('🔧 [Auto-generar] DESHABILITADO temporalmente');
-    return;
-    
+  // Función para generar cuotas hasta el mes actual
+  const generarCuotasHastaMesActual = async () => {
     try {
       const hoy = new Date();
+      const añoActual = hoy.getFullYear();
+      const mesActual = hoy.getMonth() + 1; // getMonth() es 0-indexed
+      
       console.log('🔧 [Auto-generar] Fecha actual:', hoy);
+      console.log('🔧 [Auto-generar] Generando cuotas hasta:', `${mesActual}/${añoActual}`);
       console.log('🔧 [Auto-generar] Cuotas existentes:', cuotas.map(c => `${c.mes}/${c.año}`).join(', '));
+      
       const cuotasExistentes = new Set(cuotas.map(c => `${c.año}-${c.mes}`));
 
-      // Generar hasta 12 meses adelante
-      for (let i = 0; i < 12; i++) {
-        const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-        const año = fecha.getFullYear();
-        const mes = fecha.getMonth() + 1;
-        const clave = `${año}-${mes}`;
-        console.log(`🔧 [Auto-generar] Iteración ${i}: calculando ${mes}/${año} (existe: ${cuotasExistentes.has(clave)})`);
+      // Calcular fecha de ingreso del socio
+      const fechaIngreso = socio.fechaIngreso ? new Date(socio.fechaIngreso) : null;
+      const añoIngreso = fechaIngreso ? fechaIngreso.getFullYear() : añoActual;
+      const mesIngreso = fechaIngreso ? fechaIngreso.getMonth() + 1 : 1;
 
-        // Si no existe la cuota, crearla
-        if (!cuotasExistentes.has(clave)) {
-          console.log(`🔧 [Auto-generar] Creando cuota para ${mes}/${año}`);
+      // Generar desde fecha de ingreso hasta mes actual
+      for (let año = añoIngreso; año <= añoActual; año++) {
+        const mesInicio = año === añoIngreso ? mesIngreso : 1;
+        const mesFin = año === añoActual ? mesActual : 12;
+        
+        for (let mes = mesInicio; mes <= mesFin; mes++) {
+          const clave = `${año}-${mes}`;
           
-          const result = await sociosService.crearCuotaIndividual(
-            socio.id,
-            año,
-            mes,
-            socio.valorCuota
-          );
-          
-          // Si falla por cuota duplicada, es normal - ignorar silenciosamente
-          if (!result.success && result.error?.includes('Ya existe una cuota')) {
-            // Ignorar silenciosamente - la cuota ya existe
-          } else if (!result.success) {
-            // Otros errores sí los registramos
-            if (import.meta.env.MODE === 'development') {
-              console.error(`[Auto-generar] Error creando cuota ${mes}/${año}:`, result.error);
+          // Si no existe la cuota, crearla
+          if (!cuotasExistentes.has(clave)) {
+            console.log(`🔧 [Auto-generar] Creando cuota para ${mes}/${año}`);
+            
+            const result = await sociosService.crearCuotaIndividual(
+              socio.id,
+              año,
+              mes,
+              socio.valorCuota
+            );
+            
+            // Si falla por cuota duplicada, es normal - ignorar silenciosamente
+            if (!result.success && result.error?.includes('Ya existe una cuota')) {
+              // Ignorar silenciosamente - la cuota ya existe
+            } else if (!result.success) {
+              // Otros errores sí los registramos
+              if (import.meta.env.MODE === 'development') {
+                console.error(`[Auto-generar] Error creando cuota ${mes}/${año}:`, result.error);
+              }
             }
           }
         }
       }
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
-        console.error('[Auto-generar] Error general generando cuotas futuras:', err);
+        console.error('[Auto-generar] Error general generando cuotas:', err);
       }
     }
   };
@@ -732,10 +756,10 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
         if (response.success && response.data) {
           setCuotas(response.data.cuotas || []);
 
-          // Auto-generar cuotas futuras si estamos en el año actual
+          // Auto-generar cuotas hasta mes actual si estamos en el año actual
           const añoActual = new Date().getFullYear();
           if (añoSeleccionado === añoActual) {
-            await generarCuotasFuturas();
+            await generarCuotasHastaMesActual();
 
             // Recargar después de generar
             const reloadResponse = await sociosService.getCuotas({
@@ -1023,7 +1047,12 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
   };
 
   const getCuotaMes = (mes: number) => cuotas.find(c => c.mes === mes);
-  const esAtrasado = (mes: number) => añoSeleccionado === new Date().getFullYear() && mes < mesActual;
+  
+  // Determinar si una cuota está vencida basándose en la función esCuotaVencida
+  const esAtrasado = (mes: number) => {
+    const cuota = getCuotaMes(mes);
+    return cuota ? esCuotaVencida(cuota) : false;
+  };
 
   // Determinar si un mes es válido (desde fecha de ingreso hacia adelante)
   const esMesValido = (mes: number): boolean => {
@@ -1121,10 +1150,10 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
             <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-blue-800">
-                Las cuotas se generan automáticamente hasta 12 meses adelante
+                Las cuotas se generan automáticamente hasta el mes actual
               </p>
               <p className="text-xs text-blue-700 mt-1">
-                Las cuotas vencen el día 5 de cada mes. Los meses vencidos aparecen en rojo.
+                Las cuotas vencen el día 5 de cada mes. Los meses vencidos (después del día 5) aparecen en rojo.
               </p>
             </div>
           </div>
@@ -1200,12 +1229,19 @@ function SocioDetailModal({ socio, cuotas: initialCuotas, año: añoInicial, mes
                     {cuota ? (
                       <div className="text-xs">
                         {cuota.pagado ? (
-                          <span className="text-green-700">
-                            {cuota.fechaPago ? new Date(cuota.fechaPago).toLocaleDateString('es-CL') : 'Pagado'}
+                          <>
+                            <div className="font-semibold text-green-700">PAGADO</div>
+                            <div className="text-green-600">
+                              {cuota.fechaPago ? new Date(cuota.fechaPago).toLocaleDateString('es-CL') : ''}
+                            </div>
+                          </>
+                        ) : esCuotaVencida(cuota) ? (
+                          <span className="text-red-700 font-semibold">
+                            VENCIDA
                           </span>
                         ) : (
-                          <span className={atrasado ? 'text-red-700 font-medium' : 'text-gray-500'}>
-                            {atrasado ? 'Atrasado' : 'Pendiente'}
+                          <span className="text-gray-500">
+                            Pendiente
                           </span>
                         )}
                       </div>
