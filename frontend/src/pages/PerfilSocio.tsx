@@ -107,7 +107,7 @@ export default function PerfilSocio() {
   };
 
   const esCuotaVencida = (cuota: Cuota): boolean => {
-    const fechaVencimiento = new Date(cuota.año, cuota.mes - 1, 5);
+    const fechaVencimiento = new Date(cuota.año, cuota.mes - 1, 10);
     const hoy = new Date();
     return hoy > fechaVencimiento;
   };

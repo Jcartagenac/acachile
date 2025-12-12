@@ -162,9 +162,9 @@ export default function AdminCuotas() {
       return true;
     }
 
-    // Si es el mes actual, está vencida si ya pasó el día 5
+    // Si es el mes actual, está vencida si ya pasó el día 10
     if (cuota.año === añoActual && cuota.mes === mesActual) {
-      return diaActual > 5;
+      return diaActual > 10;
     }
 
     return false;
@@ -777,9 +777,9 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
       return true;
     }
 
-    // Si es el mes actual, está vencida si ya pasó el día 5
+    // Si es el mes actual, está vencida si ya pasó el día 10
     if (cuota.año === añoActual && cuota.mes === mesActual) {
-      return diaActual > 5;
+      return diaActual > 10;
     }
 
     return false;
