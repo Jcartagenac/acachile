@@ -5,7 +5,7 @@ interface ShopPasswordProtectionProps {
   children: ReactNode;
 }
 
-const SHOP_PASSWORD = 'Acachile.2010';
+const SHOP_PASSWORD = 'Aca2025';
 const SHOP_ACCESS_KEY = 'aca_shop_access';
 const SHOP_ACCESS_EXPIRY_KEY = 'aca_shop_access_expiry';
 const ACCESS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
