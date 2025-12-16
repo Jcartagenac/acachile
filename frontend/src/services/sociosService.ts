@@ -23,7 +23,7 @@ export interface Socio {
   redSocial: string | null;
   fotoUrl: string | null;
   valorCuota: number;
-  estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
+  estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' | 'suspendido';
   fechaIngreso: string;
   listaNegra: boolean;
   motivoListaNegra?: string;
@@ -49,7 +49,7 @@ export interface CreateSocioData {
   fechaNacimiento?: string;
   redSocial?: string;
   valorCuota?: number;
-  estadoSocio?: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado';
+  estadoSocio?: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' | 'suspendido';
   fechaIngreso?: string;
   listaNegra?: boolean;
   motivoListaNegra?: string;

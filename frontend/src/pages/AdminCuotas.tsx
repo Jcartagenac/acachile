@@ -1,6 +1,12 @@
 /**
  * Página de gestión de cuotas anuales
  * ACA Chile Frontend - Versión Compacta y Escalable
+ * 
+ * CICLO DE PAGOS Y ESTADOS:
+ * - Las cuotas vencen el día 10 de cada mes
+ * - A los 3 meses sin pagar: Estado cambia a SUSPENDIDO
+ * - A los 6 meses sin pagar: Marcado para EXPULSIÓN
+ * - Alertas visuales en 3 y 6 meses de atraso
  */
 
 import { useState, useEffect } from 'react';
@@ -36,7 +42,10 @@ interface SocioConEstado extends Socio {
   cuotasPagadasVencidas: number;
   mesesPagadosUltimoAño: number;
   ultimoPago?: string;
+  ultimaActualizacion?: string; // Fecha del último pago o cambio de estado
   estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos';
+  alertaNivel?: 'ninguna' | 'advertencia-3-meses' | 'critica-6-meses'; // Nivel de alerta
+  marcarParaExpulsion?: boolean; // Marcar si tiene 6+ meses sin pagar
 }
 
 export default function AdminCuotas() {
@@ -259,6 +268,8 @@ export default function AdminCuotas() {
 
       // Determinar estado basado SOLO en cuotas vencidas
       let estadoPago: 'al-dia' | 'atrasado' | 'sin-pagos' = 'sin-pagos';
+      let alertaNivel: 'ninguna' | 'advertencia-3-meses' | 'critica-6-meses' = 'ninguna';
+      let marcarParaExpulsion = false;
       
       if (cuotasVencidasCount === 0) {
         // No tiene cuotas vencidas
@@ -270,7 +281,20 @@ export default function AdminCuotas() {
       } else {
         // Tiene cuotas vencidas
         estadoPago = 'atrasado';
+        
+        // LÓGICA DE SUSPENSIÓN Y EXPULSIÓN
+        // 3 meses sin pagar -> Suspendido
+        // 6 meses sin pagar -> Para expulsión
+        if (cuotasVencidasCount >= 6) {
+          alertaNivel = 'critica-6-meses';
+          marcarParaExpulsion = true;
+        } else if (cuotasVencidasCount >= 3) {
+          alertaNivel = 'advertencia-3-meses';
+        }
       }
+      
+      // Última actualización (último pago o createdAt)
+      const ultimaActualizacion = ultimoPago || socio.createdAt;
       
       // 🔍 Debug especial para usuarios específicos
       if (socio.rut === '12679495-9' || socio.id === 557 || socio.id === 647) {
@@ -293,7 +317,10 @@ export default function AdminCuotas() {
         cuotasPagadasVencidas: cuotasPagadas.length,
         mesesPagadosUltimoAño: cuotasPagadas.length,
         ultimoPago,
-        estadoPago
+        ultimaActualizacion,
+        estadoPago,
+        alertaNivel,
+        marcarParaExpulsion
       };
     });
   };
@@ -364,6 +391,11 @@ export default function AdminCuotas() {
         'Último Pago': socio.ultimoPago
           ? new Date(socio.ultimoPago).toLocaleDateString('es-CL')
           : 'Sin pagos',
+        'Última Actualización': socio.ultimaActualizacion
+          ? new Date(socio.ultimaActualizacion).toLocaleDateString('es-CL')
+          : 'Sin actualizaciones',
+        'Alerta': socio.alertaNivel === 'critica-6-meses' ? '6+ meses - EXPULSIÓN' :
+          socio.alertaNivel === 'advertencia-3-meses' ? '3 meses - SUSPENDIDO' : 'Ninguna',
         'Teléfono': socio.telefono || 'N/A',
         'Ciudad': socio.ciudad || 'N/A'
       }));
@@ -383,6 +415,8 @@ export default function AdminCuotas() {
         { wch: 14 }, // Cuotas Vencidas
         { wch: 20 }, // Cuotas Pagadas
         { wch: 15 }, // Último Pago
+        { wch: 18 }, // Última Actualización
+        { wch: 20 }, // Alerta
         { wch: 15 }, // Teléfono
         { wch: 20 }, // Ciudad
       ];
@@ -631,33 +665,49 @@ export default function AdminCuotas() {
                           {socio.mesesPagados}/{socio.cuotasVencidas} meses
                         </p>
                         <p className="text-xs text-gray-500">
-                          {socio.ultimoPago ? (
-                            `Último: ${new Date(socio.ultimoPago).toLocaleDateString('es-CL', { month: 'short', year: 'numeric' })}`
+                          {socio.ultimaActualizacion ? (
+                            `Última actualización: ${new Date(socio.ultimaActualizacion).toLocaleDateString('es-CL')}`
                           ) : (
-                            'Sin pagos'
+                            'Sin actualizaciones'
                           )}
                         </p>
                       </div>
 
+                      {/* ALERTAS: Advertencia a 3 meses, Crítica a 6 meses */}
+                      {socio.alertaNivel === 'critica-6-meses' && (
+                        <div className="px-3 py-1.5 rounded-full text-xs font-medium bg-red-600 text-white flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          6+ meses - EXPULSIÓN
+                        </div>
+                      )}
+                      {socio.alertaNivel === 'advertencia-3-meses' && (
+                        <div className="px-3 py-1.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          3 meses - SUSPENDIDO
+                        </div>
+                      )}
+
                       {/* Badge de estado: Verde = al día, Amarillo = 1-2 vencidas, Rojo = 3+ vencidas */}
-                      <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 ${socio.mesesAtrasados === 0
-                        ? 'bg-green-100 text-green-800'
-                        : socio.mesesAtrasados <= 2
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                        }`}>
-                        {socio.mesesAtrasados === 0 ? (
-                          <span className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Al día
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            {socio.mesesAtrasados} vencida{socio.mesesAtrasados !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
+                      {socio.alertaNivel === 'ninguna' && (
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 ${socio.mesesAtrasados === 0
+                          ? 'bg-green-100 text-green-800'
+                          : socio.mesesAtrasados <= 2
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                          }`}>
+                          {socio.mesesAtrasados === 0 ? (
+                            <span className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Al día
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              {socio.mesesAtrasados} vencida{socio.mesesAtrasados !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       <ChevronRight className="h-5 w-5 text-gray-400" />
                     </div>
@@ -758,7 +808,7 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
   const [cuotaToDelete, setCuotaToDelete] = useState<Cuota | null>(null);
   const [fechaPago, setFechaPago] = useState<string>(new Date().toISOString().substring(0, 10));
 
-  // Función para verificar si una cuota está vencida (después del día 5)
+  // Función para verificar si una cuota está vencida (después del día 10 - Ciclo de pago)
   const esCuotaVencida = (cuota: Cuota): boolean => {
     if (cuota.pagado) return false;
 
@@ -1259,6 +1309,36 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
             </div>
           </div>
 
+          {/* ALERTAS DE SUSPENSIÓN Y EXPULSIÓN */}
+          {socio.alertaNivel === 'critica-6-meses' && (
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-500 rounded-lg flex items-start gap-3">
+              <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-red-900">
+                  ⚠️ ALERTA CRÍTICA: 6+ MESES SIN PAGAR
+                </p>
+                <p className="text-xs text-red-800 mt-1">
+                  Este socio tiene {cuotas.filter(c => esCuotaVencida(c)).length} cuotas vencidas. 
+                  Marcado para EXPULSIÓN según políticas de la asociación.
+                </p>
+              </div>
+            </div>
+          )}
+          {socio.alertaNivel === 'advertencia-3-meses' && (
+            <div className="mb-6 p-4 bg-orange-50 border-2 border-orange-400 rounded-lg flex items-start gap-3">
+              <AlertTriangle className="h-6 w-6 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-orange-900">
+                  ⚠️ ADVERTENCIA: 3 MESES SIN PAGAR
+                </p>
+                <p className="text-xs text-orange-800 mt-1">
+                  Este socio tiene {cuotas.filter(c => esCuotaVencida(c)).length} cuotas vencidas. 
+                  Estado cambiado a SUSPENDIDO. Si llega a 6 meses será marcado para expulsión.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Información sobre cuotas automáticas */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -1267,7 +1347,10 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
                 Las cuotas se generan automáticamente hasta el mes actual
               </p>
               <p className="text-xs text-blue-700 mt-1">
-                Las cuotas vencen el día 5 de cada mes. Los meses vencidos (después del día 5) aparecen en rojo.
+                Ciclo de pago: Las cuotas vencen el día 10 de cada mes. Los meses vencidos aparecen en rojo.
+              </p>
+              <p className="text-xs text-blue-700 mt-1">
+                <strong>Nota:</strong> Los pagos se registran exclusivamente a través del sistema de importación CSV o desde el panel administrativo de cuotas.
               </p>
             </div>
           </div>
@@ -1319,21 +1402,8 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
                     </button>
                   )}
 
-                  {/* Contenido principal - clickeable */}
-                  <button
-                    onClick={() => handleTogglePago(mes)}
-                    disabled={loading || !mesValido}
-                    className="w-full text-left"
-                    title={
-                      !mesValido
-                        ? 'Mes no disponible - Anterior a fecha de ingreso del socio'
-                        : !cuota
-                          ? 'Click para marcar como pagado (creará la cuota automáticamente)'
-                          : cuota.pagado
-                            ? 'Click para desmarcar como pagado'
-                            : 'Click para marcar como pagado'
-                    }
-                  >
+                  {/* Contenido principal - NO clickeable (botones de pago deshabilitados) */}
+                  <div className="w-full text-left opacity-60 cursor-not-allowed">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-900">
                         {nombreMes}
@@ -1382,7 +1452,7 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
                         </span>
                       </div>
                     )}
-                  </button>
+                  </div>
                 </div>
               );
             })}
@@ -1394,11 +1464,13 @@ function SocioDetailModal({ socio, año: añoInicial, onClose, onUpdate }: Socio
           )}
 
           {/* Instrucciones */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              💡 <strong>Tip:</strong> Haz clic en cualquier mes disponible para marcar como pagado/no pagado.
-              Los meses sin cuota se crearán automáticamente al marcarlos como pagados.
-              Los meses en gris no están disponibles (anteriores a la fecha de ingreso del socio).
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-300 rounded-lg">
+            <p className="text-sm text-gray-800">
+              ℹ️ <strong>Vista de solo lectura:</strong> Los pagos de cuotas se registran únicamente a través del sistema de importación CSV desde el panel principal de gestión de cuotas.
+              Este modal solo muestra el estado actual de los pagos del socio.
+            </p>
+            <p className="text-xs text-gray-600 mt-2">
+              <strong>Ciclo de pagos:</strong> Vencimiento día 10 | 3 meses sin pagar = Suspendido | 6 meses sin pagar = Expulsión
             </p>
           </div>
         </div>
