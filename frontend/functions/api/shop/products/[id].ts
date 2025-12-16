@@ -161,6 +161,31 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
   try {
     const id = context.params.id as string;
 
+    // First check if product exists
+    const product = await context.env.DB.prepare(
+      'SELECT id FROM shop_products WHERE id = ?'
+    ).bind(id).first();
+
+    if (!product) {
+      return jsonResponse({
+        success: false,
+        error: 'Product not found'
+      }, 404);
+    }
+
+    // Check if product is referenced in any orders
+    const orderItems = await context.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM shop_order_items WHERE product_id = ?'
+    ).bind(id).first<{ count: number }>();
+
+    if (orderItems && orderItems.count > 0) {
+      return jsonResponse({
+        success: false,
+        error: 'Cannot delete product: it has associated orders. Set to inactive instead.'
+      }, 400);
+    }
+
+    // Delete the product
     const result = await context.env.DB.prepare(
       'DELETE FROM shop_products WHERE id = ?'
     ).bind(id).run();
@@ -168,8 +193,8 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     if (result.meta.changes === 0) {
       return jsonResponse({
         success: false,
-        error: 'Product not found'
-      }, 404);
+        error: 'Failed to delete product'
+      }, 500);
     }
 
     return jsonResponse({
@@ -177,11 +202,20 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
       message: 'Product deleted successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting product:', error);
+    
+    // Check if it's a foreign key constraint error
+    if (error.message && error.message.includes('FOREIGN KEY constraint')) {
+      return jsonResponse({
+        success: false,
+        error: 'Cannot delete product: it is referenced in orders or cart. Set to inactive instead.'
+      }, 400);
+    }
+
     return jsonResponse({
       success: false,
-      error: 'Failed to delete product'
+      error: 'Failed to delete product: ' + (error.message || 'Unknown error')
     }, 500);
   }
 };
