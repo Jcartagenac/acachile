@@ -201,19 +201,31 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (product: Product) => {
-    if (!confirm(`¿Eliminar producto "${product.name}"?`)) return;
+    const confirmMsg = `¿Eliminar producto "${product.name}"?\n\nAdvertencia: Si hay órdenes asociadas, deberás eliminarlas primero o desactivar el producto.`;
+    if (!confirm(confirmMsg)) return;
 
     try {
       await deleteProduct(product.id);
       await loadProducts();
+      alert('Producto eliminado exitosamente');
     } catch (err: any) {
-      alert('Error al eliminar producto: ' + err.message);
+      const errorMsg = err.message || 'Error desconocido';
+      if (errorMsg.includes('referenced in orders') || errorMsg.includes('FOREIGN KEY')) {
+        alert('No se puede eliminar: El producto tiene órdenes asociadas.\n\nOpciones:\n1. Desactiva el producto para ocultarlo\n2. Ve a "Órdenes" y elimina las órdenes que usan este producto');
+      } else {
+        alert('Error al eliminar producto: ' + errorMsg);
+      }
     }
   };
 
   const handleToggleActive = async (product: Product) => {
+    const newStatus = product.is_active ? 0 : 1;
+    const action = newStatus ? 'activar' : 'desactivar';
+    
+    if (!confirm(`¿${action.charAt(0).toUpperCase() + action.slice(1)} producto "${product.name}"?`)) return;
+
     try {
-      await updateProduct(product.id, { is_active: product.is_active ? 0 : 1 });
+      await updateProduct(product.id, { is_active: newStatus });
       await loadProducts();
     } catch (err) {
       alert('Error al actualizar estado');

@@ -378,6 +378,23 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
   }
 }
 
+export async function deleteOrder(orderId: number): Promise<void> {
+  try {
+    const response = await fetch(`/api/shop/orders/${orderId}`, {
+      method: 'DELETE',
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to delete order');
+    }
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    throw error;
+  }
+}
+
 /**
  * Create product (admin)
  */

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Package, Search, Eye, Download, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { getAllOrders, updateOrderStatus, type Order } from '../services/shopService';
+import { Package, Search, Eye, Download, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
+import { getAllOrders, updateOrderStatus, deleteOrder, type Order } from '../services/shopService';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -54,6 +54,20 @@ export default function AdminOrders() {
       await loadOrders();
     } catch (err) {
       alert('Error al actualizar estado');
+    }
+  };
+
+  const handleDeleteOrder = async (order: Order) => {
+    const confirmMsg = `¿Eliminar orden ${order.order_number}?\n\nEsta acción no se puede deshacer.\n\nProductos: ${order.items.map(i => i.product_name).join(', ')}`;
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      await deleteOrder(order.id);
+      await loadOrders();
+      alert('Orden eliminada exitosamente');
+    } catch (err: any) {
+      alert('Error al eliminar orden: ' + (err.message || 'Error desconocido'));
     }
   };
 
@@ -207,13 +221,22 @@ export default function AdminOrders() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="inline-flex items-center gap-1 px-3 py-1 text-sm text-primary-600 hover:bg-primary-50 rounded transition-colors"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Ver detalles
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="inline-flex items-center gap-1 px-3 py-1 text-sm text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Ver detalles
+                    </button>
+                    <button
+                      onClick={() => handleDeleteOrder(order)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Eliminar orden"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
