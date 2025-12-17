@@ -53,6 +53,7 @@ export const MyEventsPage: React.FC = () => {
       case 'encuentro': return '#10B981';
       case 'competencia': return '#F59E0B';
       case 'masterclass': return '#8B5CF6';
+      case 'social': return '#EC4899';
       default: return '#6B7280';
     }
   };

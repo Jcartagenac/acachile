@@ -37,7 +37,7 @@ const eventSchema = z
       .string()
       .min(5, 'La ubicación debe tener al menos 5 caracteres')
       .max(100, 'La ubicación no puede exceder 100 caracteres'),
-    type: z.enum(['campeonato', 'taller', 'encuentro', 'competencia', 'masterclass'], {
+    type: z.enum(['campeonato', 'taller', 'encuentro', 'competencia', 'masterclass', 'social'], {
       errorMap: () => ({ message: 'Selecciona un tipo de evento válido' })
     }),
     maxParticipants: z
@@ -393,6 +393,7 @@ export const EditEventPage: React.FC = () => {
                       <option value="encuentro">Encuentro</option>
                       <option value="competencia">Competencia</option>
                       <option value="masterclass">Masterclass</option>
+                      <option value="social">Social</option>
                     </select>
                     {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>}
                   </div>

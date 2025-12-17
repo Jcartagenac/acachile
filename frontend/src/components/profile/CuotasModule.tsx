@@ -236,16 +236,15 @@ export const CuotasModule: React.FC = () => {
                     )}
 
                     {!cuota.pagado ? (
-                      <button
-                        onClick={() => {
-                          setSelectedCuota(cuota);
-                          setShowPagarModal(true);
-                        }}
-                        className="w-full mt-2 flex items-center justify-center px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Pagar
-                      </button>
+                      <div className="w-full mt-2 px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm text-center border border-gray-200">
+                        <div className="flex items-center justify-center mb-1">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          <span className="font-medium">Pago Pendiente</span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Los pagos se registran solo por directores
+                        </p>
+                      </div>
                     ) : (
                       cuota.comprobanteUrl && (
                         <button
@@ -272,18 +271,13 @@ export const CuotasModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal de pago */}
-      {showPagarModal && selectedCuota && (
-        <PagarCuotaModal
+      {/* Modal para ver comprobante */}
+      {showPagarModal && selectedCuota && selectedCuota.comprobanteUrl && (
+        <VerComprobanteModal
           cuota={selectedCuota}
           onClose={() => {
             setShowPagarModal(false);
             setSelectedCuota(null);
-          }}
-          onPagado={() => {
-            setShowPagarModal(false);
-            setSelectedCuota(null);
-            loadMisCuotas();
           }}
         />
       )}
@@ -291,70 +285,82 @@ export const CuotasModule: React.FC = () => {
   );
 };
 
-// Modal para pagar cuota
-function PagarCuotaModal({ cuota, onClose, onPagado }: {
+// Modal para ver comprobante de pago
+function VerComprobanteModal({ cuota, onClose }: {
   cuota: Cuota;
   onClose: () => void;
-  onPagado: () => void;
 }) {
-  const [comprobante, setComprobante] = useState<File | null>(null);
-  const [comprobantePreview, setComprobantePreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-neutral-900">
+              Comprobante de Pago
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-neutral-400 hover:text-neutral-600"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
-  const handleComprobanteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setComprobante(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setComprobantePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubirComprobante = async () => {
-    if (!comprobante) {
-      setError('Debes seleccionar un comprobante');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await sociosService.subirComprobante(comprobante, cuota.id);
-
-      if (!response.success) {
-        throw new Error(response.error || 'Error al subir comprobante');
-      }
-
-      setSuccess(true);
-      setTimeout(() => {
-        onPagado();
-      }, 2000);
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Si la cuota ya está pagada, solo mostrar el comprobante
-  if (cuota.pagado && cuota.comprobanteUrl) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-neutral-900">Comprobante de Pago</h2>
-              <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
-                <X className="h-6 w-6" />
-              </button>
+          <div className="mb-4 p-4 bg-neutral-50 rounded-lg">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-neutral-500">Período:</span>
+                <span className="ml-2 font-medium text-neutral-900">
+                  {cuota.mes}/{cuota.ano}
+                </span>
+              </div>
+              <div>
+                <span className="text-neutral-500">Monto:</span>
+                <span className="ml-2 font-medium text-neutral-900">
+                  ${cuota.monto.toLocaleString('es-CL')}
+                </span>
+              </div>
+              {cuota.fechaPago && (
+                <div className="col-span-2">
+                  <span className="text-neutral-500">Fecha de pago:</span>
+                  <span className="ml-2 font-medium text-neutral-900">
+                    {new Date(cuota.fechaPago).toLocaleDateString('es-CL')}
+                  </span>
+                </div>
+              )}
             </div>
+          </div>
+
+          {cuota.comprobanteUrl && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-neutral-700 mb-2">
+                Comprobante de Pago
+              </h4>
+              <div className="border border-neutral-200 rounded-lg overflow-hidden">
+                <img
+                  src={cuota.comprobanteUrl}
+                  alt="Comprobante de pago"
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default CuotasModule;
 
             <div className="space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">

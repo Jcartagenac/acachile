@@ -51,6 +51,8 @@ export const EventCard: React.FC<EventCardProps> = ({
         return '#10B981'; // Green
       case 'torneo':
         return '#F59E0B'; // Amber
+      case 'social':
+        return '#EC4899'; // Pink
       default:
         return '#6B7280'; // Gray
     }
