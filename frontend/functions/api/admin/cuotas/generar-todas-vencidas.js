@@ -28,23 +28,41 @@ async function getSociosActivos(env) {
 async function generarCuotasVencidasSocio(env, socio, valorCuotaDefault, fechaActual) {
   const valorCuota = socio.valor_cuota || valorCuotaDefault;
   
-  // Obtener fecha de ingreso del socio
-  let fechaIngreso = new Date(socio.created_at || '2024-01-01');
+  // Obtener la fecha del primer pago del socio para determinar desde cuándo generar
+  const primerPago = await env.DB.prepare(`
+    SELECT MIN(año) as min_año, MIN(mes) as min_mes
+    FROM cuotas 
+    WHERE usuario_id = ? AND pagado = 1
+    ORDER BY año ASC, mes ASC
+    LIMIT 1
+  `).bind(socio.id).first();
   
-  // Determinar desde qué mes/año generar
-  let añoInicio = fechaIngreso.getFullYear();
-  let mesInicio = fechaIngreso.getMonth() + 1; // JavaScript months are 0-indexed
+  let añoInicio, mesInicio;
   
-  const añoActual = fechaActual.getFullYear();
-  const mesActual = fechaActual.getMonth() + 1;
+  if (primerPago && primerPago.min_año) {
+    // Si tiene pagos, iniciar desde el mes del primer pago
+    añoInicio = primerPago.min_año;
+    mesInicio = primerPago.min_mes || 1;
+    console.log(`[Socio ${socio.id}] Primer pago encontrado: ${mesInicio}/${añoInicio}`);
+  } else {
+    // Si no tiene pagos, usar fecha de ingreso
+    const fechaIngreso = new Date(socio.created_at || '2024-01-01');
+    añoInicio = fechaIngreso.getFullYear();
+    mesInicio = fechaIngreso.getMonth() + 1; // JavaScript months are 0-indexed
+    console.log(`[Socio ${socio.id}] Sin pagos, usando fecha ingreso: ${mesInicio}/${añoInicio}`);
+  }
+  
+  // Generar hasta diciembre 2025
+  const añoFin = 2025;
+  const mesFin = 12;
   
   let cuotasGeneradas = 0;
   let cuotasActualizadas = 0;
   
-  // Iterar desde la fecha de ingreso hasta el mes actual
-  for (let año = añoInicio; año <= añoActual; año++) {
+  // Iterar desde la fecha inicial hasta diciembre 2025
+  for (let año = añoInicio; año <= añoFin; año++) {
     const mesInicioPeriodo = (año === añoInicio) ? mesInicio : 1;
-    const mesFinPeriodo = (año === añoActual) ? mesActual : 12;
+    const mesFinPeriodo = (año === añoFin) ? mesFin : 12;
     
     for (let mes = mesInicioPeriodo; mes <= mesFinPeriodo; mes++) {
       try {
