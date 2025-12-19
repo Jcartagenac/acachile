@@ -65,6 +65,8 @@ export default function AdminCuotas() {
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'al-dia' | 'atrasado'>('todos');
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
+  const [generandoTodasCuotas, setGenerandoTodasCuotas] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -442,6 +444,39 @@ export default function AdminCuotas() {
     }
   };
 
+  const handleGenerarTodasCuotasVencidas = async () => {
+    if (!confirm('¿Estás seguro de que deseas generar TODAS las cuotas vencidas de TODOS los socios? Este proceso puede tardar varios segundos.')) {
+      return;
+    }
+
+    setGenerandoTodasCuotas(true);
+    setError(null);
+    setMensajeExito(null);
+
+    try {
+      const response = await sociosService.generarTodasCuotasVencidas();
+      
+      if (response.success && response.data) {
+        const { sociosProcesados, cuotasGeneradas, cuotasActualizadas, totalCuotas } = response.data;
+        setMensajeExito(
+          `✅ Proceso completado: ${sociosProcesados} socios procesados, ${cuotasGeneradas} cuotas generadas, ${cuotasActualizadas} cuotas actualizadas (Total: ${totalCuotas} cuotas)`
+        );
+        
+        // Recargar datos para reflejar los cambios
+        await loadData();
+        
+        // Limpiar mensaje después de 10 segundos
+        setTimeout(() => setMensajeExito(null), 10000);
+      } else {
+        setError(response.error || 'Error al generar cuotas vencidas');
+      }
+    } catch (err) {
+      setError('Error al generar cuotas vencidas: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setGenerandoTodasCuotas(false);
+    }
+  };
+
   const stats = getEstadisticas();
 
   if (loading) {
@@ -490,6 +525,24 @@ export default function AdminCuotas() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={handleGenerarTodasCuotasVencidas}
+              disabled={generandoTodasCuotas}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Generar todas las cuotas vencidas de todos los socios desde su fecha de ingreso hasta hoy"
+            >
+              {generandoTodasCuotas ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Generar Todas las Vencidas
+                </>
+              )}
+            </button>
+            <button
               onClick={() => setShowImportarModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
@@ -505,6 +558,16 @@ export default function AdminCuotas() {
             </button>
           </div>
         </div>
+
+        {/* Mensaje de éxito */}
+        {mensajeExito && (
+          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded">
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-400 mr-3" />
+              <p className="text-green-700">{mensajeExito}</p>
+            </div>
+          </div>
+        )}
 
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

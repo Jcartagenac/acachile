@@ -296,6 +296,27 @@ class SociosService {
     }
   }
 
+  async generarTodasCuotasVencidas(): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/cuotas/generar-todas-vencidas`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al generar todas las cuotas vencidas');
+      }
+
+      const data = await response.json();
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('Error generating all overdue cuotas:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' };
+    }
+  }
+
   async marcarCuotaPagada(cuotaId: number, datos: {
     metodoPago: 'transferencia' | 'efectivo' | 'tarjeta';
     fechaPago?: string;
