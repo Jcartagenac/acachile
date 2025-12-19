@@ -9,7 +9,6 @@ import {
   Bell
 } from 'lucide-react';
 import { ProfileModule } from '../components/profile/ProfileModule';
-import { AccountModule } from '../components/profile/AccountModule';
 import { CuotasModule } from '../components/profile/CuotasModule';
 import { SettingsModule } from '../components/profile/SettingsModule';
 
@@ -84,12 +83,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
       case 'profile':
         return <ProfileModule />;
       case 'account':
-        return (
-          <div className="space-y-6">
-            <CuotasModule />
-            <AccountModule />
-          </div>
-        );
+        return <CuotasModule />;
       case 'settings':
         return <SettingsModule />;
       default:
