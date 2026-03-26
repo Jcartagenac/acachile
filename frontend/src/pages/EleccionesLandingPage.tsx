@@ -35,21 +35,20 @@ const EleccionesLandingPage: React.FC = () => {
 
       <Container size="xl" className="space-y-5 sm:space-y-8">
         <section className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/80 shadow-xl shadow-stone-200/70 backdrop-blur-md sm:rounded-[2rem]">
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-black">
+          <div className="px-4 py-4 sm:px-8 sm:py-6">
+            <div className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-red-700 sm:px-4">
+              Proceso eleccionario 2026
+            </div>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
+              Elecciones de directorio ACA 2026
+            </h1>
+          </div>
+          <div className="aspect-[16/9] w-full overflow-hidden bg-black">
             <img
               src={bannerElecciones}
               alt="Banner elecciones de directorio ACA 2026"
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-8">
-              <div className="inline-flex items-center rounded-full border border-white/20 bg-black/35 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-sm sm:px-4">
-                Proceso eleccionario 2026
-              </div>
-              <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Elecciones de directorio ACA 2026
-              </h1>
-            </div>
           </div>
         </section>
 
