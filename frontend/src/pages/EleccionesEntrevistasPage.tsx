@@ -226,23 +226,23 @@ const EleccionesEntrevistasPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-soft-gradient-light py-10 sm:py-14">
+    <div className="min-h-screen bg-soft-gradient-light py-4 sm:py-10">
       <SEOHelmet
         title="Entrevistas elecciones directorio ACA Chile"
         description="Entrevistas y resúmenes de candidaturas para la elección de directorio del día 28."
         url="https://acachile.com/elecciones/entrevistas"
       />
 
-      <Container size="xl" className="space-y-5 sm:space-y-8">
-        <section className="overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/75 shadow-xl shadow-stone-200/70 backdrop-blur-md sm:rounded-[2rem]">
-          <div className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+      <Container size="xl" className="space-y-4 sm:space-y-8">
+        <section className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/75 shadow-xl shadow-stone-200/70 backdrop-blur-md sm:rounded-[2rem]">
+          <div className="px-4 py-4 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             <div className="space-y-4 sm:space-y-5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">
                   Elecciones ACA · 28 de marzo
                 </span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <h1 className="text-2xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
                   Elecciones ACA 28 de marzo
                 </h1>
@@ -256,9 +256,9 @@ const EleccionesEntrevistasPage: React.FC = () => {
 
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm lg:hidden">
+            <div className="rounded-3xl border border-stone-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm lg:hidden">
               <div className="mb-3 text-sm font-semibold text-stone-700">Selecciona una entrevista</div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-2">
                 {interviews.map((candidate) => {
                   const isActive = candidate.id === selectedId;
                   return (
@@ -266,7 +266,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                       key={candidate.id}
                       type="button"
                       onClick={() => handleSelectCandidate(candidate.id)}
-                      className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold shadow-sm transition-all ${
+                      className={`min-h-[64px] rounded-2xl border px-3 py-3 text-center text-xs font-semibold leading-4 shadow-sm transition-all ${
                         isActive
                           ? 'border-red-600 bg-red-600 text-white shadow-red-200'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
