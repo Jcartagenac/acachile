@@ -77,6 +77,13 @@ const isHTML = (content: string): boolean => {
   return /<\/?[a-z][\s\S]*>/i.test(content);
 };
 
+const resolvePreferredImage = (manualImage?: string, sourceImage?: string, fallbackImage?: string) => {
+  const invalidImages = new Set(['', '/images/default-news.jpg']);
+  if (manualImage && !invalidImages.has(manualImage)) return manualImage;
+  if (sourceImage && !invalidImages.has(sourceImage)) return sourceImage;
+  return fallbackImage || '';
+};
+
 const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = ({ section, reverse }) => {
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
   const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
@@ -475,7 +482,7 @@ const HomePage: React.FC = () => {
             if (event.registrationOpen) parts.push('Inscripciones abiertas');
             content = parts.filter(Boolean).join('\n\n');
           }
-          image = section.image_url || event.image || image;
+          image = resolvePreferredImage(section.image_url, event.image, image);
           ctaLabel = section.cta_label || 'Ver evento';
           ctaUrl = section.cta_url || `/eventos/${event.id}`;
         }
@@ -488,7 +495,7 @@ const HomePage: React.FC = () => {
           if (!section.content) {
             content = article.excerpt || article.content || content;
           }
-          image = section.image_url || article.featured_image || image;
+          image = resolvePreferredImage(section.image_url, article.featured_image, image);
           ctaLabel = section.cta_label || 'Leer noticia';
           ctaUrl = section.cta_url || `/noticias/${article.slug}`;
         }
