@@ -62,6 +62,7 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const AdminEcommerce = lazy(() => import('./pages/AdminEcommerce'));
+const EleccionesEntrevistasPage = lazy(() => import('./pages/EleccionesEntrevistasPage'));
 
 import { ShopPasswordProtection } from './components/auth';
 
@@ -157,6 +158,9 @@ function App() {
           {/* Página de participación sorteo (acceso directo, sin indexar) */}
           <Route path="/participa" element={<ParticipaPage />} />
           <Route path="/condicionessorteo" element={<CondicionesSorteoPage />} />
+
+          {/* Elecciones - acceso directo solamente */}
+          <Route path="/elecciones/entrevistas" element={<EleccionesEntrevistasPage />} />
 
           {/* Test Page */}
           <Route path="/testuser" element={<TestUser />} />
