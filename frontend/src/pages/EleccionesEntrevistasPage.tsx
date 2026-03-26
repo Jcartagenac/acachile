@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SEOHelmet } from '../components/SEOHelmet';
 import { Container } from '../components/layout/Container';
-import { FileText, PlayCircle, ScrollText, Users } from 'lucide-react';
+import { FileText, Heart, PlayCircle, ScrollText, Users } from 'lucide-react';
 
 import danielInterview from '../content/elecciones/Daniel Tolosa-limpio.txt?raw';
 import danielSummary from '../content/elecciones/Daniel Tolosa-resumen.txt?raw';
@@ -150,11 +150,36 @@ const setRobotsNoIndex = () => {
   robots.setAttribute('content', 'noindex,nofollow,noarchive');
 };
 
+const LIKE_COOKIE_KEY = 'aca_elecciones_likes';
+
+const readLikesFromCookie = (): Record<string, true> => {
+  if (typeof document === 'undefined') return {};
+  const raw = document.cookie
+    .split('; ')
+    .find((entry) => entry.startsWith(`${LIKE_COOKIE_KEY}=`))
+    ?.split('=')[1];
+
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(decodeURIComponent(raw));
+  } catch {
+    return {};
+  }
+};
+
+const writeLikesToCookie = (likes: Record<string, true>) => {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${LIKE_COOKIE_KEY}=${encodeURIComponent(JSON.stringify(likes))}; path=/; max-age=${60 * 60 * 24 * 365}`;
+};
+
 const CandidateList: React.FC<{
   candidates: CandidateInterview[];
   selectedId: string;
+  likedCandidates: Record<string, true>;
   onSelect: (id: string) => void;
-}> = ({ candidates, selectedId, onSelect }) => {
+  onLike: (id: string) => void;
+}> = ({ candidates, selectedId, likedCandidates, onSelect, onLike }) => {
   return (
     <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">
@@ -164,6 +189,7 @@ const CandidateList: React.FC<{
       <div className="flex flex-col gap-2">
         {candidates.map((candidate) => {
           const isActive = candidate.id === selectedId;
+          const isLiked = Boolean(likedCandidates[candidate.id]);
           return (
             <button
               key={candidate.id}
@@ -175,8 +201,32 @@ const CandidateList: React.FC<{
                   : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
               }`}
             >
-              <div className="font-semibold">{candidate.name}</div>
-              <div className={`mt-1 text-sm ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold">{candidate.name}</div>
+                  <div className={`mt-1 text-sm ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLike(candidate.id);
+                  }}
+                  disabled={isLiked}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    isActive
+                      ? isLiked
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white/15 text-white hover:bg-white/25'
+                      : isLiked
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-white text-stone-500 hover:text-red-700'
+                  } ${isLiked ? 'cursor-default' : ''}`}
+                >
+                  <Heart className={`h-3.5 w-3.5 ${isLiked ? 'fill-current' : ''}`} />
+                  {isLiked ? 'Likeado' : 'Like'}
+                </button>
+              </div>
             </button>
           );
         })}
@@ -228,10 +278,12 @@ const ViewSwitcher: React.FC<{
 const EleccionesEntrevistasPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState(interviews[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>('entrevista');
+  const [likedCandidates, setLikedCandidates] = useState<Record<string, true>>({});
   const contentTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setRobotsNoIndex();
+    setLikedCandidates(readLikesFromCookie());
   }, []);
 
   const selected = useMemo(
@@ -248,6 +300,15 @@ const EleccionesEntrevistasPage: React.FC = () => {
 
     requestAnimationFrame(() => {
       contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const handleLikeCandidate = (id: string) => {
+    setLikedCandidates((prev) => {
+      if (prev[id]) return prev;
+      const next = { ...prev, [id]: true };
+      writeLikesToCookie(next);
+      return next;
     });
   };
 
@@ -287,26 +348,54 @@ const EleccionesEntrevistasPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-2">
                 {interviews.map((candidate) => {
                   const isActive = candidate.id === selectedId;
+                  const isLiked = Boolean(likedCandidates[candidate.id]);
                   return (
-                    <button
+                    <div
                       key={candidate.id}
-                      type="button"
-                      onClick={() => handleSelectCandidate(candidate.id)}
                       className={`min-h-[64px] rounded-2xl border px-3 py-3 text-center text-xs font-semibold leading-4 shadow-sm transition-all ${
                         isActive
                           ? 'border-red-600 bg-red-600 text-white shadow-red-200'
                           : 'border-stone-200 bg-white text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                       }`}
                     >
-                      {candidate.name}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectCandidate(candidate.id)}
+                        className="w-full"
+                      >
+                        {candidate.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLikeCandidate(candidate.id)}
+                        disabled={isLiked}
+                        className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          isActive
+                            ? isLiked
+                              ? 'bg-white/20 text-white'
+                              : 'bg-white/15 text-white'
+                            : isLiked
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-stone-100 text-stone-500 hover:text-red-700'
+                        } ${isLiked ? 'cursor-default' : ''}`}
+                      >
+                        <Heart className={`h-3 w-3 ${isLiked ? 'fill-current' : ''}`} />
+                        {isLiked ? 'Likeado' : 'Like'}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
             </div>
 
             <div className="hidden lg:block">
-              <CandidateList candidates={interviews} selectedId={selectedId} onSelect={handleSelectCandidate} />
+              <CandidateList
+                candidates={interviews}
+                selectedId={selectedId}
+                likedCandidates={likedCandidates}
+                onSelect={handleSelectCandidate}
+                onLike={handleLikeCandidate}
+              />
             </div>
           </aside>
 
@@ -315,7 +404,22 @@ const EleccionesEntrevistasPage: React.FC = () => {
               <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 sm:text-sm">Contenido seleccionado</div>
-                  <h2 className="mt-2 text-xl font-bold text-stone-900 sm:text-3xl">{selected.name}</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <h2 className="text-xl font-bold text-stone-900 sm:text-3xl">{selected.name}</h2>
+                    <button
+                      type="button"
+                      onClick={() => handleLikeCandidate(selected.id)}
+                      disabled={Boolean(likedCandidates[selected.id])}
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold sm:text-sm ${
+                        likedCandidates[selected.id]
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-stone-100 text-stone-600 hover:text-red-700'
+                      } ${likedCandidates[selected.id] ? 'cursor-default' : ''}`}
+                    >
+                      <Heart className={`h-4 w-4 ${likedCandidates[selected.id] ? 'fill-current' : ''}`} />
+                      {likedCandidates[selected.id] ? 'Likeado' : 'Dar like'}
+                    </button>
+                  </div>
                   <p className="mt-1 text-sm text-stone-600">{selected.role}</p>
                 </div>
                 <ViewSwitcher mode={viewMode} onChange={setViewMode} />
