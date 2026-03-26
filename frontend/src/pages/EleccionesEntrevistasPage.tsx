@@ -42,7 +42,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'daniel-tolosa',
     name: 'Daniel Tolosa',
-    role: 'Candidato a tesorería',
+    role: 'Postulante a tesorería',
     interview: danielInterview,
     summary: danielSummary,
     videoUrl: `${VIDEO_BASE_URL}/01-daniel-tolosa.mp4`,
@@ -50,7 +50,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'jorge-silva',
     name: 'Jorge Silva',
-    role: 'Candidato',
+    role: 'Postulante',
     interview: jorgeInterview,
     summary: jorgeSummary,
     videoUrl: `${VIDEO_BASE_URL}/02-jorge-silva.mp4`,
@@ -82,7 +82,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'eduardo-elgueta',
     name: 'Eduardo Elgueta',
-    role: 'Candidato',
+    role: 'Postulante',
     interview: eduardoInterview,
     summary: eduardoSummary,
     videoUrl: `${VIDEO_BASE_URL}/07-eduardo-elgueta.mp4`,
@@ -90,7 +90,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'oscar-cerda',
     name: 'Oscar Cerda',
-    role: 'Candidato',
+    role: 'Postulante',
     interview: oscarInterview,
     summary: oscarSummary,
     videoUrl: `${VIDEO_BASE_URL}/08-oscar-cerda.mp4`,
@@ -299,7 +299,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
     setViewMode('entrevista');
 
     requestAnimationFrame(() => {
-      contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   };
 
@@ -403,8 +403,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
             <div ref={contentTopRef} className="border-b border-stone-200 bg-stone-50/80 px-4 py-4 sm:px-8 sm:py-5">
               <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 sm:text-sm">Contenido seleccionado</div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-xl font-bold text-stone-900 sm:text-3xl">{selected.name}</h2>
                     <button
                       type="button"
