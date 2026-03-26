@@ -239,18 +239,12 @@ const EleccionesEntrevistasPage: React.FC = () => {
             <div className="space-y-4 sm:space-y-5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">
-                  Elecciones directorio · 28
-                </span>
-                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-600">
-                  Acceso directo
-                </span>
-                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-600">
-                  {interviews.length} entrevistas
+                  Elecciones ACA · 28 de marzo
                 </span>
               </div>
               <div className="space-y-3">
                 <h1 className="text-2xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
-                  Entrevistas y resúmenes de candidaturas
+                  Elecciones ACA 28 de marzo
                 </h1>
                 <p className="max-w-3xl text-sm leading-6 text-stone-600 sm:text-lg sm:leading-7">
                   {introText}
