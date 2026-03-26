@@ -150,36 +150,33 @@ const setRobotsNoIndex = () => {
   robots.setAttribute('content', 'noindex,nofollow,noarchive');
 };
 
-const LIKE_COOKIE_KEY = 'aca_elecciones_likes';
+const BROWSER_ID_COOKIE_KEY = 'aca_elecciones_browser_id';
 
-const readLikesFromCookie = (): Record<string, true> => {
-  if (typeof document === 'undefined') return {};
-  const raw = document.cookie
+const readCookieValue = (key: string) => {
+  if (typeof document === 'undefined') return null;
+  return document.cookie
     .split('; ')
-    .find((entry) => entry.startsWith(`${LIKE_COOKIE_KEY}=`))
-    ?.split('=')[1];
-
-  if (!raw) return {};
-
-  try {
-    return JSON.parse(decodeURIComponent(raw));
-  } catch {
-    return {};
-  }
+    .find((entry) => entry.startsWith(`${key}=`))
+    ?.split('=')[1] || null;
 };
 
-const writeLikesToCookie = (likes: Record<string, true>) => {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${LIKE_COOKIE_KEY}=${encodeURIComponent(JSON.stringify(likes))}; path=/; max-age=${60 * 60 * 24 * 365}`;
+const ensureBrowserId = () => {
+  const existing = readCookieValue(BROWSER_ID_COOKIE_KEY);
+  if (existing) return decodeURIComponent(existing);
+
+  const browserId = `browser_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+  document.cookie = `${BROWSER_ID_COOKIE_KEY}=${encodeURIComponent(browserId)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+  return browserId;
 };
 
 const CandidateList: React.FC<{
   candidates: CandidateInterview[];
   selectedId: string;
-  likedCandidates: Record<string, true>;
+  likedCandidates: Record<string, boolean>;
+  likeCounts: Record<string, number>;
   onSelect: (id: string) => void;
   onLike: (id: string) => void;
-}> = ({ candidates, selectedId, likedCandidates, onSelect, onLike }) => {
+}> = ({ candidates, selectedId, likedCandidates, likeCounts, onSelect, onLike }) => {
   return (
     <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">
@@ -212,7 +209,6 @@ const CandidateList: React.FC<{
                     event.stopPropagation();
                     onLike(candidate.id);
                   }}
-                  disabled={isLiked}
                   className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
                     isActive
                       ? isLiked
@@ -224,7 +220,7 @@ const CandidateList: React.FC<{
                   } ${isLiked ? 'cursor-default' : ''}`}
                 >
                   <Heart className={`h-3.5 w-3.5 ${isLiked ? 'fill-current' : ''}`} />
-                  {isLiked ? 'Likeado' : 'Like'}
+                  {isLiked ? 'Quitar like' : 'Like'} · {likeCounts[candidate.id] ?? 0}
                 </button>
               </div>
             </button>
@@ -278,12 +274,40 @@ const ViewSwitcher: React.FC<{
 const EleccionesEntrevistasPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState(interviews[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>('entrevista');
-  const [likedCandidates, setLikedCandidates] = useState<Record<string, true>>({});
+  const [browserId, setBrowserId] = useState('');
+  const [likedCandidates, setLikedCandidates] = useState<Record<string, boolean>>({});
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const contentTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setRobotsNoIndex();
-    setLikedCandidates(readLikesFromCookie());
+    const currentBrowserId = ensureBrowserId();
+    setBrowserId(currentBrowserId);
+
+    Promise.all(
+      interviews.map(async (candidate) => {
+        const response = await fetch(`/api/elecciones/likes/${candidate.id}?browserId=${encodeURIComponent(currentBrowserId)}`);
+        const data = await response.json();
+        return {
+          id: candidate.id,
+          totalLikes: data?.data?.totalLikes ?? 0,
+          userLiked: Boolean(data?.data?.userLiked),
+        };
+      })
+    )
+      .then((results) => {
+        const nextCounts: Record<string, number> = {};
+        const nextLiked: Record<string, boolean> = {};
+        for (const result of results) {
+          nextCounts[result.id] = result.totalLikes;
+          nextLiked[result.id] = result.userLiked;
+        }
+        setLikeCounts(nextCounts);
+        setLikedCandidates(nextLiked);
+      })
+      .catch((error) => {
+        console.error('Error loading election likes:', error);
+      });
   }, []);
 
   const selected = useMemo(
@@ -303,13 +327,26 @@ const EleccionesEntrevistasPage: React.FC = () => {
     });
   };
 
-  const handleLikeCandidate = (id: string) => {
-    setLikedCandidates((prev) => {
-      if (prev[id]) return prev;
-      const next = { ...prev, [id]: true };
-      writeLikesToCookie(next);
-      return next;
-    });
+  const handleLikeCandidate = async (id: string) => {
+    if (!browserId) return;
+
+    try {
+      const response = await fetch(`/api/elecciones/likes/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ browserId }),
+      });
+      const data = await response.json();
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'No se pudo actualizar el like');
+      }
+
+      setLikedCandidates((prev) => ({ ...prev, [id]: Boolean(data.data.userLiked) }));
+      setLikeCounts((prev) => ({ ...prev, [id]: Number(data.data.totalLikes || 0) }));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
   };
 
   return (
@@ -368,7 +405,6 @@ const EleccionesEntrevistasPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleLikeCandidate(candidate.id)}
-                        disabled={isLiked}
                         className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                           isActive
                             ? isLiked
@@ -380,7 +416,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                         } ${isLiked ? 'cursor-default' : ''}`}
                       >
                         <Heart className={`h-3 w-3 ${isLiked ? 'fill-current' : ''}`} />
-                        {isLiked ? 'Likeado' : 'Like'}
+                        {isLiked ? 'Quitar like' : 'Like'} · {likeCounts[candidate.id] ?? 0}
                       </button>
                     </div>
                   );
@@ -393,6 +429,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                 candidates={interviews}
                 selectedId={selectedId}
                 likedCandidates={likedCandidates}
+                likeCounts={likeCounts}
                 onSelect={handleSelectCandidate}
                 onLike={handleLikeCandidate}
               />
@@ -408,15 +445,14 @@ const EleccionesEntrevistasPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleLikeCandidate(selected.id)}
-                      disabled={Boolean(likedCandidates[selected.id])}
                       className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold sm:text-sm ${
                         likedCandidates[selected.id]
                           ? 'bg-red-100 text-red-700'
                           : 'bg-stone-100 text-stone-600 hover:text-red-700'
-                      } ${likedCandidates[selected.id] ? 'cursor-default' : ''}`}
+                      }`}
                     >
                       <Heart className={`h-4 w-4 ${likedCandidates[selected.id] ? 'fill-current' : ''}`} />
-                      {likedCandidates[selected.id] ? 'Likeado' : 'Dar like'}
+                      {likedCandidates[selected.id] ? 'Quitar like' : 'Dar like'} · {likeCounts[selected.id] ?? 0}
                     </button>
                   </div>
                   <p className="mt-1 text-sm text-stone-600">{selected.role}</p>
