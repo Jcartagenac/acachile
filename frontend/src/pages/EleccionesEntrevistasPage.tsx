@@ -148,7 +148,7 @@ const CandidateList: React.FC<{
     <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">
         <Users className="h-4 w-4" />
-        Selección
+        Selecciona una entrevista
       </div>
       <div className="flex flex-col gap-2">
         {candidates.map((candidate) => {
@@ -262,8 +262,9 @@ const EleccionesEntrevistasPage: React.FC = () => {
 
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="lg:hidden">
-              <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1">
+            <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm lg:hidden">
+              <div className="mb-3 text-sm font-semibold text-stone-700">Selecciona una entrevista</div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {interviews.map((candidate) => {
                   const isActive = candidate.id === selectedId;
                   return (
@@ -271,14 +272,13 @@ const EleccionesEntrevistasPage: React.FC = () => {
                       key={candidate.id}
                       type="button"
                       onClick={() => handleSelectCandidate(candidate.id)}
-                      className={`min-w-[220px] snap-start rounded-2xl border px-4 py-3 text-left shadow-sm transition-all ${
+                      className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold shadow-sm transition-all ${
                         isActive
                           ? 'border-red-600 bg-red-600 text-white shadow-red-200'
-                          : 'border-stone-200 bg-white text-stone-700'
+                          : 'border-stone-200 bg-white text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                       }`}
                     >
-                      <div className="text-sm font-semibold">{candidate.name}</div>
-                      <div className={`mt-1 text-xs ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
+                      {candidate.name}
                     </button>
                   );
                 })}
@@ -321,7 +321,6 @@ const EleccionesEntrevistasPage: React.FC = () => {
                           className="rounded-2xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-4 shadow-sm sm:p-5"
                         >
                           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                            {entry.timestamp ? <span>{entry.timestamp}</span> : null}
                             <span className="text-red-700">{entry.speaker}</span>
                           </div>
                           <p className="whitespace-pre-wrap text-sm leading-6 text-stone-700 sm:text-base sm:leading-7">{entry.text}</p>
