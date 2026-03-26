@@ -15,15 +15,14 @@ interface ImageUploadRequest {
   contentType: string;
 }
 
-// Función para subir imagen sin procesamiento (temporalmente desactivado)
-async function processImage(file: File, folder: string): Promise<{ buffer: ArrayBuffer, size: number, contentType: string }> {
-  console.log(`📁 Subiendo imagen original sin procesamiento para ${folder}:`, {
+// Función para subir archivo sin procesamiento en servidor
+async function processFile(file: File, folder: string): Promise<{ buffer: ArrayBuffer, size: number, contentType: string }> {
+  console.log(`📁 Subiendo archivo original sin procesamiento para ${folder}:`, {
     originalSize: file.size,
     originalType: file.type,
     name: file.name
   });
 
-  // Retornar imagen original sin ningún procesamiento
   const buffer = await file.arrayBuffer();
   return {
     buffer,
@@ -33,9 +32,9 @@ async function processImage(file: File, folder: string): Promise<{ buffer: Array
 }
 
 // Validaciones de seguridad (usando nombres en español para consistencia)
-const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones', 'shop-products', 'payment-proofs'];
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones', 'shop-products', 'payment-proofs', 'videos'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB
 
 // Configuración de compresión por tipo de carpeta
 const COMPRESSION_CONFIG = {
@@ -73,8 +72,8 @@ async function uploadToR2(
       throw new Error(`Archivo muy grande: ${file.size} bytes (máximo ${MAX_FILE_SIZE})`);
     }
 
-    // Procesar y optimizar imagen
-    const { buffer: arrayBuffer, size: finalSize, contentType: optimizedContentType } = await processImage(file, folder);
+    // El archivo llega ya preparado desde cliente/local; aquí solo lo persistimos
+    const { buffer: arrayBuffer, size: finalSize, contentType: optimizedContentType } = await processFile(file, folder);
 
     // Subir a R2 usando el binding
     await r2Bucket.put(filename, arrayBuffer, {

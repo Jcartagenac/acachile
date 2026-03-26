@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SEOHelmet } from '../components/SEOHelmet';
 import { Container } from '../components/layout/Container';
-import { FileText, ScrollText, Users } from 'lucide-react';
+import { FileText, PlayCircle, ScrollText, Users } from 'lucide-react';
 
 import danielInterview from '../content/elecciones/Daniel Tolosa-limpio.txt?raw';
 import danielSummary from '../content/elecciones/Daniel Tolosa-resumen.txt?raw';
@@ -20,7 +20,7 @@ import eduardoSummary from '../content/elecciones/Eduardo Elgueta-resumen.txt?ra
 import oscarInterview from '../content/elecciones/Oscar Cerda-limpio.txt?raw';
 import oscarSummary from '../content/elecciones/Oscar Cerda-resumen.txt?raw';
 
-type ViewMode = 'entrevista' | 'resumen';
+type ViewMode = 'entrevista' | 'video' | 'resumen';
 
 type CandidateInterview = {
   id: string;
@@ -28,12 +28,15 @@ type CandidateInterview = {
   role: string;
   interview: string;
   summary: string;
+  videoUrl: string;
 };
 
 type ParsedLine =
   | { type: 'speaker'; speaker: string; timestamp?: string; text: string }
   | { type: 'paragraph'; text: string }
   | { type: 'heading'; text: string };
+
+const VIDEO_BASE_URL = 'https://images.acachile.com/videos/elecciones';
 
 const interviews: CandidateInterview[] = [
   {
@@ -42,6 +45,7 @@ const interviews: CandidateInterview[] = [
     role: 'Candidato a tesorería',
     interview: danielInterview,
     summary: danielSummary,
+    videoUrl: `${VIDEO_BASE_URL}/01-daniel-tolosa.mp4`,
   },
   {
     id: 'jorge-silva',
@@ -49,6 +53,7 @@ const interviews: CandidateInterview[] = [
     role: 'Candidato',
     interview: jorgeInterview,
     summary: jorgeSummary,
+    videoUrl: `${VIDEO_BASE_URL}/02-jorge-silva.mp4`,
   },
   {
     id: 'karina-norero',
@@ -56,6 +61,7 @@ const interviews: CandidateInterview[] = [
     role: 'Postulante a directora de torneos',
     interview: karinaInterview,
     summary: karinaSummary,
+    videoUrl: `${VIDEO_BASE_URL}/03-karina-norero.mp4`,
   },
   {
     id: 'barbara-inostroza',
@@ -63,6 +69,7 @@ const interviews: CandidateInterview[] = [
     role: 'Postulante a director de comunicaciones',
     interview: barbaraInterview,
     summary: barbaraSummary,
+    videoUrl: `${VIDEO_BASE_URL}/05-barbara-inostroza.mp4`,
   },
   {
     id: 'pauli',
@@ -70,6 +77,7 @@ const interviews: CandidateInterview[] = [
     role: 'Postulante a director de comunicaciones',
     interview: pauliInterview,
     summary: pauliSummary,
+    videoUrl: `${VIDEO_BASE_URL}/06-paulina-sandoval.mp4`,
   },
   {
     id: 'eduardo-elgueta',
@@ -77,6 +85,7 @@ const interviews: CandidateInterview[] = [
     role: 'Candidato',
     interview: eduardoInterview,
     summary: eduardoSummary,
+    videoUrl: `${VIDEO_BASE_URL}/07-eduardo-elgueta.mp4`,
   },
   {
     id: 'oscar-cerda',
@@ -84,6 +93,7 @@ const interviews: CandidateInterview[] = [
     role: 'Candidato',
     interview: oscarInterview,
     summary: oscarSummary,
+    videoUrl: `${VIDEO_BASE_URL}/08-oscar-cerda.mp4`,
   },
   {
     id: 'bloque-etica',
@@ -91,6 +101,7 @@ const interviews: CandidateInterview[] = [
     role: 'Postulantes al Comité de Ética',
     interview: bloqueEticaInterview,
     summary: bloqueEticaSummary,
+    videoUrl: `${VIDEO_BASE_URL}/04-bloque-etica.mp4`,
   },
 ];
 
@@ -189,6 +200,16 @@ const ViewSwitcher: React.FC<{
       >
         <ScrollText className="h-4 w-4" />
         Entrevista
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('video')}
+        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+          mode === 'video' ? 'bg-white text-red-700 shadow-sm' : 'text-stone-600 hover:text-stone-900'
+        }`}
+      >
+        <PlayCircle className="h-4 w-4" />
+        Video
       </button>
       <button
         type="button"
@@ -328,6 +349,24 @@ const EleccionesEntrevistasPage: React.FC = () => {
                       </p>
                     );
                   })}
+                </div>
+              ) : viewMode === 'video' ? (
+                <div className="space-y-4">
+                  <div className="overflow-hidden rounded-3xl border border-stone-200 bg-black shadow-sm">
+                    <video
+                      key={selected.videoUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="block aspect-video w-full"
+                    >
+                      <source src={selected.videoUrl} type="video/mp4" />
+                      Tu navegador no soporta la reproducción de video.
+                    </video>
+                  </div>
+                  <p className="text-sm leading-6 text-stone-500">
+                    Reproductor nativo HTML5, sin autoplay, optimizado para escritorio y mobile.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
