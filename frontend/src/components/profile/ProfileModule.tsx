@@ -29,10 +29,39 @@ const cleanFormValue = (value: string): string | null => {
   return value && value.trim() !== '' ? value.trim() : null;
 };
 
+const getSocialProfileData = (value: string) => {
+  const raw = value?.trim() || '';
+  if (!raw) return null;
+
+  const normalized = raw.startsWith('http://') || raw.startsWith('https://')
+    ? raw
+    : raw.startsWith('@')
+      ? `https://instagram.com/${raw.slice(1)}`
+      : `https://instagram.com/${raw.replace(/^@/, '')}`;
+
+  try {
+    const url = new URL(normalized);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const handle = parts[0] || raw.replace(/^@/, '');
+
+    return {
+      url: normalized,
+      handle: handle ? `@${handle}` : raw,
+    };
+  } catch {
+    const handle = raw.replace(/^@/, '');
+    return {
+      url: `https://instagram.com/${handle}`,
+      handle: `@${handle}`,
+    };
+  }
+};
+
 export const ProfileModule: React.FC = () => {
   const { user, updateUser } = useAuth();
   const userService = useUserService();
   const imageService = useImageService();
+  const socialProfile = getSocialProfileData(formData.redSocial);
   const { updateAvatar, avatarUrl: persistedAvatarUrl } = useAvatarPersistence();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -802,31 +831,37 @@ export const ProfileModule: React.FC = () => {
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Red Social (Instagram, Facebook, etc.)
                 </label>
-                <div className="relative">
-                  <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                  <input
-                    type="url"
-                    value={formData.redSocial}
-                    onChange={(e) => setFormData({ ...formData, redSocial: e.target.value })}
-                    disabled={!isEditing}
-                    placeholder="https://instagram.com/tu_usuario"
-                    className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
-                      isEditing 
-                        ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
-                        : 'cursor-not-allowed opacity-75'
-                    }`}
-                  />
-                </div>
-                {!isEditing && formData.redSocial && (
+                {isEditing ? (
+                  <div className="relative">
+                    <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                    <input
+                      type="url"
+                      value={formData.redSocial}
+                      onChange={(e) => setFormData({ ...formData, redSocial: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="https://instagram.com/tu_usuario"
+                      className={`w-full pl-10 pr-4 py-3 bg-white/50 backdrop-blur-medium border border-white/30 rounded-xl shadow-soft-xs text-neutral-700 placeholder-neutral-500 transition-all duration-300 ${
+                        isEditing 
+                          ? 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-soft-sm' 
+                          : 'cursor-not-allowed opacity-75'
+                      }`}
+                    />
+                  </div>
+                ) : socialProfile ? (
                   <a
-                    href={formData.redSocial}
+                    href={socialProfile.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    className="inline-flex w-full items-center gap-3 rounded-xl border border-white/30 bg-white/50 px-4 py-3 text-neutral-700 shadow-soft-xs transition-all duration-300 hover:text-primary-700"
                   >
-                    <Instagram className="w-4 h-4 mr-1" />
-                    Ver perfil social
+                    <Instagram className="w-5 h-5 text-neutral-400" />
+                    <span className="font-medium">{socialProfile.handle}</span>
                   </a>
+                ) : (
+                  <div className="inline-flex w-full items-center gap-3 rounded-xl border border-white/30 bg-white/50 px-4 py-3 text-neutral-400 shadow-soft-xs">
+                    <Instagram className="w-5 h-5" />
+                    <span>Sin red social registrada</span>
+                  </div>
                 )}
               </div>
             </div>
