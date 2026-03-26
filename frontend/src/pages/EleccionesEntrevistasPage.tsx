@@ -364,9 +364,6 @@ const EleccionesEntrevistasPage: React.FC = () => {
                       Tu navegador no soporta la reproducción de video.
                     </video>
                   </div>
-                  <p className="text-sm leading-6 text-stone-500">
-                    Reproductor nativo HTML5, sin autoplay, optimizado para escritorio y mobile.
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
