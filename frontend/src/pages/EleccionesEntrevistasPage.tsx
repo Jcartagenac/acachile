@@ -233,60 +233,56 @@ const EleccionesEntrevistasPage: React.FC = () => {
         url="https://acachile.com/elecciones/entrevistas"
       />
 
-      <Container size="xl" className="space-y-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/75 shadow-xl shadow-stone-200/70 backdrop-blur-md">
-          <div className="grid gap-8 px-6 py-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:py-10">
-            <div className="space-y-5">
-              <div className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-red-700">
-                Elecciones directorio · 28
-              </div>
-              <div className="space-y-3">
-                <h1 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
-                  Entrevistas y resúmenes de candidaturas
-                </h1>
-                <p className="max-w-3xl text-base leading-7 text-stone-600 sm:text-lg">
-                  {introText}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-[1.75rem] border border-stone-200 bg-stone-50/80 p-6">
+      <Container size="xl" className="space-y-5 sm:space-y-8">
+        <section className="overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/75 shadow-xl shadow-stone-200/70 backdrop-blur-md sm:rounded-[2rem]">
+          <div className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+            <div className="space-y-4 sm:space-y-5">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-stone-600">
+                <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">
+                  Elecciones directorio · 28
+                </span>
+                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-600">
                   Acceso directo
                 </span>
-                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-stone-600">
+                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-600">
                   {interviews.length} entrevistas
                 </span>
               </div>
-              <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Cómo usar esta página</h2>
-              <div className="mt-4 space-y-3 text-sm leading-6 text-stone-600">
-                <p>Selecciona un nombre para abrir su contenido. Cada perfil carga por defecto la entrevista completa.</p>
-                <p>En la parte superior del panel principal puedes alternar entre <strong>Entrevista</strong> y <strong>Resumen</strong> sin perder el contexto visual.</p>
-                <p>Esta ruta está pensada para acceso directo y no está enlazada desde la navegación pública del sitio.</p>
+              <div className="space-y-3">
+                <h1 className="text-2xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
+                  Entrevistas y resúmenes de candidaturas
+                </h1>
+                <p className="max-w-3xl text-sm leading-6 text-stone-600 sm:text-lg sm:leading-7">
+                  {introText}
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm lg:hidden">
-              <label htmlFor="candidate-selector" className="mb-2 block text-sm font-semibold text-stone-700">
-                Selecciona una candidatura
-              </label>
-              <select
-                id="candidate-selector"
-                value={selectedId}
-                onChange={(event) => handleSelectCandidate(event.target.value)}
-                className="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-stone-800 shadow-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200"
-              >
-                {interviews.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.name}
-                  </option>
-                ))}
-              </select>
+            <div className="lg:hidden">
+              <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1">
+                {interviews.map((candidate) => {
+                  const isActive = candidate.id === selectedId;
+                  return (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      onClick={() => handleSelectCandidate(candidate.id)}
+                      className={`min-w-[220px] snap-start rounded-2xl border px-4 py-3 text-left shadow-sm transition-all ${
+                        isActive
+                          ? 'border-red-600 bg-red-600 text-white shadow-red-200'
+                          : 'border-stone-200 bg-white text-stone-700'
+                      }`}
+                    >
+                      <div className="text-sm font-semibold">{candidate.name}</div>
+                      <div className={`mt-1 text-xs ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="hidden lg:block">
@@ -294,26 +290,26 @@ const EleccionesEntrevistasPage: React.FC = () => {
             </div>
           </aside>
 
-          <section className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-xl shadow-stone-200/70">
-            <div className="border-b border-stone-200 bg-stone-50/80 px-6 py-5 sm:px-8">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <section className="overflow-hidden rounded-[1.5rem] border border-stone-200 bg-white shadow-xl shadow-stone-200/70 sm:rounded-[2rem]">
+            <div className="border-b border-stone-200 bg-stone-50/80 px-4 py-4 sm:px-8 sm:py-5">
+              <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <div className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Contenido seleccionado</div>
-                  <h2 className="mt-2 text-2xl font-bold text-stone-900 sm:text-3xl">{selected.name}</h2>
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 sm:text-sm">Contenido seleccionado</div>
+                  <h2 className="mt-2 text-xl font-bold text-stone-900 sm:text-3xl">{selected.name}</h2>
                   <p className="mt-1 text-sm text-stone-600">{selected.role}</p>
                 </div>
                 <ViewSwitcher mode={viewMode} onChange={setViewMode} />
               </div>
             </div>
 
-            <div className="px-6 py-6 sm:px-8 sm:py-8">
+            <div className="px-4 py-4 sm:px-8 sm:py-8">
               {viewMode === 'entrevista' ? (
                 <div className="space-y-4">
                   {parsedInterview.map((entry, index) => {
                     if (entry.type === 'heading') {
                       return (
-                        <div key={`${entry.text}-${index}`} className="pb-2">
-                          <h3 className="text-xl font-bold uppercase tracking-[0.12em] text-stone-900">{entry.text}</h3>
+                        <div key={`${entry.text}-${index}`} className="pb-1 sm:pb-2">
+                          <h3 className="text-lg font-bold uppercase tracking-[0.12em] text-stone-900 sm:text-xl">{entry.text}</h3>
                         </div>
                       );
                     }
@@ -328,13 +324,13 @@ const EleccionesEntrevistasPage: React.FC = () => {
                             {entry.timestamp ? <span>{entry.timestamp}</span> : null}
                             <span className="text-red-700">{entry.speaker}</span>
                           </div>
-                          <p className="whitespace-pre-wrap text-[15px] leading-7 text-stone-700 sm:text-base">{entry.text}</p>
+                          <p className="whitespace-pre-wrap text-sm leading-6 text-stone-700 sm:text-base sm:leading-7">{entry.text}</p>
                         </article>
                       );
                     }
 
                     return (
-                      <p key={`${entry.text}-${index}`} className="text-base leading-8 text-stone-700">
+                      <p key={`${entry.text}-${index}`} className="text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
                         {entry.text}
                       </p>
                     );
@@ -345,7 +341,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                   {parsedSummary.map((line, index) => {
                     if (!line.startsWith('- ')) {
                       return (
-                        <p key={`${line}-${index}`} className="text-base leading-8 text-stone-700">
+                        <p key={`${line}-${index}`} className="text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
                           {line}
                         </p>
                       );
@@ -356,7 +352,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                         key={`${line}-${index}`}
                         className="rounded-2xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white px-4 py-4 text-stone-700 shadow-sm"
                       >
-                        <p className="text-base leading-7">{line.slice(2)}</p>
+                        <p className="text-sm leading-6 sm:text-base sm:leading-7">{line.slice(2)}</p>
                       </div>
                     );
                   })}
