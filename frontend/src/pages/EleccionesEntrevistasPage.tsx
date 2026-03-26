@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SEOHelmet } from '../components/SEOHelmet';
 import { Container } from '../components/layout/Container';
 import { FileText, PlayCircle, ScrollText, Users } from 'lucide-react';
@@ -228,6 +228,7 @@ const ViewSwitcher: React.FC<{
 const EleccionesEntrevistasPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState(interviews[0].id);
   const [viewMode, setViewMode] = useState<ViewMode>('entrevista');
+  const contentTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setRobotsNoIndex();
@@ -244,6 +245,10 @@ const EleccionesEntrevistasPage: React.FC = () => {
   const handleSelectCandidate = (id: string) => {
     setSelectedId(id);
     setViewMode('entrevista');
+
+    requestAnimationFrame(() => {
+      contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   return (
@@ -306,7 +311,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
           </aside>
 
           <section className="overflow-hidden rounded-[1.5rem] border border-stone-200 bg-white shadow-xl shadow-stone-200/70 sm:rounded-[2rem]">
-            <div className="border-b border-stone-200 bg-stone-50/80 px-4 py-4 sm:px-8 sm:py-5">
+            <div ref={contentTopRef} className="border-b border-stone-200 bg-stone-50/80 px-4 py-4 sm:px-8 sm:py-5">
               <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 sm:text-sm">Contenido seleccionado</div>
