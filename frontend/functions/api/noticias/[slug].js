@@ -1,4 +1,5 @@
 import { requireAuth } from '../../_middleware';
+import { getCategoryMap, resolveValidCategoryId } from './_utils';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,18 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-const categories = {
-  1: { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
-  2: { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
-  3: { id: 3, name: 'Eventos', slug: 'eventos', color: '#2563EB' },
-  4: { id: 4, name: 'Institucional', slug: 'institucional', color: '#7C3AED' },
-  5: { id: 5, name: 'Internacional', slug: 'internacional', color: '#EA580C' },
-  6: { id: 6, name: 'Comunidad', slug: 'comunidad', color: '#0891B2' },
-  7: { id: 7, name: 'Técnicas', slug: 'tecnicas', color: '#CA8A04' },
-  8: { id: 8, name: 'General', slug: 'general', color: '#64748B' }
-};
-
-function formatArticle(article) {
+function formatArticle(article, categories) {
   // Parsear gallery si es un string JSON
   let gallery = [];
   if (article.gallery) {
@@ -74,6 +64,7 @@ export async function onRequestGet(context) {
       binding = params.slug;
     }
     const article = await env.DB.prepare(query).bind(binding).first();
+    const categories = await getCategoryMap(env);
     if (!article) {
       return new Response(JSON.stringify({ success: false, error: 'Noticia no encontrada' }), {
         status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -106,7 +97,7 @@ export async function onRequestGet(context) {
       }
     }
     
-    const formatted = formatArticle(article);
+    const formatted = formatArticle(article, categories);
     return new Response(JSON.stringify({ success: true, data: formatted }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
@@ -230,6 +221,7 @@ export async function onRequestPut(context) {
     } else if (body.category_id) {
       categoryId = body.category_id;
     }
+    categoryId = await resolveValidCategoryId(env, categoryId, article.category_id);
 
     // Convertir gallery a JSON string si es un array
     let galleryJson = article.gallery;
@@ -257,9 +249,10 @@ export async function onRequestPut(context) {
     
     console.log('[NOTICIAS/SLUG] Article updated:', updated.title);
 
+    const categories = await getCategoryMap(env);
     return new Response(JSON.stringify({
       success: true,
-      data: formatArticle(updated),
+      data: formatArticle(updated, categories),
       message: 'Noticia actualizada exitosamente'
     }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders }

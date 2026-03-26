@@ -1,5 +1,7 @@
 // MIGRACIÓN URGENTE: API de noticias usando D1 en lugar de KV
 // Este archivo reemplaza /frontend/functions/api/noticias/index.js
+import { getCategoryMap, resolveValidAuthorId, resolveValidCategoryId } from './_utils';
+import { requireAuth } from '../_middleware';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -79,16 +81,7 @@ async function handleGetNoticias(url, env, corsHeaders) {
     const totalPages = Math.ceil(total / limit);
 
     // Mapear categorías
-    const categories = {
-      1: { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
-      2: { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
-      3: { id: 3, name: 'Eventos', slug: 'eventos', color: '#2563EB' },
-      4: { id: 4, name: 'Institucional', slug: 'institucional', color: '#7C3AED' },
-      5: { id: 5, name: 'Internacional', slug: 'internacional', color: '#EA580C' },
-      6: { id: 6, name: 'Comunidad', slug: 'comunidad', color: '#0891B2' },
-      7: { id: 7, name: 'Técnicas', slug: 'tecnicas', color: '#CA8A04' },
-      8: { id: 8, name: 'General', slug: 'general', color: '#64748B' }
-    };
+    const categories = await getCategoryMap(env);
 
     // Formatear noticias para el frontend
     const formattedNews = results.map(article => {
@@ -159,8 +152,10 @@ async function handleGetNoticias(url, env, corsHeaders) {
 async function handleCreateNoticia(request, env, corsHeaders) {
   try {
     // Verificar autenticación
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let authUser;
+    try {
+      authUser = await requireAuth(request, env);
+    } catch (error) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Token de autorización requerido'
@@ -184,6 +179,19 @@ async function handleCreateNoticia(request, env, corsHeaders) {
 
     const now = new Date().toISOString();
 
+    const resolvedCategoryId = await resolveValidCategoryId(env, body.category_id, 8);
+    const resolvedAuthorId = await resolveValidAuthorId(env, authUser?.userId || authUser?.id || null);
+
+    if (!resolvedAuthorId) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No existe un autor válido en la tabla users para crear la noticia'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     // Convertir gallery a JSON string si viene como array
     const galleryJson = body.gallery ? JSON.stringify(body.gallery) : null;
 
@@ -204,8 +212,8 @@ async function handleCreateNoticia(request, env, corsHeaders) {
         body.featured_image || '/images/default-news.jpg',
         galleryJson,
         body.video_url || null,
-        1, // author_id por defecto
-        body.category_id || 8,
+        resolvedAuthorId,
+        resolvedCategoryId,
         body.status || 'published',
         body.is_featured || false,
         0, // view_count inicial
@@ -228,16 +236,7 @@ async function handleCreateNoticia(request, env, corsHeaders) {
     ).bind(insertedId).first();
 
     // Formatear para frontend
-    const categories = {
-      1: { id: 1, name: 'Competencias', slug: 'competencias', color: '#DC2626' },
-      2: { id: 2, name: 'Educación', slug: 'educacion', color: '#059669' },
-      3: { id: 3, name: 'Eventos', slug: 'eventos', color: '#2563EB' },
-      4: { id: 4, name: 'Institucional', slug: 'institucional', color: '#7C3AED' },
-      5: { id: 5, name: 'Internacional', slug: 'internacional', color: '#EA580C' },
-      6: { id: 6, name: 'Comunidad', slug: 'comunidad', color: '#0891B2' },
-      7: { id: 7, name: 'Técnicas', slug: 'tecnicas', color: '#CA8A04' },
-      8: { id: 8, name: 'General', slug: 'general', color: '#64748B' }
-    };
+    const categories = await getCategoryMap(env);
 
     // Parsear gallery
     let gallery = [];
