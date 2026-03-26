@@ -61,7 +61,6 @@ export const ProfileModule: React.FC = () => {
   const { user, updateUser } = useAuth();
   const userService = useUserService();
   const imageService = useImageService();
-  const socialProfile = getSocialProfileData(formData.redSocial);
   const { updateAvatar, avatarUrl: persistedAvatarUrl } = useAvatarPersistence();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +82,7 @@ export const ProfileModule: React.FC = () => {
     rut: '',
     ciudad: ''
   });
+  const socialProfile = getSocialProfileData(formData.redSocial);
 
   // Cargar perfil al montar el componente
   useEffect(() => {
