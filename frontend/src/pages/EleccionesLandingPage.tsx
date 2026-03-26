@@ -54,27 +54,24 @@ const EleccionesLandingPage: React.FC = () => {
 
         <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6">
           <article className="rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-lg shadow-stone-200/60 sm:p-8">
-            <div className="space-y-5 text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
+            <div className="space-y-6 text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
               <p>Estimados socios de la Asociación Chilena de Asadores A.G.:</p>
 
               <p>
-                Junto con saludar, nos dirigimos a ustedes para presentar formalmente al Tribunal Calificador de
-                Elecciones (TRICEL), órgano responsable de velar por la transparencia, legalidad y correcto desarrollo
-                del proceso eleccionario de nuestra asociación.
+                Junto con saludar, nos dirigimos a ustedes para presentar formalmente al Tribunal Calificador de Elecciones (TRICEL), órgano responsable de velar por la transparencia, legalidad y correcto desarrollo del proceso eleccionario de nuestra asociación.
               </p>
 
               <p>El TRICEL para este proceso estará conformado por los siguientes socios:</p>
 
               <p>
-                Como TRICEL, nuestro compromiso es actuar con total imparcialidad y apego a los estatutos vigentes,
-                garantizando a todos los socios un proceso claro, ordenado y confiable.
+                Como TRICEL, nuestro compromiso es actuar con total imparcialidad y apego a los estatutos vigentes, garantizando a todos los socios un proceso claro, ordenado y confiable.
               </p>
 
               <p>
                 Agradecemos desde ya su participación y compromiso con la asociación. Y los esperamos para votar este 28 de Marzo 2026.
               </p>
 
-              <div className="pt-2 text-sm leading-7 text-stone-800 sm:text-base">
+              <div className="space-y-2 pt-2 text-sm leading-7 text-stone-800 sm:text-base">
                 <p>Atentamente,</p>
                 <p>TRICEL 2026</p>
                 <p>Asociación Chilena de Asadores A.G.</p>
