@@ -251,7 +251,15 @@ const EleccionesEntrevistasPage: React.FC = () => {
             </div>
 
             <div className="rounded-[1.75rem] border border-stone-200 bg-stone-50/80 p-6">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Cómo usar esta página</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-stone-600">
+                  Acceso directo
+                </span>
+                <span className="inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-stone-600">
+                  {interviews.length} entrevistas
+                </span>
+              </div>
+              <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Cómo usar esta página</h2>
               <div className="mt-4 space-y-3 text-sm leading-6 text-stone-600">
                 <p>Selecciona un nombre para abrir su contenido. Cada perfil carga por defecto la entrevista completa.</p>
                 <p>En la parte superior del panel principal puedes alternar entre <strong>Entrevista</strong> y <strong>Resumen</strong> sin perder el contexto visual.</p>
@@ -314,7 +322,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                       return (
                         <article
                           key={`${entry.speaker}-${entry.timestamp}-${index}`}
-                          className="rounded-2xl border border-stone-200 bg-stone-50/80 p-4 sm:p-5"
+                          className="rounded-2xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-4 shadow-sm sm:p-5"
                         >
                           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
                             {entry.timestamp ? <span>{entry.timestamp}</span> : null}
@@ -346,7 +354,7 @@ const EleccionesEntrevistasPage: React.FC = () => {
                     return (
                       <div
                         key={`${line}-${index}`}
-                        className="rounded-2xl border border-stone-200 bg-stone-50/80 px-4 py-4 text-stone-700"
+                        className="rounded-2xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white px-4 py-4 text-stone-700 shadow-sm"
                       >
                         <p className="text-base leading-7">{line.slice(2)}</p>
                       </div>
