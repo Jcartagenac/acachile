@@ -66,7 +66,7 @@ const interviews: CandidateInterview[] = [
   },
   {
     id: 'pauli',
-    name: 'Pauli',
+    name: 'Paulina Sandoval',
     role: 'Candidata',
     interview: pauliInterview,
     summary: pauliSummary,
