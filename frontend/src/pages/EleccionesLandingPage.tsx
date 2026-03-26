@@ -55,7 +55,7 @@ const EleccionesLandingPage: React.FC = () => {
         <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6">
           <article className="rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-lg shadow-stone-200/60 sm:p-8">
             <div className="space-y-5 text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
-              <p><strong>Estimados socios de la Asociación Chilena de Asadores A.G.:</strong></p>
+              <p>Estimados socios de la Asociación Chilena de Asadores A.G.:</p>
 
               <p>
                 Junto con saludar, nos dirigimos a ustedes para presentar formalmente al Tribunal Calificador de
@@ -63,9 +63,7 @@ const EleccionesLandingPage: React.FC = () => {
                 del proceso eleccionario de nuestra asociación.
               </p>
 
-              <p>
-                El TRICEL para este proceso estará conformado por los siguientes socios:
-              </p>
+              <p>El TRICEL para este proceso estará conformado por los siguientes socios:</p>
 
               <p>
                 Como TRICEL, nuestro compromiso es actuar con total imparcialidad y apego a los estatutos vigentes,
@@ -73,12 +71,11 @@ const EleccionesLandingPage: React.FC = () => {
               </p>
 
               <p>
-                Agradecemos desde ya su participación y compromiso con la asociación. Y los esperamos para votar este
-                <strong> 28 de Marzo 2026</strong>.
+                Agradecemos desde ya su participación y compromiso con la asociación. Y los esperamos para votar este 28 de Marzo 2026.
               </p>
 
               <div className="pt-2 text-sm leading-7 text-stone-800 sm:text-base">
-                <p><strong>Atentamente,</strong></p>
+                <p>Atentamente,</p>
                 <p>TRICEL 2026</p>
                 <p>Asociación Chilena de Asadores A.G.</p>
               </div>
