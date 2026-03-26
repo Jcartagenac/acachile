@@ -19,13 +19,17 @@ function formatArticle(article, categories) {
     }
   }
 
+  const featuredImage = article.featured_image && article.featured_image !== '/images/default-news.jpg'
+    ? article.featured_image
+    : (gallery[0] || '/images/default-news.jpg');
+
   return {
     id: article.id,
     title: article.title,
     slug: article.slug,
     excerpt: article.excerpt || '',
     content: article.content,
-    featured_image: article.featured_image || '/images/default-news.jpg',
+    featured_image: featuredImage,
     gallery: gallery,
     video_url: article.video_url || '',
     category: categories[article.category_id] || categories[8],
