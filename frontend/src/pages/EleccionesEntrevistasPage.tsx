@@ -188,27 +188,26 @@ const CandidateList: React.FC<{
           const isActive = candidate.id === selectedId;
           const isLiked = Boolean(likedCandidates[candidate.id]);
           return (
-            <button
+            <div
               key={candidate.id}
-              type="button"
-              onClick={() => onSelect(candidate.id)}
-              className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+              className={`rounded-2xl border px-4 py-3 transition-all ${
                 isActive
                   ? 'border-red-600 bg-red-600 text-white shadow-lg shadow-red-200'
                   : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold">{candidate.name}</div>
-                  <div className={`mt-1 text-sm ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
-                </div>
                 <button
                   type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onLike(candidate.id);
-                  }}
+                  onClick={() => onSelect(candidate.id)}
+                  className="flex-1 text-left"
+                >
+                  <div className="font-semibold">{candidate.name}</div>
+                  <div className={`mt-1 text-sm ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLike(candidate.id)}
                   className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
                     isActive
                       ? isLiked
@@ -223,7 +222,7 @@ const CandidateList: React.FC<{
                   {isLiked ? 'Quitar like' : 'Like'} · {likeCounts[candidate.id] ?? 0}
                 </button>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
