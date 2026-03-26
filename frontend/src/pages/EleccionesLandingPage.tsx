@@ -61,7 +61,12 @@ const EleccionesLandingPage: React.FC = () => {
                 Junto con saludar, nos dirigimos a ustedes para presentar formalmente al Tribunal Calificador de Elecciones (TRICEL), órgano responsable de velar por la transparencia, legalidad y correcto desarrollo del proceso eleccionario de nuestra asociación.
               </p>
 
-              <p>El TRICEL para este proceso estará conformado por los siguientes socios:</p>
+              <div className="space-y-2">
+                <p>El TRICEL para este proceso estará conformado por los siguientes socios:</p>
+                <p>Alex Vidal</p>
+                <p>Mario Pavez</p>
+                <p>David Saavedra</p>
+              </div>
 
               <p>
                 Como TRICEL, nuestro compromiso es actuar con total imparcialidad y apego a los estatutos vigentes, garantizando a todos los socios un proceso claro, ordenado y confiable.
