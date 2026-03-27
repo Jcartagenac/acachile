@@ -20,6 +20,20 @@ import eduardoSummary from '../content/elecciones/Eduardo Elgueta-resumen.txt?ra
 import oscarInterview from '../content/elecciones/Oscar Cerda-limpio.txt?raw';
 import oscarSummary from '../content/elecciones/Oscar Cerda-resumen.txt?raw';
 
+// Nuevos candidatos
+import fernandoSepulvedaInterview from '../content/elecciones/05-fernando-sepulveda-limpio.txt?raw';
+import fernandoSepulvedaSummary from '../content/elecciones/05-fernando-sepulveda-resumen.txt?raw';
+import juanPabloGaeteInterview from '../content/elecciones/02-juan-pablo-gaete-limpio.txt?raw';
+import juanPabloGaeteSummary from '../content/elecciones/02-juan-pablo-gaete-resumen.txt?raw';
+import pabloVerdugoInterview from '../content/elecciones/03-pablo-verdugo-limpio.txt?raw';
+import pabloVerdugoSummary from '../content/elecciones/03-pablo-verdugo-resumen.txt?raw';
+import antonioEscobarInterview from '../content/elecciones/04-antonio-escobar-limpio.txt?raw';
+import antonioEscobarSummary from '../content/elecciones/04-antonio-escobar-resumen.txt?raw';
+import javierBianchiInterview from '../content/elecciones/06-javier-bianchi-limpio.txt?raw';
+import javierBianchiSummary from '../content/elecciones/06-javier-bianchi-resumen.txt?raw';
+import pepeVivarInterview from '../content/elecciones/07-pepe-vivar-limpio.txt?raw';
+import pepeVivarSummary from '../content/elecciones/07-pepe-vivar-resumen.txt?raw';
+
 import fernandoSepulvedaInterview from '../content/elecciones/fernando-sepulveda-limpio.txt?raw';
 import fernandoSepulvedaSummary from '../content/elecciones/fernando-sepulveda-resumen.txt?raw';
 import juanPabloGaeteInterview from '../content/elecciones/juan-pablo-gaete-limpio.txt?raw';
@@ -115,6 +129,54 @@ const interviews: CandidateInterview[] = [
     interview: bloqueEticaInterview,
     summary: bloqueEticaSummary,
     videoUrl: `${VIDEO_BASE_URL}/04-bloque-etica.mp4`,
+  },
+  {
+    id: 'fernando-sepulveda',
+    name: 'Fernando Sepúlveda',
+    role: 'Candidato a Presidente',
+    interview: fernandoSepulvedaInterview,
+    summary: fernandoSepulvedaSummary,
+    videoUrl: `${VIDEO_BASE_URL}/05-fernando-sepulveda.mp4`,
+  },
+  {
+    id: 'juan-pablo-gaete',
+    name: 'Juan Pablo Gaete',
+    role: 'Candidato a Presidente',
+    interview: juanPabloGaeteInterview,
+    summary: juanPabloGaeteSummary,
+    videoUrl: `${VIDEO_BASE_URL}/02-juan-pablo-gaete.mp4`,
+  },
+  {
+    id: 'pablo-verdugo',
+    name: 'Pablo Verdugo',
+    role: 'Candidato a Director de Proyectos',
+    interview: pabloVerdugoInterview,
+    summary: pabloVerdugoSummary,
+    videoUrl: `${VIDEO_BASE_URL}/03-pablo-verdugo.mp4`,
+  },
+  {
+    id: 'antonio-escobar',
+    name: 'Antonio Escobar',
+    role: 'Candidato a Director de Proyectos',
+    interview: antonioEscobarInterview,
+    summary: antonioEscobarSummary,
+    videoUrl: `${VIDEO_BASE_URL}/04-antonio-escobar.mp4`,
+  },
+  {
+    id: 'javier-bianchi',
+    name: 'Javier Bianchi',
+    role: 'Candidato a Comité Revisor de Cuentas',
+    interview: javierBianchiInterview,
+    summary: javierBianchiSummary,
+    videoUrl: `${VIDEO_BASE_URL}/06-javier-bianchi.mp4`,
+  },
+  {
+    id: 'pepe-vivar',
+    name: 'Pepe Vivar',
+    role: 'Candidato a Comité Revisor de Cuentas',
+    interview: pepeVivarInterview,
+    summary: pepeVivarSummary,
+    videoUrl: `${VIDEO_BASE_URL}/07-pepe-vivar.mp4`,
   },
   {
     id: 'fernando-sepulveda',
