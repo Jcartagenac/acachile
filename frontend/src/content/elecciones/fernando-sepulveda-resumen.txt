@@ -1,12 +1,3 @@
-Resumen de la entrevista: Fernando Sepulveda
-==================================================
-
-Juan Pablo. Recién ya, hola, voy de nuevo, buenas tardes. ¿Cómo están todos? Hoy día es el día más importante para nosotros porque vamos a conocer a los dos candidatos a presidencia, a Fernando y a Juan Pablo Gaete, ambos con hartas ganas para que estén informados. Fernando envió
-
-su programa, yo estoy esperando el de Juan Pablo que me dijo que lo iba a preparar, así que cuando lo prepare después de esta reunión. Sí, Juan Pablo, sí me dijiste. Así que se los voy a poder disponibilizar todos para que los puedan leer y puedan llegar más informados aún a lo que va a ser
-
-la asamblea del día sábado. Aviso de utilidad pública, la Pauli me mandó el siguiente mensaje, dice quienes vayan a presencial a la asamblea, que marquen por favor su asistencia para saber quiénes van y para que la actividad post asamblea podamos asignarnos las parrillas. O sea, que avisen
-
-quienes van a la asamblea el sábado para que puedan ver quién puede llegar parrillas y cosas. El día de hoy tenemos las entrevistas a los dos presidentes. Los días previos habíamos tenido torneos, comunicaciones, tesorería, los comités y todos nos presentaron también hartas ideas, así que
-
-hoy día también mandaron hartas preguntas, está interesante. Se nota mucho interés para esta entrevista y no solo para la entrevista, sino que también para lo que se viene para acá en los próximos años. Así que sin más, vamos a partir por don Fernando Sepúlveda. Así que Dani, ayúdame ahí por
+🧿 oracle 0.8.6 — Your AI coworker's quality control.
+ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.

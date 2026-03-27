@@ -1,8 +1,3 @@
-Resumen de la entrevista: Antonio Escobar
-==================================================
-
-Seguimos con el segundo bloque de estas conversatorias para poder conocer mejor a los candidatos a este directorio 2026. Y seguimos con el segundo candidato a director de proyectos,
-
-Oye, Antonio, de primero, bueno, lo mismo que le dije a todos, muchas gracias por el programa que mandaste, lo leí, Pero antes que eso, quiero saber quién es Antonio Escobar,
-
-Hace 20 años que me estoy dedicando ya a lo que es sonido, con un pequeño break entre medio que tuve un emprendimiento.
+🧿 oracle 0.8.6 — Silent run, loud receipts.
+ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.

@@ -1,12 +1,3 @@
-Resumen de la entrevista: Pablo Verdugo
-==================================================
-
-Comenzamos entonces este nuevo bloque de candidatos a la dirección de proyectos. porque las valencias que muchos ven dentro de la ACA es que faltan más actividades que no sea solo la competencia, que para eso tenemos otra candidata.
-
-Así que voy a comenzar con Pablo Verdugo, que nos presentó un plan de trabajo bien enfocado en la gestión de beneficios, alianzas y una importante hoja de ruta. Hola Pablo, ¿cómo está ahí? Bienvenido a esta instancia.
-
-¿Cómo están? Gracias, gusto saludarlos. ¿Me escuchan bien? Yo, perfecto, ya. Estoy en la casa y estoy en el único lado que tengo 4G. Oye Pablo, me hiciste un programa, o sea, no me hiciste,
-
-porque lo pidió el trícel, a mí me llegó, yo tuve la venida de leerlo antes, y está súper enfocado en la gestión de beneficios, las alianzas y una hoja de ruta bien marcada. Pero antes de entrar directamente al programa, quiero saber quién es Pablo Verdugo en la interna.
-
-También tengo un magíster en administración de contratos mineros, que gran parte de mi vida profesional la desarrollé en minería, desarrollando túneles, fortificación, movimiento de tierra, lámina, HDPE,
+🧿 oracle 0.8.6 — Less hallucination, more escalation.
+ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.

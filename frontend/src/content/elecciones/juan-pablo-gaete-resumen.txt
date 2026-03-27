@@ -1,12 +1,3 @@
-Resumen de la entrevista: Juan Pablo Gaete
-==================================================
-
-a la transición de trabajar con la grill o con actividades un poco más masivas. Entonces ahí como que cambió un poco el esquema de las competencias. O sea, la otra vez se hablaba de no gastar la plata solo en competencias.
-
-Hay que buscar la forma de generar y de también hacer actividades, Que puede ser un calendario de, por ejemplo, el Día de la Mujer. pero sí que se sienta considerada realmente con ciertos presentes
-
-que uno no tiene tampoco que gastar una cantidad de escabellidad de plata. que se pueden nosotros de manera regional, por ejemplo, Se pueden hacer cursos, talleres también con escuelas.
-
-Se estuvo haciendo con talleres con escuelas gastronómicas en donde uno podría patrocinar también ese tipo de actividades, Pero que al final, en este caso, el socio organice eso.
-
-tienen la idea, pero lamentablemente igual hay que llevarlo al papel. Yo en su oportunidad lo realicé en Nueva Imperial y en Melipeuco. En este caso, bueno, Hernán también hace actividades,
+🧿 oracle 0.8.6 — Your repo, neatly bottled, gently shaken.
+ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
