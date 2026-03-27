@@ -55,7 +55,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'daniel-tolosa',
     name: 'Daniel Tolosa',
-    role: 'Postulante a tesorería',
+    role: 'Candidato a Director de Proyectos',
     interview: danielInterview,
     summary: danielSummary,
     videoUrl: `${VIDEO_BASE_URL}/01-daniel-tolosa.mp4`,
@@ -119,7 +119,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'fernando-sepulveda',
     name: 'Fernando Sepúlveda',
-    role: 'Postulante',
+    role: 'Candidato a Presidente',
     interview: fernandoSepulvedaInterview,
     summary: fernandoSepulvedaSummary,
     videoUrl: `${VIDEO_BASE_URL}/fernando-sepulveda.mp4`,
@@ -127,7 +127,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'juan-pablo-gaete',
     name: 'Juan Pablo Gaete',
-    role: 'Postulante',
+    role: 'Candidato a Presidente',
     interview: juanPabloGaeteInterview,
     summary: juanPabloGaeteSummary,
     videoUrl: `${VIDEO_BASE_URL}/juan-pablo-gaete.mp4`,
@@ -135,7 +135,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'pablo-verdugo',
     name: 'Pablo Verdugo',
-    role: 'Postulante',
+    role: 'Candidato a Director de Proyectos',
     interview: pabloVerdugoInterview,
     summary: pabloVerdugoSummary,
     videoUrl: `${VIDEO_BASE_URL}/pablo-verdugo.mp4`,
@@ -143,7 +143,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'antonio-escobar',
     name: 'Antonio Escobar',
-    role: 'Postulante',
+    role: 'Candidato a Director de Proyectos',
     interview: antonioEscobarInterview,
     summary: antonioEscobarSummary,
     videoUrl: `${VIDEO_BASE_URL}/antonio-escobar.mp4`,
@@ -151,7 +151,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'javier-bianchi',
     name: 'Javier Bianchi',
-    role: 'Postulante',
+    role: 'Candidato a Comité Revisor de Cuentas',
     interview: javierBianchiInterview,
     summary: javierBianchiSummary,
     videoUrl: `${VIDEO_BASE_URL}/javier-bianchi.mp4`,
@@ -159,7 +159,7 @@ const interviews: CandidateInterview[] = [
   {
     id: 'pepe-vivar',
     name: 'Pepe Vivar',
-    role: 'Postulante',
+    role: 'Candidato a Comité Revisor de Cuentas',
     interview: pepeVivarInterview,
     summary: pepeVivarSummary,
     videoUrl: `${VIDEO_BASE_URL}/pepe-vivar.mp4`,
