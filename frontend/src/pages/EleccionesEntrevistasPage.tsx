@@ -20,6 +20,19 @@ import eduardoSummary from '../content/elecciones/Eduardo Elgueta-resumen.txt?ra
 import oscarInterview from '../content/elecciones/Oscar Cerda-limpio.txt?raw';
 import oscarSummary from '../content/elecciones/Oscar Cerda-resumen.txt?raw';
 
+import fernandoSepulvedaInterview from '../content/elecciones/fernando-sepulveda-limpio.txt?raw';
+import fernandoSepulvedaSummary from '../content/elecciones/fernando-sepulveda-resumen.txt?raw';
+import juanPabloGaeteInterview from '../content/elecciones/juan-pablo-gaete-limpio.txt?raw';
+import juanPabloGaeteSummary from '../content/elecciones/juan-pablo-gaete-resumen.txt?raw';
+import pabloVerdugoInterview from '../content/elecciones/pablo-verdugo-limpio.txt?raw';
+import pabloVerdugoSummary from '../content/elecciones/pablo-verdugo-resumen.txt?raw';
+import antonioEscobarInterview from '../content/elecciones/antonio-escobar-limpio.txt?raw';
+import antonioEscobarSummary from '../content/elecciones/antonio-escobar-resumen.txt?raw';
+import javierBianchiInterview from '../content/elecciones/javier-bianchi-limpio.txt?raw';
+import javierBianchiSummary from '../content/elecciones/javier-bianchi-resumen.txt?raw';
+import pepeVivarInterview from '../content/elecciones/pepe-vivar-limpio.txt?raw';
+import pepeVivarSummary from '../content/elecciones/pepe-vivar-resumen.txt?raw';
+
 type ViewMode = 'entrevista' | 'video' | 'resumen';
 
 type CandidateInterview = {
@@ -103,6 +116,55 @@ const interviews: CandidateInterview[] = [
     summary: bloqueEticaSummary,
     videoUrl: `${VIDEO_BASE_URL}/04-bloque-etica.mp4`,
   },
+  {
+    id: 'fernando-sepulveda',
+    name: 'Fernando Sepúlveda',
+    role: 'Postulante',
+    interview: fernandoSepulvedaInterview,
+    summary: fernandoSepulvedaSummary,
+    videoUrl: `${VIDEO_BASE_URL}/fernando-sepulveda.mp4`,
+  },
+  {
+    id: 'juan-pablo-gaete',
+    name: 'Juan Pablo Gaete',
+    role: 'Postulante',
+    interview: juanPabloGaeteInterview,
+    summary: juanPabloGaeteSummary,
+    videoUrl: `${VIDEO_BASE_URL}/juan-pablo-gaete.mp4`,
+  },
+  {
+    id: 'pablo-verdugo',
+    name: 'Pablo Verdugo',
+    role: 'Postulante',
+    interview: pabloVerdugoInterview,
+    summary: pabloVerdugoSummary,
+    videoUrl: `${VIDEO_BASE_URL}/pablo-verdugo.mp4`,
+  },
+  {
+    id: 'antonio-escobar',
+    name: 'Antonio Escobar',
+    role: 'Postulante',
+    interview: antonioEscobarInterview,
+    summary: antonioEscobarSummary,
+    videoUrl: `${VIDEO_BASE_URL}/antonio-escobar.mp4`,
+  },
+  {
+    id: 'javier-bianchi',
+    name: 'Javier Bianchi',
+    role: 'Postulante',
+    interview: javierBianchiInterview,
+    summary: javierBianchiSummary,
+    videoUrl: `${VIDEO_BASE_URL}/javier-bianchi.mp4`,
+  },
+  {
+    id: 'pepe-vivar',
+    name: 'Pepe Vivar',
+    role: 'Postulante',
+    interview: pepeVivarInterview,
+    summary: pepeVivarSummary,
+    videoUrl: `${VIDEO_BASE_URL}/pepe-vivar.mp4`,
+  },
+
 ];
 
 const introText = 'Reunimos en un solo lugar las entrevistas y resúmenes de candidaturas de cara a la elección de directorio del día 28. La idea es facilitar una revisión directa, simple y comparable, respetando el contexto de cada conversación y manteniendo una lectura rápida para quienes quieran llegar informados a la votación.';
