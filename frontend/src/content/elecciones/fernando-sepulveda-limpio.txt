@@ -1,3 +1,3 @@
-🧿 oracle 0.8.6 — Token-aware, omen-ready.
+🧿 oracle 0.8.6 — Because vibes aren't a deliverable.
 ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
 User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.

@@ -1,3 +1,3 @@
-🧿 oracle 0.8.6 — Your AI's hot take, fact-checked.
+🧿 oracle 0.8.6 — Whispering your tokens to the silicon sage.
 ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
 User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
