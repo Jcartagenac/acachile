@@ -3,25 +3,23 @@ import { SEOHelmet } from '../components/SEOHelmet';
 import { Container } from '../components/layout/Container';
 import { FileText, Heart, PlayCircle, ScrollText, Users } from 'lucide-react';
 
-// Entrevistas originales
-import danielInterview from '../content/elecciones/01-daniel-tolosa-limpio.txt?raw';
-import danielSummary from '../content/elecciones/01-daniel-tolosa-resumen.txt?raw';
-import jorgeInterview from '../content/elecciones/02-jorge-silva-limpio.txt?raw';
-import jorgeSummary from '../content/elecciones/02-jorge-silva-resumen.txt?raw';
-import karinaInterview from '../content/elecciones/03-karina-norero-limpio.txt?raw';
-import karinaSummary from '../content/elecciones/03-karina-norero-resumen.txt?raw';
-import bloqueEticaInterview from '../content/elecciones/04-bloque-etica-limpio.txt?raw';
-import bloqueEticaSummary from '../content/elecciones/04-bloque-etica-resumen.txt?raw';
-import barbaraInterview from '../content/elecciones/05-barbara-inostroza-limpio.txt?raw';
-import barbaraSummary from '../content/elecciones/05-barbara-inostroza-resumen.txt?raw';
-import pauliInterview from '../content/elecciones/06-paulina-sandoval-limpio.txt?raw';
-import pauliSummary from '../content/elecciones/06-paulina-sandoval-resumen.txt?raw';
-import eduardoInterview from '../content/elecciones/07-eduardo-elgueta-limpio.txt?raw';
-import eduardoSummary from '../content/elecciones/07-eduardo-elgueta-resumen.txt?raw';
-import oscarInterview from '../content/elecciones/08-oscar-cerda-limpio.txt?raw';
-import oscarSummary from '../content/elecciones/08-oscar-cerda-resumen.txt?raw';
+import danielInterview from '../content/elecciones/Daniel Tolosa-limpio.txt?raw';
+import danielSummary from '../content/elecciones/Daniel Tolosa-resumen.txt?raw';
+import jorgeInterview from '../content/elecciones/Jorge Silva-limpio.txt?raw';
+import jorgeSummary from '../content/elecciones/Jorge Silva-resumen.txt?raw';
+import karinaInterview from '../content/elecciones/Karina Norero-limpio.txt?raw';
+import karinaSummary from '../content/elecciones/Karina Norero-resumen.txt?raw';
+import bloqueEticaInterview from '../content/elecciones/Bloque etica-limpio.txt?raw';
+import bloqueEticaSummary from '../content/elecciones/Bloque etica-resumen.txt?raw';
+import barbaraInterview from '../content/elecciones/Bárbara Inostroza-limpio.txt?raw';
+import barbaraSummary from '../content/elecciones/Bárbara Inostroza-resumen.txt?raw';
+import pauliInterview from '../content/elecciones/Pauli-limpio.txt?raw';
+import pauliSummary from '../content/elecciones/Pauli-resumen.txt?raw';
+import eduardoInterview from '../content/elecciones/Eduardo Elgueta-limpio.txt?raw';
+import eduardoSummary from '../content/elecciones/Eduardo Elgueta-resumen.txt?raw';
+import oscarInterview from '../content/elecciones/Oscar Cerda-limpio.txt?raw';
+import oscarSummary from '../content/elecciones/Oscar Cerda-resumen.txt?raw';
 
-// Entrevistas segunda tanda
 import fernandoSepulvedaInterview from '../content/elecciones/fernando-sepulveda-limpio.txt?raw';
 import fernandoSepulvedaSummary from '../content/elecciones/fernando-sepulveda-resumen.txt?raw';
 import juanPabloGaeteInterview from '../content/elecciones/juan-pablo-gaete-limpio.txt?raw';
@@ -166,8 +164,440 @@ const interviews: CandidateInterview[] = [
     summary: pepeVivarSummary,
     videoUrl: `${VIDEO_BASE_URL}/pepe-vivar.mp4`,
   },
+
 ];
 
 const introText = 'Reunimos en un solo lugar las entrevistas y resúmenes de candidaturas de cara a la elección de directorio del día 28. La idea es facilitar una revisión directa, simple y comparable, respetando el contexto de cada conversación y manteniendo una lectura rápida para quienes quieran llegar informados a la votación.';
 
-// ... (el resto del archivo es igual y no necesita cambios)
+const parseInterview = (raw: string): ParsedLine[] => {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const speakerMatch = line.match(/^\[(\d{2}:\d{2}:\d{2})\]\s+([^:]+):\s*(.*)$/);
+      if (speakerMatch) {
+        return {
+          type: 'speaker' as const,
+          timestamp: speakerMatch[1],
+          speaker: speakerMatch[2].trim(),
+          text: speakerMatch[3].trim(),
+        };
+      }
+
+      const looksLikeHeading = !line.includes(':') && line === line.toUpperCase() && line.length < 80;
+      if (looksLikeHeading) {
+        return { type: 'heading' as const, text: line };
+      }
+
+      return { type: 'paragraph' as const, text: line };
+    });
+};
+
+const parseSummary = (raw: string) => {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^resumen ejecutivo$/i.test(line) && !/^-{3,}$/.test(line));
+};
+
+const setRobotsNoIndex = () => {
+  let robots = document.querySelector('meta[name="robots"]');
+  if (!robots) {
+    robots = document.createElement('meta');
+    robots.setAttribute('name', 'robots');
+    document.head.appendChild(robots);
+  }
+  robots.setAttribute('content', 'noindex,nofollow,noarchive');
+};
+
+const BROWSER_ID_COOKIE_KEY = 'aca_elecciones_browser_id';
+
+const readCookieValue = (key: string) => {
+  if (typeof document === 'undefined') return null;
+  return document.cookie
+    .split('; ')
+    .find((entry) => entry.startsWith(`${key}=`))
+    ?.split('=')[1] || null;
+};
+
+const ensureBrowserId = () => {
+  const existing = readCookieValue(BROWSER_ID_COOKIE_KEY);
+  if (existing) return decodeURIComponent(existing);
+
+  const browserId = `browser_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+  document.cookie = `${BROWSER_ID_COOKIE_KEY}=${encodeURIComponent(browserId)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+  return browserId;
+};
+
+const CandidateList: React.FC<{
+  candidates: CandidateInterview[];
+  selectedId: string;
+  likedCandidates: Record<string, boolean>;
+  likeCounts: Record<string, number>;
+  onSelect: (id: string) => void;
+  onLike: (id: string) => void;
+}> = ({ candidates, selectedId, likedCandidates, likeCounts, onSelect, onLike }) => {
+  return (
+    <div className="rounded-3xl border border-stone-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">
+        <Users className="h-4 w-4" />
+        Selecciona una entrevista
+      </div>
+      <div className="flex flex-col gap-2">
+        {candidates.map((candidate) => {
+          const isActive = candidate.id === selectedId;
+          const isLiked = Boolean(likedCandidates[candidate.id]);
+          return (
+            <div
+              key={candidate.id}
+              className={`rounded-2xl border px-4 py-3 transition-all ${
+                isActive
+                  ? 'border-red-600 bg-red-600 text-white shadow-lg shadow-red-200'
+                  : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => onSelect(candidate.id)}
+                  className="flex-1 text-left"
+                >
+                  <div className="font-semibold">{candidate.name}</div>
+                  <div className={`mt-1 text-sm ${isActive ? 'text-red-100' : 'text-stone-500'}`}>{candidate.role}</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLike(candidate.id)}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    isActive
+                      ? isLiked
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white/15 text-white hover:bg-white/25'
+                      : isLiked
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-white text-stone-500 hover:text-red-700'
+                  } ${isLiked ? 'cursor-default' : ''}`}
+                >
+                  <Heart className={`h-3.5 w-3.5 ${isLiked ? 'fill-current' : ''}`} />
+                  {isLiked ? 'Quitar like' : 'Like'} · {likeCounts[candidate.id] ?? 0}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const ViewSwitcher: React.FC<{
+  mode: ViewMode;
+  onChange: (mode: ViewMode) => void;
+}> = ({ mode, onChange }) => {
+  return (
+    <div className="inline-flex rounded-2xl border border-stone-200 bg-stone-100 p-1">
+      <button
+        type="button"
+        onClick={() => onChange('entrevista')}
+        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+          mode === 'entrevista' ? 'bg-white text-red-700 shadow-sm' : 'text-stone-600 hover:text-stone-900'
+        }`}
+      >
+        <ScrollText className="h-4 w-4" />
+        Entrevista
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('video')}
+        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+          mode === 'video' ? 'bg-white text-red-700 shadow-sm' : 'text-stone-600 hover:text-stone-900'
+        }`}
+      >
+        <PlayCircle className="h-4 w-4" />
+        Video
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('resumen')}
+        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+          mode === 'resumen' ? 'bg-white text-red-700 shadow-sm' : 'text-stone-600 hover:text-stone-900'
+        }`}
+      >
+        <FileText className="h-4 w-4" />
+        Resumen
+      </button>
+    </div>
+  );
+};
+
+const EleccionesEntrevistasPage: React.FC = () => {
+  const [selectedId, setSelectedId] = useState(interviews[0].id);
+  const [viewMode, setViewMode] = useState<ViewMode>('entrevista');
+  const [browserId, setBrowserId] = useState('');
+  const [likedCandidates, setLikedCandidates] = useState<Record<string, boolean>>({});
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const contentTopRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setRobotsNoIndex();
+    const currentBrowserId = ensureBrowserId();
+    setBrowserId(currentBrowserId);
+
+    Promise.all(
+      interviews.map(async (candidate) => {
+        const response = await fetch(`/api/elecciones/likes/${candidate.id}?browserId=${encodeURIComponent(currentBrowserId)}`);
+        const data = await response.json();
+        return {
+          id: candidate.id,
+          totalLikes: data?.data?.totalLikes ?? 0,
+          userLiked: Boolean(data?.data?.userLiked),
+        };
+      })
+    )
+      .then((results) => {
+        const nextCounts: Record<string, number> = {};
+        const nextLiked: Record<string, boolean> = {};
+        for (const result of results) {
+          nextCounts[result.id] = result.totalLikes;
+          nextLiked[result.id] = result.userLiked;
+        }
+        setLikeCounts(nextCounts);
+        setLikedCandidates(nextLiked);
+      })
+      .catch((error) => {
+        console.error('Error loading election likes:', error);
+      });
+  }, []);
+
+  const selected = useMemo(
+    () => interviews.find((candidate) => candidate.id === selectedId) ?? interviews[0],
+    [selectedId],
+  );
+
+  const parsedInterview = useMemo(() => parseInterview(selected.interview), [selected]);
+  const parsedSummary = useMemo(() => parseSummary(selected.summary), [selected]);
+
+  const handleSelectCandidate = (id: string) => {
+    setSelectedId(id);
+    setViewMode('entrevista');
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  };
+
+  const handleLikeCandidate = async (id: string) => {
+    if (!browserId) return;
+
+    try {
+      const response = await fetch(`/api/elecciones/likes/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ browserId }),
+      });
+      const data = await response.json();
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'No se pudo actualizar el like');
+      }
+
+      setLikedCandidates((prev) => ({ ...prev, [id]: Boolean(data.data.userLiked) }));
+      setLikeCounts((prev) => ({ ...prev, [id]: Number(data.data.totalLikes || 0) }));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-soft-gradient-light py-4 sm:py-10">
+      <SEOHelmet
+        title="Entrevistas elecciones directorio ACA Chile"
+        description="Entrevistas y resúmenes de candidaturas para la elección de directorio del día 28."
+        url="https://acachile.com/elecciones/entrevistas"
+      />
+
+      <Container size="xl" className="space-y-4 sm:space-y-8">
+        <section className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/75 shadow-xl shadow-stone-200/70 backdrop-blur-md sm:rounded-[2rem]">
+          <div className="px-4 py-4 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">
+                  Elecciones ACA · 28 de marzo
+                </span>
+              </div>
+              <div className="space-y-2 sm:space-y-3">
+                <h1 className="text-2xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
+                  Elecciones ACA 28 de marzo
+                </h1>
+                <p className="max-w-3xl text-sm leading-6 text-stone-600 sm:text-lg sm:leading-7">
+                  {introText}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-3xl border border-stone-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm lg:hidden">
+              <div className="mb-3 text-sm font-semibold text-stone-700">Selecciona una entrevista</div>
+              <div className="grid grid-cols-2 gap-2">
+                {interviews.map((candidate) => {
+                  const isActive = candidate.id === selectedId;
+                  const isLiked = Boolean(likedCandidates[candidate.id]);
+                  return (
+                    <div
+                      key={candidate.id}
+                      className={`min-h-[64px] rounded-2xl border px-3 py-3 text-center text-xs font-semibold leading-4 shadow-sm transition-all ${
+                        isActive
+                          ? 'border-red-600 bg-red-600 text-white shadow-red-200'
+                          : 'border-stone-200 bg-white text-stone-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleSelectCandidate(candidate.id)}
+                        className="w-full"
+                      >
+                        {candidate.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLikeCandidate(candidate.id)}
+                        className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          isActive
+                            ? isLiked
+                              ? 'bg-white/20 text-white'
+                              : 'bg-white/15 text-white'
+                            : isLiked
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-stone-100 text-stone-500 hover:text-red-700'
+                        } ${isLiked ? 'cursor-default' : ''}`}
+                      >
+                        <Heart className={`h-3 w-3 ${isLiked ? 'fill-current' : ''}`} />
+                        {isLiked ? 'Quitar like' : 'Like'} · {likeCounts[candidate.id] ?? 0}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="hidden lg:block">
+              <CandidateList
+                candidates={interviews}
+                selectedId={selectedId}
+                likedCandidates={likedCandidates}
+                likeCounts={likeCounts}
+                onSelect={handleSelectCandidate}
+                onLike={handleLikeCandidate}
+              />
+            </div>
+          </aside>
+
+          <section className="overflow-hidden rounded-[1.5rem] border border-stone-200 bg-white shadow-xl shadow-stone-200/70 sm:rounded-[2rem]">
+            <div ref={contentTopRef} className="border-b border-stone-200 bg-stone-50/80 px-4 py-4 sm:px-8 sm:py-5">
+              <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-xl font-bold text-stone-900 sm:text-3xl">{selected.name}</h2>
+                    <button
+                      type="button"
+                      onClick={() => handleLikeCandidate(selected.id)}
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold sm:text-sm ${
+                        likedCandidates[selected.id]
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-stone-100 text-stone-600 hover:text-red-700'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${likedCandidates[selected.id] ? 'fill-current' : ''}`} />
+                      {likedCandidates[selected.id] ? 'Quitar like' : 'Dar like'} · {likeCounts[selected.id] ?? 0}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-sm text-stone-600">{selected.role}</p>
+                </div>
+                <ViewSwitcher mode={viewMode} onChange={setViewMode} />
+              </div>
+            </div>
+
+            <div className="px-4 py-4 sm:px-8 sm:py-8">
+              {viewMode === 'entrevista' ? (
+                <div className="space-y-4">
+                  {parsedInterview.map((entry, index) => {
+                    if (entry.type === 'heading') {
+                      return (
+                        <div key={`${entry.text}-${index}`} className="pb-1 sm:pb-2">
+                          <h3 className="text-lg font-bold uppercase tracking-[0.12em] text-stone-900 sm:text-xl">{entry.text}</h3>
+                        </div>
+                      );
+                    }
+
+                    if (entry.type === 'speaker') {
+                      return (
+                        <article
+                          key={`${entry.speaker}-${entry.timestamp}-${index}`}
+                          className="rounded-2xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-4 shadow-sm sm:p-5"
+                        >
+                          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                            <span className="text-red-700">{entry.speaker}</span>
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm leading-6 text-stone-700 sm:text-base sm:leading-7">{entry.text}</p>
+                        </article>
+                      );
+                    }
+
+                    return (
+                      <p key={`${entry.text}-${index}`} className="text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
+                        {entry.text}
+                      </p>
+                    );
+                  })}
+                </div>
+              ) : viewMode === 'video' ? (
+                <div className="space-y-4">
+                  <div className="overflow-hidden rounded-3xl border border-stone-200 bg-black shadow-sm">
+                    <video
+                      key={selected.videoUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="block aspect-video w-full"
+                    >
+                      <source src={selected.videoUrl} type="video/mp4" />
+                      Tu navegador no soporta la reproducción de video.
+                    </video>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {parsedSummary.map((line, index) => {
+                    if (!line.startsWith('- ')) {
+                      return (
+                        <p key={`${line}-${index}`} className="text-sm leading-7 text-stone-700 sm:text-base sm:leading-8">
+                          {line}
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={`${line}-${index}`}
+                        className="rounded-2xl border border-stone-200 bg-gradient-to-br from-stone-50 to-white px-4 py-4 text-stone-700 shadow-sm"
+                      >
+                        <p className="text-sm leading-6 sm:text-base sm:leading-7">{line.slice(2)}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      </Container>
+    </div>
+  );
+};
+
+export default EleccionesEntrevistasPage;
