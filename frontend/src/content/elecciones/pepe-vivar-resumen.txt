@@ -1,3 +1,5 @@
-🧿 oracle 0.8.6 — One command, several seers; results stay grounded.
-ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
-User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+Pepe Vivar se presenta como contador con trayectoria prolongada en contabilidad, remuneraciones, control presupuestario y revisión de cuentas. En el bloque compartido del Comité Revisor de Cuentas explica su recorrido laboral y cómo ese perfil técnico lo acerca naturalmente al rol que hoy postula.
+
+Su intervención se centra en fortalecer la transparencia y el orden financiero de la ACA, especialmente a través de inventarios claros, seguimiento de activos, revisión de rendiciones y mejor trazabilidad de la información contable. También aparece una preocupación por que los socios reciban reportes comprensibles y útiles.
+
+La entrevista lo muestra como un candidato de perfil técnico, orientado al detalle y a consolidar procesos de control que permitan dar mayor confianza y claridad sobre el uso de recursos dentro de la asociación.

@@ -1,3 +1,5 @@
-🧿 oracle 0.8.6 — AI wrote it? Oracle babysits it.
-ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
-User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+Javier Bianchi se presenta como profesional de marketing, con larga experiencia en empresas y una etapa posterior dedicada a emprendimientos, parrilla y colaboración con otros actores del rubro. En el bloque del Comité Revisor de Cuentas explica además su historia dentro de la ACA y su estilo directo para abordar los problemas.
+
+Su foco está puesto en la transparencia, el control y la formalización de la información financiera y patrimonial de la asociación. La entrevista desarrolla con detalle la necesidad de cuantificar activos, ordenar inventarios, registrar depreciaciones y asegurar que balances y reportes sean realmente útiles para los socios.
+
+En conjunto, su propuesta transmite continuidad en el trabajo ya iniciado, preocupación por la rendición de cuentas y una visión rigurosa del rol fiscalizador dentro de la ACA.

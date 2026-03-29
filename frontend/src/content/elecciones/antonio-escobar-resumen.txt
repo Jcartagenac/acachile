@@ -1,3 +1,5 @@
-🧿 oracle 0.8.6 — Silent run, loud receipts.
-ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
-User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+Antonio Escobar se presenta como ingeniero de sonido y gestor de proyectos, con experiencia en producción, coordinación y generación de instancias de trabajo colaborativo. En la entrevista combina antecedentes personales con una mirada práctica sobre cómo aportar al funcionamiento de la asociación.
+
+Su candidatura para dirección de proyectos enfatiza la autosustentabilidad, la generación de ingresos y una mayor profesionalización de la ACA. La idea central es ampliar la capacidad de hacer cosas sin depender únicamente de recursos escasos o soluciones improvisadas.
+
+En la conversación transmite un perfil ejecutivo, orientado a crear estructura, abrir oportunidades y fortalecer el trabajo con auspiciadores, actividades y procesos internos más ordenados.

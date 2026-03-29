@@ -1,3 +1,5 @@
-🧿 oracle 0.8.6 — Your AI coworker's quality control.
-ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
-User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+Fernando Sepúlveda se presenta como ingeniero civil, emprendedor ligado a proyectos gastronómicos y asador de larga data. En la conversación repasa su trayectoria personal, su vínculo con el mundo de la parrilla y la forma en que esa experiencia lo fue acercando a la ACA.
+
+En su candidatura a la presidencia pone énfasis en ordenar el trabajo del directorio, fortalecer la coordinación entre áreas y dar una conducción más unificada. La idea central es que la asociación funcione como un equipo y no como compartimentos aislados.
+
+También aparece una mirada de crecimiento con foco en formación, actividades y participación de socios en distintas regiones. Su planteamiento combina experiencia de gestión, visión estratégica y una preocupación por dar continuidad institucional a la ACA.

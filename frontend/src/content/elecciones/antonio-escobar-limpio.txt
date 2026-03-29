@@ -1,3 +1,115 @@
-🧿 oracle 0.8.6 — Calm prompt, converged truths.
-ERROR: Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
-User error (prompt-validation): Missing OPENROUTER_API_KEY. Set it via the environment or a .env file.
+[00:00:34] Camila: ¿Cómo te sumí?
+[00:00:36] Antonio Escobar: Sí, general.
+[00:00:38] Camila: Bienvenido.
+[00:00:40] Antonio Escobar: Hola, Antonio.
+[00:00:42] Camila: Bienvenido.
+[00:00:43] Antonio Escobar: Bueno, porque les ya todos ustedes es por el programa que mandaste. Lo leí. Así que tengo artistas preguntas para ti.
+[00:00:49] Camila: Pero al desqueso quiero saber quién es Antonio Escobar para quiénes no lo conocen.
+[00:00:55] Antonio Escobar: Bueno, soy de Santiago. Tengo 38 años. Soy casado. Tengo cuatro hijos.
+[00:01:03] Camila: Bienvenido. Bienvenido.
+[00:01:05] Antonio Escobar: De profesión soy ingeniero un sonido. Ya hace... 20 años que me estoy dedicando ya a lo que he sonido con un pequeño gran entremenio que tuvo un entendimiento. Y me encanta esto. Me encanta lo que he sonido. La producción, la gestión, el coordinar, el generar instancias,
+[00:01:27] Antonio Escobar: el tal de la oportunidad, que podamos hacer cosas, que se puedan crear cosas y que todo vamos sumando. Y también uno de los amigos me dijo el hijo, también lo tuvo con también acá.
+[00:01:41] Camila: ¿Un serio? ¿Qué ha tenido hijo?
+[00:01:44] Antonio Escobar: Y si ocho.
+[00:01:45] Camila: ¿Vacan? ¿Qué ha tenido un Antonio?
+[00:01:48] Antonio Escobar: 38. Allá. Todo el primer hijo fue el buena. Hoy sí. Es que porque te veía sobre el joven. Entonces, como dije 18,
+[00:01:59] Camila: ¿vence que era y tenía un...
+[00:02:00] Antonio Escobar: No sé.
+[00:02:01] Camila: Hoy, ¿cómo llegaste a la acá?
+[00:02:05] Antonio Escobar: Por un contacto que me afiró a lo cutillo. Y creó a la afiró a lo que avarios en los socios. Sí. Entonces me comentó. Me dijo, y en todo, si ven un bien, me ha sido torné a dedicar en Metricinó, se he funcionado. Me he dedicado a la casa, pero he gustado el tener lo cutillo.
+[00:02:24] Antonio Escobar: Y en mi fin intención, me ha lo presentado, me comentó. Y fui investigando. Hasta que llegué. Me he incluido y pasaron parte de semana. Y esto fue a finales, en Momenov en 24. Añá, no hace tanto. Hoy llegué desde Santiago. De Santiago. Super.
+[00:02:43] Antonio Escobar: Y ahí, como ha sido tu vinculo con la acá,
+[00:02:45] Camila: que representa la acá en tu vida para ti?
+[00:02:48] Antonio Escobar: No. Hay una bolita espació. Me ha cumplido bastante. El año pasado fui, por ejemplo, Delca, fui a Ráner. Estoy un poquito en el interayudando en la condenación a la acá, y durante la año pasado, Armamos un otro sociorama, un equipo, un equipo,
+[00:03:10] Antonio Escobar: que tuvimos participación en Santiago, y el día en el inter. Bueno. Entonces, no, como ha sido bastante este año, el año pasado fue bastante intenso en ese sentido. Hoy y tu participación como Ráner, igual en buena, y qué es sensación que hace,
+[00:03:26] Antonio Escobar: qué, como fue el futuro de la impresión,
+[00:03:28] Camila: cuando conociste ese mundo?
+[00:03:30] Antonio Escobar: No, como decirlo, no, en caso. En caso. Entonces, más ganas me hicieron de, me pico el bichito del de competir. Entonces, me pico el bichito del mariquí, podrá ser alguna cosa, dirá avanzando. No sólo estar ahí como sucibirando o esperando la convocatoria.
+[00:03:48] Antonio Escobar: Entonces, te presentes de alguna otra cosa. Hoy y yo no sé si, yo soy tan monos focal, pero a mí me pasa que yo pienso que competir y ser parte del director igual es peluón. No estoyis no que esté prohibido en una obra difícil.
+[00:03:59] Camila: ¿Cómo ves ese camino?
+[00:04:01] Antonio Escobar: No. Ahora y una pose en la competición. Ya. Entonces, estaré en un equipo igual y genera un acto gasto, tiempo, energía, y si estamos en esta postulación y queremos ser de esta borte para la cánise aunque la energía esté ahí. Eso tía contento.
+[00:04:19] Camila: ¿Qué te motivó?
+[00:04:20] Antonio Escobar: Entonces, voy a estar en su mercado con tu competencia.
+[00:04:23] Camila: ¿Está y hermano en equipo? ¿Y qué te motivó ahora?
+[00:04:25] Antonio Escobar: Si usted es que quiero ser director de proyecto. Porque, siempre y se van a hacer muchas más cosas. Fuerta mucha instancia donde los socios nos podamos conozcar más, donde los nuevos socios tengan instancia de aprender y donde la gente que verá fuera tenga un sentido
+[00:04:39] Antonio Escobar: así, quiero estar en la cánise porque en la que voy a encontrar esto. No solo dormir. Mira. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Sí. Entonces. Y esto es
+[00:05:15] Antonio Escobar: como estáificado.
+[00:05:16] Camila: ¿ remindsringees?
+[00:05:18] Antonio Escobar: Bueno. No, se hagan muchas cosasaciones de veces de懂. negocio en el buen sentido de la palabra, sabemos que no somos lucrativos y que si yo, pero que un edad que un edad que un edad pueda ir a tener ingresos para laaca y valor al mismo tiempo para el socio.
+[00:05:47] Antonio Escobar: Sí, un edad sopa laaca y oficialmente mejor al comienzo, no ser un gasto. Poder hacer cosas y no está limitado porque no tenemos recursos. Dispure lo que va a ser es asalbo de hacer de cobrar lo que cuesta un curso realmente. No, pues sí. Claro.
+[00:06:02] Antonio Escobar: Cobrar lo que cuesta realmente o gestionar o gestionar el opicio, gestionar esta gestionar estar en lugar, por ejemplo, alguna feria principal o aprivada, generar el espacio, tener un espacio y poder estar ahí como un comúaca.
+[00:06:18] Camila: ¿Quiestos no tienen un costo que se va
+[00:06:20] Antonio Escobar: a una instancia donde se gestionen, donde se conocizadores se pueda aportar con eso y frente ahí mostra laaca. Si vamos a ser una baste, claro, alguna otra cosa, veen los costos y que se cobra realmente lo que cuesta. No, se entiende. Entonces vamos no generar un gasto para laaca
+[00:06:38] Antonio Escobar: al contrario y llamar a la gente para generar ingresos en socios. Sí, bueno, ingresos en socios también eso significa más responsabilidad y finalmente cada socios también requiere su espacio como lo digo, como entre más socios, mayor la responsabilidad
+[00:06:57] Camila: también, ¿no?
+[00:06:58] Antonio Escobar: Como que estamos todos los candidatos de diores, han hablado todos como de esta búsqueda de volver un poco a cuidar esta cámara de día, como llevaría y eso con en fondament, al ser campaña de mas socios.
+[00:07:15] Camila: ¿Qué?
+[00:07:16] Antonio Escobar: Vamos a hacer que vamos a seguir en mensaje. Se va a ingresonos socios, queremos o llor menos, quiero que se va a lo que va a ingresar. Yo creo que en muchos socios que ha ingresado, que realmente lo mejor no sabe que van contra el laaca, sólo lo mejor
+[00:07:27] Antonio Escobar: va a esperar una capacitación de un resultado o es para ser parte orgúnicivo, este no tenemos. Y no vuelvo. La camería necesitamos instancia, necesitamos juntas, necesitamos tener alguna feria, hacer algo más, ver fecha, ocupar los meses que no tenemos torneo y generarlo
+[00:07:42] Antonio Escobar: los espacios para que nosotros los nuevos socios, que bueno, yo ya no soy tan nuevo. Podemos tener lugares instancia, espacios para tener esa camería. O sea, que dentro de tus proyectos en esta como la camería como tal, eniftando las secuntas,
+[00:08:02] Antonio Escobar: quizás mensuales, como dijo Juan Palo en una. Sí. Están dentro de los turo vez como parte de tu responsabilidad también. Sí. Sí, totalmente. Ya. Porque claramente, lo que yo no voy a ver, como están en son torneos, ahí está, el otro director,
+[00:08:18] Antonio Escobar: o directora, pero está todo lo demás que que ocurrir, hay que ir en los espacios de horizontal y hacer virtuarios oある出來 física y eso mismo lograra los 극es a mí en la sinal. Que los que de sucede conoce enterá realmente los le cortes siendo no akan
+[00:08:40] Antonio Escobar: a veces que lo creamos estaciases tenga un lignamiento claro entre todo Chile. No que los torneos son en Santiago a la o la ferio, la matricación en Santiago y en el sur de otra cosa y en el norte se hace otra cosa, que a nivel nacional se marge una misma ligna.
+[00:09:08] Antonio Escobar: Hoy en tus ejes también detrás o mencionaste el potencial los emprendimientos de los socios. Como piensas articulares sobre que todos tengan la misma joportunidad de visilia. Lo que decía la ferios en crear espacio generar por darte un nombre que se me viene a la mente que lo está
+[00:09:28] Antonio Escobar: trabajando en el espacio de humo o el espacio de fuego dentro de clienta feria municipal, publica o privada, donde estamos como en espacio como acá y donde hay los socios que tienen son tendimientos y puede mostrar. Vamos a depender también que facilidad tenemos como no
+[00:09:44] Antonio Escobar: van a dar la instancia cuántos socios pueden ir que no que lo tenemos que ven en su momento ya cuando esto se active. Pero importante tener primero el lugar la instancia y a nivel en todos lados.
+[00:09:57] Camila: ¿Y cómo harías un filtro o sería por cobro? No sé, estoy preguntando
+[00:10:04] Antonio Escobar: para que efectivamente puedan postular porque no pueden todos los emprendedores a una a la misma feria por la aga y no ver por por porque al endeario ya tenemos un filtro mejor que por fecha a un porcentaje y no va a poder ir. Yo creo que vamos a tener que hacer
+[00:10:18] Antonio Escobar: alguna cuota o alguna lista y viendo la idea es que durante el año todo se muestra. Por lo mismo es que ser diferente de el nivel nacional donde lo mejor realmente lleva a la feria donde tenemos socios que no entendimiento, que yo lo mejor no van a
+[00:10:32] Antonio Escobar: poder venir siempre a ser teo o donde realmente está las dos o tres cuatro ferios que no movemos normalmente en el año.
+[00:10:38] Camila: ¿Quienerar más instancia y vale la ferial al entendimiento del socio acá para que tenga el lugar donde está?
+[00:10:46] Antonio Escobar: O un kioco, tengo que volver a hacer un kioco. Así que ya va a entremeyer a hacer una fecha o un punto de acadurante eso para dejarlas en lo más posible todos. Oye y en relación como con la tesoredia porque proyectos voy a mente siempre a necesitar un inversón inicial.
+[00:11:07] Camila: ¿Cómo piensas trabajar con el tesorero para asegurar que tus
+[00:11:10] Antonio Escobar: iniciatías sean financieramente viables y no un riesgo para la caja de
+[00:11:14] Camila: la acá?
+[00:11:16] Antonio Escobar: Con eso, la autogestión, que sea el menor gasto posible y con número real y hace el proyecto que sea un realmente factible, no sacamos con un gusto. Por ejemplo, todo con numeros, todo con conversaciones, todo un opiciador y que ya tener un gasto cubierto con opiciadores.
+[00:11:40] Antonio Escobar: Lo ves también como parte de tu reconcidía de traer el piseores. Para esto sí, porque empecé queremos hacer una mástera o una ferial, necesitamos tener marcas que quieran hacer una porte y por lo mismo tenemos que primero es un proceso donde tenemos que posicionar la marca acá.
+[00:12:00] Antonio Escobar: Cosa que a las marcas les interés y les sea interactivo trabajar con nosotros y que tenga la disponibilidad que cuando lo solo les presentemos un programa completo y durante las ideas y le sabes que durante este año queremos hacer tal tal, tal actividad de con
+[00:12:16] Antonio Escobar: cuán no ayudas, no ayudas con todas, cuál va a ser toport y qué tofesco yo. Muy bien. Hoy y en qué te atellas tienes como pagenerada a las alianzas que permitan este financiamiento, tienes alcico como ideas de las ideas con empresas, marcas,
+[00:12:35] Antonio Escobar: gremios a temas bueno, no tenemos que ver con ya tanto adentro, tenemos que ver realmente tenemos que definir que realmente estamos en capacidad de ofrecer la la marca y si hubo un eso sentano a conversar y negociar porque vamos a yo que será de 20 marcas, pero
+[00:12:56] Antonio Escobar: nos estamos a la altura de poder sentarme a conversar
+[00:12:58] Camila: con ello directamente, si no tengo claro ahora, ¿qué le puedo ofrecer a parte de no seguir aparezcan el reo sociales?
+[00:13:06] Antonio Escobar: Claro, claro, necesito, por ejemplo, compreverteleme con una marca y a usted me van a ayudar durante 7 actividades en el año y yo les tengo que con algunos socios hacerle alguna clase a su trabajador. Claro, no sé, como la gente está en manos,
+[00:13:23] Antonio Escobar: y claro. Y esa cosa claro, tenemos que aceptar no ver que tenemos capacidad realizar y que presenten en las marcas para poder sentarnos negocios. Y la gestión de beneficios para los socios, porque estamos hablando de cómo de cómo autos sustentar ciertas actividades, cómo hacemos
+[00:13:39] Antonio Escobar: que el socio sienta, que es el parte de la década, también es un beneficio. Es que si tenemos tibirá de tenemos espacio donde puedan ser ir donde puede estar, se donde puesta con la familia. Yo creo que ya es un beneficio tener un panorama relativamente cada mes.
+[00:13:59] Antonio Escobar: A parte que si lo ya no tenemos la confianza, tenemos la certeza de sentarlo a conversar con una marca. Podemos daivimos sacar mayor beneficio. Podemos personalmente que la marca no ayuda con algo, hacer pequeños recuerdo y cosas incentivos.
+[00:14:18] Antonio Escobar: También tengo en la cabeza hacer un estat formativo. Y ya un beneficio para la gente que viene ingresando. Y genera una vacia de todo el socio que estén dispuestos a trabajar a formar sus que vienen ingresando y que al final en el menor tiempo
+[00:14:38] Antonio Escobar: si lo estemos todos con un lenguaje, tenemos toda la par para poder compartir, poder hacer parte de un equipo, poder comenzar algo que quieran. Como un emprendimiento, en el fondo que es porque es lo que es lo que más se repite en las preguntas y en las inquietuas de los socios, el tema de la no-competencia.
+[00:15:02] Camila: ¿Cómo salimos de no ser solamente una liga de azadores?
+[00:15:06] Antonio Escobar: Con esto, creo yo, genera instancias para compartir, para que todo esto me he hablado. Siempre están como incertas en una competencia, como proyecto 5. Es de algún tipo de la gente, por ejemplo. Sí, lo que hemos capacitado y pueden crear un pensamiento de banquetería pueden generar
+[00:15:28] Antonio Escobar: a habilidades, por ejemplo, trabajar cuero, hacer más terclas para su diario a ver sin mucho que somos para ir aficionado y a lo mejor es rico aprender a hacer un buen oso para la familia. No, porque la mayoría, por eso es dego, varios preguntas como de beneficio
+[00:15:47] Antonio Escobar: es de educación, digamos, lo así, como, pero que buscan así como aprender también, porque entran y claro, todos, varios, a muchos saben mucho, pero también hay otros que tan recién ingresando, que no saben mucho para ir y quieren aprender. Entonces, hay proyectos, hay como detalleres de desarrollo o cosas así.
+[00:16:06] Antonio Escobar: Sí, bueno, solo más, por ejemplo, tratemos de conseguir durante el año y talidad de una de las cosas que tengo, no está forcercuchillo, trabajar cuero. Su throttle. Sus Carlos, untuk. Pero bueno, por eso que la misma socio, si, le backgroundo el que se diga el cuego
+[00:16:23] Antonio Escobar: que enseña a los ovotros for y que se de lado que así que el Veir al P que sea un traprehencia final de nuevo, lo cual aceptas al huis, es qué al señor C Mommy y tieneslo en la altogetherkay de que todos sabemos para un turno. Pero a mi viktigt, laughing, si, como voy a ser una más de cara para ser un buen
+[00:16:32] Antonio Escobar: asado, no solamente va a ser un buen asado en este orden en este odverna o en la mattaria, para una competencia, también para hacerlo en la casa con los framilia. elo a más cultura como estaran en el año pasado, a dejar un buen asela en la una rica cena para el paldía de la mamá, cosas diferentes, pero claro, siempre
+[00:16:52] Antonio Escobar: va a estar en el trafondo a nuestra cabeza del querer forzarnos para formarnos para la competencia, pero no la gran mayoría de los socios no va a ser eso a lo mejor, especialmente lo que venga en el grisanto. Claro. Estaría dispuesto a hacer como una hoja de ruta de los beneficios en el fondo de
+[00:17:09] Antonio Escobar: convenios para los socios en el primer tiempo que llegue a la década. Sí, hay que llegar a gestionar y que sea en tener beneficios, sí, se puede lograr, se puede lograr y hay que hacerlo. Y como propondías mantenerlos, por ejemplo, visualizarlos,
+[00:17:29] Antonio Escobar: siendo responsable, con los compromisos que yo quiero para tener beneficios. Si yo consigui un descuento con alguien necesito que el que obtuvo el descuento, le sai con la foder prevoutero, lo podemos trajar en el rey de... No, no, no, no, no, no, no, no, no, no, como los socios pueden saber que existen
+[00:17:43] Antonio Escobar: esos beneficios. Ah, hay que hacer un programa, vamos a tener que hacer un programa, levanta en una página web, trabajar en la redes sociales, está muy correcto. Sí, por todo el lado, por mí hemos correo, actualizar todos los meses mejor, un comander un meid, todos los meses con lo beneficio actualizado.
+[00:18:05] Antonio Escobar: Ya, hoy es que... Habidamente.
+[00:18:10] Camila: ¿Cuál sería el serio distintigo de la gestión de Antonio
+[00:18:15] Antonio Escobar: que te gustaría mejorar de las gestiones anteriores que has visto
+[00:18:18] Camila: de proyectos o hay general del directorio de acá? ¿Qué cosas repetirías, qué cosas no deberías hacer?
+[00:18:27] Antonio Escobar: Yo creo que primero, tratar de centralizar la acá, hacer aquí durante a nivel nacional, tener un calendario ocupado, que tengamos actividad del todo lo meses, por lo menos, que siempre tengamos algo que hacer, que tengamos algo más de que conversar,
+[00:18:42] Antonio Escobar: que veránificar, que darle un instancia el socio para que pueda hacer algo.
+[00:18:47] Camila: ¿Potener más actividades?
+[00:18:49] Antonio Escobar: Sí. Y que es el fondo de eso, lo que no harías,
+[00:18:54] Camila: ¿qué harías de las cosas? ¿Qué es lo que me ha gustado de la última gestión de la acá? ¿Qué cosas de lo que han hecho o mantendrías?
+[00:19:03] Antonio Escobar: Me gusta que muchas de las cosas que se hacen sea todo otra vez transmitió. Eso es un instancia, entonces les va a dar a la gente que no pueda citerficivamente, que sea parte de él.
+[00:19:14] Camila: ¿Qué la cosa sea?
+[00:19:16] Antonio Escobar: En la transmira, porque empecé a hacer un taller, no tal a la gente mejor va a llegar a taller, pero sí que se transmite y se da la instancia de que ya, por favor, el socio que no pueda decir, lo puedes ver, puede ser parte de él. Yo creo que eso es que manten él.
+[00:19:30] Camila: ¿Cómo te gustaría que te recordaran en estos tres años que vienen?
+[00:19:37] Antonio Escobar: Que deje un programa con un calendario estrecho. Sí, que genera un programa con un calendario estrecho, que siempre tengo ahí a cosa que en mi gestión no hubiera un mes en muerto. Perfecto. Oye, y me quedan algunos minutos, algo que le gustaría decirles a los socios
+[00:20:00] Antonio Escobar: para que decían votar por ti. Y confíen en que alguien que llegó hace poco más de un año, que sentirá necesidad de ser nuevo, dono a entender mucho. Y no tener muchas herramientas en cuanto a la necesidad y sabe lo que necesita el socio para poder motivarse más.
+[00:20:21] Antonio Escobar: Creo que al pasar por esa instancia hace poco tiempo, yo digo a mi tarde, el año pasado, pase por eso, entiendra necesidad de, entiendo el querer darle una identidad a la marca acá, para que todos los socios nuevos antiguos trajimos en una misma línea.
+[00:20:37] Antonio Escobar: Y sepamos lo que es una acá. Túben.
+[00:20:41] Camila: Oye, ¿qué fue lo que más te encantó de la acá cuando ingresaste?
+[00:20:47] Antonio Escobar: Por ejemplo, me gustó mucho en el traca cuando estuve en la baña. Desde lo mismo equipo, ya también todos competimos, pero en el caso de en el caso de todo no bañamos. Todo se apoya. El compartir, en la conversa, el post terminar el último plato,
+[00:21:09] Antonio Escobar: la conversa al relajo, el apoyarse, el darse año cuando no resultó sentir el aplauso el obrino detrás cuando entregaste plato. La Sancadilla. La Sancadilla, todo. Oye, Antonio, y decir mi la acá, entre espalabras. La madería. Experience y famita.
+[00:21:40] Antonio Escobar: Oye, Antonio, te felicito por las ganas. La gracia, primero, por este espacio, por el tiempo, porque los sociétuviste podís en te pudiese vos conocer mejor. Sí, yo soy por la ganan.
+[00:21:53] Camila: Oye, si no sales elegidos, ¿terías dispuesto a apoyar al directorio?
+[00:21:59] Antonio Escobar: No, también. Yo lo quiero ver a todos. Ajan dos ahí. Me vas a eso. Porque todos han dicho tanta idea. Bueno, quiero ver a todos, ajan dos. No entendía todo. Yo, cuando he podido y han necesitado de ahí esto. Te felicito, vuelvo a decirte por el impito de querer postular por la gana.
+[00:22:18] Antonio Escobar: Vamos a ver qué pasa estas elecciones el día sabos. Pero desde ya, tristarte por las ganas. Y ojalá qué, de verdad, de verdad. Agamos grandes cosas por la acá. Todos lo que están, estamos haciendo cosas por estas elecciones. Y estamos buscando un mejor futuro balaca.
+[00:22:37] Antonio Escobar: Así que muchas gracias.
+[00:22:41] Camila: ¿Qué estoy bien? Dani, ¿reca también?
+[00:22:45] Antonio Escobar: Si quieren abrir mi trófono y dar un ratito para poder musicar.
