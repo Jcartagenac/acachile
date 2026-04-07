@@ -15,7 +15,8 @@ import {
   ExternalLink,
   Users,
   X,
-  Phone
+  Phone,
+  Mail
 } from 'lucide-react';
 import logoFallback from '@/assets/aca-logo.svg';
 
@@ -32,6 +33,7 @@ interface DirectorInfo {
   name: string;
   role: string;
   phone: string;
+  email: string;
 }
 
 const SociosAcaLinks: React.FC = () => {
@@ -40,12 +42,15 @@ const SociosAcaLinks: React.FC = () => {
   const [showDirectorio, setShowDirectorio] = useState(false);
 
   const directores: DirectorInfo[] = [
-    { name: 'Vianca Galdames', role: 'Presidenta', phone: '+56934520459' },
-    { name: 'Alejandro Bakit', role: 'Director Ejecutivo', phone: '+56964342200' },
-    { name: 'Daniel Toloza', role: 'Tesorería', phone: '+56982278485' },
-    { name: 'Carolina Carriel', role: 'Directora de Torneos y Competencias', phone: '+56955347961' },
-    { name: 'María José Gallegos', role: 'Directora de Proyectos', phone: '+56954881808' },
-    { name: 'Paulina Sandoval', role: 'Directora de Comunicaciones', phone: '+56950486915' }
+    { name: 'Juan Pablo Gaete', role: 'Presidente', phone: '+56 9 9997 1878', email: 'directorio@acachile.com' },
+    { name: 'Oscar Cerda', role: 'Director Ejecutivo', phone: '+56 9 4275 0675', email: 'proyectos@acachile.com' },
+    { name: 'Eduardo Elgueta', role: 'Secretario', phone: '+56 9 7849 0100', email: 'secretaria@acachile.com' },
+    { name: 'Jorge Silva', role: 'Tesorero', phone: '+56 9 9032 4222', email: 'tesoreria@acachile.com' },
+    { name: 'Paulina Sandoval', role: 'Directora de Comunicaciones', phone: '+56 9 5048 6915', email: 'comunicaciones@acachile.com' },
+    { name: 'Karina Norero', role: 'Directora de Torneos y Competencias', phone: '+56 9 2901 0492', email: 'competencias@acachile.com' },
+    { name: 'Pablo Verdugo', role: 'Director de Proyectos', phone: '+56 9 8262 0693', email: 'proyectos@acachile.com' },
+    { name: 'Sergio Maturana', role: 'Comité de Ética', phone: '+56 9 9309 8978', email: 'etica@acachile.com' },
+    { name: 'Javier Bianchi', role: 'Comité Revisor de Cuentas', phone: '+56 9 7954 6507', email: 'contraloria@acachile.com' }
   ];
 
   const links: LinkItem[] = [
@@ -286,11 +291,18 @@ const SociosAcaLinks: React.FC = () => {
                       {director.role}
                     </p>
                     <a
-                      href={`tel:${director.phone}`}
+                      href={`tel:${director.phone.replace(/\s+/g, '')}`}
                       className="flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors"
                     >
                       <Phone className="h-4 w-4" />
                       <span className="font-mono text-sm">{director.phone}</span>
+                    </a>
+                    <a
+                      href={`mailto:${director.email}`}
+                      className="mt-2 flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors"
+                    >
+                      <Mail className="h-4 w-4" />
+                      <span className="text-sm">{director.email}</span>
                     </a>
                   </div>
                 ))}
