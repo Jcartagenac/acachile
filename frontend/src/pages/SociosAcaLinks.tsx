@@ -43,7 +43,7 @@ const SociosAcaLinks: React.FC = () => {
 
   const directores: DirectorInfo[] = [
     { name: 'Juan Pablo Gaete', role: 'Presidente', phone: '+56 9 9997 1878', email: 'directorio@acachile.com' },
-    { name: 'Oscar Cerda', role: 'Director Ejecutivo', phone: '+56 9 4275 0675', email: 'proyectos@acachile.com' },
+    { name: 'Oscar Cerda', role: 'Director Ejecutivo', phone: '+56 9 4275 0675', email: 'directorejecutivo@acachile.com' },
     { name: 'Eduardo Elgueta', role: 'Secretario', phone: '+56 9 7849 0100', email: 'secretaria@acachile.com' },
     { name: 'Jorge Silva', role: 'Tesorero', phone: '+56 9 9032 4222', email: 'tesoreria@acachile.com' },
     { name: 'Paulina Sandoval', role: 'Directora de Comunicaciones', phone: '+56 9 5048 6915', email: 'comunicaciones@acachile.com' },
