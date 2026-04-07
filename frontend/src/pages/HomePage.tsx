@@ -106,9 +106,10 @@ const resolvePreferredImage = (manualImage?: string, sourceImage?: string, fallb
 const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = ({ section, reverse }) => {
   const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
   const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
+  const isCompactNews = section.source_type === 'news';
 
   return (
-    <section className="py-16 sm:py-20 lg:py-28 bg-soft-gradient-light relative overflow-hidden">
+    <section className={`${isCompactNews ? 'py-8 sm:py-10 lg:py-12' : 'py-16 sm:py-20 lg:py-28'} bg-soft-gradient-light relative overflow-hidden`}>
       {/* Elementos decorativos de fondo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute ${reverse ? 'left-0' : 'right-0'} top-1/4 w-96 h-96 bg-primary-100/30 rounded-full blur-3xl`}></div>
@@ -118,47 +119,46 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Mobile: orden natural - Título, Imagen, Texto */}
         {/* Desktop: usar grid de 2 columnas como hero */}
-        <div className={`flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 lg:items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}>
+        <div className={`flex flex-col ${isCompactNews ? 'gap-5 max-w-3xl mx-auto' : 'lg:grid lg:grid-cols-2 gap-10 lg:gap-20 lg:items-center'} ${reverse ? 'lg:flex-row-reverse' : ''}`}>
           {/* Título - siempre primero en mobile */}
-          <div className="lg:hidden mb-6">
-            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight tracking-tight line-clamp-2">
-              {section.display_title}
-            </h2>
-            <div className="mt-3 h-1 w-20 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
-          </div>
-
-          {/* Columna izquierda en desktop: Título y Texto */}
-          <div className={`space-y-6 sm:space-y-8 order-3 lg:order-none ${reverse ? 'lg:col-start-2' : 'lg:col-start-1'}`}>
-            {/* Título - solo visible en desktop */}
-            <div className="hidden lg:block">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight tracking-tight mb-4 line-clamp-2">
+          {!isCompactNews ? (
+            <div className="lg:hidden mb-6">
+              <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight tracking-tight line-clamp-2">
                 {section.display_title}
               </h2>
-              <div className="h-1.5 w-24 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
+              <div className="mt-3 h-1 w-20 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
             </div>
+          ) : null}
+
+          {/* Columna izquierda en desktop: Título y Texto */}
+          <div className={`space-y-6 sm:space-y-8 ${isCompactNews ? 'order-2' : 'order-3 lg:order-none'} ${!isCompactNews && reverse ? 'lg:col-start-2' : !isCompactNews ? 'lg:col-start-1' : ''}`}>
+            {/* Título - solo visible en desktop */}
+            {!isCompactNews ? (
+              <div className="hidden lg:block">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight tracking-tight mb-4 line-clamp-2">
+                  {section.display_title}
+                </h2>
+                <div className="h-1.5 w-24 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
+              </div>
+            ) : null}
             
             {/* Texto y CTA */}
-            <div className="mt-8">
+            <div className={`${isCompactNews ? 'mt-0' : 'mt-8'}`}>
               {hasHTML ? (
                 <div 
-                  className="prose prose-lg max-w-none text-neutral-700 
-                    prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight
-                    prose-p:text-neutral-700 prose-p:leading-relaxed 
-                    prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline
-                    prose-strong:text-neutral-900 prose-strong:font-bold
-                    prose-ul:text-neutral-700 prose-ul:space-y-2
-                    prose-ol:text-neutral-700 prose-ol:space-y-2
-                    prose-li:marker:text-primary-500"
+                  className={isCompactNews
+                    ? 'text-neutral-700 text-base sm:text-lg leading-relaxed line-clamp-2'
+                    : "prose prose-lg max-w-none text-neutral-700 prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight prose-p:text-neutral-700 prose-p:leading-relaxed prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline prose-strong:text-neutral-900 prose-strong:font-bold prose-ul:text-neutral-700 prose-ul:space-y-2 prose-ol:text-neutral-700 prose-ol:space-y-2 prose-li:marker:text-primary-500"}
                   dangerouslySetInnerHTML={{ __html: section.display_content }}
                 />
               ) : (
-                <div className="space-y-4 sm:space-y-5 text-neutral-700 text-base sm:text-lg leading-relaxed">
+                <div className={isCompactNews ? 'text-neutral-700 text-base sm:text-lg leading-relaxed' : 'space-y-4 sm:space-y-5 text-neutral-700 text-base sm:text-lg leading-relaxed'}>
                   {blocks.length === 0 ? (
-                    <p className="text-lg">{section.display_content}</p>
+                    <p className={isCompactNews ? 'line-clamp-2' : 'text-lg'}>{section.display_content}</p>
                   ) : (
                     blocks.map((block, blockIndex) => {
                       if (block.type === 'paragraph') {
-                        return <p key={blockIndex} className="text-lg leading-relaxed">{block.text}</p>;
+                        return <p key={blockIndex} className={isCompactNews ? 'line-clamp-2' : 'text-lg leading-relaxed'}>{block.text}</p>;
                       }
                       return (
                         <ul key={blockIndex} className="space-y-3 pl-6">
@@ -173,7 +173,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
                   )}
                 </div>
               )}
-              {section.display_cta_label && section.display_cta_url ? (
+              {!isCompactNews && section.display_cta_label && section.display_cta_url ? (
                 <div className="mt-8">
                   <a
                     href={section.display_cta_url}
@@ -196,7 +196,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
           
           {/* Columna derecha en desktop: Imagen - segundo en mobile (después del título) */}
           {section.display_image ? (
-            <div className={`order-2 lg:order-none mb-8 lg:mb-0 ${reverse ? 'lg:col-start-1 lg:row-start-1' : 'lg:col-start-2'}`}>
+            <div className={`${isCompactNews ? 'order-1 mb-4' : 'order-2 lg:order-none mb-8 lg:mb-0'} ${!isCompactNews && reverse ? 'lg:col-start-1 lg:row-start-1' : !isCompactNews ? 'lg:col-start-2' : ''}`}>
               <div className="relative group">
                 {/* Fondo decorativo */}
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary-200/50 to-primary-300/50 rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-40 group-hover:opacity-60"></div>
@@ -207,7 +207,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
                     <img
                       src={section.display_image}
                       alt={section.display_title}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
+                      className={`w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1 ${isCompactNews ? 'h-56 sm:h-64' : 'h-full'}`}
                     />
                   </div>
                 </div>
