@@ -77,6 +77,25 @@ const isHTML = (content: string): boolean => {
   return /<\/?[a-z][\s\S]*>/i.test(content);
 };
 
+const summarizeFeaturedStory = (content: string, maxLength = 150): string => {
+  const plain = content
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!plain) return '';
+  if (plain.length <= maxLength) return plain;
+
+  const sentenceMatch = plain.match(/^[^.!?]+[.!?]/);
+  if (sentenceMatch && sentenceMatch[0].length <= maxLength) {
+    return sentenceMatch[0].trim();
+  }
+
+  const truncated = plain.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated).trim()}…`;
+};
+
 const resolvePreferredImage = (manualImage?: string, sourceImage?: string, fallbackImage?: string) => {
   const invalidImages = new Set(['', '/images/default-news.jpg']);
   if (manualImage && !invalidImages.has(manualImage)) return manualImage;
@@ -493,7 +512,7 @@ const HomePage: React.FC = () => {
         if (article) {
           title = section.title || article.title || title;
           if (!section.content) {
-            content = article.excerpt || article.content || content;
+            content = summarizeFeaturedStory(article.excerpt || article.content || content);
           }
           image = resolvePreferredImage(section.image_url, article.featured_image, image);
           ctaLabel = section.cta_label || 'Leer noticia';
