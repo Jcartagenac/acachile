@@ -48,3 +48,20 @@
   - se reforzó la limpieza del resumen para evitar HTML, estilos o texto basura
 - **Validación:**
   - build del frontend ejecutado correctamente después del ajuste
+
+### Mantenedor del carrusel principal del home en panel admin
+- **Objetivo:** dejar el carrusel del hero principal administrable desde “Gestión de Contenido > Inicio”, sin hardcodear slides en el frontend.
+- **Archivos modificados:**
+  - `shared/siteSections.ts`
+  - `frontend/functions/api/_utils/content.ts`
+  - `frontend/functions/api/admin/content/index.ts`
+  - `frontend/src/components/admin/AdminHomeEditor.tsx`
+  - `frontend/src/pages/HomePage.tsx`
+- **Cambios realizados:**
+  - se agregó soporte para `is_active` en `site_sections`
+  - el admin de Inicio ahora incorpora un bloque específico “Carrusel Hero Home”
+  - permite agregar slides, asociarlos a noticias, definir orden, activar/desactivar y quitarlos
+  - cada slide muestra vista rápida con título, noticia asociada, imagen, orden y estado
+  - el home consume primero los slides configurados en admin (`hero_slide_*` activos); si no hay, cae al fallback actual de noticias destacadas/recientes
+- **Validación:**
+  - build del frontend ejecutado correctamente después del cambio

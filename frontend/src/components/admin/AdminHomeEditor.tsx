@@ -6,6 +6,8 @@ import type { NewsArticle } from '../../services/newsService';
 
 type EditableSection = SiteSection & { preview_image?: string; image_url_2?: string };
 
+const isHeroSlideKey = (key: string) => key.startsWith('hero_slide_');
+
 const PAGE_TABS: Array<{ key: SitePageKey; label: string }> = [
   { key: 'home', label: 'Inicio' },
   { key: 'about', label: 'Quiénes Somos' },
@@ -58,7 +60,8 @@ const processIncomingSections = (page: SitePageKey, incoming: Partial<SiteSectio
       source_type: coerceSourceType(raw?.source_type),
       source_id: raw?.source_id != null ? String(raw.source_id) : undefined,
       cta_label: raw?.cta_label != null ? String(raw.cta_label) : undefined,
-      cta_url: raw?.cta_url != null ? String(raw.cta_url) : undefined
+      cta_url: raw?.cta_url != null ? String(raw.cta_url) : undefined,
+      is_active: raw?.is_active == null ? true : Boolean(raw.is_active)
     });
   });
 
@@ -78,7 +81,8 @@ const sanitizeSectionsForSave = (page: SitePageKey, sections: EditableSection[])
       source_type: section.source_type ?? 'custom',
       source_id: section.source_id,
       cta_label: section.cta_label?.trim() || undefined,
-      cta_url: section.cta_url?.trim() || undefined
+      cta_url: section.cta_url?.trim() || undefined,
+      is_active: section.is_active !== false
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
 
@@ -172,6 +176,21 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
   const sortedSections = useMemo(
     () => [...sections].sort((a, b) => a.sort_order - b.sort_order),
     [sections]
+  );
+
+  const heroSlides = useMemo(
+    () => sortedSections.filter((section) => isHeroSlideKey(section.key)),
+    [sortedSections]
+  );
+
+  const contentSections = useMemo(
+    () => sortedSections.filter((section) => !isHeroSlideKey(section.key)),
+    [sortedSections]
+  );
+
+  const newsBySlug = useMemo(
+    () => Object.fromEntries(news.map((article) => [article.slug, article] as const)),
+    [news]
   );
 
   const updateSection = useCallback(
@@ -421,10 +440,36 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
       content: '',
       image_url: '',
       sort_order: nextIndex,
-      source_type: 'custom'
+      source_type: 'custom',
+      is_active: true
     };
     setSections((prev) => [...prev, newSection]);
   }, [sections.length, activePage]);
+
+  const addHeroSlide = useCallback(() => {
+    if (activePage !== 'home') return;
+
+    const nextOrder = heroSlides.length > 0
+      ? Math.max(...heroSlides.map((section) => section.sort_order)) + 1
+      : 10;
+
+    const fallbackNews = news[0];
+    const newSlide: EditableSection = {
+      page: 'home',
+      key: `hero_slide_${Date.now()}`,
+      title: fallbackNews?.title || '',
+      content: fallbackNews?.excerpt || '',
+      image_url: fallbackNews?.featured_image || '',
+      sort_order: nextOrder,
+      source_type: 'news',
+      source_id: fallbackNews?.slug,
+      cta_label: 'Leer más',
+      cta_url: fallbackNews ? `/noticias/${fallbackNews.slug}` : '/noticias',
+      is_active: true
+    };
+
+    setSections((prev) => [...prev, newSlide]);
+  }, [activePage, heroSlides, news]);
 
   const deleteSection = useCallback((sectionKey: string) => {
     if (window.confirm('¿Eliminar esta sección?')) {
@@ -457,7 +502,142 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
         <div>Cargando...</div>
       ) : (
         <div className="space-y-4">
-          {sortedSections.map((section, index) => (
+          {activePage === 'home' && (
+            <div className="border rounded p-4 space-y-4 bg-white">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Carrusel Hero Home</h3>
+                  <p className="text-sm text-gray-600">
+                    Administra los slides del hero principal usando noticias editoriales del sitio.
+                  </p>
+                </div>
+                <Button onClick={addHeroSlide} className="bg-blue-600 text-white" disabled={uploadsInProgress > 0}>
+                  Agregar slide al carrusel
+                </Button>
+              </div>
+
+              {heroSlides.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-sm text-gray-600">
+                  No hay slides configurados. Puedes agregar hasta 4 y activar solo los que quieras mostrar.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {heroSlides.map((section, index) => {
+                    const linkedNews = section.source_id ? newsBySlug[section.source_id] : undefined;
+                    const previewTitle = linkedNews?.title || section.title || 'Sin noticia asociada';
+                    const previewImage = linkedNews?.featured_image || section.image_url || '';
+
+                    return (
+                      <div key={section.key} className="rounded-xl border border-gray-200 p-4 space-y-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-gray-900">Slide {index + 1}</p>
+                            <p className="text-xs text-gray-500">{section.key}</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                              <span>Orden</span>
+                              <input
+                                type="number"
+                                value={section.sort_order ?? index}
+                                onChange={(event) => updateSection(section.key, 'sort_order', Number(event.target.value))}
+                                className="w-20 border rounded px-2 py-1 text-sm"
+                              />
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={section.is_active !== false}
+                                onChange={(event) => updateSection(section.key, 'is_active', event.target.checked)}
+                              />
+                              Activo
+                            </label>
+                            <Button
+                              variant="outline"
+                              onClick={() => deleteSection(section.key)}
+                              className="text-red-600 hover:bg-red-50"
+                            >
+                              Quitar slide
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium">Noticia asociada</label>
+                              <select
+                                value={section.source_id ?? ''}
+                                onChange={(event) => applyNewsToSection(section.key, event.target.value)}
+                                className="w-full border rounded px-2 py-2"
+                              >
+                                <option value="">-- selecciona una noticia --</option>
+                                {news.map((article) => (
+                                  <option key={article.id} value={article.slug}>
+                                    {article.title}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-sm font-medium">Título mostrado</label>
+                                <input
+                                  value={section.title || ''}
+                                  onChange={(event) => updateSection(section.key, 'title', event.target.value)}
+                                  className="w-full border rounded px-2 py-1"
+                                  placeholder={linkedNews?.title || 'Usa el título de la noticia'}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium">Texto del botón</label>
+                                <input
+                                  value={section.cta_label || ''}
+                                  onChange={(event) => updateSection(section.key, 'cta_label', event.target.value)}
+                                  className="w-full border rounded px-2 py-1"
+                                  placeholder="Leer más"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium">Resumen breve</label>
+                              <textarea
+                                value={section.content || ''}
+                                onChange={(event) => updateSection(section.key, 'content', event.target.value)}
+                                className="w-full border rounded px-2 py-1"
+                                rows={3}
+                                placeholder={linkedNews?.excerpt || 'Si lo dejas vacío, se usa el extracto de la noticia'}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <p className="text-sm font-medium text-gray-700">Vista rápida</p>
+                            {previewImage ? (
+                              <img src={previewImage} alt={previewTitle} className="h-32 w-full rounded-lg object-cover border" />
+                            ) : (
+                              <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500">
+                                Sin imagen
+                              </div>
+                            )}
+                            <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
+                              <p><span className="font-medium text-gray-900">Título:</span> {previewTitle}</p>
+                              <p className="mt-2"><span className="font-medium text-gray-900">Estado:</span> {section.is_active === false ? 'Inactivo' : 'Activo'}</p>
+                              <p className="mt-2"><span className="font-medium text-gray-900">Orden:</span> {section.sort_order ?? index}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {contentSections.map((section, index) => (
             <div key={section.key || index} className="border p-4 rounded space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-gray-700">

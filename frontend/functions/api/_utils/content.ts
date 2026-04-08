@@ -62,6 +62,7 @@ export const normalizeSections = (rawSections: RawSection[] | undefined, page: S
       source_id: sourceId,
       cta_label: ctaLabel,
       cta_url: ctaUrl,
+      is_active: raw?.is_active == null ? (fallback?.is_active ?? true) : Boolean(raw.is_active),
     };
 
     collected.set(normalized.key, normalized);
@@ -103,6 +104,7 @@ export const ensureTable = async (db: Database) => {
         source_id TEXT,
         cta_label TEXT,
         cta_url TEXT,
+        is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (page, key)
@@ -115,6 +117,7 @@ export const ensureTable = async (db: Database) => {
     'ALTER TABLE site_sections ADD COLUMN source_id TEXT',
     'ALTER TABLE site_sections ADD COLUMN cta_label TEXT',
     'ALTER TABLE site_sections ADD COLUMN cta_url TEXT',
+    'ALTER TABLE site_sections ADD COLUMN is_active INTEGER DEFAULT 1',
     "ALTER TABLE site_sections ADD COLUMN page TEXT DEFAULT 'home'",
   ];
 
@@ -157,7 +160,7 @@ export const getSectionsForPage = async (env: Env, page: SitePageKey): Promise<S
     await ensureTable(env.DB);
     const res = await env.DB
       .prepare<SiteSection>(
-        'SELECT page, key, title, image_url, image_url_2, content, sort_order, source_type, source_id, cta_label, cta_url FROM site_sections WHERE page = ? ORDER BY sort_order ASC',
+        'SELECT page, key, title, image_url, image_url_2, content, sort_order, source_type, source_id, cta_label, cta_url, is_active FROM site_sections WHERE page = ? ORDER BY sort_order ASC',
       )
       .bind(page)
       .all();

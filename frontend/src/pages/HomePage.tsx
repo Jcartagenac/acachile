@@ -588,8 +588,32 @@ const HomePage: React.FC = () => {
     display_cta_label: defaultHero.cta_label,
     display_cta_url: defaultHero.cta_url
   };
-  const otherSections = resolvedSections.slice(1);
+  const heroCarouselSections = resolvedSections.filter(
+    (section) => section.page === 'home' && section.key.startsWith('hero_slide_') && section.is_active !== false
+  );
+  const otherSections = resolvedSections.slice(1).filter((section) => !section.key.startsWith('hero_slide_'));
   const heroNewsItems = useMemo<HeroNewsItem[]>(() => {
+    if (heroCarouselSections.length > 0) {
+      return heroCarouselSections
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .slice(0, 4)
+        .map((section, index) => {
+          const article = section.source_id ? allNews.find((item) => item.slug === section.source_id) : undefined;
+          const title = section.title || article?.title || `Slide ${index + 1}`;
+          const summarySource = section.content || article?.excerpt || article?.content || '';
+          const image = section.image_url || article?.featured_image || undefined;
+          const url = section.cta_url || (article ? `/noticias/${article.slug}` : '/noticias');
+
+          return {
+            id: article?.id || index + 1,
+            title,
+            summary: summarizeHeroNews(summarySource),
+            image,
+            url
+          };
+        });
+    }
+
     const featured = allNews.filter((article) => article.is_featured);
     const source = (featured.length > 0 ? featured : allNews).slice(0, 4);
 
@@ -600,7 +624,7 @@ const HomePage: React.FC = () => {
       image: article.featured_image || undefined,
       url: `/noticias/${article.slug}`
     }));
-  }, [allNews]);
+  }, [allNews, heroCarouselSections]);
 
   return (
     <>

@@ -75,8 +75,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         const result = await env.DB
           .prepare(
             `
-              INSERT INTO site_sections (page, key, title, image_url, image_url_2, content, sort_order, source_type, source_id, cta_label, cta_url, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+              INSERT INTO site_sections (page, key, title, image_url, image_url_2, content, sort_order, source_type, source_id, cta_label, cta_url, is_active, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
               ON CONFLICT(page, key) DO UPDATE SET
                 title=excluded.title,
                 image_url=excluded.image_url,
@@ -87,6 +87,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
                 source_id=excluded.source_id,
                 cta_label=excluded.cta_label,
                 cta_url=excluded.cta_url,
+                is_active=excluded.is_active,
                 updated_at=datetime('now')
             `
           )
@@ -101,7 +102,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
             section.source_type ?? 'custom',
             section.source_id ?? null,
             section.cta_label ?? null,
-            section.cta_url ?? null
+            section.cta_url ?? null,
+            section.is_active === false ? 0 : 1
           )
           .run();
 

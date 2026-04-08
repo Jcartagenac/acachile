@@ -13,6 +13,7 @@ export interface SiteSection {
   source_id?: string;
   cta_label?: string;
   cta_url?: string;
+  is_active?: boolean;
 }
 
 const withPage = (page: SitePageKey, sections: Omit<SiteSection, 'page'>[]): SiteSection[] =>
