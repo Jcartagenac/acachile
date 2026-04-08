@@ -93,21 +93,34 @@ const resolvePreferredImage = (manualImage?: string, sourceImage?: string, fallb
   return fallbackImage || '';
 };
 
-const summarizeHeroNews = (content: string, maxLength = 135): string => {
+const summarizeHeroNews = (content: string, maxLength = 120): string => {
   const plain = content
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<[^>]*>/g, ' ')
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/[`*_#>[\]{}|~]/g, ' ')
+    .replace(/&nbsp;|&amp;|&quot;|&#39;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
   if (!plain) return '';
-  if (plain.length <= maxLength) return plain;
 
-  const sentenceMatch = plain.match(/^[^.!?]+[.!?]/);
+  const cleaned = plain
+    .split(/(?<=[.!?])\s+/)
+    .filter((chunk) => chunk && !/[{}<>]|function\s*\(|=>|\.css|\.js/i.test(chunk))
+    .join(' ')
+    .trim();
+
+  const safe = cleaned || plain;
+  if (safe.length <= maxLength) return safe;
+
+  const sentenceMatch = safe.match(/^[^.!?]+[.!?]/);
   if (sentenceMatch && sentenceMatch[0].length <= maxLength) {
     return sentenceMatch[0].trim();
   }
 
-  const truncated = plain.slice(0, maxLength);
+  const truncated = safe.slice(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
   return `${(lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated).trim()}…`;
 };
@@ -332,24 +345,24 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean; newsIte
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-primary-700 via-neutral-900 to-orange-700" />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/85 via-neutral-950/65 to-neutral-950/25" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/35 to-transparent" />
                 </div>
 
-                <div className="relative z-10 flex h-full items-end p-6 sm:p-8 lg:p-10">
-                  <div className="max-w-2xl rounded-[1.75rem] border border-white/10 bg-black/20 p-5 text-white backdrop-blur-md sm:p-6 lg:p-8">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                <div className="relative z-10 flex h-full items-end p-5 sm:p-7 lg:p-8">
+                  <div className="max-w-xl text-white">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70 sm:text-xs">
                       Noticias destacadas
                     </p>
-                    <h1 className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+                    <h1 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)] sm:text-3xl lg:text-4xl">
                       {item.title}
                     </h1>
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-white/85 line-clamp-3 sm:text-base sm:leading-7 lg:line-clamp-2">
+                    <p className="mt-3 max-w-lg text-sm leading-6 text-white/85 line-clamp-2 sm:text-[15px] sm:leading-6 lg:max-w-xl">
                       {item.summary}
                     </p>
-                    <div className="mt-6">
+                    <div className="mt-4">
                       <a
                         href={item.url}
-                        className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-neutral-900 transition hover:-translate-y-0.5 hover:bg-primary-50"
+                        className="inline-flex items-center justify-center rounded-xl bg-white/95 px-4 py-2.5 text-sm font-semibold text-neutral-900 transition hover:-translate-y-0.5 hover:bg-white"
                       >
                         Leer más
                       </a>

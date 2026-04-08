@@ -34,3 +34,17 @@
   - fallback limpio si no hay noticias disponibles
 - **Validación:**
   - build del frontend ejecutado correctamente después del cambio
+
+### Ajuste de composición visual del hero de noticias
+- **Objetivo:** hacer que la imagen vuelva a ser protagonista y que el bloque editorial se apoye abajo sin tapar demasiado el hero.
+- **Archivo modificado:**
+  - `frontend/src/pages/HomePage.tsx`
+- **Cambios realizados:**
+  - se eliminó la sensación de tarjeta grande flotante sobre la imagen
+  - el contenido textual quedó apoyado abajo a la izquierda
+  - se cambió el overlay a un degradado inferior más suave y editorial
+  - se redujo el ancho y peso visual del bloque textual
+  - se acortó el extracto visible a una presentación más discreta
+  - se reforzó la limpieza del resumen para evitar HTML, estilos o texto basura
+- **Validación:**
+  - build del frontend ejecutado correctamente después del ajuste
