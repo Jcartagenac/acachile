@@ -207,7 +207,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
                     <img
                       src={section.display_image}
                       alt={section.display_title}
-                      className={`w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1 ${isCompactNews ? 'h-64 sm:h-64 md:h-64' : 'h-full'}`}
+                      className={`w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 group-hover:rotate-1 ${isCompactNews ? 'h-56 sm:h-64' : 'h-full'}`}
                     />
                   </div>
                 </div>
