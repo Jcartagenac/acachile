@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Evento } from '@shared/index';
 import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
 import type { NewsArticle } from '../services/newsService';
 import { SEOHelmet } from '../components/SEOHelmet';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type SectionDisplay = SiteSection & {
   display_title: string;
@@ -11,6 +12,14 @@ type SectionDisplay = SiteSection & {
   display_image_2?: string;
   display_cta_label?: string;
   display_cta_url?: string;
+};
+
+type HeroNewsItem = {
+  id: number;
+  title: string;
+  summary: string;
+  image?: string;
+  url: string;
 };
 
 // NO usar defaults - trabajar solo con datos reales de BD
@@ -82,6 +91,25 @@ const resolvePreferredImage = (manualImage?: string, sourceImage?: string, fallb
   if (manualImage && !invalidImages.has(manualImage)) return manualImage;
   if (sourceImage && !invalidImages.has(sourceImage)) return sourceImage;
   return fallbackImage || '';
+};
+
+const summarizeHeroNews = (content: string, maxLength = 135): string => {
+  const plain = content
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!plain) return '';
+  if (plain.length <= maxLength) return plain;
+
+  const sentenceMatch = plain.match(/^[^.!?]+[.!?]/);
+  if (sentenceMatch && sentenceMatch[0].length <= maxLength) {
+    return sentenceMatch[0].trim();
+  }
+
+  const truncated = plain.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated).trim()}…`;
 };
 
 const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = ({ section, reverse }) => {
@@ -201,161 +229,169 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
   );
 };
 
-const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ section }) => {
-  const blocks = useMemo(() => parseContentBlocks(section.display_content || ''), [section.display_content]);
-  const hasHTML = useMemo(() => isHTML(section.display_content || ''), [section.display_content]);
+const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean; newsItems: HeroNewsItem[] }> = ({ section, newsItems }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const ctaUrl = section.display_cta_url || '/noticias';
+  const hasSlides = newsItems.length > 0;
+
+  useEffect(() => {
+    if (!hasSlides || newsItems.length <= 1 || isPaused) return;
+
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % newsItems.length);
+    }, 6000);
+
+    return () => window.clearInterval(timer);
+  }, [hasSlides, isPaused, newsItems.length]);
+
+  useEffect(() => {
+    if (activeIndex >= newsItems.length) {
+      setActiveIndex(0);
+    }
+  }, [activeIndex, newsItems.length]);
+
+  const goTo = (index: number) => setActiveIndex(index);
+  const goNext = () => setActiveIndex((current) => (current + 1) % newsItems.length);
+  const goPrev = () => setActiveIndex((current) => (current - 1 + newsItems.length) % newsItems.length);
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current == null || newsItems.length <= 1) return;
+    const deltaX = event.changedTouches[0]?.clientX - touchStartX.current;
+    touchStartX.current = null;
+
+    if (Math.abs(deltaX) < 40) return;
+    if (deltaX < 0) goNext();
+    else goPrev();
+  };
+
+  if (!hasSlides) {
+    return (
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-primary-100 py-10 sm:py-12 lg:py-14">
+        <div className="absolute inset-0 opacity-60 pointer-events-none">
+          <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
+          <div className="absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-orange-200/30 blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 p-8 shadow-[0_25px_60px_-35px_rgba(15,23,42,0.35)] backdrop-blur sm:p-10 lg:p-12">
+            <div className="max-w-3xl space-y-5">
+              <div className="inline-flex items-center rounded-full border border-primary-200/80 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary-700 shadow-sm backdrop-blur">
+                Asociación Chilena de Asadores
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight text-neutral-950 sm:text-5xl lg:text-6xl">
+                {section.display_title}
+              </h1>
+              {section.display_content ? (
+                <p className="max-w-2xl text-base leading-8 text-neutral-700 sm:text-lg">
+                  {section.display_content}
+                </p>
+              ) : null}
+              <a
+                href={ctaUrl}
+                className="inline-flex items-center justify-center rounded-2xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:-translate-y-0.5 hover:bg-primary-700"
+              >
+                Ver noticias
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-20 lg:py-28 bg-soft-gradient-light">
-      {/* Elementos decorativos animados de fondo */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute right-0 top-0 w-[600px] h-[600px] bg-gradient-to-br from-primary-100/40 to-primary-200/30 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute left-0 bottom-0 w-[500px] h-[500px] bg-gradient-to-tr from-pastel-blue/50 to-pastel-purple/40 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-gradient-to-tl from-pastel-orange/30 to-pastel-yellow/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-primary-100 py-8 sm:py-10 lg:py-12">
+      <div className="absolute inset-0 opacity-60 pointer-events-none">
+        <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-primary-200/40 blur-3xl" />
+        <div className="absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-orange-200/30 blur-3xl" />
       </div>
 
-      <div className="relative px-4 py-8 sm:py-12 mx-auto max-w-7xl sm:px-6 lg:px-8 z-10">
-        {/* Layout vertical: Título → Imagen → Texto */}
-        <div className="flex flex-col space-y-10 sm:space-y-12 lg:space-y-16">
-          
-          {/* 1. TÍTULO - Ocupa todo el ancho */}
-          <div className="text-center animate-slide-up">
-            <div className="inline-block px-4 py-2 bg-primary-50 rounded-full mb-6">
-              <span className="text-sm font-semibold text-primary-700 tracking-wide uppercase">Bienvenido</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-neutral-900 tracking-tight mb-6">
-              {section.display_title}
-            </h1>
-            <div className="mx-auto h-2 w-28 bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 rounded-full"></div>
-          </div>
-
-          {/* 2. IMAGEN(ES) - Ocupa todo el ancho */}
-          {(section.display_image || section.display_image_2) && (
-            <div className="w-full animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              {section.display_image_2 ? (
-                /* Si hay 2 imágenes, mostrarlas en grid */
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                  {section.display_image && (
-                    <div className="relative group">
-                      {/* Efecto de brillo de fondo */}
-                      <div className="absolute -inset-6 bg-gradient-to-r from-primary-200/50 via-primary-300/50 to-primary-400/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
-                      
-                      {/* Contenedor de imagen */}
-                      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
-                        <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                          <img
-                            src={section.display_image}
-                            alt={section.display_title}
-                            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:rotate-1"
-                          />
-                        </div>
-                      </div>
-                    </div>
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-neutral-950 shadow-[0_25px_60px_-35px_rgba(15,23,42,0.4)]"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="relative h-[430px] sm:h-[520px] lg:h-[600px]">
+            {newsItems.map((item, index) => (
+              <article
+                key={item.id}
+                className={`absolute inset-0 transition-opacity duration-700 ease-out ${index === activeIndex ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+              >
+                <div className="absolute inset-0">
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-primary-700 via-neutral-900 to-orange-700" />
                   )}
-                  
-                  <div className="relative group">
-                    {/* Efecto de brillo de fondo */}
-                    <div className="absolute -inset-6 bg-gradient-to-l from-pastel-purple/50 via-pastel-blue/50 to-primary-200/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
-                    
-                    {/* Contenedor de imagen */}
-                    <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
-                      <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                        <img
-                          src={section.display_image_2}
-                          alt={`${section.display_title} - Imagen 2`}
-                          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:-rotate-1"
-                        />
-                      </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/85 via-neutral-950/65 to-neutral-950/25" />
+                </div>
+
+                <div className="relative z-10 flex h-full items-end p-6 sm:p-8 lg:p-10">
+                  <div className="max-w-2xl rounded-[1.75rem] border border-white/10 bg-black/20 p-5 text-white backdrop-blur-md sm:p-6 lg:p-8">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                      Noticias destacadas
+                    </p>
+                    <h1 className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+                      {item.title}
+                    </h1>
+                    <p className="mt-4 max-w-xl text-sm leading-6 text-white/85 line-clamp-3 sm:text-base sm:leading-7 lg:line-clamp-2">
+                      {item.summary}
+                    </p>
+                    <div className="mt-6">
+                      <a
+                        href={item.url}
+                        className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-neutral-900 transition hover:-translate-y-0.5 hover:bg-primary-50"
+                      >
+                        Leer más
+                      </a>
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* Si solo hay 1 imagen, mostrarla centrada con max-width */
-                section.display_image && (
-                  <div className="max-w-5xl mx-auto">
-                    <div className="relative group">
-                      {/* Efecto de brillo de fondo */}
-                      <div className="absolute -inset-6 bg-gradient-to-r from-primary-200/50 via-primary-300/50 to-primary-400/50 rounded-3xl blur-3xl group-hover:blur-3xl transition-all duration-700 opacity-40 group-hover:opacity-70"></div>
-                      
-                      {/* Contenedor de imagen */}
-                      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-soft-2xl border border-white/90 overflow-hidden">
-                        <div className="overflow-hidden rounded-xl sm:rounded-2xl">
-                          <img
-                            src={section.display_image}
-                            alt={section.display_title}
-                            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-
-          {/* 3. TEXTO Y CTA - Ocupa todo el ancho */}
-          <div className="max-w-5xl mx-auto w-full animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            {hasHTML ? (
-              <div 
-                className="prose prose-xl max-w-none text-neutral-700
-                  prose-headings:text-neutral-900 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-center
-                  prose-p:text-neutral-700 prose-p:text-xl prose-p:leading-relaxed prose-p:text-center
-                  prose-a:text-primary-600 prose-a:no-underline prose-a:font-semibold hover:prose-a:text-primary-700 hover:prose-a:underline
-                  prose-strong:text-neutral-900 prose-strong:font-bold
-                  prose-ul:text-neutral-700 prose-ul:space-y-3 prose-ul:max-w-3xl prose-ul:mx-auto
-                  prose-ol:text-neutral-700 prose-ol:space-y-3 prose-ol:max-w-3xl prose-ol:mx-auto
-                  prose-li:marker:text-primary-500"
-                dangerouslySetInnerHTML={{ __html: section.display_content }}
-              />
-            ) : (
-              <div className="text-lg sm:text-xl text-neutral-700 leading-relaxed space-y-4 sm:space-y-5 text-center">
-                {blocks.length === 0 ? (
-                  <p className="text-xl">{section.display_content}</p>
-                ) : (
-                  blocks.map((block, index) =>
-                    block.type === 'paragraph' ? (
-                      <p key={index} className="text-xl leading-relaxed">{block.text}</p>
-                    ) : (
-                      <ul key={index} className="space-y-3 max-w-3xl mx-auto text-left">
-                        {block.items.map((item, itemIndex) => (
-                          <li key={itemIndex} className="relative pl-8 before:content-[''] before:absolute before:left-0 before:top-[0.7rem] before:w-2.5 before:h-2.5 before:bg-primary-500 before:rounded-full">
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    )
-                  )
-                )}
-              </div>
-            )}
-            
-            {section.display_cta_label && section.display_cta_url && (
-              <div className="mt-10 sm:mt-12 text-center">
-                <a
-                  href={section.display_cta_url}
-                  className="group relative inline-flex items-center justify-center gap-4 px-10 py-5 sm:px-12 sm:py-6 rounded-2xl sm:rounded-3xl text-white font-bold text-lg sm:text-xl transition-all duration-500 transform hover:scale-105 active:scale-95 shadow-soft-colored-red hover:shadow-2xl overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(135deg, #f56934 0%, #e04c1a 50%, #b93c14 100%)'
-                  }}
-                >
-                  {/* Efecto de brillo en hover */}
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
-                  
-                  <span className="relative z-10">{section.display_cta_label}</span>
-                  <svg 
-                    className="relative z-10 w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:translate-x-2" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </a>
-              </div>
-            )}
+              </article>
+            ))}
           </div>
 
+          {newsItems.length > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={goPrev}
+                className="absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/25 p-2.5 text-white backdrop-blur transition hover:bg-black/40 lg:flex"
+                aria-label="Noticia anterior"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={goNext}
+                className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/25 p-2.5 text-white backdrop-blur transition hover:bg-black/40 lg:flex"
+                aria-label="Siguiente noticia"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/25 px-3 py-2 backdrop-blur-sm">
+                {newsItems.map((item, index) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => goTo(index)}
+                    className={`h-2.5 rounded-full transition-all ${index === activeIndex ? 'w-6 bg-white' : 'w-2.5 bg-white/45 hover:bg-white/70'}`}
+                    aria-label={`Ir a noticia ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
     </section>
@@ -367,6 +403,7 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [eventLookup, setEventLookup] = useState<Record<string, Evento>>({});
   const [newsLookup, setNewsLookup] = useState<Record<string, NewsArticle>>({});
+  const [allNews, setAllNews] = useState<NewsArticle[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const [newsLoaded, setNewsLoaded] = useState(false);
 
@@ -435,7 +472,7 @@ const HomePage: React.FC = () => {
         .map((section) => String(section.source_id))
     );
 
-    if (newsSlugs.size === 0 || newsLoaded) {
+    if (newsLoaded) {
       return;
     }
 
@@ -444,9 +481,12 @@ const HomePage: React.FC = () => {
         const res = await fetch('/api/noticias?limit=200', { cache: 'no-store' });
         const json = await res.json();
         if (json?.success && Array.isArray(json.data)) {
+          setAllNews(json.data as NewsArticle[]);
           const map: Record<string, NewsArticle> = {};
           (json.data as NewsArticle[]).forEach((article) => {
-            map[article.slug] = article;
+            if (newsSlugs.size === 0 || newsSlugs.has(article.slug)) {
+              map[article.slug] = article;
+            }
           });
           setNewsLookup(map);
         }
@@ -536,6 +576,18 @@ const HomePage: React.FC = () => {
     display_cta_url: defaultHero.cta_url
   };
   const otherSections = resolvedSections.slice(1);
+  const heroNewsItems = useMemo<HeroNewsItem[]>(() => {
+    const featured = allNews.filter((article) => article.is_featured);
+    const source = (featured.length > 0 ? featured : allNews).slice(0, 4);
+
+    return source.map((article) => ({
+      id: article.id,
+      title: article.title,
+      summary: summarizeHeroNews(article.excerpt || article.content || ''),
+      image: article.featured_image || undefined,
+      url: `/noticias/${article.slug}`
+    }));
+  }, [allNews]);
 
   return (
     <>
@@ -546,7 +598,7 @@ const HomePage: React.FC = () => {
       />
       
       <div className="min-h-screen bg-soft-gradient-light">
-        <HeroSection section={heroSection} loading={loading} />
+        <HeroSection section={heroSection} loading={loading} newsItems={heroNewsItems} />
         {otherSections.map((section, index) => (
           <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />
         ))}
