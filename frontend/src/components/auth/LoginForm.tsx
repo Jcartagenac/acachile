@@ -258,14 +258,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             <div className="space-y-3 text-center text-sm text-slate-500">
               <p>
                 ¿Quieres formar parte de ACA Chile?{' '}
-                <a
-                  href="https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-primary-600 transition hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                >
-                  Únete a ACA
-                </a>
+                <span className="font-semibold text-neutral-500">
+                  Cerrado temporalmente
+                </span>
               </p>
               <div className="pt-2">
                 <Link

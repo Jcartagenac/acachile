@@ -107,14 +107,12 @@ export const Header: React.FC = () => {
                   >
                     Iniciar Sesión
                   </button>
-                  <a
-                    href="https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 transform hover:scale-105 shadow-soft-colored-red hover:shadow-soft-md whitespace-nowrap"
+                  <span
+                    aria-disabled="true"
+                    className="px-4 py-2.5 text-sm font-semibold text-white bg-neutral-400 rounded-2xl cursor-not-allowed shadow-sm whitespace-nowrap"
                   >
-                    Únete a ACA
-                  </a>
+                    Cerrado temporalmente
+                  </span>
                 </div>
               )}
 
@@ -187,15 +185,12 @@ export const Header: React.FC = () => {
                     >
                       Iniciar Sesión
                     </button>
-                    <a
-                      href="https://docs.google.com/forms/d/e/1FAIpQLScm_pK1mysojBZGSNODV2RY0CT1DwNg06Eqhc1aoO5D7l4M6g/viewform"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="w-full px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all duration-300 shadow-md hover:shadow-lg text-center block"
+                    <span
+                      aria-disabled="true"
+                      className="w-full px-4 py-3 text-base font-semibold text-white bg-neutral-400 rounded-2xl cursor-not-allowed text-center block"
                     >
-                      Únete a ACA
-                    </a>
+                      Cerrado temporalmente
+                    </span>
                   </div>
                 )}
               </Container>

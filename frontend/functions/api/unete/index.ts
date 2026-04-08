@@ -48,9 +48,13 @@ const applicationSchema = z
     },
   );
 
-export const onRequestPost = async ({ request, env }) => {
+export const onRequestGet = async () => {
+  return errorResponse(JOIN_DISABLED_MESSAGE, 503);
+};
+
+export const onRequestPost = async () => {
   try {
-    const rawBody = await request.json();
+    return errorResponse(JOIN_DISABLED_MESSAGE, 503);
     const parseResult = applicationSchema.safeParse(rawBody);
 
     if (!parseResult.success) {

@@ -1,61 +1,47 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Container } from '../components/ui/Container';
-import { JoinApplicationForm } from '../components/join/JoinApplicationForm';
-import { CheckCircle2, ShieldCheck, Users } from 'lucide-react';
 
-export const JoinPage: React.FC = () => {
+const JoinPage: React.FC = () => {
   return (
-    <div className="bg-soft-gradient-light py-20">
+    <div className="min-h-screen bg-gradient-to-b from-white via-primary-50/30 to-white py-16 sm:py-24">
       <Container>
-        <div className="mx-auto mb-16 max-w-4xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-600">
-            <ShieldCheck className="h-4 w-4" />
-            Comunidad ACA Chile
-          </span>
-          <h1 className="mt-6 text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl">
-            Postula para convertirte en socio oficial de ACA Chile
-          </h1>
-          <p className="mt-4 text-lg text-neutral-600">
-            Buscamos personas apasionadas por la parrilla que quieran compartir conocimientos,
-            representar a la comunidad y aportar a nuestros proyectos en todo el país.
+        <div className="mx-auto max-w-3xl rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm sm:p-12">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <span className="text-2xl">⏸️</span>
+          </div>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
+            Postulaciones cerradas
           </p>
-        </div>
+          <h1 className="mb-4 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">
+            Únete a ACA, cerrado temporalmente
+          </h1>
+          <p className="mx-auto max-w-2xl text-base leading-7 text-neutral-600 sm:text-lg">
+            En este momento el formulario de postulaciones se encuentra temporalmente deshabilitado.
+            Cuando el proceso vuelva a estar disponible lo anunciaremos por los canales oficiales de ACA Chile.
+          </p>
 
-        <div className="grid gap-6 pb-16 md:grid-cols-3">
-          {[
-            {
-              icon: Users,
-              title: 'Comunidad profesional',
-              description:
-                'Comparte experiencias con parrilleros de todo Chile y accede a capacitaciones exclusivas.',
-            },
-            {
-              icon: CheckCircle2,
-              title: 'Proceso transparente',
-              description:
-                'Tu postulación será revisada por dos miembros del directorio para garantizar la calidad de la red.',
-            },
-            {
-              icon: ShieldCheck,
-              title: 'Compromiso ACA',
-              description:
-                'Ser socio implica representar los valores de la asociación en eventos, talleres y competencias.',
-            },
-          ].map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-soft-lg backdrop-blur"
+          <div className="mt-8 rounded-2xl bg-neutral-50 p-5 text-left text-sm leading-6 text-neutral-600 sm:text-base">
+            <p className="font-semibold text-neutral-900">Mientras tanto</p>
+            <ul className="mt-3 list-disc space-y-2 pl-5">
+              <li>puedes revisar nuestras noticias y eventos en la página principal,</li>
+              <li>seguir nuestras redes sociales para enterarte de la reapertura,</li>
+              <li>o contactarte con ACA por los canales oficiales publicados en el sitio.</li>
+            </ul>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center rounded-2xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
             >
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-100 text-primary-600">
-                <Icon className="h-6 w-6" />
-              </span>
-              <h3 className="mt-4 text-lg font-semibold text-neutral-900">{title}</h3>
-              <p className="mt-2 text-sm text-neutral-600">{description}</p>
-            </div>
-          ))}
+              Volver al inicio
+            </Link>
+            <span className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-100 px-6 py-3 text-sm font-semibold text-neutral-500">
+              Formulario temporalmente cerrado
+            </span>
+          </div>
         </div>
-
-        <JoinApplicationForm />
       </Container>
     </div>
   );

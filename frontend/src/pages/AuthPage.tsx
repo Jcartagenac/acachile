@@ -50,12 +50,9 @@ export const AuthPage: React.FC = () => {
             <div className="text-center text-sm text-neutral-500">
               <span className="inline-flex flex-wrap items-center justify-center gap-1">
                 ¿Aún no eres socio?{' '}
-                <button
-                  onClick={() => navigate('/unete')}
-                  className="font-semibold text-primary-600 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-lg px-1"
-                >
-                  Únete a ACA
-                </button>
+                <span className="font-semibold text-neutral-500 rounded-lg px-1">
+                  Cerrado temporalmente
+                </span>
               </span>
             </div>
           </div>
