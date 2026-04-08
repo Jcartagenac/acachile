@@ -59,9 +59,24 @@
   - `frontend/src/pages/HomePage.tsx`
 - **Cambios realizados:**
   - se agregó soporte para `is_active` en `site_sections`
-  - el admin de Inicio ahora incorpora un bloque específico “Carrusel Hero Home”
+  - el admin de Inicio ahora incorpora un bloque específico para contenidos destacados del Hero Home
   - permite agregar slides, asociarlos a noticias, definir orden, activar/desactivar y quitarlos
-  - cada slide muestra vista rápida con título, noticia asociada, imagen, orden y estado
+  - cada slide muestra vista rápida con título, noticia asociada, imagen, orden, estado y URL pública
   - el home consume primero los slides configurados en admin (`hero_slide_*` activos); si no hay, cae al fallback actual de noticias destacadas/recientes
 - **Validación:**
   - build del frontend ejecutado correctamente después del cambio
+
+### Corrección de lógica del carrusel administrado del Hero Home
+- **Objetivo:** asegurar que cada slide dependa del contenido seleccionado en admin y que “Leer más” redirija automáticamente al contenido público correcto.
+- **Archivos modificados:**
+  - `frontend/src/components/admin/AdminHomeEditor.tsx`
+  - `frontend/src/pages/HomePage.tsx`
+- **Cambios realizados:**
+  - el carrusel quedó conceptualizado como contenidos destacados para portada, no como una categoría rígida
+  - se eliminó del mantenedor la edición manual del texto del botón para los slides del hero
+  - la URL pública ahora se deriva automáticamente del contenido asociado
+  - el hero del home consume título, imagen, resumen y URL directamente desde la noticia vinculada
+  - si un slide no tiene contenido válido asociado, ya no se usa para el carrusel
+  - el slide completo quedó clickeable hacia el mismo destino que el botón
+- **Validación:**
+  - build del frontend ejecutado correctamente después del ajuste

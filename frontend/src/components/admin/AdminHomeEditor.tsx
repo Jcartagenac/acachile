@@ -251,7 +251,21 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
     (sectionKey: string, slug: string) => {
       const article = news.find((item) => item.slug === slug);
       if (!article) {
-        updateSection(sectionKey, 'source_id', undefined);
+        setSections((prev) =>
+          prev.map((section) =>
+            section.key === sectionKey
+              ? {
+                  ...section,
+                  source_type: 'news',
+                  source_id: undefined,
+                  title: '',
+                  content: '',
+                  image_url: '',
+                  cta_url: undefined
+                }
+              : section
+          )
+        );
         return;
       }
 
@@ -267,7 +281,6 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
                 title: article.title || section.title,
                 content,
                 image_url: article.featured_image || section.image_url,
-                cta_label: section.cta_label || 'Leer noticia',
                 cta_url: `/noticias/${article.slug}`
               }
             : section
@@ -463,7 +476,6 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
       sort_order: nextOrder,
       source_type: 'news',
       source_id: fallbackNews?.slug,
-      cta_label: 'Leer más',
       cta_url: fallbackNews ? `/noticias/${fallbackNews.slug}` : '/noticias',
       is_active: true
     };
@@ -506,9 +518,9 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
             <div className="border rounded p-4 space-y-4 bg-white">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Carrusel Hero Home</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Contenidos destacados Hero Home</h3>
                   <p className="text-sm text-gray-600">
-                    Administra los slides del hero principal usando noticias editoriales del sitio.
+                    Selecciona manualmente los contenidos que aparecerán en la vitrina principal de la portada.
                   </p>
                 </div>
                 <Button onClick={addHeroSlide} className="bg-blue-600 text-white" disabled={uploadsInProgress > 0}>
@@ -582,34 +594,24 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-sm font-medium">Título mostrado</label>
-                                <input
-                                  value={section.title || ''}
-                                  onChange={(event) => updateSection(section.key, 'title', event.target.value)}
-                                  className="w-full border rounded px-2 py-1"
-                                  placeholder={linkedNews?.title || 'Usa el título de la noticia'}
-                                />
+                                <label className="block text-sm font-medium">Título</label>
+                                <div className="w-full rounded border bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                  {linkedNews?.title || 'Sin contenido asociado'}
+                                </div>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium">Texto del botón</label>
-                                <input
-                                  value={section.cta_label || ''}
-                                  onChange={(event) => updateSection(section.key, 'cta_label', event.target.value)}
-                                  className="w-full border rounded px-2 py-1"
-                                  placeholder="Leer más"
-                                />
+                                <label className="block text-sm font-medium">URL pública</label>
+                                <div className="w-full rounded border bg-gray-50 px-3 py-2 text-sm text-gray-700 break-all">
+                                  {linkedNews ? `/noticias/${linkedNews.slug}` : 'Sin destino disponible'}
+                                </div>
                               </div>
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium">Resumen breve</label>
-                              <textarea
-                                value={section.content || ''}
-                                onChange={(event) => updateSection(section.key, 'content', event.target.value)}
-                                className="w-full border rounded px-2 py-1"
-                                rows={3}
-                                placeholder={linkedNews?.excerpt || 'Si lo dejas vacío, se usa el extracto de la noticia'}
-                              />
+                              <label className="block text-sm font-medium">Extracto</label>
+                              <div className="w-full rounded border bg-gray-50 px-3 py-2 text-sm text-gray-700 min-h-[88px]">
+                                {linkedNews?.excerpt || linkedNews?.content || 'Sin extracto disponible'}
+                              </div>
                             </div>
                           </div>
 

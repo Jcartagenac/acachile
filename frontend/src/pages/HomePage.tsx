@@ -339,6 +339,7 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean; newsIte
                 key={item.id}
                 className={`absolute inset-0 transition-opacity duration-700 ease-out ${index === activeIndex ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
               >
+                <a href={item.url} aria-label={`Abrir ${item.title}`} className="absolute inset-0 z-10" />
                 <div className="absolute inset-0">
                   {item.image ? (
                     <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
@@ -348,10 +349,10 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean; newsIte
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/35 to-transparent" />
                 </div>
 
-                <div className="relative z-10 flex h-full items-end p-5 sm:p-7 lg:p-8">
+                <div className="relative z-20 flex h-full items-end p-5 sm:p-7 lg:p-8">
                   <div className="max-w-xl text-white">
                     <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70 sm:text-xs">
-                      Noticias destacadas
+                      Destacados en portada
                     </p>
                     <h1 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)] sm:text-3xl lg:text-4xl">
                       {item.title}
@@ -596,22 +597,20 @@ const HomePage: React.FC = () => {
     if (heroCarouselSections.length > 0) {
       return heroCarouselSections
         .sort((a, b) => a.sort_order - b.sort_order)
-        .slice(0, 4)
-        .map((section, index) => {
+        .map((section) => {
           const article = section.source_id ? allNews.find((item) => item.slug === section.source_id) : undefined;
-          const title = section.title || article?.title || `Slide ${index + 1}`;
-          const summarySource = section.content || article?.excerpt || article?.content || '';
-          const image = section.image_url || article?.featured_image || undefined;
-          const url = section.cta_url || (article ? `/noticias/${article.slug}` : '/noticias');
+          if (!article) return null;
 
           return {
-            id: article?.id || index + 1,
-            title,
-            summary: summarizeHeroNews(summarySource),
-            image,
-            url
-          };
-        });
+            id: article.id,
+            title: article.title,
+            summary: summarizeHeroNews(article.excerpt || article.content || ''),
+            image: article.featured_image || undefined,
+            url: `/noticias/${article.slug}`
+          } satisfies HeroNewsItem;
+        })
+        .filter((item): item is HeroNewsItem => Boolean(item))
+        .slice(0, 4);
     }
 
     const featured = allNews.filter((article) => article.is_featured);
