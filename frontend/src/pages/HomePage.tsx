@@ -121,7 +121,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
         <div className={`flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-20 lg:items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}>
           {/* Título - siempre primero en mobile */}
           <div className="lg:hidden mb-6">
-            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight tracking-tight line-clamp-2">
+            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 leading-tight tracking-tight">
               {section.display_title}
             </h2>
             <div className="mt-3 h-1 w-20 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
@@ -131,7 +131,7 @@ const SectionBlock: React.FC<{ section: SectionDisplay; reverse?: boolean }> = (
           <div className={`space-y-6 sm:space-y-8 order-3 lg:order-none ${reverse ? 'lg:col-start-2' : 'lg:col-start-1'}`}>
             {/* Título - solo visible en desktop */}
             <div className="hidden lg:block">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight tracking-tight mb-4 line-clamp-2">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 leading-tight tracking-tight mb-4">
                 {section.display_title}
               </h2>
               <div className="h-1.5 w-24 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full"></div>
