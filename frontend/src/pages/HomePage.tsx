@@ -381,67 +381,6 @@ const HeroSection: React.FC<{ section: SectionDisplay; loading: boolean }> = ({ 
   );
 };
 
-const FeaturedNewsGrid: React.FC<{ sections: SectionDisplay[] }> = ({ sections }) => {
-  if (sections.length === 0) return null;
-
-  return (
-    <section className="py-8 sm:py-10 lg:py-12 bg-soft-gradient-light">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {sections.map((section, index) => (
-            <a
-              key={section.key ?? index}
-              href={section.display_cta_url || '#'}
-              className="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-200 transition-all hover:-translate-y-1 hover:shadow-lg"
-            >
-              {section.display_image ? (
-                <div className="overflow-hidden">
-                  <img
-                    src={section.display_image}
-                    alt={section.display_title}
-                    className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-              ) : null}
-              <div className="p-4">
-                <p className="text-sm leading-6 text-neutral-700 line-clamp-2">
-                  {section.display_content}
-                </p>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const renderHomepageSections = (sections: SectionDisplay[]) => {
-  const rendered: React.ReactNode[] = [];
-
-  for (let i = 0; i < sections.length; i += 1) {
-    const section = sections[i];
-
-    if (section.source_type === 'news') {
-      const newsGroup: SectionDisplay[] = [section];
-
-      while (i + 1 < sections.length && sections[i + 1].source_type === 'news') {
-        i += 1;
-        newsGroup.push(sections[i]);
-      }
-
-      rendered.push(<FeaturedNewsGrid key={`news-grid-${section.key ?? i}`} sections={newsGroup} />);
-      continue;
-    }
-
-    rendered.push(
-      <SectionBlock key={section.key ?? i} section={section} reverse={i % 2 === 0} />,
-    );
-  }
-
-  return rendered;
-};
-
 const HomePage: React.FC = () => {
   const [sections, setSections] = useState<SiteSection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -627,7 +566,9 @@ const HomePage: React.FC = () => {
       
       <div className="min-h-screen bg-soft-gradient-light">
         <HeroSection section={heroSection} loading={loading} />
-        {renderHomepageSections(otherSections)}
+        {otherSections.map((section, index) => (
+          <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />
+        ))}
       </div>
     </>
   );
