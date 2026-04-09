@@ -140,6 +140,13 @@ export default function AdminPopupEditor() {
     setError(null);
 
     try {
+      const trimmedImageUrl = form.image_url.trim();
+      const trimmedLinkUrl = form.link_url.trim();
+
+      if (form.is_active && !trimmedImageUrl) {
+        throw new Error('Debes subir una imagen antes de activar el popup');
+      }
+
       const token = getAuthToken();
       const response = await fetch('/api/admin/content/popup', {
         method: 'POST',
@@ -148,16 +155,16 @@ export default function AdminPopupEditor() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          image_url: form.image_url.trim(),
-          link_url: form.link_url.trim(),
-          open_in_new_tab: form.link_url.trim() ? form.open_in_new_tab : false,
+          image_url: trimmedImageUrl,
+          link_url: trimmedLinkUrl,
+          open_in_new_tab: trimmedLinkUrl ? form.open_in_new_tab : false,
           is_active: form.is_active,
         }),
       });
 
-      const json = await response.json();
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || 'No se pudo guardar el popup');
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.success) {
+        throw new Error(json?.error || `No se pudo guardar el popup (HTTP ${response.status})`);
       }
 
       setForm(normalizePopup(json.popup));
@@ -241,7 +248,14 @@ export default function AdminPopupEditor() {
               <input
                 type="checkbox"
                 checked={form.is_active}
-                onChange={(event) => updateField('is_active', event.target.checked)}
+                onChange={(event) => {
+                  if (event.target.checked && !form.image_url.trim()) {
+                    setError('Debes subir una imagen antes de activar el popup');
+                    return;
+                  }
+                  setError(null);
+                  updateField('is_active', event.target.checked);
+                }}
                 className="mt-1 rounded border-gray-300"
                 disabled={saving}
               />
