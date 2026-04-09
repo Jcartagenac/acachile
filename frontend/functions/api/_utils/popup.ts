@@ -15,12 +15,18 @@ type PopupRow = {
   updated_at?: string;
 };
 
-const normalizePopup = (row: PopupRow | null | undefined): SitePopupConfig | null => {
-  if (!row || !row.image_url) return null;
+const normalizePopup = (
+  row: PopupRow | null | undefined,
+  options?: { allowEmptyImage?: boolean },
+): SitePopupConfig | null => {
+  if (!row) return null;
+
+  const imageUrl = typeof row.image_url === 'string' ? row.image_url : '';
+  if (!options?.allowEmptyImage && !imageUrl) return null;
 
   return {
     id: Number(row.id || 1),
-    image_url: String(row.image_url),
+    image_url: imageUrl,
     link_url: row.link_url ? String(row.link_url) : null,
     open_in_new_tab: Boolean(row.open_in_new_tab),
     is_active: Boolean(row.is_active),
@@ -79,7 +85,9 @@ export const getPopupConfig = async (env: Env, options?: { activeOnly?: boolean 
     ? 'SELECT id, image_url, link_url, open_in_new_tab, is_active, created_at, updated_at FROM site_popup WHERE id = 1 AND is_active = 1 LIMIT 1'
     : 'SELECT id, image_url, link_url, open_in_new_tab, is_active, created_at, updated_at FROM site_popup WHERE id = 1 LIMIT 1';
 
-  const popup = normalizePopup(await env.DB.prepare(query).first<PopupRow>());
+  const popup = normalizePopup(await env.DB.prepare(query).first<PopupRow>(), {
+    allowEmptyImage: !activeOnly,
+  });
 
   if (activeOnly && env.ACA_KV) {
     if (popup) {
