@@ -106,4 +106,19 @@
   - la portada ahora consulta el popup activo y lo muestra centrado con overlay oscuro, cierre visible, comportamiento responsive y cierre persistido por sesión
   - se dejó garantizado que exista un solo popup principal administrable a la vez mediante un registro singleton
 - **Validación:**
-  - pendiente ejecutar build/typecheck después de la implementación
+  - build del frontend ejecutado correctamente después de la implementación
+
+### Corrección de resolución de noticias destacadas desde Home
+- **Objetivo:** corregir de raíz los errores intermitentes al abrir noticias destacadas desde la portada, alineando admin, home y detalle público.
+- **Archivos modificados:**
+  - `frontend/src/components/admin/AdminHomeEditor.tsx`
+  - `frontend/src/pages/HomePage.tsx`
+  - `frontend/src/services/newsService.ts`
+- **Cambios realizados:**
+  - la relación admin → noticia destacada dejó de depender del `slug` como identificador principal y ahora usa el `id` del contenido, con compatibilidad retroactiva para configuraciones antiguas
+  - el admin ahora prioriza solo noticias publicadas y resuelve selecciones antiguas por `id` o `slug`
+  - el home ahora reconstruye siempre la URL pública de noticias destacadas desde el contenido resuelto, evitando depender de `cta_url` stale o de slugs guardados manualmente
+  - se reforzó la resolución de noticias en hero y secciones destacadas para tolerar configuraciones previas
+  - `newsService` ahora devuelve errores más coherentes en vez de caer en mensajes genéricos por excepciones HTTP
+- **Validación:**
+  - build del frontend ejecutado correctamente después del ajuste

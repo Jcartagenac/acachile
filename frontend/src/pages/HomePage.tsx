@@ -419,6 +419,7 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [eventLookup, setEventLookup] = useState<Record<string, Evento>>({});
   const [newsLookup, setNewsLookup] = useState<Record<string, NewsArticle>>({});
+  const [newsLookupById, setNewsLookupById] = useState<Record<string, NewsArticle>>({});
   const [allNews, setAllNews] = useState<NewsArticle[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const [newsLoaded, setNewsLoaded] = useState(false);
@@ -498,14 +499,20 @@ const HomePage: React.FC = () => {
         const res = await fetch('/api/noticias?limit=200', { cache: 'no-store' });
         const json = await res.json();
         if (json?.success && Array.isArray(json.data)) {
-          setAllNews(json.data as NewsArticle[]);
-          const map: Record<string, NewsArticle> = {};
-          (json.data as NewsArticle[]).forEach((article) => {
-            if (newsSlugs.size === 0 || newsSlugs.has(article.slug)) {
-              map[article.slug] = article;
+          const publishedNews = (json.data as NewsArticle[]).filter(
+            (article) => article.status === 'published' && !article.deleted_at,
+          );
+          setAllNews(publishedNews);
+          const mapBySlug: Record<string, NewsArticle> = {};
+          const mapById: Record<string, NewsArticle> = {};
+          publishedNews.forEach((article) => {
+            mapById[String(article.id)] = article;
+            if (newsSlugs.size === 0 || newsSlugs.has(article.slug) || newsSlugs.has(String(article.id))) {
+              mapBySlug[article.slug] = article;
             }
           });
-          setNewsLookup(map);
+          setNewsLookup(mapBySlug);
+          setNewsLookupById(mapById);
         }
       } finally {
         setNewsLoaded(true);
@@ -537,6 +544,11 @@ const HomePage: React.FC = () => {
   }, []);
 
   const resolvedSections = useMemo<SectionDisplay[]>(() => {
+    const resolveNewsArticle = (sourceId?: string) => {
+      if (!sourceId) return undefined;
+      return newsLookupById[sourceId] || newsLookup[sourceId] || allNews.find((item) => String(item.id) === sourceId || item.slug === sourceId);
+    };
+
     return sections.map((section) => {
       let title = section.title || '';
       let content = section.content || '';
@@ -569,7 +581,7 @@ const HomePage: React.FC = () => {
       }
 
       if (section.source_type === 'news' && section.source_id) {
-        const article = newsLookup[String(section.source_id)];
+        const article = resolveNewsArticle(String(section.source_id));
         if (article) {
           title = section.title || article.title || title;
           if (!section.content) {
@@ -577,7 +589,7 @@ const HomePage: React.FC = () => {
           }
           image = resolvePreferredImage(section.image_url, article.featured_image, image);
           ctaLabel = section.cta_label || 'Leer noticia';
-          ctaUrl = section.cta_url || `/noticias/${article.slug}`;
+          ctaUrl = `/noticias/${article.slug}`;
         }
       }
 
@@ -591,7 +603,7 @@ const HomePage: React.FC = () => {
         display_cta_url: ctaUrl
       };
     });
-  }, [sections, eventLookup, newsLookup]);
+  }, [sections, eventLookup, newsLookup, newsLookupById, allNews]);
 
   const defaultHero = {
     page: 'home' as const,
@@ -624,7 +636,9 @@ const HomePage: React.FC = () => {
       return heroCarouselSections
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((section) => {
-          const article = section.source_id ? allNews.find((item) => item.slug === section.source_id) : undefined;
+          const article = section.source_id
+            ? allNews.find((item) => String(item.id) === String(section.source_id) || item.slug === section.source_id)
+            : undefined;
           if (!article) return null;
 
           return {

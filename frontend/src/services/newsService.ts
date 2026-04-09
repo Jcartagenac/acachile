@@ -120,14 +120,40 @@ class NewsService {
         }
       );
 
+      const result = await response.json().catch(() => null);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return {
+          success: false,
+          data: [],
+          pagination: {
+            page: params?.page || 1,
+            limit: params?.limit || 20,
+            total: 0,
+            pages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+          error: result?.error || `Error cargando noticias (HTTP ${response.status})`,
+        };
       }
 
-      return await response.json();
+      return result;
     } catch (error) {
       console.error('Error getting news:', error);
-      throw error;
+      return {
+        success: false,
+        data: [],
+        pagination: {
+          page: params?.page || 1,
+          limit: params?.limit || 20,
+          total: 0,
+          pages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        error: error instanceof Error ? error.message : 'Error cargando noticias',
+      };
     }
   }
 
@@ -139,14 +165,22 @@ class NewsService {
         headers: this.getAuthHeaders(),
       });
 
+      const result = await response.json().catch(() => null);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return {
+          success: false,
+          error: result?.error || `No se pudo cargar el artículo (HTTP ${response.status})`,
+        };
       }
 
-      return await response.json();
+      return result;
     } catch (error) {
       console.error('Error getting news by slug:', error);
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error cargando el artículo',
+      };
     }
   }
 

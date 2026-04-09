@@ -188,9 +188,27 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
     [sortedSections]
   );
 
-  const newsBySlug = useMemo(
-    () => Object.fromEntries(news.map((article) => [article.slug, article] as const)),
+  const publishedNews = useMemo(
+    () => news.filter((article) => article.status === 'published' && !article.deleted_at),
     [news]
+  );
+
+  const newsBySlug = useMemo(
+    () => Object.fromEntries(publishedNews.map((article) => [article.slug, article] as const)),
+    [publishedNews]
+  );
+
+  const newsById = useMemo(
+    () => Object.fromEntries(publishedNews.map((article) => [String(article.id), article] as const)),
+    [publishedNews]
+  );
+
+  const resolveNewsArticle = useCallback(
+    (sourceId?: string) => {
+      if (!sourceId) return undefined;
+      return newsById[sourceId] || newsBySlug[sourceId];
+    },
+    [newsById, newsBySlug]
   );
 
   const updateSection = useCallback(
@@ -248,8 +266,8 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
   );
 
   const applyNewsToSection = useCallback(
-    (sectionKey: string, slug: string) => {
-      const article = news.find((item) => item.slug === slug);
+    (sectionKey: string, sourceId: string) => {
+      const article = resolveNewsArticle(sourceId);
       if (!article) {
         setSections((prev) =>
           prev.map((section) =>
@@ -277,7 +295,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
             ? {
                 ...section,
                 source_type: 'news',
-                source_id: slug,
+                source_id: String(article.id),
                 title: article.title || section.title,
                 content,
                 image_url: article.featured_image || section.image_url,
@@ -287,7 +305,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
         )
       );
     },
-    [news, updateSection]
+    [resolveNewsArticle]
   );
 
   const handleSourceTypeChange = useCallback(
@@ -308,11 +326,11 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
         applyEventToSection(sectionKey, String(events[0].id));
       }
 
-      if (value === 'news' && news[0]) {
-        applyNewsToSection(sectionKey, news[0].slug);
+      if (value === 'news' && publishedNews[0]) {
+        applyNewsToSection(sectionKey, String(publishedNews[0].id));
       }
     },
-    [events, news, applyEventToSection, applyNewsToSection]
+    [events, publishedNews, applyEventToSection, applyNewsToSection]
   );
 
   const save = useCallback(async () => {
@@ -466,7 +484,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
       ? Math.max(...heroSlides.map((section) => section.sort_order)) + 1
       : 10;
 
-    const fallbackNews = news[0];
+    const fallbackNews = publishedNews[0];
     const newSlide: EditableSection = {
       page: 'home',
       key: `hero_slide_${Date.now()}`,
@@ -475,13 +493,13 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
       image_url: fallbackNews?.featured_image || '',
       sort_order: nextOrder,
       source_type: 'news',
-      source_id: fallbackNews?.slug,
+      source_id: fallbackNews ? String(fallbackNews.id) : undefined,
       cta_url: fallbackNews ? `/noticias/${fallbackNews.slug}` : '/noticias',
       is_active: true
     };
 
     setSections((prev) => [...prev, newSlide]);
-  }, [activePage, heroSlides, news]);
+  }, [activePage, heroSlides, publishedNews]);
 
   const deleteSection = useCallback((sectionKey: string) => {
     if (window.confirm('¿Eliminar esta sección?')) {
@@ -535,7 +553,7 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
               ) : (
                 <div className="space-y-4">
                   {heroSlides.map((section, index) => {
-                    const linkedNews = section.source_id ? newsBySlug[section.source_id] : undefined;
+                    const linkedNews = resolveNewsArticle(section.source_id);
                     const previewTitle = linkedNews?.title || section.title || 'Sin noticia asociada';
                     const previewImage = linkedNews?.featured_image || section.image_url || '';
 
@@ -579,13 +597,13 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
                             <div>
                               <label className="block text-sm font-medium">Noticia asociada</label>
                               <select
-                                value={section.source_id ?? ''}
+                                value={linkedNews ? String(linkedNews.id) : ''}
                                 onChange={(event) => applyNewsToSection(section.key, event.target.value)}
                                 className="w-full border rounded px-2 py-2"
                               >
                                 <option value="">-- selecciona una noticia --</option>
-                                {news.map((article) => (
-                                  <option key={article.id} value={article.slug}>
+                                {publishedNews.map((article) => (
+                                  <option key={article.id} value={String(article.id)}>
                                     {article.title}
                                   </option>
                                 ))}
@@ -691,13 +709,13 @@ export default function AdminHomeEditor({ initialPage = 'home' }: AdminHomeEdito
                   <div>
                     <label className="block text-sm font-medium">Selecciona noticia</label>
                     <select
-                      value={section.source_id ?? ''}
+                      value={resolveNewsArticle(section.source_id)?.id ? String(resolveNewsArticle(section.source_id)?.id) : ''}
                       onChange={(event) => applyNewsToSection(section.key, event.target.value)}
                       className="w-full border rounded px-2 py-1"
                     >
                       <option value="">-- selecciona --</option>
-                      {news.map((article) => (
-                        <option key={article.id} value={article.slug}>
+                      {publishedNews.map((article) => (
+                        <option key={article.id} value={String(article.id)}>
                           {article.title}
                         </option>
                       ))}
