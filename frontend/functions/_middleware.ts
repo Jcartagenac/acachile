@@ -6,11 +6,40 @@ import { validateEnv } from './utils/env';
  * Middleware de CORS y autenticación para Pages Functions
  */
 
+function normalizeHost(value: string): string {
+  return value.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/.*$/, '').toLowerCase();
+}
+
+function resolveAllowedOrigin(requestOrigin?: string | null, configuredOrigin?: string): string {
+  if (!requestOrigin) {
+    return configuredOrigin || '*';
+  }
+
+  if (!configuredOrigin || configuredOrigin === '*') {
+    return requestOrigin;
+  }
+
+  const normalizedConfigured = normalizeHost(configuredOrigin);
+  const normalizedRequest = normalizeHost(requestOrigin);
+
+  if (normalizedConfigured === normalizedRequest) {
+    return requestOrigin;
+  }
+
+  // Permitir apex y www del mismo dominio base
+  if (normalizedConfigured === normalizedRequest.replace(/^www\./, '') || normalizedRequest === normalizedConfigured.replace(/^www\./, '')) {
+    return requestOrigin;
+  }
+
+  return configuredOrigin;
+}
+
 // Configurar CORS headers
-function setCORSHeaders(response: Response, origin?: string): Response {
-  const corsOrigin = origin || '*';
+function setCORSHeaders(response: Response, requestOrigin?: string | null, configuredOrigin?: string): Response {
+  const corsOrigin = resolveAllowedOrigin(requestOrigin, configuredOrigin);
 
   response.headers.set('Access-Control-Allow-Origin', corsOrigin);
+  response.headers.set('Vary', 'Origin');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   response.headers.set('Access-Control-Allow-Credentials', 'true');
@@ -20,9 +49,9 @@ function setCORSHeaders(response: Response, origin?: string): Response {
 }
 
 // Manejar preflight OPTIONS requests
-function handleOptions(origin?: string): Response {
+function handleOptions(requestOrigin?: string | null, configuredOrigin?: string): Response {
   const response = new Response(null, { status: 204 });
-  return setCORSHeaders(response, origin);
+  return setCORSHeaders(response, requestOrigin, configuredOrigin);
 }
 
 
@@ -61,8 +90,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   // Manejar preflight OPTIONS requests
+  const requestOrigin = request.headers.get('Origin');
+
   if (request.method === 'OPTIONS') {
-    return handleOptions(env.CORS_ORIGIN);
+    return handleOptions(requestOrigin, env.CORS_ORIGIN);
   }
 
   // Continuar con la siguiente función
@@ -70,7 +101,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const response = await next();
 
     // Agregar headers CORS solo a respuestas de API
-    return setCORSHeaders(response, env.CORS_ORIGIN);
+    return setCORSHeaders(response, requestOrigin, env.CORS_ORIGIN);
   } catch (error) {
     console.error('[MIDDLEWARE] Error:', error);
 
@@ -86,7 +117,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
     );
 
-    return setCORSHeaders(errorResponse, env.CORS_ORIGIN);
+    return setCORSHeaders(errorResponse, requestOrigin, env.CORS_ORIGIN);
   }
 };
 

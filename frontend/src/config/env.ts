@@ -6,13 +6,41 @@
 
 /**
  * URL base del API
- * En producción, esto es inyectado por Cloudflare Pages desde la variable FRONTEND_URL
- * En desarrollo, usa el valor de .env.local o localhost
+ * En producción preferimos el mismo origin actual del navegador para evitar
+ * errores cross-origin entre acachile.com y www.acachile.com.
  */
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.MODE === 'production' 
-    ? window.location.origin 
-    : 'http://localhost:8788');
+const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+
+const resolveApiBaseUrl = () => {
+  if (!configuredApiBaseUrl) {
+    return import.meta.env.MODE === 'production' ? browserOrigin : 'http://localhost:8788';
+  }
+
+  const normalizedConfigured = configuredApiBaseUrl.replace(/\/$/, '');
+
+  if (typeof window === 'undefined') {
+    return normalizedConfigured;
+  }
+
+  try {
+    const configuredUrl = new URL(normalizedConfigured, browserOrigin);
+    const configuredHost = configuredUrl.hostname.replace(/^www\./, '');
+    const currentHost = window.location.hostname.replace(/^www\./, '');
+
+    // Si estamos en el mismo dominio base pero distinto subdominio (www vs apex),
+    // usar el mismo origin actual del navegador para evitar bloqueos CORS.
+    if (configuredHost === currentHost && configuredUrl.origin !== window.location.origin) {
+      return window.location.origin;
+    }
+
+    return configuredUrl.toString().replace(/\/$/, '');
+  } catch {
+    return normalizedConfigured;
+  }
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 /**
  * Entorno actual (development, production, preview)
