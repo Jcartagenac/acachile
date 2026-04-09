@@ -3,7 +3,7 @@ import { requireAdmin, authErrorResponse, errorResponse, jsonResponse } from '..
 // Admin-only upload to R2 for homepage images
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
-const ALLOWED_FOLDERS = ['home', 'eventos', 'noticias', 'avatars', 'gallery', 'content'];
+const ALLOWED_FOLDERS = ['home', 'eventos', 'noticias', 'avatars', 'gallery', 'content', 'popup'];
 
 export async function onRequestPost(context) {
   const { request, env } = context;

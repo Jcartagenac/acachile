@@ -32,7 +32,7 @@ async function processFile(file: File, folder: string): Promise<{ buffer: ArrayB
 }
 
 // Validaciones de seguridad (usando nombres en español para consistencia)
-const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones', 'shop-products', 'payment-proofs', 'videos'];
+const ALLOWED_FOLDERS = ['avatars', 'home', 'eventos', 'noticias', 'gallery', 'postulaciones', 'shop-products', 'payment-proofs', 'videos', 'popup'];
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
 const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB
 

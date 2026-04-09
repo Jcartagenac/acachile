@@ -25,7 +25,7 @@ import { useEvents } from '../contexts/EventContext';
 import type { SitePageKey } from '@shared/siteSections';
 
 export default function AdminContent() {
-  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'eventos' | 'postulantes' | 'noticias' | 'imagenes';
+  type ContentTab = 'inicio' | 'quienes' | 'contacto' | 'popup' | 'eventos' | 'postulantes' | 'noticias' | 'imagenes';
   const [activeTab, setActiveTab] = useState<ContentTab>('eventos');
   const [searchTerm, setSearchTerm] = useState('');
   const [showArchived, setShowArchived] = useState(false);
@@ -35,6 +35,7 @@ export default function AdminContent() {
   // IMPORTANTE: Este AdminPostulantes es para inscripciones a EVENTOS (no para postulaciones a socios ACA)
   const AdminPostulantes = React.lazy(() => import('../components/admin/AdminPostulantes'));
   const AdminNews = React.lazy(() => import('../components/admin/AdminNews'));
+  const AdminPopupEditor = React.lazy(() => import('../components/admin/AdminPopupEditor'));
 
   const resolvePageKey = (tab: ContentTab): SitePageKey | null => {
     switch (tab) {
@@ -57,6 +58,7 @@ export default function AdminContent() {
     { id: 'inicio', label: 'Inicio', icon: Home },
     { id: 'quienes', label: 'Quiénes Somos', icon: Users2 },
     { id: 'contacto', label: 'Contacto', icon: Mail },
+    { id: 'popup', label: 'Pop Up principal', icon: Eye },
     { id: 'imagenes', label: 'Subir Imagen', icon: Upload },
     { id: 'eventos', label: 'Eventos', icon: Calendar },
     { id: 'postulantes', label: 'Postulantes', icon: Users },
@@ -235,6 +237,12 @@ export default function AdminContent() {
           </div>
           );
         })()}
+
+        {activeTab === 'popup' && (
+          <React.Suspense fallback={<div>Cargando editor de popup...</div>}>
+            <AdminPopupEditor />
+          </React.Suspense>
+        )}
 
         {activeTab === 'eventos' && (
           <div>

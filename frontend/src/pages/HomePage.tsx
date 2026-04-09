@@ -4,6 +4,8 @@ import type { SiteSection, SiteSectionSourceType } from '@shared/siteSections';
 import type { NewsArticle } from '../services/newsService';
 import { SEOHelmet } from '../components/SEOHelmet';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { SitePopup } from '../components/SitePopup';
+import type { SitePopupConfig } from '@shared/sitePopup';
 
 type SectionDisplay = SiteSection & {
   display_title: string;
@@ -420,6 +422,7 @@ const HomePage: React.FC = () => {
   const [allNews, setAllNews] = useState<NewsArticle[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const [newsLoaded, setNewsLoaded] = useState(false);
+  const [sitePopup, setSitePopup] = useState<SitePopupConfig | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -509,6 +512,29 @@ const HomePage: React.FC = () => {
       }
     })();
   }, [sections, newsLoaded]);
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/content/popup', { cache: 'no-store' });
+        const json = await res.json();
+        if (active && json?.success) {
+          setSitePopup(json.popup ?? null);
+        }
+      } catch (error) {
+        console.warn('[HomePage] No se pudo obtener popup activo.', error);
+        if (active) {
+          setSitePopup(null);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const resolvedSections = useMemo<SectionDisplay[]>(() => {
     return sections.map((section) => {
@@ -634,6 +660,7 @@ const HomePage: React.FC = () => {
       />
       
       <div className="min-h-screen bg-soft-gradient-light">
+        <SitePopup popup={sitePopup} />
         <HeroSection section={heroSection} loading={loading} newsItems={heroNewsItems} />
         {otherSections.map((section, index) => (
           <SectionBlock key={section.key ?? index} section={section} reverse={index % 2 === 0} />

@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS site_popup (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  image_url TEXT,
+  link_url TEXT,
+  open_in_new_tab INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

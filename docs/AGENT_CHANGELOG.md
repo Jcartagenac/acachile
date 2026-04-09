@@ -80,3 +80,30 @@
   - el slide completo quedó clickeable hacia el mismo destino que el botón
 - **Validación:**
   - build del frontend ejecutado correctamente después del ajuste
+
+## 2026-04-09
+
+### Pop Up principal administrable desde panel admin
+- **Objetivo:** permitir crear, activar, desactivar y visualizar un popup principal del sitio desde el gestor de contenidos, sin hardcodearlo en frontend.
+- **Archivos modificados:**
+  - `shared/sitePopup.ts`
+  - `frontend/functions/api/_utils/popup.ts`
+  - `frontend/functions/api/admin/content/popup.ts`
+  - `frontend/functions/api/content/popup.ts`
+  - `frontend/functions/api/admin/content/upload.js`
+  - `frontend/functions/api/upload-image.ts`
+  - `frontend/migrations/0027_create_site_popup.sql`
+  - `frontend/src/components/admin/AdminPopupEditor.tsx`
+  - `frontend/src/components/SitePopup.tsx`
+  - `frontend/src/pages/AdminContent.tsx`
+  - `frontend/src/pages/HomePage.tsx`
+- **Cambios realizados:**
+  - se creó una entidad dedicada `site_popup`, separada de `site_sections`, para mantener el popup como módulo propio del CMS
+  - se agregó API admin para leer y guardar el popup principal, con soporte para imagen, link opcional, apertura en nueva pestaña y estado activo/inactivo
+  - se agregó endpoint público para que la home consulte solo el popup activo
+  - se habilitó carpeta `popup` en el flujo de uploads a R2
+  - el panel admin ahora incorpora una pestaña “Pop Up principal” con subida desde computador, preview, activación/desactivación y guardado
+  - la portada ahora consulta el popup activo y lo muestra centrado con overlay oscuro, cierre visible, comportamiento responsive y cierre persistido por sesión
+  - se dejó garantizado que exista un solo popup principal administrable a la vez mediante un registro singleton
+- **Validación:**
+  - pendiente ejecutar build/typecheck después de la implementación
