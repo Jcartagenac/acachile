@@ -1,12 +1,23 @@
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { ArrowUpRight, Blocks, Compass, Layers3 } from 'lucide-react';
-import type { PortalSection } from '../features/portal/portalSections';
+import type { PortalSectionContent } from '@shared/portalSections';
+import type { PortalLayoutContextValue } from '../components/portal/PortalDelSocioLayout';
 
-interface PortalSectionPageProps {
-  section: PortalSection;
-}
+export default function PortalSectionPage() {
+  const { section: sectionPath } = useParams();
+  const { sections } = useOutletContext<PortalLayoutContextValue>();
 
-export default function PortalSectionPage({ section }: PortalSectionPageProps) {
+  const section: PortalSectionContent | undefined = sections.find((item) => item.path === sectionPath) || sections[0];
+
+  if (!section) {
+    return (
+      <div className="rounded-[32px] border border-white/80 bg-white/85 p-8 shadow-soft-xl backdrop-blur-soft">
+        <h2 className="text-2xl font-bold text-neutral-950">Portal del Socio</h2>
+        <p className="mt-2 text-sm text-neutral-600">No se pudo resolver la sección solicitada.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-10rem)] w-full flex-col gap-6 rounded-[32px] border border-white/80 bg-white/85 p-5 shadow-soft-xl backdrop-blur-soft sm:p-8 lg:p-10">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_360px] xl:items-start">

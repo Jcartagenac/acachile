@@ -71,6 +71,12 @@ const menuGroups: MenuGroup[] = [
         description: 'Eventos y noticias',
       },
       {
+        path: '/panel-admin/portal-del-socio',
+        label: 'Portal del Socio',
+        icon: LayoutDashboard,
+        description: 'Contenido del portal',
+      },
+      {
         path: '/panel-admin/news',
         label: 'Comunicados',
         icon: Megaphone,

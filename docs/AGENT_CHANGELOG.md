@@ -138,3 +138,27 @@
   - cada subruta carga dentro del mismo layout y muestra contenido placeholder listo para crecer funcionalmente
 - **Validación:**
   - build del frontend ejecutado correctamente después de la implementación
+
+### Administración integrada del Portal del Socio
+- **Objetivo:** permitir gestionar desde el panel admin el contenido base del Portal del Socio y hacer que `/portaldelsocio` consuma esos datos.
+- **Archivos modificados:**
+  - `shared/portalSections.ts`
+  - `frontend/src/features/portal/portalSections.ts`
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/layout/PanelAdminLayout.tsx`
+  - `frontend/src/components/portal/PortalDelSocioLayout.tsx`
+  - `frontend/src/pages/PortalSectionPage.tsx`
+  - `frontend/src/pages/AdminPortalDelSocio.tsx`
+  - `frontend/functions/api/_utils/portal.ts`
+  - `frontend/functions/api/admin/portal-sections.ts`
+  - `frontend/functions/api/portal/sections.ts`
+  - `frontend/migrations/0028_create_portal_sections.sql`
+- **Cambios realizados:**
+  - se creó una entidad dedicada `portal_sections` para almacenar el contenido editable de las secciones del portal
+  - se agregó endpoint admin protegido para listar y guardar secciones del portal
+  - se agregó endpoint público para que `/portaldelsocio` consuma el contenido administrable
+  - se añadió la opción `Portal del Socio` dentro del panel admin
+  - se creó una vista de administración interna del portal con listado de secciones y editor de título/descripción
+  - el frontend público del portal ahora usa datos provenientes de API y no contenido hardcodeado
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la integración

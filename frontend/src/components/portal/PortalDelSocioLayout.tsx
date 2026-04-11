@@ -1,11 +1,43 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ChevronRight, LayoutDashboard, ShieldCheck, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../utils/cn';
-import { portalSections } from '../../features/portal/portalSections';
+import { getDefaultPortalSections, type PortalSectionContent } from '../../features/portal/portalSections';
+
+export interface PortalLayoutContextValue {
+  sections: PortalSectionContent[];
+  loading: boolean;
+}
 
 export default function PortalDelSocioLayout() {
   const location = useLocation();
-  const currentSection = portalSections.find((section) => location.pathname.endsWith(`/${section.path}`));
+  const [sections, setSections] = useState<PortalSectionContent[]>(getDefaultPortalSections());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const response = await fetch('/api/portal/sections', { cache: 'no-store' });
+        const json = await response.json();
+        if (active && response.ok && json?.success && Array.isArray(json.sections) && json.sections.length > 0) {
+          setSections(json.sections);
+        }
+      } catch (error) {
+        console.warn('[PortalDelSocio] No se pudo cargar contenido dinámico del portal.', error);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const currentSection = useMemo(
+    () => sections.find((section) => location.pathname.endsWith(`/${section.path}`)),
+    [location.pathname, sections],
+  );
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(245,105,52,0.14),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(99,102,241,0.12),_transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_46%,_#f8fafc_100%)]">
@@ -59,7 +91,7 @@ export default function PortalDelSocioLayout() {
               </div>
 
               <nav className="flex gap-2 overflow-x-auto px-1 pb-2 lg:block lg:space-y-1 lg:overflow-visible lg:px-0 lg:pb-0">
-                {portalSections.map((section) => (
+                {sections.map((section) => (
                   <NavLink
                     key={section.key}
                     to={`/portaldelsocio/${section.path}`}
@@ -94,13 +126,13 @@ export default function PortalDelSocioLayout() {
                 </p>
               </div>
               <div className="text-xs text-neutral-500">
-                Navegación interna persistente y preparada para ampliar funcionalidades.
+                {loading ? 'Cargando contenido del portal…' : 'Contenido administrable consumido desde el panel admin.'}
               </div>
             </div>
           </div>
 
           <div className="w-full animate-fade-in">
-            <Outlet />
+            <Outlet context={{ sections, loading } satisfies PortalLayoutContextValue} />
           </div>
         </main>
       </div>
