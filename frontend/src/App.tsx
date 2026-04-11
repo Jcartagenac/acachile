@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Layout } from './components/layout';
 import { DebugPanel } from './components/debug';
@@ -64,8 +64,11 @@ const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const AdminEcommerce = lazy(() => import('./pages/AdminEcommerce'));
 const EleccionesLandingPage = lazy(() => import('./pages/EleccionesLandingPage'));
 const EleccionesEntrevistasPage = lazy(() => import('./pages/EleccionesEntrevistasPage'));
+const PortalDelSocioLayout = lazy(() => import('./components/portal/PortalDelSocioLayout'));
+const PortalSectionPage = lazy(() => import('./pages/PortalSectionPage'));
 
 import { ShopPasswordProtection } from './components/auth';
+import { portalSections } from './features/portal/portalSections';
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -83,6 +86,16 @@ function App() {
           <Route path="/resultados" element={<ResultadosPage />} />
           <Route path="/quienes-somos" element={<AboutPage />} />
           <Route path="/unete" element={<JoinPage />} />
+          <Route path="/portaldelsocio" element={<PortalDelSocioLayout />}>
+            <Route index element={<Navigate to="inicio" replace />} />
+            {portalSections.map((section) => (
+              <Route
+                key={section.key}
+                path={section.path}
+                element={<PortalSectionPage section={section} />}
+              />
+            ))}
+          </Route>
           
           {/* Tienda - Protegida con clave de acceso */}
           <Route path="/shop" element={<ShopPasswordProtection><ShopPage /></ShopPasswordProtection>} />

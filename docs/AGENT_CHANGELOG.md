@@ -122,3 +122,19 @@
   - `newsService` ahora devuelve errores más coherentes en vez de caer en mensajes genéricos por excepciones HTTP
 - **Validación:**
   - build del frontend ejecutado correctamente después del ajuste
+
+### Nuevo módulo Portal del Socio con layout y navegación interna
+- **Objetivo:** crear una nueva sección escalable en `/portaldelsocio` con layout propio, menú persistente y subrutas internas para los módulos del portal.
+- **Archivos modificados:**
+  - `frontend/src/App.tsx`
+  - `frontend/src/features/portal/portalSections.ts`
+  - `frontend/src/components/portal/PortalDelSocioLayout.tsx`
+  - `frontend/src/pages/PortalSectionPage.tsx`
+- **Cambios realizados:**
+  - se integró `/portaldelsocio` como conjunto de rutas anidadas dentro del router principal
+  - se agregó redirect de `/portaldelsocio` a `/portaldelsocio/inicio`
+  - se definió un catálogo central de secciones del portal para construir rutas y menú desde una sola fuente
+  - se creó un layout persistente del portal con menú interno responsive y estado activo por sección
+  - cada subruta carga dentro del mismo layout y muestra contenido placeholder listo para crecer funcionalmente
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la implementación
