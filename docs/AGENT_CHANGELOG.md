@@ -162,3 +162,23 @@
   - el frontend público del portal ahora usa datos provenientes de API y no contenido hardcodeado
 - **Validación:**
   - build del frontend ejecutado correctamente después de la integración
+
+### Gestión de documentos del Portal del Socio
+- **Objetivo:** permitir subir, administrar y visualizar archivos en la sección `Documentos` del Portal del Socio desde el panel admin.
+- **Archivos modificados:**
+  - `shared/portalDocuments.ts`
+  - `frontend/src/pages/AdminPortalDelSocio.tsx`
+  - `frontend/src/pages/PortalSectionPage.tsx`
+  - `frontend/functions/api/_utils/portalDocuments.ts`
+  - `frontend/functions/api/admin/portal-documents.ts`
+  - `frontend/functions/api/admin/portal-documents/[id].ts`
+  - `frontend/functions/api/portal/documents.ts`
+  - `frontend/migrations/0029_create_portal_documents.sql`
+- **Cambios realizados:**
+  - se creó persistencia dedicada para documentos del portal con metadata de nombre, tipo, URL, tamaño y orden
+  - se implementó subida de archivos al storage R2 con soporte para PDF, imágenes y documentos ofimáticos comunes
+  - se agregó administración en el panel para subir múltiples archivos, renombrarlos y eliminarlos
+  - la sección pública `/portaldelsocio/documentos` ahora consume los archivos desde API y los muestra en grilla con preview/icono por tipo
+  - la estructura quedó preparada para futuras categorías, filtros y ordenamiento
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la implementación
