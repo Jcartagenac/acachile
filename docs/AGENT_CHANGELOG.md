@@ -169,6 +169,7 @@
   - `shared/portalDocuments.ts`
   - `frontend/src/pages/AdminPortalDelSocio.tsx`
   - `frontend/src/pages/PortalSectionPage.tsx`
+  - `frontend/src/components/portal/PortalDocumentsPreview.tsx`
   - `frontend/functions/api/_utils/portalDocuments.ts`
   - `frontend/functions/api/admin/portal-documents.ts`
   - `frontend/functions/api/admin/portal-documents/[id].ts`
@@ -179,6 +180,21 @@
   - se implementó subida de archivos al storage R2 con soporte para PDF, imágenes y documentos ofimáticos comunes
   - se agregó administración en el panel para subir múltiples archivos, renombrarlos y eliminarlos
   - la sección pública `/portaldelsocio/documentos` ahora consume los archivos desde API y los muestra en grilla con preview/icono por tipo
+  - se extrajo una grilla reutilizable de documentos para compartir exactamente la misma representación visual entre frontend y admin
   - la estructura quedó preparada para futuras categorías, filtros y ordenamiento
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la implementación
+
+### Vista previa responsive de Documentos dentro del admin
+- **Objetivo:** permitir visualizar desde el panel admin cómo se verá la sección `Documentos` del portal, sin salir del módulo.
+- **Archivos modificados:**
+  - `frontend/src/pages/AdminPortalDelSocio.tsx`
+  - `frontend/src/pages/PortalSectionPage.tsx`
+  - `frontend/src/components/portal/PortalDocumentsPreview.tsx`
+- **Cambios realizados:**
+  - se agregó toggle `Vista previa` dentro de la administración de documentos
+  - la vista previa reutiliza la misma grilla y tarjetas del frontend público, evitando duplicar lógica visual
+  - se añadieron modos de simulación para desktop, tablet y móvil dentro del panel admin
+  - la vista previa refleja archivos actuales, orden y nombres visibles cargados en el módulo
 - **Validación:**
   - build del frontend ejecutado correctamente después de la implementación

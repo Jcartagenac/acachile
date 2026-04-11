@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { File, FileImage, FileText, Save, Settings2, Trash2, Upload } from 'lucide-react';
+import { File, FileImage, FileText, Laptop, Save, Settings2, Smartphone, Tablet, Trash2, Upload, Eye } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import type { PortalSectionContent } from '@shared/portalSections';
 import type { PortalDocument } from '@shared/portalDocuments';
 import { getDefaultPortalSections } from '../features/portal/portalSections';
+import { PortalDocumentsGrid } from '../components/portal/PortalDocumentsPreview';
+import { cn } from '../utils/cn';
 
 const getAuthToken = () => {
   if (typeof document === 'undefined') return '';
@@ -39,6 +41,14 @@ function DocumentThumb({ document }: { document: PortalDocument }) {
   return <div className="flex h-full w-full items-center justify-center bg-neutral-100 text-neutral-500"><File className="h-10 w-10" /></div>;
 }
 
+type PreviewViewport = 'desktop' | 'tablet' | 'mobile';
+
+const previewViewports: Array<{ key: PreviewViewport; label: string; icon: typeof Laptop; widthClass: string }> = [
+  { key: 'desktop', label: 'Desktop', icon: Laptop, widthClass: 'w-full' },
+  { key: 'tablet', label: 'Tablet', icon: Tablet, widthClass: 'mx-auto w-full max-w-[820px]' },
+  { key: 'mobile', label: 'Móvil', icon: Smartphone, widthClass: 'mx-auto w-full max-w-[390px]' },
+];
+
 export default function AdminPortalDelSocio() {
   const [sections, setSections] = useState<PortalSectionContent[]>(getDefaultPortalSections());
   const [documents, setDocuments] = useState<PortalDocument[]>([]);
@@ -46,6 +56,8 @@ export default function AdminPortalDelSocio() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showDocumentsPreview, setShowDocumentsPreview] = useState(false);
+  const [previewViewport, setPreviewViewport] = useState<PreviewViewport>('desktop');
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -99,6 +111,8 @@ export default function AdminPortalDelSocio() {
     () => sections.find((section) => section.key === activeKey) || sections[0],
     [sections, activeKey],
   );
+
+  const currentViewport = previewViewports.find((item) => item.key === previewViewport) || previewViewports[0];
 
   const updateSection = (key: string, field: 'title' | 'description', value: string) => {
     setSections((current) =>
@@ -291,7 +305,7 @@ export default function AdminPortalDelSocio() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <input
                           ref={fileInputRef}
                           type="file"
@@ -300,6 +314,12 @@ export default function AdminPortalDelSocio() {
                           onChange={(event) => handleUploadFiles(event.target.files)}
                           accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
                         />
+                        <Button
+                          variant={showDocumentsPreview ? 'outline' : 'secondary'}
+                          onClick={() => setShowDocumentsPreview((current) => !current)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" /> {showDocumentsPreview ? 'Ocultar vista previa' : 'Vista previa'}
+                        </Button>
                         <Button onClick={() => fileInputRef.current?.click()} className="bg-red-600 text-white" disabled={uploading}>
                           <Upload className="mr-2 h-4 w-4" /> {uploading ? 'Subiendo…' : 'Subir archivos'}
                         </Button>
@@ -367,6 +387,59 @@ export default function AdminPortalDelSocio() {
                         ))}
                       </div>
                     )}
+
+                    {showDocumentsPreview ? (
+                      <div className="space-y-4 rounded-3xl border border-gray-200 bg-gray-50/70 p-4 sm:p-5">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">Vista previa del frontend</h4>
+                            <p className="mt-1 text-sm text-gray-600">
+                              Esta vista reutiliza la misma grilla del portal público y refleja nombres visibles, orden y archivos actuales.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {previewViewports.map((viewport) => {
+                              const Icon = viewport.icon;
+                              return (
+                                <button
+                                  key={viewport.key}
+                                  type="button"
+                                  onClick={() => setPreviewViewport(viewport.key)}
+                                  className={cn(
+                                    'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition',
+                                    previewViewport === viewport.key
+                                      ? 'border-red-500 bg-red-50 text-red-700'
+                                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                                  )}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                  {viewport.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="rounded-[28px] border border-gray-200 bg-white p-3 shadow-inner sm:p-5">
+                          <div className={cn('transition-all duration-300', currentViewport.widthClass)}>
+                            <div className="overflow-hidden rounded-[28px] border border-white/80 bg-white/85 p-4 shadow-soft-xl backdrop-blur-soft sm:p-6">
+                              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                                <div>
+                                  <h3 className="text-xl font-bold text-neutral-950">Biblioteca de documentos</h3>
+                                  <p className="mt-1 text-sm text-neutral-600">Archivos administrados desde el panel del Portal del Socio.</p>
+                                </div>
+                                <div className="text-xs text-neutral-500">Vista {currentViewport.label.toLowerCase()}</div>
+                              </div>
+
+                              <PortalDocumentsGrid
+                                documents={documents}
+                                emptyMessage="Aún no hay documentos cargados para esta sección."
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
