@@ -198,3 +198,32 @@
   - la vista previa refleja archivos actuales, orden y nombres visibles cargados en el módulo
 - **Validación:**
   - build del frontend ejecutado correctamente después de la implementación
+
+### Gestión completa de equipos de competencias del Portal del Socio
+- **Objetivo:** crear un flujo completo admin → almacenamiento → visualización pública para equipos de competencias, con galería, ficha individual e indicadores de visibilidad.
+- **Archivos modificados:**
+  - `shared/portalCompetencias.ts`
+  - `frontend/src/App.tsx`
+  - `frontend/src/pages/AdminPortalDelSocio.tsx`
+  - `frontend/src/pages/AdminPortalCompetencias.tsx`
+  - `frontend/src/pages/PortalSectionPage.tsx`
+  - `frontend/src/pages/PortalCompetenciaTeamPage.tsx`
+  - `frontend/src/components/portal/PortalCompetenciasGrid.tsx`
+  - `frontend/src/components/portal/PortalDelSocioLayout.tsx`
+  - `frontend/functions/api/_utils/portalCompetencias.ts`
+  - `frontend/functions/api/admin/portal-competencias/upload-image.ts`
+  - `frontend/functions/api/admin/portal-competencias/teams.ts`
+  - `frontend/functions/api/admin/portal-competencias/teams/[id].ts`
+  - `frontend/functions/api/portal/competencias.ts`
+  - `frontend/functions/api/portal/competencias/[slug].ts`
+  - `frontend/migrations/0030_create_portal_competencias.sql`
+- **Cambios realizados:**
+  - se creó persistencia dedicada para equipos, integrantes y galería del módulo de competencias
+  - se implementó administración interna en `/panel-admin/portal-del-socio/competencias` con galería de equipos, creación, edición y eliminación
+  - cada equipo ahora tiene ficha editable con nombre, imagen principal, integrantes con foto, logros, estado activo, visibilidad pública y galería de hasta 5 imágenes
+  - se agregó subida de imágenes a R2 para logo principal, integrantes y galería del equipo
+  - la vista pública `/portaldelsocio/competencias` ahora muestra solo equipos activos y visibles
+  - se agregó ficha pública por equipo en `/portaldelsocio/competencias/:slug`
+  - se dejó la base preparada para ordenar y filtrar equipos en futuras iteraciones
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la implementación

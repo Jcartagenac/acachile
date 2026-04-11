@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { File, FileImage, FileText, Laptop, Save, Settings2, Smartphone, Tablet, Trash2, Upload, Eye } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import type { PortalSectionContent } from '@shared/portalSections';
@@ -50,6 +51,7 @@ const previewViewports: Array<{ key: PreviewViewport; label: string; icon: typeo
 ];
 
 export default function AdminPortalDelSocio() {
+  const navigate = useNavigate();
   const [sections, setSections] = useState<PortalSectionContent[]>(getDefaultPortalSections());
   const [documents, setDocuments] = useState<PortalDocument[]>([]);
   const [activeKey, setActiveKey] = useState<string>(getDefaultPortalSections()[0]?.key || 'inicio');
@@ -247,7 +249,13 @@ export default function AdminPortalDelSocio() {
                 <button
                   key={section.key}
                   type="button"
-                  onClick={() => setActiveKey(section.key)}
+                  onClick={() => {
+                    if (section.key === 'competencias') {
+                      navigate('/panel-admin/portal-del-socio/competencias');
+                      return;
+                    }
+                    setActiveKey(section.key);
+                  }}
                   className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition ${
                     activeKey === section.key
                       ? 'border-red-500 bg-red-50 text-red-700'

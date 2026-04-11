@@ -3,14 +3,18 @@ import { ArrowUpRight, Blocks, Compass, Layers3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PortalSectionContent } from '@shared/portalSections';
 import type { PortalDocument } from '@shared/portalDocuments';
+import type { PortalCompetitionTeam } from '@shared/portalCompetencias';
 import type { PortalLayoutContextValue } from '../components/portal/PortalDelSocioLayout';
 import { PortalDocumentsGrid } from '../components/portal/PortalDocumentsPreview';
+import { PortalCompetenciasGrid } from '../components/portal/PortalCompetenciasGrid';
 
 export default function PortalSectionPage() {
   const { section: sectionPath } = useParams();
   const { sections } = useOutletContext<PortalLayoutContextValue>();
   const [documents, setDocuments] = useState<PortalDocument[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [teams, setTeams] = useState<PortalCompetitionTeam[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(false);
 
   const section: PortalSectionContent | undefined = sections.find((item) => item.path === sectionPath) || sections[0];
 
@@ -41,6 +45,33 @@ export default function PortalSectionPage() {
     };
   }, [section?.path]);
 
+  useEffect(() => {
+    let active = true;
+    if (section?.path !== 'competencias') {
+      setTeams([]);
+      return;
+    }
+
+    (async () => {
+      try {
+        setTeamsLoading(true);
+        const response = await fetch('/api/portal/competencias', { cache: 'no-store' });
+        const json = await response.json();
+        if (active && response.ok && json?.success && Array.isArray(json.teams)) {
+          setTeams(json.teams);
+        }
+      } catch (error) {
+        console.warn('[PortalSectionPage] No se pudieron cargar equipos.', error);
+      } finally {
+        if (active) setTeamsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [section?.path]);
+
   if (!section) {
     return (
       <div className="rounded-[32px] border border-white/80 bg-white/85 p-8 shadow-soft-xl backdrop-blur-soft">
@@ -58,12 +89,8 @@ export default function PortalSectionPage() {
             Portal del Socio
           </p>
           <div className="space-y-3">
-            <h2 className="text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl lg:text-[2.6rem]">
-              {section.title}
-            </h2>
-            <p className="max-w-4xl text-sm leading-8 text-neutral-600 sm:text-base">
-              {section.description}
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl lg:text-[2.6rem]">{section.title}</h2>
+            <p className="max-w-4xl text-sm leading-8 text-neutral-600 sm:text-base">{section.description}</p>
           </div>
         </div>
 
@@ -87,8 +114,22 @@ export default function PortalSectionPage() {
             </div>
             <div className="text-xs text-neutral-500">PDF, imágenes y documentos disponibles para socios.</div>
           </div>
-
           <PortalDocumentsGrid documents={documents} loading={documentsLoading} />
+        </div>
+      ) : section.path === 'competencias' ? (
+        <div className="space-y-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-neutral-950">Equipos de competencias</h3>
+              <p className="mt-1 text-sm text-neutral-600">Equipos activos y visibles administrados desde el portal.</p>
+            </div>
+            <div className="text-xs text-neutral-500">Solo se muestran equipos visibles y activos.</div>
+          </div>
+          {teamsLoading ? (
+            <div className="rounded-[28px] border border-neutral-200 bg-neutral-50/90 px-6 py-10 text-center text-sm text-neutral-500">Cargando equipos…</div>
+          ) : (
+            <PortalCompetenciasGrid teams={teams} />
+          )}
         </div>
       ) : (
         <>
@@ -98,29 +139,21 @@ export default function PortalSectionPage() {
                 <Blocks className="h-5 w-5 text-primary-600" />
               </div>
               <p className="mt-4 text-base font-semibold text-neutral-900">Base funcional</p>
-              <p className="mt-2 text-sm leading-7 text-neutral-600">
-                La sección ya está habilitada dentro del portal con navegación propia y una base clara para sumar contenido real.
-              </p>
+              <p className="mt-2 text-sm leading-7 text-neutral-600">La sección ya está habilitada dentro del portal con navegación propia y una base clara para sumar contenido real.</p>
             </div>
-
             <div className="rounded-[28px] border border-neutral-200 bg-neutral-50/90 p-5 shadow-soft-sm transition-transform duration-200 hover:-translate-y-1">
               <div className="inline-flex rounded-2xl bg-white p-3 shadow-soft-sm">
                 <Layers3 className="h-5 w-5 text-primary-600" />
               </div>
               <p className="mt-4 text-base font-semibold text-neutral-900">Escalabilidad</p>
-              <p className="mt-2 text-sm leading-7 text-neutral-600">
-                El módulo puede crecer con vistas, servicios, permisos, componentes específicos y lógica independiente cuando lo definan.
-              </p>
+              <p className="mt-2 text-sm leading-7 text-neutral-600">El módulo puede crecer con vistas, servicios, permisos, componentes específicos y lógica independiente cuando lo definan.</p>
             </div>
-
             <div className="rounded-[28px] border border-neutral-200 bg-neutral-50/90 p-5 shadow-soft-sm transition-transform duration-200 hover:-translate-y-1 md:col-span-2 xl:col-span-1">
               <div className="inline-flex rounded-2xl bg-white p-3 shadow-soft-sm">
                 <Compass className="h-5 w-5 text-primary-600" />
               </div>
               <p className="mt-4 text-base font-semibold text-neutral-900">Navegación clara</p>
-              <p className="mt-2 text-sm leading-7 text-neutral-600">
-                Puedes moverte entre módulos sin salir del portal, manteniendo una experiencia fluida y consistente.
-              </p>
+              <p className="mt-2 text-sm leading-7 text-neutral-600">Puedes moverte entre módulos sin salir del portal, manteniendo una experiencia fluida y consistente.</p>
             </div>
           </div>
 
@@ -128,21 +161,11 @@ export default function PortalSectionPage() {
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
                 <p className="text-lg font-semibold">Bienvenido a la sección {section.title}</p>
-                <p className="mt-2 text-sm leading-7 text-white/80 sm:text-base">
-                  Este módulo ya tiene una base visual y estructural sólida para evolucionar hacia una experiencia completa dentro del Portal del Socio.
-                </p>
+                <p className="mt-2 text-sm leading-7 text-white/80 sm:text-base">Este módulo ya tiene una base visual y estructural sólida para evolucionar hacia una experiencia completa dentro del Portal del Socio.</p>
               </div>
-
               <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  to="/portaldelsocio/inicio"
-                  className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-primary-700 transition hover:bg-primary-50"
-                >
-                  Volver al inicio
-                </Link>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs uppercase tracking-[0.2em] text-white/70">
-                  Espacio listo para crecer
-                </div>
+                <Link to="/portaldelsocio/inicio" className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-primary-700 transition hover:bg-primary-50">Volver al inicio</Link>
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs uppercase tracking-[0.2em] text-white/70">Espacio listo para crecer</div>
               </div>
             </div>
           </div>
