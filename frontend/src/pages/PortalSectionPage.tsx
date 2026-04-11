@@ -7,11 +7,11 @@ interface PortalSectionPageProps {
 
 export default function PortalSectionPage({ section }: PortalSectionPageProps) {
   return (
-    <div className="space-y-6 rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="flex min-h-[calc(100vh-7rem)] w-full flex-col gap-6 rounded-[28px] border border-neutral-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
       <div className="space-y-3 border-b border-neutral-100 pb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary-700">Portal del Socio</p>
-        <h2 className="text-3xl font-bold tracking-tight text-neutral-950">{section.title}</h2>
-        <p className="max-w-3xl text-sm leading-7 text-neutral-600 sm:text-base">{section.description}</p>
+        <h2 className="text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl">{section.title}</h2>
+        <p className="max-w-4xl text-sm leading-7 text-neutral-600 sm:text-base">{section.description}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -30,12 +30,12 @@ export default function PortalSectionPage({ section }: PortalSectionPageProps) {
         <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 md:col-span-2 xl:col-span-1">
           <p className="text-sm font-semibold text-neutral-900">Navegación</p>
           <p className="mt-2 text-sm text-neutral-600">
-            Usa el menú lateral o superior para cambiar de módulo sin salir del Portal del Socio.
+            Usa el menú del portal para moverte entre módulos sin salir de esta experiencia full page.
           </p>
         </div>
       </div>
 
-      <div className="rounded-3xl bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-6 text-white shadow-lg shadow-primary-500/20">
+      <div className="mt-auto rounded-3xl bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-6 text-white shadow-lg shadow-primary-500/20">
         <p className="text-lg font-semibold">Bienvenido a la sección {section.title}</p>
         <p className="mt-2 max-w-2xl text-sm text-white/85 sm:text-base">
           Aquí podremos sumar contenido, herramientas y flujos propios del módulo cuando definan su alcance funcional.
