@@ -35,7 +35,7 @@ export default function PortalDelSocioLayout() {
   }, []);
 
   const currentSection = useMemo(
-    () => sections.find((section) => location.pathname === `/portaldelsocio/${section.path}` || location.pathname.startsWith(`/portaldelsocio/${section.path}/`)),
+    () => sections.find((section) => location.pathname.endsWith(`/${section.path}`)),
     [location.pathname, sections],
   );
 
