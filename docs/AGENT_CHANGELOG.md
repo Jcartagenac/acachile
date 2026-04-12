@@ -198,3 +198,22 @@
   - la vista previa refleja archivos actuales, orden y nombres visibles cargados en el módulo
 - **Validación:**
   - build del frontend ejecutado correctamente después de la implementación
+
+### Reconstrucción base del módulo Competencias como dashboard navegable
+- **Objetivo:** rehacer Competencias desde cero como estructura limpia de navegación interna, sin lógica compleja todavía, tanto en el portal público como en el panel admin.
+- **Archivos modificados:**
+  - `frontend/src/App.tsx`
+  - `frontend/src/features/portal/competenciasSections.ts`
+  - `frontend/src/components/portal/CompetenciasDashboardGrid.tsx`
+  - `frontend/src/pages/PortalCompetenciasPage.tsx`
+  - `frontend/src/pages/PortalCompetenciasSectionPage.tsx`
+  - `frontend/src/pages/AdminPortalCompetenciasPage.tsx`
+  - `frontend/src/pages/AdminPortalDelSocio.tsx`
+- **Cambios realizados:**
+  - se reconstruyó Competencias como dashboard interno con navegación por cards hacia cinco sub-secciones
+  - se agregaron rutas públicas para equipos, ranking, calendario, resultados y bases dentro de `/portaldelsocio/competencias/*`
+  - se agregaron rutas equivalentes dentro del admin en `/panel-admin/portal-del-socio/competencias/*`
+  - cada sub-sección quedó con placeholder mínimo, preparada para crecer sin rigidez
+  - se mantuvo coherencia visual con el Portal del Socio y el panel admin actual
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la reconstrucción

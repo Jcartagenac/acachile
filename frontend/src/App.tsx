@@ -67,6 +67,9 @@ const EleccionesEntrevistasPage = lazy(() => import('./pages/EleccionesEntrevist
 const PortalDelSocioLayout = lazy(() => import('./components/portal/PortalDelSocioLayout'));
 const PortalSectionPage = lazy(() => import('./pages/PortalSectionPage'));
 const AdminPortalDelSocio = lazy(() => import('./pages/AdminPortalDelSocio'));
+const PortalCompetenciasPage = lazy(() => import('./pages/PortalCompetenciasPage'));
+const PortalCompetenciasSectionPage = lazy(() => import('./pages/PortalCompetenciasSectionPage'));
+const AdminPortalCompetenciasPage = lazy(() => import('./pages/AdminPortalCompetenciasPage'));
 
 import { ShopPasswordProtection } from './components/auth';
 
@@ -88,6 +91,8 @@ function App() {
           <Route path="/unete" element={<JoinPage />} />
           <Route path="/portaldelsocio" element={<PortalDelSocioLayout />}>
             <Route index element={<Navigate to="inicio" replace />} />
+            <Route path="competencias" element={<PortalCompetenciasPage />} />
+            <Route path="competencias/:subSection" element={<PortalCompetenciasSectionPage />} />
             <Route path=":section" element={<PortalSectionPage />} />
           </Route>
           
@@ -145,6 +150,8 @@ function App() {
           <Route path="/panel-admin/payments/users/:userId" element={<PanelAdminLayout><AdminCuotas /></PanelAdminLayout>} />
           <Route path="/panel-admin/content" element={<EventProviderWrapper><PanelAdminLayout><AdminContent /></PanelAdminLayout></EventProviderWrapper>} />
           <Route path="/panel-admin/portal-del-socio" element={<PanelAdminLayout><AdminPortalDelSocio /></PanelAdminLayout>} />
+          <Route path="/panel-admin/portal-del-socio/competencias" element={<PanelAdminLayout><AdminPortalCompetenciasPage /></PanelAdminLayout>} />
+          <Route path="/panel-admin/portal-del-socio/competencias/:subSection" element={<PanelAdminLayout><AdminPortalCompetenciasPage /></PanelAdminLayout>} />
           <Route path="/panel-admin/news" element={<PanelAdminLayout><AdminNews /></PanelAdminLayout>} />
           <Route path="/panel-admin/papelera" element={<PanelAdminLayout><AdminTrash /></PanelAdminLayout>} />
           <Route path="/panel-admin/postulantes" element={<EventProviderWrapper><PanelAdminLayout><AdminPostulantes /></PanelAdminLayout></EventProviderWrapper>} />

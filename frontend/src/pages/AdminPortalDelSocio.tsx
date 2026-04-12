@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { File, FileImage, FileText, Laptop, Save, Settings2, Smartphone, Tablet, Trash2, Upload, Eye } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import type { PortalSectionContent } from '@shared/portalSections';
@@ -294,6 +295,25 @@ export default function AdminPortalDelSocio() {
                     />
                   </div>
                 </div>
+
+                {activeSection.key === 'competencias' ? (
+                  <div className="space-y-5 border-t border-gray-200 pt-8">
+                    <div className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Módulo de Competencias</h3>
+                        <p className="mt-1 text-sm text-gray-600">
+                          Accede al dashboard interno de Competencias para navegar sus sub-secciones de gestión futura.
+                        </p>
+                      </div>
+                      <Link
+                        to="/panel-admin/portal-del-socio/competencias"
+                        className="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+                      >
+                        Abrir Competencias
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
 
                 {activeSection.key === 'documentos' ? (
                   <div className="space-y-5 border-t border-gray-200 pt-8">
