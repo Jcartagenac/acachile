@@ -217,3 +217,18 @@
   - se mantuvo coherencia visual con el Portal del Socio y el panel admin actual
 - **Validación:**
   - build del frontend ejecutado correctamente después de la reconstrucción
+
+### Simplificación de Competencias a una sola pantalla con botones
+- **Objetivo:** eliminar el submódulo navegable de Competencias y dejar solo la pantalla principal con los botones/cards visibles dentro de `/portaldelsocio/competencias` y su equivalente en admin.
+- **Archivos modificados:**
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/portal/CompetenciasDashboardGrid.tsx`
+  - `frontend/src/pages/PortalCompetenciasPage.tsx`
+  - `frontend/src/pages/AdminPortalCompetenciasPage.tsx`
+  - `frontend/src/pages/AdminPortalDelSocio.tsx`
+- **Cambios realizados:**
+  - se eliminaron las subrutas públicas y admin de Competencias
+  - los botones/cards de Competencias quedaron solo como registro visual dentro de la pantalla principal
+  - el dashboard dejó de navegar a sub-secciones y ahora funciona como estructura base estática para futuras etapas
+- **Validación:**
+  - build del frontend ejecutado correctamente después de la simplificación

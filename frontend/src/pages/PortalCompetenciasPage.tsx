@@ -13,7 +13,7 @@ export default function PortalCompetenciasPage() {
         </p>
       </div>
 
-      <CompetenciasDashboardGrid basePath="/portaldelsocio/competencias" />
+      <CompetenciasDashboardGrid />
     </div>
   );
 }
