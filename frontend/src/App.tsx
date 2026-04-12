@@ -68,6 +68,7 @@ const PortalDelSocioLayout = lazy(() => import('./components/portal/PortalDelSoc
 const PortalSectionPage = lazy(() => import('./pages/PortalSectionPage'));
 const AdminPortalDelSocio = lazy(() => import('./pages/AdminPortalDelSocio'));
 const PortalCompetenciasPage = lazy(() => import('./pages/PortalCompetenciasPage'));
+const PortalCompetenciasNacionalPage = lazy(() => import('./pages/PortalCompetenciasNacionalPage'));
 const AdminPortalCompetenciasPage = lazy(() => import('./pages/AdminPortalCompetenciasPage'));
 
 import { ShopPasswordProtection } from './components/auth';
@@ -91,6 +92,7 @@ function App() {
           <Route path="/portaldelsocio" element={<PortalDelSocioLayout />}>
             <Route index element={<Navigate to="inicio" replace />} />
             <Route path="competencias" element={<PortalCompetenciasPage />} />
+            <Route path="competencias/nacional" element={<PortalCompetenciasNacionalPage />} />
             <Route path=":section" element={<PortalSectionPage />} />
           </Route>
           
