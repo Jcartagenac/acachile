@@ -11,6 +11,7 @@ import {
   Megaphone,
   Phone,
   Scale,
+  ShoppingBag,
   Trophy,
   UserCircle,
   Wallet,
@@ -29,6 +30,7 @@ type ActiveModule =
   | 'settings'
   | 'communications'
   | 'benefits'
+  | 'marketplace'
   | 'documents'
   | 'competitions'
   | 'ethics'
@@ -109,6 +111,14 @@ const menuItems: MenuItem[] = [
     inactiveIconClass: 'bg-amber-100 text-amber-600 group-hover:bg-amber-200',
   },
   {
+    id: 'marketplace',
+    title: 'MarketPlace',
+    description: 'Espacio comercial y oportunidades entre socios',
+    icon: ShoppingBag,
+    activeIconClass: 'bg-emerald-500 text-white shadow-soft-xs',
+    inactiveIconClass: 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200',
+  },
+  {
     id: 'documents',
     title: 'Documentos',
     description: 'Archivos oficiales y material interno de ACA',
@@ -172,6 +182,13 @@ const auxiliaryModules: Record<Exclude<ActiveModule, 'profile' | 'account' | 'se
     resources: [
       { label: 'Convenios 2025', href: 'https://docs.google.com/spreadsheets/d/1z3poXdUG6DuNb57kK9Qpcmm8jVtz8moY-HhRqL8NiQg/edit?gid=0#gid=0' },
       { label: 'Link de pago Webpay', href: 'https://www.webpay.cl/company/61599?utm_source=transbank&utm_medium=portal3.0&utm_campaign=link_portal' },
+    ],
+  },
+  marketplace: {
+    title: 'MarketPlace',
+    description: 'Sección pensada para concentrar publicaciones, productos, oportunidades y visibilidad comercial entre socios ACA.',
+    resources: [
+      { label: 'Ir al Portal del Socio / Marketplace', href: '/portaldelsocio/marketplace' },
     ],
   },
   documents: {
@@ -355,6 +372,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ defaultTab }) => {
         return <SettingsModule />;
       case 'communications':
       case 'benefits':
+      case 'marketplace':
       case 'documents':
       case 'competitions':
       case 'ethics':
