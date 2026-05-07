@@ -53,11 +53,23 @@ interface ContactInfo {
   phone?: string;
 }
 
+interface TournamentCard {
+  month: string;
+  date: string;
+  name: string;
+  country: string;
+  organization: string;
+  registrationFee: string;
+  teamMembers: string;
+  slots: string;
+}
+
 interface SectionModuleProps {
   title: string;
   description: string;
   contact?: ContactInfo;
   resources?: ResourceLink[];
+  tournaments?: TournamentCard[];
 }
 
 interface MenuItem {
@@ -201,7 +213,7 @@ const auxiliaryModules: Record<Exclude<ActiveModule, 'profile' | 'account' | 'se
   },
   competitions: {
     title: 'Competencias',
-    description: 'Mantén a mano el acceso al módulo de competencias y el contacto del área encargada para consultas y seguimiento.',
+    description: 'Mantén a mano el acceso al módulo de competencias, el contacto del área encargada y el calendario internacional disponible para socios.',
     contact: {
       name: 'Karina Norero',
       role: 'Directora de Torneos y Competencias',
@@ -210,6 +222,58 @@ const auxiliaryModules: Record<Exclude<ActiveModule, 'profile' | 'account' | 'se
     },
     resources: [
       { label: 'Portal de Competencias', href: '/portaldelsocio/competencias' },
+    ],
+    tournaments: [
+      {
+        month: 'Mayo',
+        date: '8 y 9',
+        name: 'Jabalí - Río Negro',
+        country: 'Argentina',
+        organization: 'No informado',
+        registrationFee: 'US$50',
+        teamMembers: '2-4 personas',
+        slots: '2-3 equipos',
+      },
+      {
+        month: 'Mayo',
+        date: '13 al 17',
+        name: 'Porto Alegre',
+        country: 'Brasil',
+        organization: 'CONFIAPA',
+        registrationFee: 'US$250',
+        teamMembers: 'No informado',
+        slots: '4 equipos',
+      },
+      {
+        month: 'Mayo',
+        date: '13 al 17',
+        name: 'Torneo Andino Asadores - Cusco',
+        country: 'Perú',
+        organization: 'Liga Parrillera',
+        registrationFee: 'US$350',
+        teamMembers: 'No informado',
+        slots: 'No informado',
+      },
+      {
+        month: 'Septiembre',
+        date: '5 y 6',
+        name: 'Grill Up - European Plancha Championship 2026',
+        country: 'Baindt - Alemania',
+        organization: 'WBQA - Fire & Food BBQ Week',
+        registrationFee: '650 €',
+        teamMembers: '2-6 personas',
+        slots: 'No informado',
+      },
+      {
+        month: 'Noviembre',
+        date: '21',
+        name: 'Inka BBQ Championship',
+        country: 'Lima - Perú',
+        organization: 'Federación Peruana de Fuegos y Parrillas',
+        registrationFee: 'No informado',
+        teamMembers: 'No informado',
+        slots: 'No informado',
+      },
     ],
   },
   ethics: {
@@ -242,7 +306,7 @@ const auxiliaryModules: Record<Exclude<ActiveModule, 'profile' | 'account' | 'se
   },
 };
 
-const SectionModule: React.FC<SectionModuleProps> = ({ title, description, contact, resources = [] }) => (
+const SectionModule: React.FC<SectionModuleProps> = ({ title, description, contact, resources = [], tournaments = [] }) => (
   <div className="bg-white/60 backdrop-blur-soft border border-white/30 rounded-2xl shadow-soft-lg p-6 sm:p-8 space-y-6">
     <div className="space-y-3">
       <span className="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary-700 border border-primary-100">
@@ -269,6 +333,79 @@ const SectionModule: React.FC<SectionModuleProps> = ({ title, description, conta
         </p>
       </div>
     </div>
+
+    {tournaments.length > 0 && (
+      <div className="rounded-3xl border border-primary-100 bg-gradient-to-br from-white via-primary-50/40 to-orange-50/50 p-5 shadow-soft-md sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center rounded-full border border-primary-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-700">
+              Competencias internacionales
+            </span>
+            <h3 className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+              CALENDARIO TORNEOS INTERNACIONALES 2026
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-neutral-600">
+              Revisa fechas, destinos y condiciones generales de los torneos internacionales disponibles actualmente para planificación de equipos ACA.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-primary-100 bg-white/90 px-4 py-3 text-xs font-medium text-neutral-600 shadow-soft-sm">
+            {tournaments.length} torneos registrados
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 xl:grid-cols-2">
+          {tournaments.map((tournament) => (
+            <div
+              key={`${tournament.month}-${tournament.name}`}
+              className="rounded-[28px] border border-white/80 bg-white/90 p-5 shadow-soft-lg transition-transform duration-200 hover:-translate-y-1"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary-700">{tournament.month}</p>
+                  <h4 className="mt-2 text-xl font-bold leading-tight text-neutral-900">{tournament.name}</h4>
+                </div>
+                <div className="rounded-2xl bg-primary-50 px-3 py-2 text-right shadow-soft-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-600">Fecha</p>
+                  <p className="mt-1 text-sm font-bold text-primary-800">{tournament.date}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700">
+                  {tournament.country}
+                </span>
+                <span className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-700">
+                  {tournament.registrationFee}
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">País</p>
+                  <p className="mt-1 text-sm font-medium text-neutral-800">{tournament.country}</p>
+                </div>
+                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Organización</p>
+                  <p className="mt-1 text-sm font-medium text-neutral-800">{tournament.organization}</p>
+                </div>
+                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Valor inscripción</p>
+                  <p className="mt-1 text-sm font-medium text-neutral-800">{tournament.registrationFee}</p>
+                </div>
+                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Miembros por equipo</p>
+                  <p className="mt-1 text-sm font-medium text-neutral-800">{tournament.teamMembers}</p>
+                </div>
+                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/80 p-4 sm:col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">Cupos</p>
+                  <p className="mt-1 text-sm font-medium text-neutral-800">{tournament.slots}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
 
     {(resources.length > 0 || contact) && (
       <div className="grid gap-4 lg:grid-cols-2">
