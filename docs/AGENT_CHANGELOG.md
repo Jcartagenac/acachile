@@ -232,3 +232,14 @@
   - el dashboard dejó de navegar a sub-secciones y ahora funciona como estructura base estática para futuras etapas
 - **Validación:**
   - build del frontend ejecutado correctamente después de la simplificación
+
+### Nueva tarjeta "Portal del Socio" en `/sociosaca`
+- **Objetivo:** agregar un nuevo acceso visual dentro de la página de links para socios, manteniendo exactamente el estilo y comportamiento de las tarjetas existentes.
+- **Archivos modificados:**
+  - `frontend/src/pages/SociosAcaLinks.tsx`
+- **Cambios realizados:**
+  - se añadió la tarjeta `Portal del Socio` a la lista actual de accesos
+  - se configuró para abrir el enlace externo de Apps Script en nueva pestaña
+  - se reutilizó la misma estructura visual de icono, texto y acción que ya usa la página
+- **Validación:**
+  - build del frontend ejecutado correctamente después del cambio

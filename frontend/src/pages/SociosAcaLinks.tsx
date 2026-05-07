@@ -12,6 +12,7 @@ import {
   Music,
   Globe,
   Instagram,
+  LayoutDashboard,
   ExternalLink,
   Users,
   X,
@@ -54,6 +55,12 @@ const SociosAcaLinks: React.FC = () => {
   ];
 
   const links: LinkItem[] = [
+    {
+      title: 'Portal del Socio',
+      url: 'https://script.google.com/a/macros/acachile.com/s/AKfycby8xAngmFI5WYcM1bagw_3CnGahms8r5-cqJcua60NTKqXMRtF1x67_D2TN4pODe_c3qQ/exec',
+      icon: <LayoutDashboard className="h-6 w-6" />,
+      description: 'Acceso al portal exclusivo para socios ACA'
+    },
     {
       title: 'Archivos Oficiales',
       url: 'https://drive.google.com/drive/folders/1ze6yNbu3PMrpzgPkpC5nWqXDeNzE7u6o?usp=sharing',
