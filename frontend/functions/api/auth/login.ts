@@ -2,6 +2,7 @@ import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse } from '../../_middleware';
 import { hashPassword, verifyPassword } from '../../utils/password';
 import { createJWT } from '../../utils/jwt';
+import { normalizeRut } from '../../../../shared/utils/validators';
 
 /**
  * Funciones de autenticación JWT para Pages Functions
@@ -38,6 +39,17 @@ interface AuthToken {
   iat: number;
 }
 
+function buildRutLookupValues(rut: string): { candidates: string[]; canonical: string } {
+  const canonical = normalizeRut(rut.trim());
+  const withoutDots = canonical.replace(/\./g, '');
+  const compact = withoutDots.replace(/-/g, '');
+
+  return {
+    canonical,
+    candidates: Array.from(new Set([rut.trim(), canonical, withoutDots, compact])),
+  };
+}
+
 
 
 // Handler principal de login
@@ -70,12 +82,31 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     console.log('[AUTH/LOGIN] Attempting login for RUT:', rut);
 
+    let rutLookup;
+    try {
+      rutLookup = buildRutLookupValues(rut);
+    } catch {
+      console.log('[AUTH/LOGIN] Invalid RUT format:', rut);
+      return errorResponse('Credenciales inválidas', 401);
+    }
+
     // Buscar usuario en la base de datos por RUT
     const user = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, telefono, rut, ciudad, direccion, comuna, region, 
              fecha_nacimiento, red_social, foto_url, fecha_ingreso, role, activo, password_hash, created_at, last_login
-      FROM usuarios WHERE rut = ? AND activo = 1
-    `).bind(rut.trim()).first();
+      FROM usuarios
+      WHERE activo = 1
+        AND (
+          rut IN (?, ?, ?, ?)
+          OR REPLACE(REPLACE(UPPER(rut), '.', ''), '-', '') = ?
+        )
+    `).bind(
+      rutLookup.candidates[0] ?? rutLookup.canonical,
+      rutLookup.candidates[1] ?? rutLookup.canonical,
+      rutLookup.candidates[2] ?? rutLookup.canonical,
+      rutLookup.candidates[3] ?? rutLookup.canonical,
+      rutLookup.canonical.replace(/\./g, '').replace(/-/g, ''),
+    ).first();
 
     if (!user) {
       console.log('[AUTH/LOGIN] User not found or inactive with RUT:', rut);

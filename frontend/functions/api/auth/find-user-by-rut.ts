@@ -3,8 +3,21 @@
  * Busca un usuario por RUT y retorna su email (enmascarado)
  */
 
+import { normalizeRut } from '../../../../shared/utils/validators';
+
 interface FindUserRequest {
   rut: string;
+}
+
+function buildRutLookupValues(rut: string): { candidates: string[]; canonical: string } {
+  const canonical = normalizeRut(rut.trim());
+  const withoutDots = canonical.replace(/\./g, '');
+  const compact = withoutDots.replace(/-/g, '');
+
+  return {
+    canonical,
+    candidates: Array.from(new Set([rut.trim(), canonical, withoutDots, compact])),
+  };
 }
 
 // Función para enmascarar email
@@ -33,11 +46,38 @@ export const onRequestPost = async (context: any) => {
       );
     }
 
+    let rutLookup: { candidates: string[]; canonical: string };
+    try {
+      rutLookup = buildRutLookupValues(body.rut);
+    } catch {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'RUT inválido'
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     // Buscar usuario por RUT
     const result = await context.env.DB.prepare(
-      'SELECT email FROM usuarios WHERE rut = ? AND activo = 1'
+      `SELECT email FROM usuarios
+       WHERE activo = 1
+         AND (
+           rut IN (?, ?, ?, ?)
+           OR REPLACE(REPLACE(UPPER(rut), '.', ''), '-', '') = ?
+         )`
     )
-      .bind(body.rut)
+      .bind(
+        rutLookup.candidates[0] ?? rutLookup.canonical,
+        rutLookup.candidates[1] ?? rutLookup.canonical,
+        rutLookup.candidates[2] ?? rutLookup.canonical,
+        rutLookup.candidates[3] ?? rutLookup.canonical,
+        rutLookup.canonical.replace(/\./g, '').replace(/-/g, ''),
+      )
       .first();
 
     if (!result || !result.email) {

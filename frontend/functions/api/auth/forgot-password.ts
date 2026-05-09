@@ -1,5 +1,6 @@
 import type { PagesFunction, Env } from '../../types';
 import { jsonResponse, errorResponse } from '../../_middleware';
+import { normalizeRut } from '../../../../shared/utils/validators';
 
 /**
  * Handler de forgot password
@@ -10,6 +11,17 @@ interface EmailPayload {
   to: string;
   subject: string;
   html: string;
+}
+
+function buildRutLookupValues(rut: string): { candidates: string[]; canonical: string } {
+  const canonical = normalizeRut(rut.trim());
+  const withoutDots = canonical.replace(/\./g, '');
+  const compact = withoutDots.replace(/-/g, '');
+
+  return {
+    canonical,
+    candidates: Array.from(new Set([rut.trim(), canonical, withoutDots, compact])),
+  };
 }
 
 async function sendEmail(env: Env, payload: EmailPayload): Promise<boolean> {
@@ -78,11 +90,31 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     console.log('[AUTH/FORGOT-PASSWORD] Processing request for RUT:', rut);
 
+    let rutLookup: { candidates: string[]; canonical: string };
+    try {
+      rutLookup = buildRutLookupValues(rut);
+    } catch {
+      return jsonResponse({
+        success: true,
+        message: 'Si el RUT está asociado a una cuenta activa, recibirás un enlace para restablecer tu contraseña'
+      });
+    }
+
     // Buscar usuario por RUT
     const user = await env.DB.prepare(`
       SELECT id, email, nombre, apellido, rut FROM usuarios 
-      WHERE rut = ? AND activo = 1
-    `).bind(rut.trim()).first();
+      WHERE activo = 1
+        AND (
+          rut IN (?, ?, ?, ?)
+          OR REPLACE(REPLACE(UPPER(rut), '.', ''), '-', '') = ?
+        )
+    `).bind(
+      rutLookup.candidates[0] ?? rutLookup.canonical,
+      rutLookup.candidates[1] ?? rutLookup.canonical,
+      rutLookup.candidates[2] ?? rutLookup.canonical,
+      rutLookup.candidates[3] ?? rutLookup.canonical,
+      rutLookup.canonical.replace(/\./g, '').replace(/-/g, ''),
+    ).first();
 
     // Por seguridad, siempre devolvemos el mismo mensaje
     const successMessage = 'Si el RUT está asociado a una cuenta activa, recibirás un enlace para restablecer tu contraseña';
