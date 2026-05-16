@@ -23,6 +23,10 @@
     "health-check": "curl -s https://acachile.com/api/health | jq ."
   },
   "dependencies": {
+    "@tiptap/extension-link": "^3.23.4",
+    "@tiptap/extension-text-align": "^3.23.4",
+    "@tiptap/react": "^3.23.4",
+    "@tiptap/starter-kit": "^3.23.4",
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.545.0",

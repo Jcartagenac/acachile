@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Eye, Upload, Image as ImageIcon } from 'lucide-react';
-import type { NewsArticle } from '../../services/newsService';
 import { ImageGalleryUploader } from './ImageGalleryUploader';
+import RichTextHtmlEditor from './RichTextHtmlEditor';
 
 interface NewsEditorProps {
   articleSlug?: string;
@@ -296,23 +296,12 @@ export default function NewsEditor({ articleSlug, onBack, onSave }: NewsEditorPr
             />
           </div>
 
-          {/* Contenido */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contenido *
-            </label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              rows={12}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent font-mono text-sm"
-              placeholder="Contenido HTML de la noticia"
-              required
-            />
-            <p className="text-sm text-gray-500 mt-1">
-              Puedes usar HTML para dar formato al contenido
-            </p>
-          </div>
+          <RichTextHtmlEditor
+            value={formData.content}
+            onChange={(content) => setFormData((prev) => ({ ...prev, content }))}
+            label="Contenido"
+            helperText="El contenido se guarda como HTML, así que seguirá renderizando correctamente en la noticia pública."
+          />
 
           {/* Categoría */}
           <div className="mb-6">
