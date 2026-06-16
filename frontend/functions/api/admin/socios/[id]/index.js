@@ -1,4 +1,5 @@
 import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../_middleware';
+import { ensureSociosSchema } from '../_schema';
 
 // Endpoint para gestión individual de socios
 // GET /api/admin/socios/[id] - Obtener un socio
@@ -21,10 +22,13 @@ export async function onRequestGet(context) {
       return authErrorResponse(error, env);
     }
 
+    await ensureSociosSchema(env.DB);
+
     const query = `
       SELECT 
         id,
         email,
+        numero_socio,
         nombre,
         apellido,
         telefono,
@@ -63,6 +67,7 @@ export async function onRequestGet(context) {
         socio: {
           id: socio.id,
           email: socio.email,
+          numeroSocio: socio.numero_socio,
           nombre: socio.nombre,
           apellido: socio.apellido,
           nombreCompleto: `${socio.nombre} ${socio.apellido}`,
@@ -114,6 +119,8 @@ export async function onRequestPut(context) {
       return authErrorResponse(error, env);
     }
 
+    await ensureSociosSchema(env.DB);
+
     // Verificar que el socio existe
     const existingSocio = await env.DB.prepare(
       'SELECT id FROM usuarios WHERE id = ? AND activo = 1'
@@ -163,12 +170,20 @@ export async function onRequestPut(context) {
       normalizedData.foto_url = data.fotoUrl;
       delete normalizedData.fotoUrl;
     }
+    if (data.numeroSocio !== undefined) {
+      normalizedData.numero_socio = data.numeroSocio;
+      delete normalizedData.numeroSocio;
+    }
+    if (normalizedData.estado_socio !== undefined && typeof normalizedData.estado_socio === 'string') {
+      normalizedData.estado_socio = normalizedData.estado_socio.trim().toLowerCase();
+    }
 
     // Campos permitidos para actualizar (nombres en snake_case como en DB)
     const allowedFields = [
       'nombre',
       'apellido',
       'email',
+      'numero_socio',
       'telefono',
       'rut',
       'ciudad',
@@ -223,6 +238,7 @@ export async function onRequestPut(context) {
       SELECT 
         id,
         email,
+        numero_socio,
         nombre,
         apellido,
         telefono,
@@ -254,6 +270,7 @@ export async function onRequestPut(context) {
         socio: {
           id: updatedSocio.id,
           email: updatedSocio.email,
+          numeroSocio: updatedSocio.numero_socio,
           nombre: updatedSocio.nombre,
           apellido: updatedSocio.apellido,
           nombreCompleto: `${updatedSocio.nombre} ${updatedSocio.apellido}`,

@@ -13,6 +13,7 @@ export interface Socio {
   apellido: string;
   nombreCompleto: string;
   email: string;
+  numeroSocio?: string | null;
   telefono: string | null;
   rut: string | null;
   direccion: string | null;
@@ -23,7 +24,7 @@ export interface Socio {
   redSocial: string | null;
   fotoUrl: string | null;
   valorCuota: number;
-  estadoSocio: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' | 'suspendido';
+  estadoSocio: 'activo' | 'postumo' | 'expulsado' | 'suspendido' | 'honorario' | 'renunciado';
   fechaIngreso: string;
   listaNegra: boolean;
   motivoListaNegra?: string;
@@ -38,8 +39,9 @@ export interface Socio {
 
 export interface CreateSocioData {
   nombre: string;
-  apellido: string;
+  apellido?: string;
   email: string;
+  numeroSocio?: string;
   telefono?: string;
   rut?: string;
   direccion?: string;
@@ -49,11 +51,11 @@ export interface CreateSocioData {
   fechaNacimiento?: string;
   redSocial?: string;
   valorCuota?: number;
-  estadoSocio?: 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' | 'suspendido';
+  estadoSocio?: 'activo' | 'postumo' | 'expulsado' | 'suspendido' | 'honorario' | 'renunciado';
   fechaIngreso?: string;
   listaNegra?: boolean;
   motivoListaNegra?: string;
-  password: string;
+  password?: string;
 }
 
 export interface Cuota {

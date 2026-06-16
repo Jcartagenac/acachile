@@ -1,4 +1,5 @@
 import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../_middleware';
+import { ensureSociosSchema } from './_schema';
 
 // Endpoint para gestión de socios
 // GET /api/admin/socios - Obtener lista de socios
@@ -71,6 +72,8 @@ export async function onRequestGet(context) {
       return authErrorResponse(error, env);
     }
 
+    await ensureSociosSchema(env.DB);
+
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page')) || 1;
     const limit = parseInt(url.searchParams.get('limit')) || 20;
@@ -82,6 +85,7 @@ export async function onRequestGet(context) {
       SELECT 
         u.id,
         u.email,
+        u.numero_socio,
         u.nombre,
         u.apellido,
         u.telefono,
@@ -167,6 +171,7 @@ export async function onRequestGet(context) {
     const socios = paginatedResults.map(socio => ({
       id: socio.id,
       email: socio.email,
+      numeroSocio: socio.numero_socio,
       nombre: socio.nombre,
       apellido: socio.apellido,
       nombreCompleto: `${socio.nombre} ${socio.apellido}`,
@@ -245,11 +250,14 @@ export async function onRequestPost(context) {
       return authErrorResponse(error, env);
     }
 
+    await ensureSociosSchema(env.DB);
+
     const body = await request.json();
     console.log('[ADMIN SOCIOS] Datos recibidos:', JSON.stringify(body, null, 2));
 
     const {
       email,
+      numeroSocio,
       nombre,
       apellido,
       telefono,
@@ -266,15 +274,32 @@ export async function onRequestPost(context) {
       fechaIngreso,
       listaNegra = false,
       motivoListaNegra,
-      password, // Password enviado desde el frontend
+      password,
       rol = 'usuario' // Rol/perfil del usuario
     } = body;
 
-    // Validaciones
-    if (!email || !nombre || !apellido || !password) {
+    const normalizedEstadoSocio = typeof estadoSocio === 'string' ? estadoSocio.trim().toLowerCase() : 'activo';
+    const allowedEstadoSocio = new Set(['activo', 'suspendido', 'expulsado', 'postumo']);
+    if (!allowedEstadoSocio.has(normalizedEstadoSocio)) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Campos obligatorios: email, nombre, apellido, password'
+        error: 'Estado de socio inválido. Debe ser: activo, suspendido, expulsado o postumo'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const apellidoNormalizado = typeof apellido === 'string' ? apellido.trim() : '';
+    const passwordToUse = typeof password === 'string' && password.trim().length >= 6
+      ? password.trim()
+      : crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+
+    // Validaciones
+    if (!email || !nombre) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Campos obligatorios: email, nombre'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -293,16 +318,6 @@ export async function onRequestPost(context) {
       });
     }
 
-    if (password.length < 6) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'La contraseña debe tener al menos 6 caracteres'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
     // Verificar si el RUT ya existe (activo o inactivo)
     // RUT es la clave única, emails pueden duplicarse
     let existingUser = null;
@@ -313,7 +328,7 @@ export async function onRequestPost(context) {
     }
 
     // Hash de la contraseña con SHA-256 + salt
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(passwordToUse);
     const now = new Date().toISOString();
 
     let socioId;
@@ -335,16 +350,17 @@ export async function onRequestPost(context) {
 
         const updateResult = await env.DB.prepare(`
           UPDATE usuarios 
-          SET email = ?, nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, 
+          SET email = ?, numero_socio = ?, nombre = ?, apellido = ?, telefono = ?, rut = ?, ciudad = ?, 
               comuna = ?, region = ?, fecha_nacimiento = ?, red_social = ?, direccion = ?,
               foto_url = ?, valor_cuota = ?, estado_socio = ?, fecha_ingreso = ?,
               lista_negra = ?, motivo_lista_negra = ?,
               password_hash = ?, role = ?, activo = 1, updated_at = ?
-          WHERE id = ?
+        WHERE id = ?
         `).bind(
           email.toLowerCase(),
+          numeroSocio || null,
           nombre,
-          apellido,
+          apellidoNormalizado,
           telefono || null,
           rut || null,
           ciudad || null,
@@ -355,7 +371,7 @@ export async function onRequestPost(context) {
           direccion || null,
           fotoUrl || null,
           valorCuota,
-          estadoSocio,
+          normalizedEstadoSocio,
           fechaIngreso || now,
           listaNegra ? 1 : 0,
           motivoListaNegra || null,
@@ -377,15 +393,16 @@ export async function onRequestPost(context) {
       // Usuario no existe - CREAR NUEVO
       const result = await env.DB.prepare(`
         INSERT INTO usuarios (
-          email, nombre, apellido, telefono, rut, ciudad, comuna, region,
+          email, numero_socio, nombre, apellido, telefono, rut, ciudad, comuna, region,
           fecha_nacimiento, red_social, direccion, foto_url, valor_cuota, 
           estado_socio, fecha_ingreso, lista_negra, motivo_lista_negra,
           password_hash, role, activo, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
       `).bind(
         email.toLowerCase(),
+        numeroSocio || null,
         nombre,
-        apellido,
+        apellidoNormalizado,
         telefono || null,
         rut || null,
         ciudad || null,
@@ -396,7 +413,7 @@ export async function onRequestPost(context) {
         direccion || null,
         fotoUrl || null,
         valorCuota,
-        estadoSocio,
+        normalizedEstadoSocio,
         fechaIngreso || now,
         listaNegra ? 1 : 0,
         motivoListaNegra || null,
@@ -417,7 +434,7 @@ export async function onRequestPost(context) {
     // Obtener socio creado o reactivado
     newSocio = await env.DB.prepare(`
       SELECT 
-        id, email, nombre, apellido, telefono, rut, ciudad, comuna, region,
+        id, email, numero_socio, nombre, apellido, telefono, rut, ciudad, comuna, region,
         fecha_nacimiento, red_social, direccion, foto_url, valor_cuota, 
         fecha_ingreso, estado_socio, lista_negra, motivo_lista_negra, role, created_at
       FROM usuarios 
@@ -432,6 +449,7 @@ export async function onRequestPost(context) {
       data: {
         id: newSocio.id,
         email: newSocio.email,
+        numeroSocio: newSocio.numero_socio,
         nombre: newSocio.nombre,
         apellido: newSocio.apellido,
         nombreCompleto: `${newSocio.nombre} ${newSocio.apellido}`,

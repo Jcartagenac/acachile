@@ -293,12 +293,13 @@ export default function AdminSocios() {
     switch (estado) {
       case 'activo':
         return 'bg-green-100 text-green-800';
-      case 'honorario':
+      case 'suspendido':
         return 'bg-blue-100 text-blue-800';
       case 'postumo':
         return 'bg-gray-100 text-gray-800';
       case 'expulsado':
         return 'bg-red-100 text-red-800';
+      case 'honorario':
       case 'renunciado':
         return 'bg-yellow-100 text-yellow-800';
       default:
@@ -387,8 +388,9 @@ export default function AdminSocios() {
             >
               <option value="">Todos los estados</option>
               <option value="activo">Activos</option>
-              <option value="inactivo">Inactivos</option>
               <option value="suspendido">Suspendidos</option>
+              <option value="expulsado">Expulsados</option>
+              <option value="postumo">Póstumos</option>
             </select>
 
             <select
@@ -722,46 +724,153 @@ function ImportCSVModal({ onClose, onImportComplete }: {
   onClose: () => void;
   onImportComplete: () => void;
 }) {
+  const PROTECTED_ADMIN_EMAILS = new Set([
+    'jcartagenac@gmail.com',
+    'paulina.sandoval.g@gmail.com',
+  ]);
+
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<any[]>([]);
+  const [preview, setPreview] = useState<string[][]>([]);
   const [results, setResults] = useState<{
-    success: number;
+    created: number;
     updated: number;
+    rejected: number;
     errors: Array<{ row: number; error: string }>;
+    protectedAdmins: Array<{ id: number; email: string; nombreCompleto: string }>;
   } | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const parseCsvLine = (line: string): string[] => {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    values.push(current.trim());
+    return values.map((value) => value.replace(/^"|"$/g, '').trim());
+  };
+
+  const parseCsvText = (text: string): string[][] =>
+    text
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0)
+      .map(parseCsvLine);
+
+  const normalizeHeader = (header: string): string => {
+    const normalized = header.trim().toLowerCase();
+    const aliases: Record<string, string> = {
+      correo: 'email',
+      situacion: 'estado_socio',
+    };
+
+    return aliases[normalized] || normalized;
+  };
+
+  const normalizeEmail = (value?: string) => (value || '').trim().toLowerCase();
+
+  const normalizeText = (value?: string) =>
+    (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+  const extractRutKey = (rut?: string | null) => {
+    const digits = String(rut || '').replace(/\D/g, '');
+    return digits.slice(0, 6);
+  };
+
+  const normalizeStatus = (status?: string) => {
+    const normalized = normalizeText(status);
+    if (!normalized) return 'activo';
+
+    const map: Record<string, 'activo' | 'suspendido' | 'expulsado' | 'postumo'> = {
+      activo: 'activo',
+      suspendido: 'suspendido',
+      suspendida: 'suspendido',
+      expulsado: 'expulsado',
+      expulsada: 'expulsado',
+      postumo: 'postumo',
+      postuma: 'postumo',
+    };
+
+    return map[normalized] || null;
+  };
+
+  const splitFullName = (fullName: string) => {
+    const parts = fullName.split(/\s+/).filter(Boolean);
+
+    if (parts.length <= 1) {
+      return {
+        nombre: fullName.trim(),
+        apellido: '',
+      };
+    }
+
+    if (parts.length === 2) {
+      return {
+        nombre: parts[0],
+        apellido: parts[1],
+      };
+    }
+
+    const firstNameParts = parts.length >= 4 ? parts.slice(0, 2) : parts.slice(0, 1);
+    const lastNameParts = parts.slice(firstNameParts.length);
+
+    return {
+      nombre: firstNameParts.join(' '),
+      apellido: lastNameParts.join(' '),
+    };
+  };
+
+  const generatePassword = () => crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    if (!selectedFile.name.endsWith('.csv')) {
+    if (!selectedFile.name.toLowerCase().endsWith('.csv')) {
       setError('Por favor selecciona un archivo CSV válido');
       return;
     }
 
-    setFile(selectedFile);
-    setError(null);
-    setResults(null);
-    
-    // Preview del archivo
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      const lines = text.split('\n').slice(0, 6); // Header + 5 primeras filas
-      const parsed = lines.map(line => line.split(','));
-      setPreview(parsed);
-    };
-    reader.readAsText(selectedFile);
+    try {
+      const text = await selectedFile.text();
+      const rows = parseCsvText(text).slice(0, 6);
+      setPreview(rows);
+      setFile(selectedFile);
+      setError(null);
+      setResults(null);
+    } catch {
+      setError('No pudimos leer el archivo CSV');
+    }
   };
 
   const downloadTemplate = () => {
-    const template = `nombre,apellido,email,telefono,rut,direccion,ciudad,comuna,region,fecha_nacimiento,red_social,valor_cuota,fecha_ingreso,password,estado_socio
-Juan,Pérez,juan.perez@email.com,+56912345678,12.345.678-9,"Av. Libertador 123, Depto 45",Santiago,Las Condes,Metropolitana,1985-03-15,https://instagram.com/juanperez,6500,2024-01-15,password123,activo
-María,González,maria.gonzalez@email.com,+56987654321,98.765.432-1,"Calle Principal 456",Valparaíso,Valparaíso,Valparaíso,1990-07-20,https://instagram.com/mariagonzalez,6500,2024-02-20,,activo
-Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Viña del Mar,Viña del Mar,Valparaíso,1988-11-10,,,,activo`;
-    
+    const template = `situacion,numero_socio,nombre,rut,email,telefono,direccion,ciudad,comuna,region,fecha_nacimiento,red_social
+activo,1001,Juan Pérez,12.345.678-9,juan.perez@email.com,+56912345678,"Av. Libertador 123, Depto 45",Santiago,Las Condes,Metropolitana,1985-03-15,https://instagram.com/juanperez
+suspendido,1002,María González,98.765.432-1,maria.gonzalez@email.com,+56987654321,Calle Principal 456,Valparaíso,Valparaíso,Valparaíso,1990-07-20,
+postumo,1003,Pedro Silva,11.222.333-4,pedro.silva@email.com,,,,,,,`;
+
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -780,167 +889,208 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
     setResults(null);
 
     try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const text = event.target?.result as string;
-        const lines = text.split('\n').filter(line => line.trim());
-        
-        if (lines.length < 2) {
-          setError('El archivo está vacío o no tiene datos');
-          setLoading(false);
-          return;
+      const text = await file.text();
+      const rows = parseCsvText(text);
+
+      if (rows.length < 2) {
+        throw new Error('El archivo está vacío o no tiene datos');
+      }
+
+      const rawHeaders = rows[0] || [];
+      const headers = rawHeaders.map(normalizeHeader);
+      const requiredHeaders = ['nombre', 'rut', 'email'];
+      const missingHeaders = requiredHeaders.filter((header) => !headers.includes(header));
+
+      if (missingHeaders.length > 0) {
+        throw new Error(`Faltan columnas requeridas: ${missingHeaders.join(', ')}`);
+      }
+
+      const existingResponse = await sociosService.getSocios({ page: 1, limit: 1000 });
+      if (!existingResponse.success || !existingResponse.data) {
+        throw new Error(existingResponse.error || 'No pudimos validar la compatibilidad con los socios existentes');
+      }
+
+      const existingSocios = existingResponse.data.socios || [];
+      const protectedAdmins = existingSocios
+        .filter((socio) => PROTECTED_ADMIN_EMAILS.has(normalizeEmail(socio.email)) && socio.role === 'admin')
+        .map((socio) => ({
+          id: socio.id,
+          email: socio.email,
+          nombreCompleto: socio.nombreCompleto,
+          rut: socio.rut,
+          role: socio.role,
+        }));
+
+      if (protectedAdmins.length !== 2) {
+        throw new Error('No se pudo validar a los dos administradores protegidos antes de importar');
+      }
+
+      const protectedIds = new Set(protectedAdmins.map((admin) => admin.id));
+      const protectedKeys = new Set(protectedAdmins.map((admin) => extractRutKey(admin.rut)));
+      const protectedEmails = new Set(protectedAdmins.map((admin) => normalizeEmail(admin.email)));
+
+      const duplicateExistingKeys = new Map<string, Array<{ id: number; nombreCompleto: string }>>();
+      const existingByRutKey = new Map<string, Socio>();
+
+      for (const socio of existingSocios) {
+        if (protectedIds.has(socio.id)) continue;
+
+        const key = extractRutKey(socio.rut);
+        if (!key) {
+          throw new Error(`Compatibilidad bloqueada: el socio ${socio.nombreCompleto} (ID ${socio.id}) no tiene un RUT válido para generar la clave de 6 dígitos`);
         }
 
-        // Parse header
-        const header = lines[0];
-        if (!header) {
-          setError('El archivo no tiene encabezados');
-          setLoading(false);
-          return;
+        const already = existingByRutKey.get(key);
+        if (already) {
+          duplicateExistingKeys.set(key, [already, socio].map((item) => ({ id: item.id, nombreCompleto: item.nombreCompleto })));
+        } else {
+          existingByRutKey.set(key, socio);
         }
-        const headers = header.split(',').map(h => h.trim());
-        
-        // Validate headers
-        const requiredHeaders = ['nombre', 'apellido', 'email', 'password'];
-        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-        
-        if (missingHeaders.length > 0) {
-          setError(`Faltan columnas requeridas: ${missingHeaders.join(', ')}`);
-          setLoading(false);
-          return;
-        }
+      }
 
-        // Parse rows
-        const errors: Array<{ row: number; error: string }> = [];
-        let successCount = 0;
-        let updatedCount = 0;
+      if (duplicateExistingKeys.size > 0) {
+        const [conflictKey, conflictRows] = duplicateExistingKeys.entries().next().value;
+        throw new Error(`Compatibilidad bloqueada: ya existen múltiples socios con la clave única ${conflictKey} (${conflictRows.map((row) => `${row.nombreCompleto} [ID ${row.id}]`).join(', ')})`);
+      }
 
-        for (let i = 1; i < lines.length; i++) {
-          const line = lines[i];
-          if (!line || !line.trim()) continue;
+      const errors: Array<{ row: number; error: string }> = [];
+      const seenCsvKeys = new Map<string, number>();
+      let created = 0;
+      let updated = 0;
+      let rejected = 0;
 
-          try {
-            // Parse CSV line (handle quoted values)
-            const values: string[] = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let j = 0; j < line.length; j++) {
-              const char = line[j];
-              if (char === '"') {
-                inQuotes = !inQuotes;
-              } else if (char === ',' && !inQuotes) {
-                values.push(current.trim().replace(/^"|"$/g, '')); // Remove surrounding quotes
-                current = '';
-              } else {
-                current += char;
-              }
-            }
-            values.push(current.trim().replace(/^"|"$/g, '')); // Remove surrounding quotes
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i] || [];
+        const rowNumber = i + 1;
 
-            const socioData: any = {};
-            headers.forEach((header, index) => {
-              const value = values[index] || '';
-              socioData[header] = value.trim();
-            });
-
-            // Debug: Log para ver qué está llegando
-            console.log(`Fila ${i + 1}:`, {
-              headers,
-              values,
-              socioData,
-              nombre: socioData.nombre,
-              apellido: socioData.apellido,
-              email: socioData.email,
-              password: socioData.password ? '***' : '(vacío)'
-            });
-
-            // Validar que los campos mínimos requeridos no estén vacíos
-            // RUT es obligatorio para usar como clave única
-            if (!socioData.nombre || !socioData.apellido || !socioData.email || !socioData.rut) {
-              errors.push({ 
-                row: i + 1, 
-                error: `Campos requeridos vacíos: nombre="${socioData.nombre}", apellido="${socioData.apellido}", email="${socioData.email}", rut="${socioData.rut}"` 
-              });
-              continue;
-            }
-
-            // Generar password automático si no se proporciona
-            const generatePassword = () => {
-              const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-              let password = '';
-              for (let i = 0; i < 10; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-              }
-              return password;
-            };
-
-            // Preparar datos del socio
-            const socioPayload = {
-              nombre: socioData.nombre.trim(),
-              apellido: socioData.apellido.trim(),
-              email: socioData.email.trim(),
-              telefono: socioData.telefono?.trim() || undefined,
-              rut: socioData.rut?.trim() || undefined,
-              direccion: socioData.direccion?.trim() || undefined,
-              ciudad: socioData.ciudad?.trim() || undefined,
-              comuna: socioData.comuna?.trim() || undefined,
-              region: socioData.region?.trim() || undefined,
-              fechaNacimiento: socioData.fecha_nacimiento?.trim() || undefined,
-              redSocial: socioData.red_social?.trim() || undefined,
-              valorCuota: socioData.valor_cuota?.trim() ? parseInt(socioData.valor_cuota) : 6500,
-              estadoSocio: socioData.estado_socio?.trim() || 'activo',
-              fechaIngreso: socioData.fecha_ingreso?.trim() || new Date().toISOString().split('T')[0],
-              password: socioData.password?.trim() || generatePassword(),
-            };
-
-            // SIEMPRE buscar por RUT (clave única)
-            // Si el RUT existe: actualizar, si no existe: crear
-            const rutToSearch = socioData.rut.trim();
-            const existingResponse = await sociosService.getSocios({ search: rutToSearch });
-            const existingSocio = existingResponse.data?.socios.find(s => s.rut === rutToSearch);
-            
-            if (existingSocio) {
-              // Actualizar socio existente (por RUT)
-              const updateResponse = await sociosService.updateSocio(existingSocio.id, socioPayload);
-              if (updateResponse.success) {
-                updatedCount++;
-              } else {
-                errors.push({ row: i + 1, error: updateResponse.error || 'Error al actualizar' });
-              }
-            } else {
-              // Crear nuevo socio (RUT no existe)
-              const createResponse = await sociosService.createSocio(socioPayload);
-              if (createResponse.success) {
-                successCount++;
-              } else {
-                errors.push({ row: i + 1, error: createResponse.error || 'Error al crear' });
-              }
-            }
-          } catch (err) {
-            errors.push({ 
-              row: i + 1, 
-              error: err instanceof Error ? err.message : 'Error al procesar fila' 
-            });
-          }
+        if (row.every((cell) => !cell.trim())) {
+          continue;
         }
 
-        setResults({
-          success: successCount,
-          updated: updatedCount,
-          errors,
+        const socioData: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          socioData[header] = (row[index] || '').trim();
         });
 
-        if (errors.length === 0) {
-          setTimeout(() => {
-            onImportComplete();
-          }, 2000);
-        }
-      };
+        const fullName = socioData.nombre?.trim();
+        const email = normalizeEmail(socioData.email);
+        const rut = socioData.rut?.trim();
+        const rutKey = extractRutKey(rut);
+        const estadoSocio = normalizeStatus(socioData.estado_socio);
 
-      reader.readAsText(file);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al importar archivo');
+        if (!fullName || !email || !rut) {
+          errors.push({ row: rowNumber, error: 'Faltan campos obligatorios: nombre, rut o email' });
+          rejected++;
+          continue;
+        }
+
+        if (rutKey.length < 6) {
+          errors.push({ row: rowNumber, error: `El RUT "${rut}" no permite obtener una clave única válida de 6 dígitos` });
+          rejected++;
+          continue;
+        }
+
+        if (!estadoSocio) {
+          errors.push({ row: rowNumber, error: `Estado de socio inválido en situacion: "${socioData.estado_socio}"` });
+          rejected++;
+          continue;
+        }
+
+        const duplicatedCsvRow = seenCsvKeys.get(rutKey);
+        if (duplicatedCsvRow) {
+          errors.push({ row: rowNumber, error: `Clave única duplicada en el CSV (${rutKey}). Ya apareció en la fila ${duplicatedCsvRow}` });
+          rejected++;
+          continue;
+        }
+        seenCsvKeys.set(rutKey, rowNumber);
+
+        if (protectedKeys.has(rutKey) || protectedEmails.has(email)) {
+          const matchedAdmin = protectedAdmins.find((admin) => protectedEmails.has(email) ? normalizeEmail(admin.email) === email : extractRutKey(admin.rut) === rutKey);
+          errors.push({
+            row: rowNumber,
+            error: `Registro protegido: coincide con el administrador ${matchedAdmin?.nombreCompleto || 'protegido'} (ID ${matchedAdmin?.id || 'desconocido'}) y no será modificado`
+          });
+          rejected++;
+          continue;
+        }
+
+        const { nombre, apellido } = splitFullName(fullName);
+        const existingSocio = existingByRutKey.get(rutKey);
+
+        const payload: CreateSocioData & Record<string, unknown> = {
+          nombre,
+          apellido,
+          email,
+          numeroSocio: socioData.numero_socio || undefined,
+          telefono: socioData.telefono || undefined,
+          rut,
+          direccion: socioData.direccion || undefined,
+          ciudad: socioData.ciudad || undefined,
+          comuna: socioData.comuna || undefined,
+          region: socioData.region || undefined,
+          fechaNacimiento: socioData.fecha_nacimiento || undefined,
+          redSocial: socioData.red_social || undefined,
+          estadoSocio,
+        };
+
+        try {
+          if (existingSocio) {
+            const updatePayload = Object.fromEntries(
+              Object.entries(payload).filter(([, value]) => value !== undefined && value !== '')
+            );
+            const updateResponse = await sociosService.updateSocio(existingSocio.id, updatePayload as Partial<Socio>);
+            if (!updateResponse.success) {
+              throw new Error(updateResponse.error || 'Error al actualizar socio');
+            }
+            updated++;
+          } else {
+            const createResponse = await sociosService.createSocio({
+              ...payload,
+              password: generatePassword(),
+              fechaIngreso: new Date().toISOString().split('T')[0],
+            });
+            if (!createResponse.success) {
+              throw new Error(createResponse.error || 'Error al crear socio');
+            }
+            created++;
+          }
+        } catch (importError) {
+          errors.push({
+            row: rowNumber,
+            error: importError instanceof Error ? importError.message : 'Error al procesar fila',
+          });
+          rejected++;
+        }
+      }
+
+      const postImportCheck = await sociosService.getSocios({ page: 1, limit: 1000 });
+      if (!postImportCheck.success || !postImportCheck.data) {
+        throw new Error('La importación terminó, pero falló la verificación final de administradores protegidos');
+      }
+
+      const finalProtectedAdmins = postImportCheck.data.socios.filter(
+        (socio) => PROTECTED_ADMIN_EMAILS.has(normalizeEmail(socio.email)) && socio.role === 'admin'
+      );
+
+      if (finalProtectedAdmins.length !== 2) {
+        throw new Error('La verificación final falló: Juan Cartagena y Paulina Sandoval deben seguir existiendo como administradores');
+      }
+
+      setResults({
+        created,
+        updated,
+        rejected,
+        errors,
+        protectedAdmins: finalProtectedAdmins.map(({ id, email, nombreCompleto }) => ({ id, email, nombreCompleto })),
+      });
+
+      if (created > 0 || updated > 0) {
+        setTimeout(() => {
+          onImportComplete();
+        }, 1500);
+      }
+    } catch (importError) {
+      setError(importError instanceof Error ? importError.message : 'Error al importar archivo');
     } finally {
       setLoading(false);
     }
@@ -957,7 +1107,6 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             </button>
           </div>
 
-          {/* Instrucciones */}
           <div className="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
             <div className="flex">
               <AlertCircle className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" />
@@ -965,23 +1114,20 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
                 <h3 className="font-semibold text-blue-900 mb-2">Instrucciones:</h3>
                 <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                   <li>El archivo debe ser formato CSV (separado por comas)</li>
-                  <li>Columnas <strong>requeridas</strong>: <code className="bg-blue-100 px-1 rounded">nombre, apellido, email, rut</code></li>
-                  <li>Columnas <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, direccion, ciudad, comuna, region, fecha_nacimiento, red_social, valor_cuota, fecha_ingreso, password, estado_socio</code></li>
-                  <li><strong>⚠️ IMPORTANTE:</strong> El <code className="bg-blue-100 px-1 rounded">RUT</code> es la clave única. Si el RUT ya existe, se actualizarán sus datos. Si no existe, se creará un nuevo socio.</li>
-                  <li>Múltiples socios <strong>pueden tener el mismo email</strong>, pero cada uno debe tener un RUT único.</li>
-                  <li>Si <code className="bg-blue-100 px-1 rounded">password</code> está vacío, se generará uno automáticamente (aleatorio de 10 caracteres)</li>
-                  <li>Si <code className="bg-blue-100 px-1 rounded">valor_cuota</code> está vacío, se usará 6500 por defecto</li>
-                  <li>Si <code className="bg-blue-100 px-1 rounded">fecha_ingreso</code> está vacío, se usará la fecha actual</li>
-                  <li>Las columnas de fecha deben estar en formato <code className="bg-blue-100 px-1 rounded">YYYY-MM-DD</code> (ejemplo: 2024-01-15)</li>
-                  <li>La columna <code className="bg-blue-100 px-1 rounded">red_social</code> debe contener la URL completa (ej: https://instagram.com/usuario)</li>
-                  <li>La primera fila debe contener los nombres de las columnas</li>
-                  <li>Si la dirección contiene comas, enciérrala entre comillas: <code className="bg-blue-100 px-1 rounded">"Calle 123, Depto 4"</code></li>
+                  <li>Compatible con columnas de origen: <code className="bg-blue-100 px-1 rounded">situacion, numero_socio, nombre, rut, correo/email, telefono</code></li>
+                  <li>Campos <strong>obligatorios</strong>: <code className="bg-blue-100 px-1 rounded">nombre, rut, email</code></li>
+                  <li>Campos <strong>opcionales</strong>: <code className="bg-blue-100 px-1 rounded">telefono, direccion, ciudad, comuna, region, fecha_nacimiento, red_social</code></li>
+                  <li>Mapeo automático: <code className="bg-blue-100 px-1 rounded">situacion → estado_socio</code>, <code className="bg-blue-100 px-1 rounded">correo → email</code></li>
+                  <li><strong>Clave única:</strong> se usan solo los primeros 6 dígitos numéricos del RUT</li>
+                  <li>Si la clave única ya existe → se actualiza el socio</li>
+                  <li>Si la clave única no existe → se crea un nuevo socio</li>
+                  <li>Estados permitidos: <code className="bg-blue-100 px-1 rounded">activo, suspendido, expulsado, postumo</code></li>
+                  <li>Los administradores protegidos (Juan Cartagena y Paulina Sandoval) se excluyen automáticamente de cualquier actualización</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* Botón descargar plantilla */}
           <div className="mb-6">
             <button
               onClick={downloadTemplate}
@@ -992,25 +1138,23 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             </button>
           </div>
 
-          {/* Información sobre el funcionamiento */}
           <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded">
             <div className="flex items-start">
               <CheckCircle className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" />
               <div>
                 <span className="text-sm font-medium text-green-900 block mb-1">
-                  Modo de Importación: Upsert por RUT
+                  Modo de Importación: Upsert por clave RUT-6
                 </span>
                 <p className="text-xs text-green-800">
-                  El sistema usa el <strong>RUT como clave única</strong>. Por cada fila del CSV:
-                  <br />• Si el RUT ya existe → Se <strong>actualizan</strong> todos los campos del socio
-                  <br />• Si el RUT no existe → Se <strong>crea</strong> un nuevo socio
-                  <br />• Los emails pueden repetirse entre diferentes socios
+                  Antes de importar se valida compatibilidad con los socios existentes y se identifican los dos administradores protegidos.
+                  <br />• Si un registro coincide con Juan Cartagena o Paulina Sandoval → se rechaza
+                  <br />• Si la clave de 6 dígitos ya existe → se actualiza el socio no protegido
+                  <br />• Si no existe → se crea un nuevo socio
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
               <div className="flex items-center">
@@ -1020,32 +1164,35 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             </div>
           )}
 
-          {/* Resultados */}
           {results && (
-            <div className="mb-6">
-              <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded mb-4">
+            <div className="mb-6 space-y-4">
+              <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded">
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
                   <div className="text-green-700">
-                    <p className="font-semibold">
-                      Importación completada exitosamente
-                    </p>
+                    <p className="font-semibold">Importación completada</p>
                     <p className="text-sm mt-1">
-                      {results.success} socios creados
-                      {results.updated > 0 && `, ${results.updated} socios actualizados`}
+                      {results.created} creados, {results.updated} actualizados, {results.rejected} rechazados
                     </p>
                   </div>
                 </div>
               </div>
 
+              <div className="bg-slate-50 border border-slate-200 rounded p-4">
+                <h4 className="font-semibold text-slate-900 mb-2">Administradores protegidos verificados</h4>
+                <ul className="text-sm text-slate-700 space-y-1">
+                  {results.protectedAdmins.map((admin) => (
+                    <li key={admin.id}>• ID {admin.id} — {admin.nombreCompleto} — {admin.email}</li>
+                  ))}
+                </ul>
+              </div>
+
               {results.errors.length > 0 && (
                 <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
-                  <h4 className="font-semibold text-red-900 mb-2">Errores ({results.errors.length}):</h4>
-                  <ul className="text-sm text-red-800 space-y-1 max-h-40 overflow-y-auto">
+                  <h4 className="font-semibold text-red-900 mb-2">Rechazos ({results.errors.length})</h4>
+                  <ul className="text-sm text-red-800 space-y-1 max-h-56 overflow-y-auto">
                     {results.errors.map((err, idx) => (
-                      <li key={idx}>
-                        <strong>Fila {err.row}:</strong> {err.error}
-                      </li>
+                      <li key={idx}><strong>Fila {err.row}:</strong> {err.error}</li>
                     ))}
                   </ul>
                 </div>
@@ -1053,7 +1200,6 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             </div>
           )}
 
-          {/* Selector de archivo */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Seleccionar archivo CSV
@@ -1072,7 +1218,6 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             />
           </div>
 
-          {/* Preview */}
           {preview.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Vista previa (primeras 5 filas):</h3>
@@ -1103,7 +1248,6 @@ Pedro,Silva,pedro.silva@email.com,+56998765432,11.222.333-4,Calle Ejemplo 789,Vi
             </div>
           )}
 
-          {/* Botones */}
           <div className="flex items-center justify-end space-x-4 pt-4 border-t">
             <button
               type="button"
@@ -1369,14 +1513,13 @@ function CreateSocioModal({ onClose, onSocioCreated, roleOptions }: {
               </label>
               <select
                 value={formData.estadoSocio}
-                onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' })}
+                onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'suspendido' | 'postumo' | 'expulsado' })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
                 <option value="activo">Activo</option>
-                <option value="honorario">Honorario</option>
+                <option value="suspendido">Suspendido</option>
                 <option value="postumo">Póstumo</option>
                 <option value="expulsado">Expulsado</option>
-                <option value="renunciado">Renunciado</option>
               </select>
             </div>
 
@@ -1746,14 +1889,13 @@ function EditSocioModal({ socio, onClose, onSocioUpdated, roleOptions }: {
                 </label>
                 <select
                   value={formData.estadoSocio}
-                  onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'honorario' | 'postumo' | 'expulsado' | 'renunciado' })}
+                  onChange={(e) => setFormData({ ...formData, estadoSocio: e.target.value as 'activo' | 'suspendido' | 'postumo' | 'expulsado' })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="activo">Activo</option>
-                  <option value="honorario">Honorario</option>
+                  <option value="suspendido">Suspendido</option>
                   <option value="postumo">Póstumo</option>
                   <option value="expulsado">Expulsado</option>
-                  <option value="renunciado">Renunciado</option>
                 </select>
               </div>
             </div>
@@ -2047,10 +2189,9 @@ function BulkEditModal({ selectedIds, onClose, onComplete }: {
               >
                 <option value="">No modificar</option>
                 <option value="activo">Activo</option>
-                <option value="honorario">Honorario</option>
+                <option value="suspendido">Suspendido</option>
                 <option value="postumo">Póstumo</option>
                 <option value="expulsado">Expulsado</option>
-                <option value="renunciado">Renunciado</option>
               </select>
             </div>
 
