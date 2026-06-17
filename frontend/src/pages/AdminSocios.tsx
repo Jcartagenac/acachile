@@ -1049,7 +1049,7 @@ postumo,1003,Pedro Silva,11.222.333-4,pedro.silva@email.com,,,,,,,`;
             const updateResponse = await sociosService.updateSocio(existingSocio.id, {
               ...updatePayload,
               password: initialPassword,
-            } as Partial<Socio> & { password: string });
+            });
             if (!updateResponse.success) {
               throw new Error(updateResponse.error || 'Error al actualizar socio');
             }

@@ -9,6 +9,34 @@ interface ResetSociosPasswordsRequest {
   excludeRuts?: string[];
 }
 
+interface SocioPasswordRow {
+  id: number;
+  email: string | null;
+  nombre: string | null;
+  apellido: string | null;
+  rut: string | null;
+  role: string | null;
+  activo: number;
+}
+
+interface ResetCandidate {
+  id: number;
+  rut: string | null;
+  email: string | null;
+  nombreCompleto: string;
+  role: string | null;
+  activo: number;
+  initialPassword: string;
+}
+
+interface SkippedUser {
+  id: number;
+  rut: string | null;
+  email: string | null;
+  nombreCompleto?: string;
+  motivo: string;
+}
+
 const PROTECTED_ADMIN_EMAILS = new Set([
   'jcartagenac@gmail.com',
   'pauliina.v@gmail.com',
@@ -38,12 +66,95 @@ function deriveInitialPasswordFromRut(rut: unknown): string | null {
   return digits.length >= 6 ? digits.slice(0, 6) : null;
 }
 
-function isProtectedAdmin(user: Record<string, unknown>): boolean {
+function isProtectedAdmin(user: SocioPasswordRow): boolean {
   const email = normalizeEmail(user.email);
   const fullName = normalizeName(user.nombre, user.apellido);
   const role = typeof user.role === 'string' ? user.role.trim().toLowerCase() : '';
 
   return role === 'admin' || PROTECTED_ADMIN_EMAILS.has(email) || PROTECTED_ADMIN_NAMES.has(fullName);
+}
+
+function buildFullName(user: SocioPasswordRow): string {
+  return `${user.nombre || ''} ${user.apellido || ''}`.trim();
+}
+
+function buildSkippedUser(user: SocioPasswordRow, motivo: string, includeFullName: boolean = false): SkippedUser {
+  return {
+    id: user.id,
+    rut: user.rut,
+    email: user.email,
+    ...(includeFullName ? { nombreCompleto: buildFullName(user) } : {}),
+    motivo,
+  };
+}
+
+function buildCandidate(user: SocioPasswordRow, initialPassword: string): ResetCandidate {
+  return {
+    id: user.id,
+    rut: user.rut,
+    email: user.email,
+    nombreCompleto: buildFullName(user),
+    role: user.role,
+    activo: user.activo,
+    initialPassword,
+  };
+}
+
+function normalizeRutFilter(values?: string[]): Set<string> {
+  return new Set((values || []).map(rutDigits).filter(Boolean));
+}
+
+function classifyUser(
+  user: SocioPasswordRow,
+  onlyRutKeys: Set<string>,
+  excludeRutKeys: Set<string>,
+): { candidate?: ResetCandidate; skipped?: SkippedUser } {
+  const rutKey = rutDigits(user.rut);
+
+  if (onlyRutKeys.size > 0 && !onlyRutKeys.has(rutKey)) {
+    return {};
+  }
+
+  if (excludeRutKeys.has(rutKey)) {
+    return { skipped: buildSkippedUser(user, 'RUT excluido explícitamente') };
+  }
+
+  if (isProtectedAdmin(user)) {
+    return { skipped: buildSkippedUser(user, 'Administrador protegido', true) };
+  }
+
+  const initialPassword = deriveInitialPasswordFromRut(user.rut);
+  if (!initialPassword) {
+    return { skipped: buildSkippedUser(user, 'RUT sin suficientes dígitos para generar contraseña inicial') };
+  }
+
+  return { candidate: buildCandidate(user, initialPassword) };
+}
+
+function serializeCandidates(candidates: ResetCandidate[]) {
+  return candidates.map(({ initialPassword, ...user }) => ({
+    ...user,
+    passwordPreview: initialPassword,
+  }));
+}
+
+async function applyPasswordUpdates(env: Env, candidates: ResetCandidate[]) {
+  const statement = env.DB.prepare(`
+    UPDATE usuarios
+    SET password_hash = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `);
+
+  const updates = await Promise.all(
+    candidates.map(async (candidate) => {
+      const passwordHash = await hashPassword(candidate.initialPassword);
+      return statement.bind(passwordHash, candidate.id);
+    })
+  );
+
+  if (updates.length > 0) {
+    await env.DB.batch(updates);
+  }
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
@@ -63,8 +174,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const body = await request.json().catch(() => ({})) as ResetSociosPasswordsRequest;
     const dryRun = body.dryRun !== false;
     const includeInactive = body.includeInactive === true;
-    const onlyRutKeys = new Set((body.onlyRuts || []).map(rutDigits).filter(Boolean));
-    const excludeRutKeys = new Set((body.excludeRuts || []).map(rutDigits).filter(Boolean));
+    const onlyRutKeys = normalizeRutFilter(body.onlyRuts);
+    const excludeRutKeys = normalizeRutFilter(body.excludeRuts);
 
     const query = `
       SELECT id, email, nombre, apellido, rut, role, activo
@@ -76,60 +187,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     `;
 
     const result = await env.DB.prepare(query).all();
-    const users = Array.isArray(result.results) ? result.results : [];
+    const users = (Array.isArray(result.results) ? result.results : []) as SocioPasswordRow[];
 
-    const candidates: Array<Record<string, unknown>> = [];
-    const skipped: Array<Record<string, unknown>> = [];
+    const candidates: ResetCandidate[] = [];
+    const skipped: SkippedUser[] = [];
 
     for (const user of users) {
-      const rutKey = rutDigits(user.rut);
-      const initialPassword = deriveInitialPasswordFromRut(user.rut);
-      const protectedAdmin = isProtectedAdmin(user);
-
-      if (onlyRutKeys.size > 0 && !onlyRutKeys.has(rutKey)) {
-        continue;
+      const classified = classifyUser(user, onlyRutKeys, excludeRutKeys);
+      if (classified.candidate) {
+        candidates.push(classified.candidate);
       }
-
-      if (excludeRutKeys.has(rutKey)) {
-        skipped.push({
-          id: user.id,
-          rut: user.rut,
-          email: user.email,
-          motivo: 'RUT excluido explícitamente',
-        });
-        continue;
+      if (classified.skipped) {
+        skipped.push(classified.skipped);
       }
-
-      if (protectedAdmin) {
-        skipped.push({
-          id: user.id,
-          rut: user.rut,
-          email: user.email,
-          nombreCompleto: `${user.nombre || ''} ${user.apellido || ''}`.trim(),
-          motivo: 'Administrador protegido',
-        });
-        continue;
-      }
-
-      if (!initialPassword) {
-        skipped.push({
-          id: user.id,
-          rut: user.rut,
-          email: user.email,
-          motivo: 'RUT sin suficientes dígitos para generar contraseña inicial',
-        });
-        continue;
-      }
-
-      candidates.push({
-        id: user.id,
-        rut: user.rut,
-        email: user.email,
-        nombreCompleto: `${user.nombre || ''} ${user.apellido || ''}`.trim(),
-        role: user.role,
-        activo: user.activo,
-        initialPassword,
-      });
     }
 
     if (dryRun) {
@@ -142,31 +212,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           totalEvaluados: users.length,
           totalActualizar: candidates.length,
           totalOmitidos: skipped.length,
-          candidatos: candidates.map(({ initialPassword, ...user }) => ({
-            ...user,
-            passwordPreview: initialPassword,
-          })),
+          candidatos: serializeCandidates(candidates),
           omitidos: skipped,
         },
       });
     }
 
-    const statement = env.DB.prepare(`
-      UPDATE usuarios
-      SET password_hash = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `);
-
-    const updates = await Promise.all(
-      candidates.map(async (candidate) => {
-        const passwordHash = await hashPassword(String(candidate.initialPassword));
-        return statement.bind(passwordHash, candidate.id);
-      })
-    );
-
-    if (updates.length > 0) {
-      await env.DB.batch(updates);
-    }
+    await applyPasswordUpdates(env, candidates);
 
     return jsonResponse({
       success: true,
@@ -177,10 +229,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         totalEvaluados: users.length,
         totalActualizados: candidates.length,
         totalOmitidos: skipped.length,
-        actualizados: candidates.map(({ initialPassword, ...user }) => ({
-          ...user,
-          passwordPreview: initialPassword,
-        })),
+        actualizados: serializeCandidates(candidates),
         omitidos: skipped,
       },
     });

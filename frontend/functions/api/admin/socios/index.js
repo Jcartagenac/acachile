@@ -307,7 +307,7 @@ export async function onRequestPost(context) {
     const rutDerivedPassword = getInitialPasswordFromRut(rut);
     const passwordToUse = typeof password === 'string' && password.trim().length >= 6
       ? password.trim()
-      : (rutDerivedPassword || crypto.randomUUID().replace(/-/g, '').slice(0, 12));
+      : (rutDerivedPassword || crypto.randomUUID().replaceAll('-', '').slice(0, 12));
 
     // Validaciones
     if (!email || !nombre) {
