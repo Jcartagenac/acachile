@@ -842,7 +842,13 @@ function ImportCSVModal({ onClose, onImportComplete }: {
     };
   };
 
-  const generatePassword = () => crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+  const generatePasswordFromRut = (rut: string) => {
+    const digits = rut.replace(/\D/g, '');
+    if (digits.length < 6) {
+      throw new Error(`El RUT "${rut}" no permite generar una clave inicial de 6 dígitos`);
+    }
+    return digits.slice(0, 6);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -1034,11 +1040,16 @@ postumo,1003,Pedro Silva,11.222.333-4,pedro.silva@email.com,,,,,,,`;
         };
 
         try {
+          const initialPassword = generatePasswordFromRut(rut);
+
           if (existingSocio) {
             const updatePayload = Object.fromEntries(
               Object.entries(payload).filter(([, value]) => value !== undefined && value !== '')
             );
-            const updateResponse = await sociosService.updateSocio(existingSocio.id, updatePayload as Partial<Socio>);
+            const updateResponse = await sociosService.updateSocio(existingSocio.id, {
+              ...updatePayload,
+              password: initialPassword,
+            } as Partial<Socio> & { password: string });
             if (!updateResponse.success) {
               throw new Error(updateResponse.error || 'Error al actualizar socio');
             }
@@ -1046,7 +1057,7 @@ postumo,1003,Pedro Silva,11.222.333-4,pedro.silva@email.com,,,,,,,`;
           } else {
             const createResponse = await sociosService.createSocio({
               ...payload,
-              password: generatePassword(),
+              password: initialPassword,
               fechaIngreso: new Date().toISOString().split('T')[0],
             });
             if (!createResponse.success) {

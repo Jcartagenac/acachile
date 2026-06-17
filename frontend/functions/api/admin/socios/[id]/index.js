@@ -1,5 +1,6 @@
 import { requireAdminOrDirector, authErrorResponse, errorResponse } from '../../_middleware';
 import { ensureSociosSchema } from '../_schema';
+import { hashPassword } from '../../../../utils/password.js';
 
 // Endpoint para gestión individual de socios
 // GET /api/admin/socios/[id] - Obtener un socio
@@ -174,6 +175,10 @@ export async function onRequestPut(context) {
       normalizedData.numero_socio = data.numeroSocio;
       delete normalizedData.numeroSocio;
     }
+    const plainPassword = typeof data.password === 'string' ? data.password.trim() : undefined;
+    if (normalizedData.password !== undefined) {
+      delete normalizedData.password;
+    }
     if (normalizedData.estado_socio !== undefined && typeof normalizedData.estado_socio === 'string') {
       normalizedData.estado_socio = normalizedData.estado_socio.trim().toLowerCase();
     }
@@ -210,6 +215,11 @@ export async function onRequestPut(context) {
         updates.push(`${field} = ?`);
         queryParams.push(normalizedData[field]);
       }
+    }
+
+    if (plainPassword) {
+      updates.push('password_hash = ?');
+      queryParams.push(await hashPassword(plainPassword));
     }
 
     if (updates.length === 0) {

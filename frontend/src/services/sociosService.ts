@@ -58,6 +58,10 @@ export interface CreateSocioData {
   password?: string;
 }
 
+export type UpdateSocioData = Partial<Socio> & {
+  password?: string;
+};
+
 export interface Cuota {
   id: number;
   usuarioId: number;
@@ -163,7 +167,7 @@ class SociosService {
     }
   }
 
-  async updateSocio(socioId: number, updates: Partial<Socio>): Promise<{ success: boolean; data?: Socio; error?: string }> {
+  async updateSocio(socioId: number, updates: UpdateSocioData): Promise<{ success: boolean; data?: Socio; error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/socios/${socioId}`, {
         method: 'PUT',

@@ -9,13 +9,13 @@
 ## Autenticación
 
 ### POST /api/auth/login
-Iniciar sesión con email y contraseña.
+Iniciar sesión con RUT y contraseña.
 
 **Request Body:**
 ```json
 {
-  "email": "usuario@example.com",
-  "password": "password123"
+  "rut": "16074784-6",
+  "password": "160747"
 }
 ```
 
@@ -88,6 +88,29 @@ Verificar validez de un token JWT.
 
 ### POST /api/auth/logout
 Cerrar sesión (invalidar token del lado del cliente).
+
+### POST /api/admin/reset-socios-passwords
+Recalcula masivamente la contraseña inicial de socios en la tabla `usuarios`, usando los primeros 6 dígitos numéricos del RUT y excluyendo administradores protegidos. Requiere autenticación admin.
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Request Body:**
+```json
+{
+  "dryRun": true,
+  "includeInactive": false,
+  "onlyRuts": ["16074784-6"],
+  "excludeRuts": ["12345678-9"]
+}
+```
+
+**Notas:**
+- `dryRun: true` audita sin escribir en la base de datos.
+- `dryRun: false` actualiza `password_hash` en `usuarios`.
+- La contraseña inicial derivada es siempre los primeros 6 dígitos del RUT.
 
 ---
 

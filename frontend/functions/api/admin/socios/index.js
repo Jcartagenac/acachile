@@ -7,6 +7,19 @@ import { ensureSociosSchema } from './_schema';
 
 import { hashPassword } from '../../../utils/password.js';
 
+function getInitialPasswordFromRut(rut) {
+  if (typeof rut !== 'string') {
+    return null;
+  }
+
+  const digits = rut.replace(/\D/g, '');
+  if (digits.length < 6) {
+    return null;
+  }
+
+  return digits.slice(0, 6);
+}
+
 const DEFAULT_ROLES = [
   {
     key: 'usuario',
@@ -291,9 +304,10 @@ export async function onRequestPost(context) {
     }
 
     const apellidoNormalizado = typeof apellido === 'string' ? apellido.trim() : '';
+    const rutDerivedPassword = getInitialPasswordFromRut(rut);
     const passwordToUse = typeof password === 'string' && password.trim().length >= 6
       ? password.trim()
-      : crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+      : (rutDerivedPassword || crypto.randomUUID().replace(/-/g, '').slice(0, 12));
 
     // Validaciones
     if (!email || !nombre) {
