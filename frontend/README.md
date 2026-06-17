@@ -21,7 +21,7 @@ Plataforma web oficial de la Asociación Chilena de Arqueología (ACA Chile), de
 - **Email:** Resend API
 
 ### Autenticación y Seguridad
-- **Auth:** JWT + bcrypt
+- **Auth:** JWT + PBKDF2 (compatibilidad con hashes legacy)
 - **Role-based Access Control:** Admin, Director, User
 - **Security:** Binding validation, conditional logging, password hash protection
 
@@ -133,7 +133,7 @@ frontend/
 ## 🔒 Seguridad
 
 ### Implementado
-- ✅ **JWT Authentication** con bcrypt para hashing de passwords
+- ✅ **JWT Authentication** con PBKDF2 para hashing de passwords (y compatibilidad con hashes legacy)
 - ✅ **Role-based Access Control** (Admin, Director, User roles)
 - ✅ **Binding Validation** en runtime para prevenir crashes
 - ✅ **Conditional Logging** - Debug logs solo en desarrollo
