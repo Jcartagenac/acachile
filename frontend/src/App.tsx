@@ -70,8 +70,9 @@ const AdminPortalDelSocio = lazy(() => import('./pages/AdminPortalDelSocio'));
 const PortalCompetenciasPage = lazy(() => import('./pages/PortalCompetenciasPage'));
 const PortalCompetenciasNacionalPage = lazy(() => import('./pages/PortalCompetenciasNacionalPage'));
 const AdminPortalCompetenciasPage = lazy(() => import('./pages/AdminPortalCompetenciasPage'));
+const CotizadorPage = lazy(() => import('./pages/CotizadorPage'));
 
-import { ShopPasswordProtection } from './components/auth';
+import { PasswordProtection, ShopPasswordProtection } from './components/auth';
 
 const LoadingScreen = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -101,6 +102,22 @@ function App() {
           <Route path="/shop/:sku" element={<ShopPasswordProtection><ProductDetailPage /></ShopPasswordProtection>} />
           <Route path="/cart" element={<ShopPasswordProtection><CartPage /></ShopPasswordProtection>} />
           <Route path="/cart/payment/:orderNumber" element={<ShopPasswordProtection><PaymentPage /></ShopPasswordProtection>} />
+
+          {/* Cotizador privado */}
+          <Route
+            path="/cotizador"
+            element={(
+              <PasswordProtection
+                password="Aca2026$$"
+                storageKey="aca_cotizador_access"
+                title="Cotizador ACA Chile"
+                description="Ingresa la clave para acceder al cotizador privado de eventos"
+                buttonLabel="Ingresar al Cotizador"
+              >
+                <CotizadorPage />
+              </PasswordProtection>
+            )}
+          />
           
           {/* Eventos */}
           <Route path="/eventos" element={<EventProviderWrapper><EventsPage /></EventProviderWrapper>} />

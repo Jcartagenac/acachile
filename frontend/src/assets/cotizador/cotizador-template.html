@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador de Eventos | ACA Chile</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2pdf CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #141722;
+            --card-border: #232736;
+            --input-bg: #1a1e2d;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary-grad: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            --secondary-grad: linear-gradient(135deg, #475569 0%, #1e293b 100%);
+            --accent-color: #f97316;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 0 1rem 2rem 1rem;
+            line-height: 1.5;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.08) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.05) 0, transparent 50%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header (Sticky at top of screen) */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 2rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(11, 12, 16, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-left: -1rem;
+            margin-right: -1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand img {
+            height: 64px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .brand-text p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .actions-header {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--primary-grad);
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-grad);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+
+        /* Dashboard Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card styles */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-grad);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .card-title span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent-color);
+        }
+
+        .card-actions-top {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Input Controls */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            background-color: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
+
+        /* Cost Table styles */
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .number-col {
+            text-align: right;
+        }
+
+        .width-sm {
+            width: 80px;
+        }
+        .width-md {
+            width: 120px;
+        }
+        .width-lg {
+            width: 200px;
+        }
+
+        /* Financial summary card (Sticky panel) */
+        .sticky-panel {
+            position: sticky;
+            top: 6.5rem; /* Offset for sticky header banner */
+        }
+
+        .summary-card {
+            background: linear-gradient(145deg, #181d2a 0%, #0e111a 100%);
+            border: 1px solid rgba(249, 115, 22, 0.15);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .summary-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .summary-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .summary-value.grand-total {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            background: linear-gradient(to right, #ff9800, #ff5722);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .summary-value.highlight {
+            color: var(--success-color);
+            font-size: 1.3rem;
+        }
+
+        /* Auto suggestion badges */
+        .info-tip {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px dashed rgba(249, 115, 22, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-tip svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--accent-color);
+            flex-shrink: 0;
+        }
+
+        /* Saved list */
+        .saved-events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .saved-event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .saved-event-item:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--accent-color);
+        }
+
+        .saved-event-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+
+        .saved-event-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .saved-event-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Help guides section */
+        .help-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 1rem;
+            border-left: 4px solid var(--accent-color);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+        }
+
+        .help-box strong {
+            color: var(--text-color);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Tax Warning Notice Box */
+        .tax-notice-box {
+            background: rgba(249, 115, 22, 0.05);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-color);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tax-notice-box svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent-color);
+            flex-shrink: 0;
+        }
+
+        /* Printable proposal card & print header templates (client-facing) */
+        #client-pdf-proposal,
+        #pdf-description-print-block,
+        .print-header {
+            display: none;
+        }
+
+        /* ==========================================================================
+           PDF & Print Styles (Clean, ink-saving light theme for client proposal)
+           ========================================================================== */
+        
+        /* 1. PDF Mode (html2pdf) Styles */
+        body.pdf-mode {
+            padding: 1.5rem !important;
+            background-image: none !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body.pdf-mode header, 
+        body.pdf-mode .container header,
+        body.pdf-mode .actions-header,
+        body.pdf-mode .btn,
+        body.pdf-mode .btn-danger,
+        body.pdf-mode #saved-events-card,
+        body.pdf-mode .help-box,
+        body.pdf-mode .info-tip,
+        body.pdf-mode .margin-group,
+        body.pdf-mode .logistics-card,
+        body.pdf-mode .combustible-params,
+        body.pdf-mode #config-card,
+        body.pdf-mode td:last-child,
+        body.pdf-mode th:last-child,
+        body.pdf-mode .summary-card {
+            display: none !important;
+        }
+
+        /* Hide wholesale costs, internal margins, and salaries in tables */
+        body.pdf-mode #proteins-table th:nth-child(3),
+        body.pdf-mode #proteins-table td:nth-child(3),
+        body.pdf-mode #proteins-table th:nth-child(5),
+        body.pdf-mode #proteins-table td:nth-child(5),
+        body.pdf-mode #proteins-table th:nth-child(6),
+        body.pdf-mode #proteins-table td:nth-child(6),
+        
+        body.pdf-mode #combustibles-table th:nth-child(3),
+        body.pdf-mode #combustibles-table td:nth-child(3),
+        body.pdf-mode #combustibles-table th:nth-child(4),
+        body.pdf-mode #combustibles-table td:nth-child(4),
+        
+        body.pdf-mode #insumos-table th:nth-child(4),
+        body.pdf-mode #insumos-table td:nth-child(4),
+        body.pdf-mode #insumos-table th:nth-child(5),
+        body.pdf-mode #insumos-table td:nth-child(5),
+
+        body.pdf-mode #equipos-table th:nth-child(3),
+        body.pdf-mode #equipos-table td:nth-child(3),
+        body.pdf-mode #equipos-table th:nth-child(4),
+        body.pdf-mode #equipos-table td:nth-child(4),
+        
+        body.pdf-mode #staff-table th:nth-child(3),
+        body.pdf-mode #staff-table td:nth-child(3),
+        body.pdf-mode #staff-table th:nth-child(4),
+        body.pdf-mode #staff-table td:nth-child(4) {
+            display: none !important;
+        }
+
+        body.pdf-mode .dashboard-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        body.pdf-mode .print-header {
+            display: block !important;
+            border-bottom: 2px solid #ea580c !important;
+        }
+
+        body.pdf-mode #pdf-description-print-block {
+            display: block !important;
+            margin-bottom: 2rem;
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        body.pdf-mode #client-pdf-proposal {
+            display: block !important;
+            margin-top: 1.5rem;
+            background: #f8fafc !important;
+            border: 2px solid #ea580c !important;
+        }
+
+        body.pdf-mode input[type="text"],
+        body.pdf-mode input[type="number"],
+        body.pdf-mode input[type="date"],
+        body.pdf-mode textarea,
+        body.pdf-mode select {
+            border: none !important;
+            border-bottom: 1px dashed #cbd5e1 !important;
+            padding: 4px 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            color: #0f172a !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        body.pdf-mode h1, body.pdf-mode h2, body.pdf-mode h3, body.pdf-mode h4, body.pdf-mode h5, body.pdf-mode h6,
+        body.pdf-mode strong, body.pdf-mode span, body.pdf-mode p, body.pdf-mode td, body.pdf-mode th, body.pdf-mode label {
+            color: #0f172a !important;
+        }
+
+        body.pdf-mode .card {
+            background-color: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            color: #0f172a !important;
+        }
+
+        body.pdf-mode .card::before {
+            display: none !important;
+        }
+
+        body.pdf-mode .card-title {
+            border-bottom: 1px solid #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        body.pdf-mode .card-title span {
+            color: #0f172a !important;
+        }
+
+        body.pdf-mode .card-title svg {
+            fill: #ea580c !important;
+        }
+
+        body.pdf-mode .table-responsive {
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        body.pdf-mode table {
+            background-color: #ffffff !important;
+        }
+
+        body.pdf-mode th {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+        }
+
+        body.pdf-mode td {
+            border-bottom: 1px solid #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+
+        body.pdf-mode .brand-text h1,
+        body.pdf-mode .print-header h2 {
+            background: none !important;
+            -webkit-text-fill-color: initial !important;
+            color: #ea580c !important;
+            font-weight: 800 !important;
+        }
+
+        body.pdf-mode .brand-text p,
+        body.pdf-mode .print-header p,
+        body.pdf-mode .saved-event-meta,
+        body.pdf-mode label {
+            color: #475569 !important;
+        }
+
+        body.pdf-mode .summary-row {
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+
+        body.pdf-mode .summary-label {
+            color: #475569 !important;
+        }
+
+        body.pdf-mode .summary-value {
+            color: #0f172a !important;
+        }
+
+        body.pdf-mode .summary-value.grand-total,
+        body.pdf-mode .summary-value.highlight,
+        body.pdf-mode #pdf-quote-number-lbl {
+            background: none !important;
+            -webkit-text-fill-color: initial !important;
+            color: #ea580c !important;
+            font-weight: 800 !important;
+        }
+
+        /* 2. Native Print Styles */
+        @media print {
+            body {
+                padding: 1.5rem !important;
+                background-image: none !important;
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            header, 
+            .container header,
+            .actions-header,
+            .btn,
+            .btn-danger,
+            #saved-events-card,
+            .help-box,
+            .info-tip,
+            .margin-group,
+            .logistics-card,
+            .combustible-params,
+            #config-card,
+            td:last-child,
+            th:last-child,
+            .summary-card {
+                display: none !important;
+            }
+
+            /* Hide wholesale costs, internal margins, and salaries in tables */
+            #proteins-table th:nth-child(3),
+            #proteins-table td:nth-child(3),
+            #proteins-table th:nth-child(5),
+            #proteins-table td:nth-child(5),
+            #proteins-table th:nth-child(6),
+            #proteins-table td:nth-child(6),
+            
+            #combustibles-table th:nth-child(3),
+            #combustibles-table td:nth-child(3),
+            #combustibles-table th:nth-child(4),
+            #combustibles-table td:nth-child(4),
+            
+            #insumos-table th:nth-child(4),
+            #insumos-table td:nth-child(4),
+            #insumos-table th:nth-child(5),
+            #insumos-table td:nth-child(5),
+
+            #equipos-table th:nth-child(3),
+            #equipos-table td:nth-child(3),
+            #equipos-table th:nth-child(4),
+            #equipos-table td:nth-child(4),
+            
+            #staff-table th:nth-child(3),
+            #staff-table td:nth-child(3),
+            #staff-table th:nth-child(4),
+            #staff-table td:nth-child(4) {
+                display: none !important;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .print-header {
+                display: block !important;
+                border-bottom: 2px solid #ea580c !important;
+            }
+
+            #pdf-description-print-block {
+                display: block !important;
+                margin-bottom: 2rem;
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+            #client-pdf-proposal {
+                display: block !important;
+                margin-top: 1.5rem;
+                background: #f8fafc !important;
+                border: 2px solid #ea580c !important;
+            }
+
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            textarea,
+            select {
+                border: none !important;
+                border-bottom: 1px dashed #cbd5e1 !important;
+                padding: 4px 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                color: #0f172a !important;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+            }
+
+            h1, h2, h3, h4, h5, h6, strong, span, p, td, th, label {
+                color: #0f172a !important;
+            }
+
+            .card {
+                background-color: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                color: #0f172a !important;
+            }
+
+            .card::before {
+                display: none !important;
+            }
+
+            .card-title {
+                border-bottom: 1px solid #e2e8f0 !important;
+                color: #0f172a !important;
+            }
+
+            .card-title span {
+                color: #0f172a !important;
+            }
+
+            .card-title svg {
+                fill: #ea580c !important;
+            }
+
+            .table-responsive {
+                border: 1px solid #e2e8f0 !important;
+            }
+
+            table {
+                background-color: #ffffff !important;
+            }
+
+            th {
+                background-color: #f1f5f9 !important;
+                color: #475569 !important;
+                border-bottom: 1px solid #cbd5e1 !important;
+            }
+
+            td {
+                border-bottom: 1px solid #f1f5f9 !important;
+                color: #0f172a !important;
+            }
+
+            .brand-text h1,
+            .print-header h2 {
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+                color: #ea580c !important;
+                font-weight: 800 !important;
+            }
+
+            .brand-text p,
+            .print-header p,
+            .saved-event-meta,
+            label {
+                color: #475569 !important;
+            }
+
+            .summary-row {
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+
+            .summary-label {
+                color: #475569 !important;
+            }
+
+            .summary-value {
+                color: #0f172a !important;
+            }
+
+            .summary-value.grand-total,
+            .summary-value.highlight,
+            #pdf-quote-number-lbl {
+                background: none !important;
+                -webkit-text-fill-color: initial !important;
+                color: #ea580c !important;
+                font-weight: 800 !important;
+            }
+        }
+
+        /* SVG Definitions for coloring via gradients */
+        svg.gradient-fill path {
+            fill: url(#fireGrad);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--card-border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+
+
+    
+
+        /* ACA Chile soft-brand overrides */
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --card-border: #dbe4f0;
+            --input-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --primary-grad: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            --secondary-grad: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            --accent-color: #ea580c;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --shadow: 0 24px 60px -28px rgba(15, 23, 42, 0.25);
+            --transition: all 0.25s ease;
+        }
+
+        * { font-family: 'Inter', 'Outfit', sans-serif; }
+
+        body {
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.14) 0, transparent 45%),
+                radial-gradient(at 100% 0%, rgba(251, 191, 36, 0.08) 0, transparent 30%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0, transparent 35%);
+        }
+
+        .container {
+            max-width: 1440px;
+            padding: 0 1rem 2rem;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-bottom-color: #e2e8f0;
+            box-shadow: 0 18px 50px -30px rgba(15, 23, 42, 0.28);
+            margin-left: 0;
+            margin-right: 0;
+            border-radius: 0 0 24px 24px;
+        }
+
+        .brand img, .aca-logo {
+            filter: none;
+        }
+
+        .brand-text p {
+            color: #475569;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .card {
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .card-title {
+            border-bottom-color: rgba(148, 163, 184, 0.25);
+        }
+
+        .btn {
+            box-shadow: 0 14px 30px -22px rgba(15, 23, 42, 0.5);
+        }
+
+        .btn-secondary {
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #dbe4f0;
+        }
+
+        .btn-secondary:hover {
+            background: #fff;
+        }
+
+        label {
+            color: #475569;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            color: #0f172a;
+            background: #fff;
+            border-color: #cbd5e1;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: rgba(249, 115, 22, 0.7);
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+        }
+
+        table th {
+            background: rgba(249, 115, 22, 0.09) !important;
+            color: #9a3412 !important;
+        }
+
+        table td {
+            color: #0f172a;
+            border-color: rgba(226, 232, 240, 0.9);
+        }
+
+        .summary-box, .summary-card, .help-box, .info-tip {
+            border-color: rgba(249, 115, 22, 0.16) !important;
+            background: rgba(255,255,255,0.95) !important;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- SVG Gradient Definition -->
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+        <linearGradient id="fireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f97316" />
+            <stop offset="100%" stop-color="#ef4444" />
+        </linearGradient>
+    </svg>
+
+    <div class="container" id="pdf-print-area">
+        <!-- Print-only Header (Official layout with logo, name, number, date) -->
+        <div class="print-header">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ea580c; padding-bottom: 1rem; margin-bottom: 1.5rem; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <img id="pdf-logo-img" src="" alt="Logo Equipo" style="height: 64px; width: auto; object-fit: contain; display: none;">
+                    <img id="pdf-aca-logo-img" src="__ACA_LOGO_URL__" alt="Logo ACA" style="height: 64px; width: auto; object-fit: contain;">
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                    <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0; font-weight: 500;">Costeo de asados y eventos</p>
+                </div>
+            </div>
+            
+            <!-- Metadata print table -->
+            <div class="card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1.25rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.95rem;">
+                <div>
+                    <strong>Nombre del Evento:</strong> <span id="pdf-event-name-lbl" style="font-weight:600;"></span><br>
+                    <strong>Fecha del Evento:</strong> <span id="pdf-event-date-lbl"></span>
+                </div>
+                <div style="text-align: right;">
+                    <strong>Cotización N°:</strong> <span id="pdf-quote-number-lbl" style="font-weight:700;"></span><br>
+                    <strong>Invitados Confirmados:</strong> <span id="pdf-guests-count-lbl" style="font-weight:600;"></span> personas
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header (Always visible / Sticky) -->
+        <header>
+            <div class="brand">
+                <img class="aca-logo" src="__ACA_LOGO_URL__" alt="Logo ACA">
+                <div class="brand-text">
+                    <p>Costeo de asados y eventos</p>
+                </div>
+            </div>
+            <div class="actions-header">
+                <button class="btn btn-secondary" onclick="resetForm()">
+                    <!-- Trash SVG -->
+                    <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
+                    Limpiar
+                </button>
+                <button class="btn btn-primary" onclick="exportToPDF()">
+                    <!-- PDF Icon -->
+                    <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m-9.5 6H11v5h-.5l-.5-.5V9m-3 0H8v5H5V9h1.5v1.5h1V9m8.5 2h1.5v1.5h-1.5V14H15V9h3v1.5h-1.5V11z"/></svg>
+                    Exportar Propuesta PDF
+                </button>
+            </div>
+        </header>
+
+        <!-- Print-only Description block -->
+        <div id="pdf-description-print-block" class="card">
+            <div class="card-title" style="font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px;">
+                <span>Descripción del Servicio</span>
+            </div>
+            <div id="event-comments-print" style="white-space: pre-wrap; font-size: 0.95rem; margin-top: 6px; line-height: 1.6;"></div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Side: Inputs -->
+            <div class="inputs-side">
+                
+                <!-- General Info Card -->
+                <div class="card" id="config-card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Gear SVG -->
+                            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73-1.69-.98l-.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                            Configuración del Evento
+                        </span>
+                    </div>
+                    <div class="tax-notice-box">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <span><strong>Importante:</strong> Los precios ingresados para las proteínas, combustibles, insumos, equipamiento y flete deben ser <strong>valores netos (más I.V.A.)</strong> para un correcto cálculo con impuestos.</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="event-name">Nombre del Evento</label>
+                            <input type="text" id="event-name" placeholder="Ej: Asado Anual Asociación Chile" oninput="updateCalculations()">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-date">Fecha del Evento</label>
+                            <input type="date" id="event-date" onchange="updateCalculations()">
+                        </div>
+                        <div class="form-group">
+                            <label for="quote-number">Cotización N°</label>
+                            <input type="number" id="quote-number" value="1001" min="1" oninput="updateCalculations()">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="guests">Número de Invitados</label>
+                            <input type="number" id="guests" value="30" min="1" oninput="onGuestsChange()">
+                        </div>
+                        <div class="form-group margin-group">
+                            <label for="margin">Margen de Ganancia (%)</label>
+                            <input type="number" id="margin" value="30" min="0" max="99" oninput="updateCalculations()">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 0.5rem;">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="team-logo-input">Logo del Equipo (Reemplaza Logo ACA en el PDF - Opcional)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="file" id="team-logo-input" accept="image/*" onchange="loadTeamLogo(event)" style="padding: 6px 10px; font-size: 0.85rem; border: 1px solid var(--card-border); border-radius: 8px; width: auto; flex-grow: 1;">
+                                <button class="btn btn-danger btn-sm" id="btn-remove-logo" onclick="removeTeamLogo()" style="display: none; padding: 0.5rem 0.8rem; font-size: 0.8rem; height: 100%;">Quitar Logo</button>
+                            </div>
+                            <div id="team-logo-preview-container" style="display: none; margin-top: 8px; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Vista previa logo equipo:</span>
+                                <img id="team-logo-preview" src="" alt="Vista Previa" style="max-height: 40px; width: auto; object-fit: contain; border: 1px solid var(--card-border); border-radius: 4px; padding: 2px; background: white;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 0.5rem;">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="event-comments">Descripción / Comentarios del Evento (Se muestra en el PDF)</label>
+                            <textarea id="event-comments" rows="3" placeholder="Ej: El evento consiste de una puesta en escena de primer nivel con parrilleros calificados..." oninput="updateCalculations()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proteins (Proteínas) Card -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Meat SVG / drumstick -->
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm0-4c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm0-4c0 .83-.67 1.5-1.5 1.5S9 10.33 9 9.5 9.67 8 10.5 8s1.5.67 1.5 1.5z"/></svg>
+                            Proteínas y Carnes
+                        </span>
+                        <button class="btn btn-secondary btn-sm" onclick="addProteinRow()">+ Agregar Corte</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="proteins-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Corte</th>
+                                    <th class="number-col" title="Gramos listos para servir por cada invitado">Neto/Persona (g)</th>
+                                    <th class="number-col" title="Porcentaje de reducción al cocinar">Merma (%)</th>
+                                    <th class="number-col" title="Total crudo a comprar en kilos">Bruto a Comprar (kg)</th>
+                                    <th class="number-col">Precio/kg Neto (más I.V.A.)</th>
+                                    <th class="number-col">Costo Total</th>
+                                    <th class="width-sm"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="info-tip">
+                        <!-- Info icon -->
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <span><strong>Concepto de Merma:</strong> La app calcula la carne cruda real a comprar en base a los gramos cocidos que quieres servir. Ej: Lomo Vetado (25% merma) => para servir 300g netos necesitas comprar 400g crudos.</span>
+                    </div>
+                </div>
+
+                <!-- Charcoal/Firewood (Carbón y Leña) Card -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Flame SVG mini -->
+                            <svg viewBox="0 0 24 24"><path d="M12.01 21.49L23.64 7c-.45-.34-4.93-4-11.64-4C5.28 3 .81 6.66.36 7l11.63 14.49.01.01.01-.01z" fill-opacity=".3"/><path d="M0 7.01l12 14.99 12-14.99C23.55 6.67 19.07 3 12 3 4.93 3 .45 6.67 0 7.01z"/></svg>
+                            Combustible (Carbón / Leña)
+                        </span>
+                        <button class="btn btn-secondary btn-sm" onclick="addCombustibleRow()">+ Agregar Combustible</button>
+                    </div>
+
+                    <!-- Parameterized suggestion inputs -->
+                    <div class="form-row combustible-params" style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1rem;">
+                        <div class="form-group">
+                            <label for="factor-carbon">Parámetro Carbón (kg carbón/kg carne)</label>
+                            <input type="number" id="factor-carbon" value="1.2" min="0.1" step="0.1" oninput="updateCalculations()">
+                        </div>
+                        <div class="form-group">
+                            <label for="factor-lena">Parámetro Leña (kg leña/kg carne)</label>
+                            <input type="number" id="factor-lena" value="1.0" min="0.1" step="0.1" oninput="updateCalculations()">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="combustibles-table">
+                            <thead>
+                                <tr>
+                                    <th>Tipo de Combustible</th>
+                                    <th class="number-col">Cantidad (kg)</th>
+                                    <th class="number-col">Precio Unitario Neto por kg (más I.V.A.)</th>
+                                    <th class="number-col">Total</th>
+                                    <th class="width-sm"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="charcoal-suggestion-tip" class="info-tip">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <span><strong>Sugerencia de Combustible:</strong> Para <span id="total-meat-weight-lbl">0.0</span> kg de carne cruda, se sugiere: <span id="suggested-charcoal-lbl">0.0</span> kg de Carbón y/o <span id="suggested-wood-lbl">0.0</span> kg de Leña.</span>
+                    </div>
+                </div>
+
+                <!-- Equipamiento de Parrilla & Infraestructura Card -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Tool/Wrench SVG icon -->
+                            <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+                            Equipamiento e Infraestructura
+                        </span>
+                        <button class="btn btn-secondary btn-sm" onclick="addEquipoRow()">+ Agregar Equipamiento</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="equipos-table">
+                            <thead>
+                                <tr>
+                                    <th>Ítem de Equipamiento</th>
+                                    <th class="number-col">Cantidad</th>
+                                    <th class="number-col">Costo Alquiler / Uso Neto (más I.V.A.)</th>
+                                    <th class="number-col">Total</th>
+                                    <th class="width-sm"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dinámico (Pre-cargados Parrilla, Fogón, Estaca, Espiedo) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vegetables & Insumos Cards -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Basket SVG -->
+                            <svg viewBox="0 0 24 24"><path d="M17.21 9l-4.39-6.57c-.22-.32-.7-.32-.92 0L7.5 9H2v2h2v10h16V11h2V9h-4.79zM9 9l3-4.5L15 9H9zm9 10H6V11h12v8zm-5-6h-2v4h2v-4z"/></svg>
+                            Vegetales, Acompañamientos e Insumos
+                        </span>
+                        <button class="btn btn-secondary btn-sm" onclick="addInsumoRow()">+ Agregar Ítem</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="insumos-table">
+                            <thead>
+                                <tr>
+                                    <th>Descripción del Insumo / Vegetal</th>
+                                    <th>Categoría</th>
+                                    <th class="number-col">Cantidad</th>
+                                    <th class="number-col">Precio Unitario Neto (más I.V.A.)</th>
+                                    <th class="number-col">Total</th>
+                                    <th class="width-sm"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Personal (Staffing) Card -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>
+                            <!-- People SVG -->
+                            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                            Personal del Evento
+                        </span>
+                        <div class="card-actions-top">
+                            <button class="btn btn-secondary btn-sm" onclick="addCustomStaffRow()">+ Agregar Cargo</button>
+                            <button class="btn btn-primary btn-sm" onclick="applyStaffSuggestions()">Calcular Staff sugerido</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="staff-table">
+                            <thead>
+                                <tr>
+                                    <th>Cargo / Función</th>
+                                    <th class="number-col">Cantidad de Personas</th>
+                                    <th class="number-col">Sueldo / Honorario por Evento (CLP)</th>
+                                    <th class="number-col">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Pre-cargado dinámicamente con los roles -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="info-tip">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <span><strong>Parámetros de Staff:</strong> 1 parrillero c/25 invitados; 1 ayudante de parrilla c/2 parrilleros; 1 mozo c/30 invitados. Cocineros y ayudantes de cocina se manejan de forma manual.</span>
+                    </div>
+                </div>
+
+                <!-- Logística e Imprevistos -->
+                <div class="card logistics-card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Truck SVG -->
+                            <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm12 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm2-6.5h-3V9h3v3z"/></svg>
+                            Logística e Imprevistos (Interno)
+                        </span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="logistics-transport">Costo de Transporte y Flete Neto (más I.V.A.)</label>
+                            <input type="text" id="logistics-transport" value="0" oninput="handleCLPInput(this); updateCalculations()">
+                        </div>
+                        <div class="form-group">
+                            <label for="contingency-percent">Porcentaje de Imprevistos (%)</label>
+                            <input type="number" id="contingency-percent" value="5" min="0" max="30" oninput="updateCalculations()">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side: Sidebar Sticky Results & Save Area -->
+            <div class="sticky-panel">
+                
+                <!-- Financial Results Card (Internal) -->
+                <div class="card summary-card">
+                    <div class="card-title" style="border-bottom: 2px solid rgba(249,115,22,0.3)">
+                        <span>
+                            <!-- Chart SVG -->
+                            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                            Análisis Financiero (Interno)
+                        </span>
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">Costos por Categoría</div>
+                    <div class="summary-row">
+                        <span class="summary-label">Proteínas (Carne)</span>
+                        <span class="summary-value" id="breakdown-proteins-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Combustible (Carbón/Leña)</span>
+                        <span class="summary-value" id="breakdown-combustibles-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Equipamiento e Infraestructura</span>
+                        <span class="summary-value" id="breakdown-equipos-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Vegetales y Acompañamientos</span>
+                        <span class="summary-value" id="breakdown-vegetables-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Insumos y Bebestibles</span>
+                        <span class="summary-value" id="breakdown-insumos-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Personal (Staff)</span>
+                        <span class="summary-value" id="breakdown-staff-lbl">$0</span>
+                    </div>
+                    <div class="summary-row" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+                        <span class="summary-label">Logística y Flete</span>
+                        <span class="summary-value" id="breakdown-transport-lbl">$0</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span class="summary-label">Costo Neto Insumos y Personal</span>
+                        <span class="summary-value" id="net-cost-lbl" style="font-weight: 600;">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Imprevistos de Respaldo</span>
+                        <span class="summary-value" id="contingency-cost-lbl">$0</span>
+                    </div>
+                    <div class="summary-row" style="border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 1rem;">
+                        <span class="summary-label" style="font-weight: 600;">Costo Total del Evento</span>
+                        <span class="summary-value grand-total" id="grand-total-lbl">$0</span>
+                    </div>
+
+                    <div class="summary-row" style="margin-top: 0.5rem;">
+                        <span class="summary-label">Costo Unitario por Persona</span>
+                        <span class="summary-value" id="cost-per-guest-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label" style="font-weight: 600;">Entrada Mínima sugerida (Breakeven)</span>
+                        <span class="summary-value" id="breakeven-ticket-lbl" style="font-size: 1.1rem;">$0</span>
+                    </div>
+                    <div class="summary-row" style="border-top: 1px dashed rgba(249, 115, 22, 0.3); padding-top: 1rem; margin-top: 0.5rem;">
+                        <span class="summary-label" style="font-weight: 600; color: var(--accent-color);">Entrada con Margen Deseado</span>
+                        <span class="summary-value highlight" id="suggested-ticket-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Recaudación Total Proyectada</span>
+                        <span class="summary-value" id="projected-revenue-lbl">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Utilidad Neta Proyectada</span>
+                        <span class="summary-value highlight" id="projected-profit-lbl" style="color: var(--success-color); font-weight: 800;">$0</span>
+                    </div>
+
+                    <div class="help-box" style="margin-top: 1.25rem;">
+                        <strong>Precio Sugerido:</strong> Calcula el valor cobrado por ticket de forma que cubra el costo total y te deje el porcentaje de margen sobre el ingreso de venta.
+                    </div>
+                </div>
+
+                <!-- Client-facing proposal card (Only visible in PDF) -->
+                <div id="client-pdf-proposal" class="card">
+                    <div class="card-title" style="border-bottom: 2px solid var(--accent-color)">
+                        <span>Propuesta Económica para Cliente</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Invitados Confirmados</span>
+                        <span class="summary-value" id="pdf-guests-lbl">0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label" style="font-weight: 500;">Total Gramos Carne por Persona (Neto)</span>
+                        <span class="summary-value" id="pdf-total-grams-lbl" style="font-weight: 600;">0 g</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label" style="font-weight: 600; color: var(--accent-color);">Valor por Persona / Entrada</span>
+                        <span class="summary-value highlight" id="pdf-ticket-price-lbl" style="font-size: 1.4rem;">$0</span>
+                    </div>
+                    <div class="summary-row" style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 5px;">
+                        <span class="summary-label" style="font-weight: 600;">Presupuesto Total / TOTAL FINAL</span>
+                        <span class="summary-value grand-total" id="pdf-total-budget-lbl" style="font-size: 1.6rem;">$0</span>
+                    </div>
+                    <div style="font-size: 0.85rem; text-align: right; margin-top: 10px; font-style: italic; color: #475569 !important; font-weight: 600;">
+                        * Todos los valores presentados son más I.V.A.
+                    </div>
+                </div>
+
+                <!-- Save/Load Scenarios Card -->
+                <div class="card" id="saved-events-card">
+                    <div class="card-title">
+                        <span>
+                            <!-- Diskette SVG -->
+                            <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                            Historial de Cotizaciones
+                        </span>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="save-name">Nombre para Guardar Escenario</label>
+                        <div class="input-group">
+                            <input type="text" id="save-name" placeholder="Ej: Evento Copiapó 50p">
+                            <button class="btn btn-primary btn-sm" onclick="saveCurrentEvent()">Guardar</button>
+                        </div>
+                    </div>
+                    <div class="saved-events-list" id="saved-events-container">
+                        <!-- Cargar dinámicamente -->
+                        <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 10px;">
+                            No hay cotizaciones guardadas.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default Staff Setup (9 requested roles, flete removed)
+        const DEFAULT_STAFF_ROLES = [
+            { id: 'organizador', name: 'Organizador', count: 1, salary: 150000 },
+            { id: 'parrillero', name: 'Parrillero', count: 1, salary: 80000 },
+            { id: 'ayudante-parrilla', name: 'Ayudante Parrilla', count: 0, salary: 45000 },
+            { id: 'cocinero', name: 'Cocinero', count: 0, salary: 60000 },
+            { id: 'ayudante-cocina', name: 'Ayudante cocina', count: 0, salary: 35000 },
+            { id: 'mozo', name: 'Mozo', count: 0, salary: 30000 },
+            { id: 'montaje-desmontaje', name: 'Montaje y desmontaje', count: 0, salary: 40000 },
+            { id: 'animador', name: 'Animador', count: 0, salary: 100000 },
+            { id: 'orquesta', name: 'Orquesta', count: 0, salary: 250000 }
+        ];
+
+        // App state
+        let state = {
+            eventName: '',
+            eventDate: '',
+            quoteNumber: 1001,
+            guests: 30,
+            margin: 30,
+            eventComments: '',
+            factorCarbon: 1.2,
+            factorLena: 1.0,
+            proteins: [],
+            combustibles: [],
+            equipos: [],
+            insumos: [],
+            staff: JSON.parse(JSON.stringify(DEFAULT_STAFF_ROLES)), // deep copy
+            logisticsTransport: 0,
+            contingencyPercent: 5,
+            teamLogo: null
+        };
+
+        // Initialize App on DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedEventsList();
+            
+            // Set today as default date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('event-date').value = today;
+            state.eventDate = today;
+
+            // Generate initial quote number based on saved events count
+            const savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
+            const savedCount = Object.keys(savedEvents).length;
+            const newQuoteNumber = 1000 + savedCount + 1;
+            document.getElementById('quote-number').value = newQuoteNumber;
+            state.quoteNumber = newQuoteNumber;
+
+            // Add initial empty rows for users to fill in
+            addProteinRow("Lomo Vetado", 300, 25, 12000);
+            addProteinRow("Choripán / Longaniza", 100, 10, 6000);
+            
+            // Pre-calculate charcoal row based on initial meat
+            addCombustibleRow("CARBON", 0, 1500); 
+            
+            // Pre-load default equipment (Parrilla, Fogón, Estaca, Espiedo)
+            addEquipoRow("Parrilla", 1, 15000);
+            addEquipoRow("Fogón", 0, 20000);
+            addEquipoRow("Estaca", 0, 15000);
+            addEquipoRow("Espiedo", 0, 25000);
+
+            // Add couple of common items (empty rows)
+            addInsumoRow("Ensalada Chilena y Papas Mayo", "Vegetales", 30, 1500);
+            addInsumoRow("Marraqueta / Pan", "Insumos", 30, 400);
+            
+            // Populate staff table
+            renderStaffTable();
+            
+            // Initial calculations
+            updateCalculations();
+        });
+
+        // Parse CLP formatting to number
+        function parseCLP(value) {
+            if (typeof value === 'number') return value;
+            if (!value) return 0;
+            return parseInt(value.toString().replace(/\D/g, ''), 10) || 0;
+        }
+
+        // Format integer to CLP dot format (always using dot as thousands separator)
+        function formatNumberCLP(num) {
+            if (num === null || num === undefined || isNaN(num)) return '0';
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // Format number with dots for thousands and comma for decimals
+        function formatDecimalNumber(num, decimals = 2) {
+            if (num === null || num === undefined || isNaN(num)) return '0';
+            let fixed = Number(num).toFixed(decimals);
+            let parts = fixed.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return parts.join(',');
+        }
+
+        // Handle CLP input keyup/input formatting
+        function handleCLPInput(input) {
+            let cursorPosition = input.selectionStart;
+            let originalLength = input.value.length;
+            
+            let numeric = parseCLP(input.value);
+            if (numeric === 0 && input.value === '') {
+                input.value = '';
+                return;
+            }
+            
+            input.value = formatNumberCLP(numeric);
+            
+            let newLength = input.value.length;
+            cursorPosition = cursorPosition + (newLength - originalLength);
+            input.setSelectionRange(cursorPosition, cursorPosition);
+        }
+
+        // Dynamic Rows Helpers - Proteins
+        function addProteinRow(name = "", netGrams = 300, merma = 20, price = 0) {
+            const tbody = document.querySelector('#proteins-table tbody');
+            const rowId = 'protein_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="protein-name" value="${name}" placeholder="Ej: Lomo Vetado" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="number" class="protein-net-grams number-col" value="${netGrams}" min="0" step="50" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="number" class="protein-merma number-col" value="${merma}" min="0" max="95" oninput="updateCalculations()">
+                </td>
+                <td class="number-col" style="font-weight: 600;">
+                    <span class="protein-bruto-lbl">0.00</span> kg
+                </td>
+                <td>
+                    <input type="text" class="protein-price number-col" value="${formatNumberCLP(price)}" oninput="handleCLPInput(this); updateCalculations()">
+                </td>
+                <td class="number-col" style="font-weight: 600;">
+                    <span class="protein-total-lbl">$0</span>
+                </td>
+                <td>
+                    <button class="btn-danger" onclick="removeRow('${rowId}')">
+                        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            updateCalculations();
+        }
+
+        // Dynamic Rows Helpers - Combustibles
+        function addCombustibleRow(name = "CARBON", quantity = 0, price = 1500) {
+            const tbody = document.querySelector('#combustibles-table tbody');
+            const rowId = 'combustible_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="combustible-name" value="${name}" placeholder="Ej: CARBON" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="number" class="combustible-qty number-col" value="${quantity}" min="0" step="0.5" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="text" class="combustible-price number-col" value="${formatNumberCLP(price)}" oninput="handleCLPInput(this); updateCalculations()">
+                </td>
+                <td class="number-col" style="font-weight: 600;">
+                    <span class="combustible-total-lbl">$0</span>
+                </td>
+                <td>
+                    <button class="btn-danger" onclick="removeRow('${rowId}')">
+                        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            updateCalculations();
+        }
+
+        // Dynamic Rows Helpers - Equipos
+        function addEquipoRow(name = "", qty = 1, price = 0) {
+            const tbody = document.querySelector('#equipos-table tbody');
+            const rowId = 'equipo_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="equipo-name" value="${name}" placeholder="Ej: Parrilla a carbón" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="number" class="equipo-qty number-col" value="${qty}" min="0" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="text" class="equipo-price number-col" value="${formatNumberCLP(price)}" oninput="handleCLPInput(this); updateCalculations()">
+                </td>
+                <td class="number-col" style="font-weight: 600;">
+                    <span class="equipo-total-lbl">$0</span>
+                </td>
+                <td>
+                    <button class="btn-danger" onclick="removeRow('${rowId}')">
+                        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            updateCalculations();
+        }
+
+        // Dynamic Rows Helpers - Insumos/Otros
+        function addInsumoRow(name = "", category = "Insumos", qty = 30, price = 0) {
+            const tbody = document.querySelector('#insumos-table tbody');
+            const rowId = 'insumo_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="insumo-name" value="${name}" placeholder="Ej: Servilletas / Papas / Pisco" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <select class="insumo-category" onchange="updateCalculations()">
+                        <option value="Insumos" ${category === 'Insumos' ? 'selected' : ''}>Insumos</option>
+                        <option value="Vegetales" ${category === 'Vegetales' ? 'selected' : ''}>Vegetales</option>
+                        <option value="Bebestibles" ${category === 'Bebestibles' ? 'selected' : ''}>Bebestibles</option>
+                        <option value="Vajilla/Decoración" ${category === 'Vajilla/Decoración' ? 'selected' : ''}>Vajilla / Decoración</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="insumo-qty number-col" value="${qty}" min="0" oninput="updateCalculations()">
+                </td>
+                <td>
+                    <input type="text" class="insumo-price number-col" value="${formatNumberCLP(price)}" oninput="handleCLPInput(this); updateCalculations()">
+                </td>
+                <td class="number-col" style="font-weight: 600;">
+                    <span class="insumo-total-lbl">$0</span>
+                </td>
+                <td>
+                    <button class="btn-danger" onclick="removeRow('${rowId}')">
+                        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            updateCalculations();
+        }
+
+        // Render Staff Table (Static roles + fully editable + Custom Roles)
+        function renderStaffTable() {
+            const tbody = document.querySelector('#staff-table tbody');
+            tbody.innerHTML = '';
+            
+            state.staff.forEach((role, idx) => {
+                const tr = document.createElement('tr');
+                
+                const nameCell = role.isCustom 
+                    ? `<div style="display:flex; gap:8px; align-items:center;">
+                         <input type="text" class="staff-role-name" value="${role.name}" oninput="onCustomStaffNameChange(${idx}, this.value)" placeholder="Cargo..." style="padding: 4px 8px; font-size: 0.9rem; border-radius: 8px;">
+                         <button class="btn-danger btn-sm" onclick="removeCustomStaffRow(${idx})" style="padding:4px 8px;">✕</button>
+                       </div>`
+                    : role.name;
+
+                tr.innerHTML = `
+                    <td style="font-weight: 500; color: var(--text-color);">${nameCell}</td>
+                    <td>
+                        <input type="number" class="staff-count number-col" data-idx="${idx}" value="${role.count}" min="0" oninput="onStaffChange(${idx}, 'count', this.value)">
+                    </td>
+                    <td>
+                        <input type="text" class="staff-salary number-col" data-idx="${idx}" value="${formatNumberCLP(role.salary)}" oninput="handleCLPInput(this); onStaffChange(${idx}, 'salary', this.value)">
+                    </td>
+                    <td class="number-col" style="font-weight: 600;">
+                        <span class="staff-subtotal-lbl" id="staff-subtotal-${idx}">$0</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function onStaffChange(index, field, value) {
+            if (field === 'salary') {
+                state.staff[index][field] = parseCLP(value);
+            } else {
+                state.staff[index][field] = Number(value);
+            }
+            updateCalculations();
+        }
+
+        // Add custom cargo
+        function addCustomStaffRow() {
+            state.staff.push({
+                id: 'custom_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                name: 'Cargo Personalizado',
+                count: 1,
+                salary: 50000,
+                isCustom: true
+            });
+            renderStaffTable();
+            updateCalculations();
+        }
+
+        function removeCustomStaffRow(index) {
+            state.staff.splice(index, 1);
+            renderStaffTable();
+            updateCalculations();
+        }
+
+        function onCustomStaffNameChange(index, value) {
+            state.staff[index].name = value;
+            captureState();
+        }
+
+        // Suggest staff quantities based on exact guest count
+        function applyStaffSuggestions() {
+            const guests = state.guests;
+            
+            // 1. Parrillero per 25 people
+            const parrillerosCount = Math.max(1, Math.ceil(guests / 25));
+            
+            // 2. Ayudante de parrilla per 2 parrilleros
+            const ayudantesParrillaCount = Math.floor(parrillerosCount / 2);
+            
+            // 3. Mozo per 30 guests
+            const mozosCount = Math.max(0, Math.ceil(guests / 30));
+
+            state.staff.forEach(role => {
+                if (role.id === 'parrillero') {
+                    role.count = parrillerosCount;
+                } else if (role.id === 'ayudante-parrilla') {
+                    role.count = ayudantesParrillaCount;
+                } else if (role.id === 'mozo') {
+                    role.count = mozosCount;
+                } else if (role.id === 'organizador') {
+                    role.count = 1; // 1 base
+                } else if (role.id === 'montaje-desmontaje') {
+                    role.count = guests > 60 ? 2 : 1;
+                } else if (role.id === 'animador') {
+                    role.count = guests > 100 ? 1 : 0;
+                } else if (role.id === 'orquesta') {
+                    role.count = guests > 120 ? 1 : 0;
+                }
+                // Cocinero and Ayudante Cocina are ignored (kept manual as per user request)
+            });
+            
+            renderStaffTable();
+            updateCalculations();
+        }
+
+        // Guests Input handler
+        function onGuestsChange() {
+            const input = document.getElementById('guests');
+            state.guests = Math.max(1, Number(input.value));
+            updateCalculations();
+        }
+
+        // Main Financial Calculation Engine
+        function updateCalculations() {
+            // Read general configuration
+            state.eventName = document.getElementById('event-name').value;
+            state.eventDate = document.getElementById('event-date').value;
+            state.quoteNumber = Number(document.getElementById('quote-number').value) || 1001;
+            state.margin = Number(document.getElementById('margin').value);
+            state.guests = Math.max(1, Number(document.getElementById('guests').value));
+            state.logisticsTransport = parseCLP(document.getElementById('logistics-transport').value);
+            state.contingencyPercent = Number(document.getElementById('contingency-percent').value);
+            state.eventComments = document.getElementById('event-comments').value;
+            state.factorCarbon = Number(document.getElementById('factor-carbon').value) || 1.2;
+            state.factorLena = Number(document.getElementById('factor-lena').value) || 1.0;
+
+            let totalProteinsCost = 0;
+            let totalMeatBrutoKg = 0;
+            let totalNetGramsPerPerson = 0;
+
+            // 1. Proteins Calculation (Merma & Gross weight)
+            const proteinRows = document.querySelectorAll('#proteins-table tbody tr');
+            proteinRows.forEach(row => {
+                const nameInput = row.querySelector('.protein-name').value;
+                const netGramsInput = Number(row.querySelector('.protein-net-grams').value);
+                const mermaInput = Number(row.querySelector('.protein-merma').value);
+                const priceInput = parseCLP(row.querySelector('.protein-price').value);
+
+                totalNetGramsPerPerson += netGramsInput;
+
+                // Math: Bruto (kg) = (Neto (g) * Invitados) / (1 - Merma) / 1000
+                const mermaDecimal = mermaInput / 100;
+                let brutoKg = 0;
+                if (mermaDecimal < 1) {
+                    brutoKg = (netGramsInput * state.guests) / (1 - mermaDecimal) / 1000;
+                }
+                
+                const totalCost = brutoKg * priceInput;
+                totalProteinsCost += totalCost;
+                totalMeatBrutoKg += brutoKg;
+
+                // Update UI for the row
+                row.querySelector('.protein-bruto-lbl').innerText = formatDecimalNumber(brutoKg, 2);
+                row.querySelector('.protein-total-lbl').innerText = formatCLP(totalCost);
+            });
+
+            // Update Fuel section warning / suggestion values
+            const suggestedCharcoal = totalMeatBrutoKg * state.factorCarbon;
+            const suggestedWood = totalMeatBrutoKg * state.factorLena;
+            
+            document.getElementById('total-meat-weight-lbl').innerText = formatDecimalNumber(totalMeatBrutoKg, 1);
+            document.getElementById('suggested-charcoal-lbl').innerText = formatDecimalNumber(suggestedCharcoal, 1);
+            document.getElementById('suggested-wood-lbl').innerText = formatDecimalNumber(suggestedWood, 1);
+
+            // Auto-update first Combustible row quantity if it's currently 0
+            const firstCombustibleRow = document.querySelector('#combustibles-table tbody tr');
+            if (firstCombustibleRow) {
+                const nameInput = firstCombustibleRow.querySelector('.combustible-name').value.toUpperCase();
+                const qtyInput = firstCombustibleRow.querySelector('.combustible-qty');
+                if (Number(qtyInput.value) === 0) {
+                    if (nameInput.includes('CARBON') && suggestedCharcoal > 0) {
+                        qtyInput.value = Math.ceil(suggestedCharcoal);
+                    } else if (nameInput.includes('LEÑA') && suggestedWood > 0) {
+                        qtyInput.value = Math.ceil(suggestedWood);
+                    }
+                }
+            }
+
+            // 2. Fuel (Combustibles) Calculation
+            let totalCombustiblesCost = 0;
+            const combustibleRows = document.querySelectorAll('#combustibles-table tbody tr');
+            combustibleRows.forEach(row => {
+                const qty = Number(row.querySelector('.combustible-qty').value);
+                const price = parseCLP(row.querySelector('.combustible-price').value);
+                const subtotal = qty * price;
+                totalCombustiblesCost += subtotal;
+                row.querySelector('.combustible-total-lbl').innerText = formatCLP(subtotal);
+            });
+
+            // 3. Equipos Calculation
+            let totalEquiposCost = 0;
+            const equipoRows = document.querySelectorAll('#equipos-table tbody tr');
+            equipoRows.forEach(row => {
+                const qty = Number(row.querySelector('.equipo-qty').value);
+                const price = parseCLP(row.querySelector('.equipo-price').value);
+                const subtotal = qty * price;
+                totalEquiposCost += subtotal;
+                row.querySelector('.equipo-total-lbl').innerText = formatCLP(subtotal);
+            });
+
+            // 4. Vegetables / Insumos Calculation (Separate categories)
+            let totalVegetablesCost = 0;
+            let totalInsumosCostOnly = 0;
+            const insumoRows = document.querySelectorAll('#insumos-table tbody tr');
+            insumoRows.forEach(row => {
+                const category = row.querySelector('.insumo-category').value;
+                const qty = Number(row.querySelector('.insumo-qty').value);
+                const price = parseCLP(row.querySelector('.insumo-price').value);
+                const subtotal = qty * price;
+                if (category === 'Vegetales') {
+                    totalVegetablesCost += subtotal;
+                } else {
+                    totalInsumosCostOnly += subtotal;
+                }
+                row.querySelector('.insumo-total-lbl').innerText = formatCLP(subtotal);
+            });
+            const totalInsumosCost = totalVegetablesCost + totalInsumosCostOnly;
+
+            // 5. Staff Calculation
+            let totalStaffCost = 0;
+            state.staff.forEach((role, idx) => {
+                const subtotal = role.count * role.salary;
+                totalStaffCost += subtotal;
+                const lbl = document.getElementById(`staff-subtotal-${idx}`);
+                if (lbl) lbl.innerText = formatCLP(subtotal);
+            });
+
+            // 6. Total Calculations & Dashboard
+            const rawCost = totalProteinsCost + totalCombustiblesCost + totalEquiposCost + totalInsumosCost + totalStaffCost + state.logisticsTransport;
+            const contingencyCost = rawCost * (state.contingencyPercent / 100);
+            const grandTotal = rawCost + contingencyCost;
+            
+            const costPerGuest = grandTotal / state.guests;
+            
+            // Suggested ticket price with margin:
+            // Margin formula (gross margin): Selling Price = Cost / (1 - Margin%)
+            let suggestedTicket = 0;
+            if (state.margin < 100) {
+                suggestedTicket = costPerGuest / (1 - (state.margin / 100));
+            } else {
+                suggestedTicket = costPerGuest;
+            }
+
+            const projectedRevenue = suggestedTicket * state.guests;
+            const projectedProfit = Math.max(0, projectedRevenue - grandTotal);
+
+            // Update Breakdown Labels
+            document.getElementById('breakdown-proteins-lbl').innerText = formatCLP(totalProteinsCost);
+            document.getElementById('breakdown-combustibles-lbl').innerText = formatCLP(totalCombustiblesCost);
+            document.getElementById('breakdown-equipos-lbl').innerText = formatCLP(totalEquiposCost);
+            document.getElementById('breakdown-vegetables-lbl').innerText = formatCLP(totalVegetablesCost);
+            document.getElementById('breakdown-insumos-lbl').innerText = formatCLP(totalInsumosCostOnly);
+            document.getElementById('breakdown-staff-lbl').innerText = formatCLP(totalStaffCost);
+            document.getElementById('breakdown-transport-lbl').innerText = formatCLP(state.logisticsTransport);
+
+            // Update Labels (Internal Screen)
+            document.getElementById('net-cost-lbl').innerText = formatCLP(rawCost);
+            document.getElementById('contingency-cost-lbl').innerText = formatCLP(contingencyCost);
+            document.getElementById('grand-total-lbl').innerText = formatCLP(grandTotal);
+            document.getElementById('cost-per-guest-lbl').innerText = formatCLP(costPerGuest);
+            document.getElementById('breakeven-ticket-lbl').innerText = formatCLP(costPerGuest);
+            document.getElementById('suggested-ticket-lbl').innerText = formatCLP(suggestedTicket);
+            document.getElementById('projected-revenue-lbl').innerText = formatCLP(projectedRevenue);
+            document.getElementById('projected-profit-lbl').innerText = formatCLP(projectedProfit);
+
+            // Copy comments to print block
+            document.getElementById('event-comments-print').innerText = state.eventComments || 'Sin descripción del evento.';
+
+            // Format date nicely (DD/MM/YYYY) for PDF
+            let formattedDate = '';
+            if (state.eventDate) {
+                const parts = state.eventDate.split('-');
+                if (parts.length === 3) {
+                    formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                } else {
+                    formattedDate = state.eventDate;
+                }
+            } else {
+                formattedDate = '(Sin Fecha)';
+            }
+
+            // Update Labels (Client-facing PDF Header and Proposal Card)
+            document.getElementById('pdf-event-name-lbl').innerText = state.eventName || 'Asado Gastronómico';
+            document.getElementById('pdf-event-date-lbl').innerText = formattedDate;
+            document.getElementById('pdf-quote-number-lbl').innerText = state.quoteNumber || '1001';
+            document.getElementById('pdf-guests-count-lbl').innerText = state.guests;
+            
+            document.getElementById('pdf-guests-lbl').innerText = state.guests;
+            document.getElementById('pdf-total-grams-lbl').innerText = formatDecimalNumber(totalNetGramsPerPerson, 0) + ' g';
+            document.getElementById('pdf-ticket-price-lbl').innerText = formatCLP(suggestedTicket);
+            document.getElementById('pdf-total-budget-lbl').innerText = formatCLP(projectedRevenue);
+        }
+
+        // Format numbers to CLP Currency (e.g. $15.500)
+        function formatCLP(num) {
+            return '$' + formatNumberCLP(num);
+        }
+
+        // Calculate total selling price from state to show in historical list
+        function calculateTotalFromState(s) {
+            let totalProteinsCost = 0;
+            
+            // 1. Proteins
+            if (s.proteins) {
+                s.proteins.forEach(p => {
+                    const mermaDecimal = p.merma / 100;
+                    let brutoKg = 0;
+                    if (mermaDecimal < 1) {
+                        brutoKg = (p.netGrams * s.guests) / (1 - mermaDecimal) / 1000;
+                    }
+                    totalProteinsCost += brutoKg * p.price;
+                });
+            }
+
+            // 2. Fuel (Combustibles)
+            let totalCombustiblesCost = 0;
+            if (s.combustibles) {
+                s.combustibles.forEach(c => {
+                    totalCombustiblesCost += c.qty * c.price;
+                });
+            }
+
+            // 3. Equipos
+            let totalEquiposCost = 0;
+            if (s.equipos) {
+                s.equipos.forEach(eq => {
+                    totalEquiposCost += eq.qty * eq.price;
+                });
+            }
+
+            // 4. Insumos
+            let totalInsumosCost = 0;
+            if (s.insumos) {
+                s.insumos.forEach(i => {
+                    totalInsumosCost += i.qty * i.price;
+                });
+            }
+
+            // 5. Staff
+            let totalStaffCost = 0;
+            if (s.staff) {
+                s.staff.forEach(role => {
+                    totalStaffCost += role.count * role.salary;
+                });
+            }
+
+            const logistics = s.logisticsTransport || 0;
+            const contingencyPercent = s.contingencyPercent || 0;
+
+            const rawCost = totalProteinsCost + totalCombustiblesCost + totalEquiposCost + totalInsumosCost + totalStaffCost + logistics;
+            const contingencyCost = rawCost * (contingencyPercent / 100);
+            const grandTotal = rawCost + contingencyCost;
+
+            const costPerGuest = grandTotal / s.guests;
+            let suggestedTicket = 0;
+            if (s.margin < 100) {
+                suggestedTicket = costPerGuest / (1 - (s.margin / 100));
+            } else {
+                suggestedTicket = costPerGuest;
+            }
+            return suggestedTicket * s.guests;
+        }
+
+        // Local Storage - Save Scenarios
+        function saveCurrentEvent() {
+            const saveNameInput = document.getElementById('save-name');
+            const saveName = saveNameInput.value.trim();
+            if (!saveName) {
+                alert('Por favor ingresa un nombre para guardar esta cotización.');
+                return;
+            }
+
+            // Capture state from inputs
+            captureState();
+            
+            let savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
+            savedEvents[saveName] = {
+                date: new Date().toLocaleDateString('es-CL'),
+                state: state
+            };
+            localStorage.setItem('asador_costeador_scenarios', JSON.stringify(savedEvents));
+            saveNameInput.value = '';
+            loadSavedEventsList();
+            alert('¡Cotización "' + saveName + '" guardada exitosamente!');
+        }
+
+        // Capture current DOM state into the state variable
+        function captureState() {
+            state.eventName = document.getElementById('event-name').value;
+            state.eventDate = document.getElementById('event-date').value;
+            state.quoteNumber = Number(document.getElementById('quote-number').value) || 1001;
+            state.guests = Number(document.getElementById('guests').value);
+            state.margin = Number(document.getElementById('margin').value);
+            state.logisticsTransport = parseCLP(document.getElementById('logistics-transport').value);
+            state.contingencyPercent = Number(document.getElementById('contingency-percent').value);
+            state.eventComments = document.getElementById('event-comments').value;
+            state.factorCarbon = Number(document.getElementById('factor-carbon').value) || 1.2;
+            state.factorLena = Number(document.getElementById('factor-lena').value) || 1.0;
+
+            // Proteins
+            state.proteins = [];
+            document.querySelectorAll('#proteins-table tbody tr').forEach(row => {
+                state.proteins.push({
+                    name: row.querySelector('.protein-name').value,
+                    netGrams: Number(row.querySelector('.protein-net-grams').value),
+                    merma: Number(row.querySelector('.protein-merma').value),
+                    price: parseCLP(row.querySelector('.protein-price').value)
+                });
+            });
+
+            // combustibles
+            state.combustibles = [];
+            document.querySelectorAll('#combustibles-table tbody tr').forEach(row => {
+                state.combustibles.push({
+                    name: row.querySelector('.combustible-name').value,
+                    qty: Number(row.querySelector('.combustible-qty').value),
+                    price: parseCLP(row.querySelector('.combustible-price').value)
+                });
+            });
+
+            // Equipos
+            state.equipos = [];
+            document.querySelectorAll('#equipos-table tbody tr').forEach(row => {
+                state.equipos.push({
+                    name: row.querySelector('.equipo-name').value,
+                    qty: Number(row.querySelector('.equipo-qty').value),
+                    price: parseCLP(row.querySelector('.equipo-price').value)
+                });
+            });
+
+            // Insumos
+            state.insumos = [];
+            document.querySelectorAll('#insumos-table tbody tr').forEach(row => {
+                state.insumos.push({
+                    name: row.querySelector('.insumo-name').value,
+                    category: row.querySelector('.insumo-category').value,
+                    qty: Number(row.querySelector('.insumo-qty').value),
+                    price: parseCLP(row.querySelector('.insumo-price').value)
+                });
+            });
+        }
+
+        // Load Saved list
+        function loadSavedEventsList() {
+            const container = document.getElementById('saved-events-container');
+            container.innerHTML = '';
+            
+            const savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
+            const keys = Object.keys(savedEvents);
+
+            if (keys.length === 0) {
+                container.innerHTML = `
+                    <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 10px;">
+                        No hay cotizaciones guardadas.
+                    </div>`;
+                return;
+            }
+
+            keys.forEach(key => {
+                const item = savedEvents[key];
+                const div = document.createElement('div');
+                div.className = 'saved-event-item';
+                div.innerHTML = `
+                    <div class="saved-event-info" onclick="loadSavedEvent('${key}')">
+                        <span class="saved-event-name">${key}</span>
+                        <span class="saved-event-meta">${item.date} • ${item.state.guests} invitados • ${formatCLP(calculateTotalFromState(item.state))}</span>
+                    </div>
+                    <button class="btn-danger btn-sm" onclick="deleteSavedEvent('${key}')" style="padding:4px 8px;">✕</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Load scenario into App
+        function loadSavedEvent(key) {
+            const savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
+            const target = savedEvents[key];
+            if (!target) return;
+
+            state = JSON.parse(JSON.stringify(target.state)); // deep copy
+
+            // Fill basic fields
+            document.getElementById('event-name').value = state.eventName || '';
+            document.getElementById('event-date').value = state.eventDate || '';
+            document.getElementById('quote-number').value = state.quoteNumber || 1001;
+            document.getElementById('guests').value = state.guests;
+            document.getElementById('margin').value = state.margin;
+            document.getElementById('logistics-transport').value = formatNumberCLP(state.logisticsTransport || 0);
+            document.getElementById('contingency-percent').value = state.contingencyPercent;
+            document.getElementById('event-comments').value = state.eventComments || '';
+            document.getElementById('factor-carbon').value = state.factorCarbon || 1.2;
+            document.getElementById('factor-lena').value = state.factorLena || 1.0;
+
+            // Load custom team logo if exists
+            if (state.teamLogo) {
+                document.getElementById('team-logo-preview').src = state.teamLogo;
+                document.getElementById('team-logo-preview-container').style.display = 'flex';
+                document.getElementById('btn-remove-logo').style.display = 'inline-flex';
+                
+                const pdfLogoImg = document.getElementById('pdf-logo-img');
+                pdfLogoImg.src = state.teamLogo;
+                pdfLogoImg.style.display = 'inline-block';
+            } else {
+                document.getElementById('team-logo-input').value = '';
+                document.getElementById('team-logo-preview').src = '';
+                document.getElementById('team-logo-preview-container').style.display = 'none';
+                document.getElementById('btn-remove-logo').style.display = 'none';
+                
+                const pdfLogoImg = document.getElementById('pdf-logo-img');
+                pdfLogoImg.src = '';
+                pdfLogoImg.style.display = 'none';
+            }
+
+            // Clear and render tables
+            document.querySelector('#proteins-table tbody').innerHTML = '';
+            state.proteins.forEach(p => {
+                addProteinRow(p.name, p.netGrams, p.merma, p.price);
+            });
+
+            document.querySelector('#combustibles-table tbody').innerHTML = '';
+            state.combustibles.forEach(c => {
+                addCombustibleRow(c.name, c.qty, c.price);
+            });
+
+            document.querySelector('#equipos-table tbody').innerHTML = '';
+            if (state.equipos) {
+                state.equipos.forEach(eq => {
+                    addEquipoRow(eq.name, eq.qty, eq.price);
+                });
+            } else {
+                // Pre-load default equipments for older saved scenarios
+                addEquipoRow("Parrilla", 1, 15000);
+                addEquipoRow("Fogón", 0, 20000);
+                addEquipoRow("Estaca", 0, 15000);
+                addEquipoRow("Espiedo", 0, 25000);
+            }
+
+            document.querySelector('#insumos-table tbody').innerHTML = '';
+            state.insumos.forEach(i => {
+                addInsumoRow(i.name, i.category, i.qty, i.price);
+            });
+
+            renderStaffTable();
+            updateCalculations();
+        }
+
+        // Delete saved scenario
+        function deleteSavedEvent(key) {
+            if (confirm('¿Estás seguro de que deseas eliminar la cotización "' + key + '"?')) {
+                let savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
+                delete savedEvents[key];
+                localStorage.setItem('asador_costeador_scenarios', JSON.stringify(savedEvents));
+                loadSavedEventsList();
+            }
+        }
+
+        // Handle Team Logo Upload
+        function loadTeamLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                state.teamLogo = dataUrl;
+                
+                // Show preview and remove button
+                const previewImg = document.getElementById('team-logo-preview');
+                const previewCont = document.getElementById('team-logo-preview-container');
+                const removeBtn = document.getElementById('btn-remove-logo');
+                const pdfLogoImg = document.getElementById('pdf-logo-img');
+                
+                previewImg.src = dataUrl;
+                previewCont.style.display = 'flex';
+                removeBtn.style.display = 'inline-flex';
+                
+                // Set PDF logo to team logo and show it
+                pdfLogoImg.src = dataUrl;
+                pdfLogoImg.style.display = 'inline-block';
+                
+                updateCalculations();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove Team Logo
+        function removeTeamLogo() {
+            state.teamLogo = null;
+            
+            // Reset uploader inputs and hide preview
+            document.getElementById('team-logo-input').value = '';
+            document.getElementById('team-logo-preview').src = '';
+            document.getElementById('team-logo-preview-container').style.display = 'none';
+            document.getElementById('btn-remove-logo').style.display = 'none';
+            
+            // Hide team logo in PDF and clear src
+            const pdfLogoImg = document.getElementById('pdf-logo-img');
+            pdfLogoImg.src = '';
+            pdfLogoImg.style.display = 'none';
+            
+            updateCalculations();
+        }
+
+        // Clear everything
+        function resetForm() {
+            if (confirm('¿Deseas limpiar todos los campos del costeo actual?')) {
+                document.getElementById('event-name').value = '';
+                
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('event-date').value = today;
+                
+                // Quote number incremented
+                const savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
+                const savedCount = Object.keys(savedEvents).length;
+                document.getElementById('quote-number').value = 1000 + savedCount + 1;
+                
+                document.getElementById('guests').value = 30;
+                document.getElementById('margin').value = 30;
+                document.getElementById('logistics-transport').value = "0";
+                document.getElementById('contingency-percent').value = 5;
+                document.getElementById('event-comments').value = '';
+                document.getElementById('factor-carbon').value = 1.2;
+                document.getElementById('factor-lena').value = 1.0;
+
+                document.querySelector('#proteins-table tbody').innerHTML = '';
+                document.querySelector('#combustibles-table tbody').innerHTML = '';
+                document.querySelector('#equipos-table tbody').innerHTML = '';
+                document.querySelector('#insumos-table tbody').innerHTML = '';
+
+                state.staff = JSON.parse(JSON.stringify(DEFAULT_STAFF_ROLES));
+                
+                // Add default empty structure again
+                addProteinRow("", 300, 20, 0);
+                addCombustibleRow("CARBON", 0, 1500);
+                
+                addEquipoRow("Parrilla", 1, 15000);
+                addEquipoRow("Fogón", 0, 20000);
+                addEquipoRow("Estaca", 0, 15000);
+                addEquipoRow("Espiedo", 0, 25000);
+
+                addInsumoRow("", "Insumos", 30, 0);
+                
+                // Reset custom logo
+                state.teamLogo = null;
+                document.getElementById('team-logo-input').value = '';
+                document.getElementById('team-logo-preview').src = '';
+                document.getElementById('team-logo-preview-container').style.display = 'none';
+                document.getElementById('btn-remove-logo').style.display = 'none';
+                
+                // Hide team logo in PDF and clear src
+                const pdfLogoImg = document.getElementById('pdf-logo-img');
+                pdfLogoImg.src = '';
+                pdfLogoImg.style.display = 'none';
+                
+                renderStaffTable();
+                updateCalculations();
+            }
+        }
+
+        // Export current view to PDF using html2pdf (with native printing fallback)
+        function exportToPDF() {
+            captureState();
+            
+            // Add PDF mode class to body to clean up layout (hides internal costs/margins)
+            document.body.classList.add('pdf-mode');
+            
+            const originalTitle = document.title;
+            const printableTitle = 'Cotización_N°' + state.quoteNumber + '_' + (state.eventName ? state.eventName.replace(/\s+/g, '_') : 'Asado');
+            document.title = printableTitle;
+
+            const element = document.getElementById('pdf-print-area');
+
+            // Check if html2pdf library is successfully loaded
+            if (typeof html2pdf !== 'undefined') {
+                const opt = {
+                    margin:       [10, 10, 10, 10], // top, left, bottom, right in mm
+                    filename:     printableTitle + '.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true,
+                        backgroundColor: '#ffffff' // White background for printing
+                    },
+                    jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
+                };
+
+                // Trigger generation
+                html2pdf().set(opt).from(element).save().then(() => {
+                    document.title = originalTitle;
+                    document.body.classList.remove('pdf-mode');
+                }).catch(err => {
+                    console.error('Error generating PDF via html2pdf:', err);
+                    runNativePrintFallback(originalTitle);
+                });
+            } else {
+                // Library not loaded (e.g. offline). Use native browser print utility
+                console.warn('html2pdf.js is not defined. Falling back to native browser print.');
+                runNativePrintFallback(originalTitle);
+            }
+        }
+
+        // Fallback using native browser print utility
+        function runNativePrintFallback(originalTitle) {
+            alert('El generador de PDF local no pudo cargarse (posiblemente por estar sin conexión a Internet). Se abrirá el asistente de impresión del navegador, donde podrás elegir la opción "Guardar como PDF" o imprimir.');
+            window.print();
+            document.title = originalTitle;
+            document.body.classList.remove('pdf-mode');
+        }
+    </script>
+</body>
+</html>
