@@ -1048,7 +1048,7 @@
                 </div>
             </div>
             <div class="actions-header">
-                <button class="btn btn-secondary" onclick="resetForm()">
+                <button type="button" class="btn btn-secondary" onclick="resetForm(event)">
                     <!-- Trash SVG -->
                     <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
                     Limpiar
@@ -1477,63 +1477,84 @@
             { id: 'orquesta', name: 'Orquesta', count: 0, salary: 250000 }
         ];
 
-        // App state
-        let state = {
-            eventName: '',
-            eventDate: '',
-            quoteNumber: 1001,
-            guests: 30,
-            margin: 30,
-            eventComments: '',
-            factorCarbon: 1.2,
-            factorLena: 1.0,
-            proteins: [],
-            combustibles: [],
-            equipos: [],
-            insumos: [],
-            staff: JSON.parse(JSON.stringify(DEFAULT_STAFF_ROLES)), // deep copy
-            logisticsTransport: 0,
-            contingencyPercent: 5,
-            teamLogo: null
-        };
-
-        // Initialize App on DOM Load
-        window.addEventListener('DOMContentLoaded', () => {
-            loadSavedEventsList();
-            
-            // Set today as default date
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('event-date').value = today;
-            state.eventDate = today;
-
-            // Generate initial quote number based on saved events count
+        function getNextQuoteNumber() {
             const savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
-            const savedCount = Object.keys(savedEvents).length;
-            const newQuoteNumber = 1000 + savedCount + 1;
-            document.getElementById('quote-number').value = newQuoteNumber;
-            state.quoteNumber = newQuoteNumber;
+            return 1000 + Object.keys(savedEvents).length + 1;
+        }
 
-            // Add initial empty rows for users to fill in
+        function createDefaultState() {
+            return {
+                eventName: '',
+                eventDate: new Date().toISOString().split('T')[0],
+                quoteNumber: getNextQuoteNumber(),
+                guests: 30,
+                margin: 30,
+                eventComments: '',
+                factorCarbon: 1.2,
+                factorLena: 1.0,
+                proteins: [],
+                combustibles: [],
+                equipos: [],
+                insumos: [],
+                staff: JSON.parse(JSON.stringify(DEFAULT_STAFF_ROLES)),
+                logisticsTransport: 0,
+                contingencyPercent: 5,
+                teamLogo: null
+            };
+        }
+
+        function resetLogoUI() {
+            document.getElementById('team-logo-input').value = '';
+            document.getElementById('team-logo-preview').src = '';
+            document.getElementById('team-logo-preview-container').style.display = 'none';
+            document.getElementById('btn-remove-logo').style.display = 'none';
+
+            const pdfLogoImg = document.getElementById('pdf-logo-img');
+            pdfLogoImg.src = '';
+            pdfLogoImg.style.display = 'none';
+        }
+
+        function syncBasicFieldsFromState() {
+            document.getElementById('event-name').value = state.eventName;
+            document.getElementById('event-date').value = state.eventDate;
+            document.getElementById('quote-number').value = state.quoteNumber;
+            document.getElementById('guests').value = state.guests;
+            document.getElementById('margin').value = state.margin;
+            document.getElementById('logistics-transport').value = formatNumberCLP(state.logisticsTransport);
+            document.getElementById('contingency-percent').value = state.contingencyPercent;
+            document.getElementById('event-comments').value = state.eventComments;
+            document.getElementById('factor-carbon').value = state.factorCarbon;
+            document.getElementById('factor-lena').value = state.factorLena;
+            document.getElementById('save-name').value = '';
+        }
+
+        function seedDefaultRows() {
+            document.querySelector('#proteins-table tbody').innerHTML = '';
+            document.querySelector('#combustibles-table tbody').innerHTML = '';
+            document.querySelector('#equipos-table tbody').innerHTML = '';
+            document.querySelector('#insumos-table tbody').innerHTML = '';
+
             addProteinRow("Lomo Vetado", 300, 25, 12000);
             addProteinRow("Choripán / Longaniza", 100, 10, 6000);
-            
-            // Pre-calculate charcoal row based on initial meat
-            addCombustibleRow("CARBON", 0, 1500); 
-            
-            // Pre-load default equipment (Parrilla, Fogón, Estaca, Espiedo)
+            addCombustibleRow("CARBON", 0, 1500);
             addEquipoRow("Parrilla", 1, 15000);
             addEquipoRow("Fogón", 0, 20000);
             addEquipoRow("Estaca", 0, 15000);
             addEquipoRow("Espiedo", 0, 25000);
-
-            // Add couple of common items (empty rows)
             addInsumoRow("Ensalada Chilena y Papas Mayo", "Vegetales", 30, 1500);
             addInsumoRow("Marraqueta / Pan", "Insumos", 30, 400);
-            
-            // Populate staff table
+        }
+
+        // App state
+        let state = createDefaultState();
+
+        // Initialize App on DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedEventsList();
+            syncBasicFieldsFromState();
+            seedDefaultRows();
+            resetLogoUI();
             renderStaffTable();
-            
-            // Initial calculations
             updateCalculations();
         });
 
@@ -2294,101 +2315,28 @@
         // Remove Team Logo
         function removeTeamLogo() {
             state.teamLogo = null;
-            
-            // Reset uploader inputs and hide preview
-            document.getElementById('team-logo-input').value = '';
-            document.getElementById('team-logo-preview').src = '';
-            document.getElementById('team-logo-preview-container').style.display = 'none';
-            document.getElementById('btn-remove-logo').style.display = 'none';
-            
-            // Hide team logo in PDF and clear src
-            const pdfLogoImg = document.getElementById('pdf-logo-img');
-            pdfLogoImg.src = '';
-            pdfLogoImg.style.display = 'none';
-            
+            resetLogoUI();
             updateCalculations();
         }
 
         // Clear everything
-        function resetForm() {
-            if (!confirm('¿Deseas limpiar todos los campos del costeo actual?')) {
-                return;
+        function resetForm(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
             }
 
-            const today = new Date().toISOString().split('T')[0];
-            const savedEvents = JSON.parse(localStorage.getItem('asador_costeador_scenarios') || '{}');
-            const savedCount = Object.keys(savedEvents).length;
-            const nextQuoteNumber = 1000 + savedCount + 1;
+            if (!confirm('¿Deseas limpiar todos los campos del costeo actual?')) {
+                return false;
+            }
 
-            state = {
-                eventName: '',
-                eventDate: today,
-                quoteNumber: nextQuoteNumber,
-                guests: 30,
-                margin: 30,
-                eventComments: '',
-                factorCarbon: 1.2,
-                factorLena: 1.0,
-                proteins: [],
-                combustibles: [],
-                equipos: [],
-                insumos: [],
-                staff: JSON.parse(JSON.stringify(DEFAULT_STAFF_ROLES)),
-                logisticsTransport: 0,
-                contingencyPercent: 5,
-                teamLogo: null
-            };
-
-            document.getElementById('event-name').value = '';
-            document.getElementById('event-date').value = today;
-            document.getElementById('quote-number').value = nextQuoteNumber;
-            document.getElementById('guests').value = 30;
-            document.getElementById('margin').value = 30;
-            document.getElementById('logistics-transport').value = '0';
-            document.getElementById('contingency-percent').value = 5;
-            document.getElementById('event-comments').value = '';
-            document.getElementById('factor-carbon').value = 1.2;
-            document.getElementById('factor-lena').value = 1.0;
-            document.getElementById('save-name').value = '';
-
-            document.querySelector('#proteins-table tbody').innerHTML = '';
-            document.querySelector('#combustibles-table tbody').innerHTML = '';
-            document.querySelector('#equipos-table tbody').innerHTML = '';
-            document.querySelector('#insumos-table tbody').innerHTML = '';
-
-            addProteinRow('Lomo Vetado', 300, 25, 12000);
-            addProteinRow('Choripán / Longaniza', 100, 10, 6000);
-            addCombustibleRow('CARBON', 0, 1500);
-            addEquipoRow('Parrilla', 1, 15000);
-            addEquipoRow('Fogón', 0, 20000);
-            addEquipoRow('Estaca', 0, 15000);
-            addEquipoRow('Espiedo', 0, 25000);
-            addInsumoRow('Ensalada Chilena y Papas Mayo', 'Vegetales', 30, 1500);
-            addInsumoRow('Marraqueta / Pan', 'Insumos', 30, 400);
-
-            document.getElementById('team-logo-input').value = '';
-            document.getElementById('team-logo-preview').src = '';
-            document.getElementById('team-logo-preview-container').style.display = 'none';
-            document.getElementById('btn-remove-logo').style.display = 'none';
-
-            const pdfLogoImg = document.getElementById('pdf-logo-img');
-            pdfLogoImg.src = '';
-            pdfLogoImg.style.display = 'none';
-
-            const printFields = [
-                'pdf-event-name-lbl',
-                'pdf-event-date-lbl',
-                'pdf-quote-number-lbl',
-                'pdf-guests-count-lbl',
-                'event-comments-print'
-            ];
-            printFields.forEach((id) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = '';
-            });
-
+            state = createDefaultState();
+            syncBasicFieldsFromState();
+            seedDefaultRows();
+            resetLogoUI();
             renderStaffTable();
             updateCalculations();
+            return false;
         }
 
         // Export current view to PDF using html2pdf (with native printing fallback)
