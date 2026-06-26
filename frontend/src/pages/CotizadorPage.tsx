@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import acaLogoUrl from '@/assets/aca-logo.svg';
+import { getOfficialAcaLogoUrl } from '@/config/branding';
 import cotizadorTemplate from '@/assets/cotizador/cotizador-template.html?raw';
 
 const TEMPLATE_LOGO_TOKEN = '__ACA_LOGO_URL__';
@@ -8,7 +8,7 @@ const CotizadorPage = () => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const iframeHtml = useMemo(
-    () => cotizadorTemplate.replaceAll(TEMPLATE_LOGO_TOKEN, acaLogoUrl),
+    () => cotizadorTemplate.replaceAll(TEMPLATE_LOGO_TOKEN, getOfficialAcaLogoUrl()),
     [],
   );
 

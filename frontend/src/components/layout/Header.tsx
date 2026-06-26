@@ -5,16 +5,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserMenu, AuthModal } from '../auth';
 import SearchBar from '../SearchBar';
 import logoFallback from '@/assets/aca-logo.svg';
-
-const DEFAULT_HEADER_LOGO = 'https://pub-9edd01c5f73442228a840ca5c8fca38a.r2.dev/home/img-1762489301673-11k166.jpg';
+import { getOfficialAcaLogoUrl } from '@/config/branding';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const envLogoUrl = (import.meta.env.VITE_HEADER_LOGO_URL as string | undefined)?.trim();
-  const [logoSrc, setLogoSrc] = useState<string>(envLogoUrl || DEFAULT_HEADER_LOGO);
+  const [logoSrc, setLogoSrc] = useState<string>(getOfficialAcaLogoUrl());
 
   const navigation = [
     { name: 'Inicio', href: '/' },
