@@ -1048,7 +1048,7 @@
                 </div>
             </div>
             <div class="actions-header">
-                <button type="button" class="btn btn-secondary" onclick="resetForm(event)">
+                <button type="button" id="reset-form-btn" class="btn btn-secondary">
                     <!-- Trash SVG -->
                     <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
                     Limpiar
@@ -1466,8 +1466,8 @@
     <script>
         // Default Staff Setup (9 requested roles, flete removed)
         const DEFAULT_STAFF_ROLES = [
-            { id: 'organizador', name: 'Organizador', count: 1, salary: 150000 },
-            { id: 'parrillero', name: 'Parrillero', count: 1, salary: 80000 },
+            { id: 'organizador', name: 'Organizador', count: 0, salary: 150000 },
+            { id: 'parrillero', name: 'Parrillero', count: 0, salary: 80000 },
             { id: 'ayudante-parrilla', name: 'Ayudante Parrilla', count: 0, salary: 45000 },
             { id: 'cocinero', name: 'Cocinero', count: 0, salary: 60000 },
             { id: 'ayudante-cocina', name: 'Ayudante cocina', count: 0, salary: 35000 },
@@ -1485,20 +1485,20 @@
         function createDefaultState() {
             return {
                 eventName: '',
-                eventDate: new Date().toISOString().split('T')[0],
-                quoteNumber: getNextQuoteNumber(),
-                guests: 30,
-                margin: 30,
+                eventDate: '',
+                quoteNumber: '',
+                guests: '',
+                margin: '',
                 eventComments: '',
-                factorCarbon: 1.2,
-                factorLena: 1.0,
+                factorCarbon: '',
+                factorLena: '',
                 proteins: [],
                 combustibles: [],
                 equipos: [],
                 insumos: [],
                 staff: JSON.parse(JSON.stringify(DEFAULT_STAFF_ROLES)),
-                logisticsTransport: 0,
-                contingencyPercent: 5,
+                logisticsTransport: '',
+                contingencyPercent: '',
                 teamLogo: null
             };
         }
@@ -1515,16 +1515,16 @@
         }
 
         function syncBasicFieldsFromState() {
-            document.getElementById('event-name').value = state.eventName;
-            document.getElementById('event-date').value = state.eventDate;
-            document.getElementById('quote-number').value = state.quoteNumber;
-            document.getElementById('guests').value = state.guests;
-            document.getElementById('margin').value = state.margin;
-            document.getElementById('logistics-transport').value = formatNumberCLP(state.logisticsTransport);
-            document.getElementById('contingency-percent').value = state.contingencyPercent;
-            document.getElementById('event-comments').value = state.eventComments;
-            document.getElementById('factor-carbon').value = state.factorCarbon;
-            document.getElementById('factor-lena').value = state.factorLena;
+            document.getElementById('event-name').value = state.eventName || '';
+            document.getElementById('event-date').value = state.eventDate || '';
+            document.getElementById('quote-number').value = state.quoteNumber ?? '';
+            document.getElementById('guests').value = state.guests ?? '';
+            document.getElementById('margin').value = state.margin ?? '';
+            document.getElementById('logistics-transport').value = state.logisticsTransport === '' || state.logisticsTransport === null || state.logisticsTransport === undefined ? '' : formatNumberCLP(state.logisticsTransport);
+            document.getElementById('contingency-percent').value = state.contingencyPercent ?? '';
+            document.getElementById('event-comments').value = state.eventComments || '';
+            document.getElementById('factor-carbon').value = state.factorCarbon ?? '';
+            document.getElementById('factor-lena').value = state.factorLena ?? '';
             document.getElementById('save-name').value = '';
         }
 
@@ -1534,15 +1534,10 @@
             document.querySelector('#equipos-table tbody').innerHTML = '';
             document.querySelector('#insumos-table tbody').innerHTML = '';
 
-            addProteinRow("Lomo Vetado", 300, 25, 12000);
-            addProteinRow("Choripán / Longaniza", 100, 10, 6000);
-            addCombustibleRow("CARBON", 0, 1500);
-            addEquipoRow("Parrilla", 1, 15000);
-            addEquipoRow("Fogón", 0, 20000);
-            addEquipoRow("Estaca", 0, 15000);
-            addEquipoRow("Espiedo", 0, 25000);
-            addInsumoRow("Ensalada Chilena y Papas Mayo", "Vegetales", 30, 1500);
-            addInsumoRow("Marraqueta / Pan", "Insumos", 30, 400);
+            addProteinRow('', '', '', 0);
+            addCombustibleRow('', '', 0);
+            addEquipoRow('', '', 0);
+            addInsumoRow('', 'Insumos', '', 0);
         }
 
         // App state
@@ -1555,6 +1550,7 @@
             seedDefaultRows();
             resetLogoUI();
             renderStaffTable();
+            document.getElementById('reset-form-btn').addEventListener('click', resetForm);
             updateCalculations();
         });
 
@@ -1835,7 +1831,7 @@
         // Guests Input handler
         function onGuestsChange() {
             const input = document.getElementById('guests');
-            state.guests = Math.max(1, Number(input.value));
+            state.guests = input.value.trim() === '' ? '' : Math.max(1, Number(input.value));
             updateCalculations();
         }
 
@@ -1844,14 +1840,30 @@
             // Read general configuration
             state.eventName = document.getElementById('event-name').value;
             state.eventDate = document.getElementById('event-date').value;
-            state.quoteNumber = Number(document.getElementById('quote-number').value) || 1001;
-            state.margin = Number(document.getElementById('margin').value);
-            state.guests = Math.max(1, Number(document.getElementById('guests').value));
-            state.logisticsTransport = parseCLP(document.getElementById('logistics-transport').value);
-            state.contingencyPercent = Number(document.getElementById('contingency-percent').value);
             state.eventComments = document.getElementById('event-comments').value;
-            state.factorCarbon = Number(document.getElementById('factor-carbon').value) || 1.2;
-            state.factorLena = Number(document.getElementById('factor-lena').value) || 1.0;
+
+            const quoteNumberRaw = document.getElementById('quote-number').value.trim();
+            const guestsRaw = document.getElementById('guests').value.trim();
+            const marginRaw = document.getElementById('margin').value.trim();
+            const logisticsRaw = document.getElementById('logistics-transport').value.trim();
+            const contingencyRaw = document.getElementById('contingency-percent').value.trim();
+            const factorCarbonRaw = document.getElementById('factor-carbon').value.trim();
+            const factorLenaRaw = document.getElementById('factor-lena').value.trim();
+
+            state.quoteNumber = quoteNumberRaw === '' ? '' : Number(quoteNumberRaw);
+            state.guests = guestsRaw === '' ? '' : Math.max(1, Number(guestsRaw));
+            state.margin = marginRaw === '' ? '' : Number(marginRaw);
+            state.logisticsTransport = logisticsRaw === '' ? '' : parseCLP(logisticsRaw);
+            state.contingencyPercent = contingencyRaw === '' ? '' : Number(contingencyRaw);
+            state.factorCarbon = factorCarbonRaw === '' ? '' : Number(factorCarbonRaw);
+            state.factorLena = factorLenaRaw === '' ? '' : Number(factorLenaRaw);
+
+            const guestsCount = typeof state.guests === 'number' ? state.guests : 0;
+            const marginPercent = typeof state.margin === 'number' ? state.margin : 0;
+            const logisticsTransport = typeof state.logisticsTransport === 'number' ? state.logisticsTransport : 0;
+            const contingencyPercent = typeof state.contingencyPercent === 'number' ? state.contingencyPercent : 0;
+            const factorCarbon = typeof state.factorCarbon === 'number' ? state.factorCarbon : 0;
+            const factorLena = typeof state.factorLena === 'number' ? state.factorLena : 0;
 
             let totalProteinsCost = 0;
             let totalMeatBrutoKg = 0;
@@ -1871,7 +1883,7 @@
                 const mermaDecimal = mermaInput / 100;
                 let brutoKg = 0;
                 if (mermaDecimal < 1) {
-                    brutoKg = (netGramsInput * state.guests) / (1 - mermaDecimal) / 1000;
+                    brutoKg = (netGramsInput * guestsCount) / (1 - mermaDecimal) / 1000;
                 }
                 
                 const totalCost = brutoKg * priceInput;
@@ -1884,8 +1896,8 @@
             });
 
             // Update Fuel section warning / suggestion values
-            const suggestedCharcoal = totalMeatBrutoKg * state.factorCarbon;
-            const suggestedWood = totalMeatBrutoKg * state.factorLena;
+            const suggestedCharcoal = totalMeatBrutoKg * factorCarbon;
+            const suggestedWood = totalMeatBrutoKg * factorLena;
             
             document.getElementById('total-meat-weight-lbl').innerText = formatDecimalNumber(totalMeatBrutoKg, 1);
             document.getElementById('suggested-charcoal-lbl').innerText = formatDecimalNumber(suggestedCharcoal, 1);
@@ -1955,22 +1967,24 @@
             });
 
             // 6. Total Calculations & Dashboard
-            const rawCost = totalProteinsCost + totalCombustiblesCost + totalEquiposCost + totalInsumosCost + totalStaffCost + state.logisticsTransport;
-            const contingencyCost = rawCost * (state.contingencyPercent / 100);
+            const rawCost = totalProteinsCost + totalCombustiblesCost + totalEquiposCost + totalInsumosCost + totalStaffCost + logisticsTransport;
+            const contingencyCost = rawCost * (contingencyPercent / 100);
             const grandTotal = rawCost + contingencyCost;
             
-            const costPerGuest = grandTotal / state.guests;
+            const costPerGuest = guestsCount > 0 ? grandTotal / guestsCount : 0;
             
             // Suggested ticket price with margin:
             // Margin formula (gross margin): Selling Price = Cost / (1 - Margin%)
             let suggestedTicket = 0;
-            if (state.margin < 100) {
-                suggestedTicket = costPerGuest / (1 - (state.margin / 100));
-            } else {
-                suggestedTicket = costPerGuest;
+            if (guestsCount > 0) {
+                if (marginPercent < 100) {
+                    suggestedTicket = costPerGuest / (1 - (marginPercent / 100));
+                } else {
+                    suggestedTicket = costPerGuest;
+                }
             }
 
-            const projectedRevenue = suggestedTicket * state.guests;
+            const projectedRevenue = suggestedTicket * guestsCount;
             const projectedProfit = Math.max(0, projectedRevenue - grandTotal);
 
             // Update Breakdown Labels
@@ -1980,7 +1994,7 @@
             document.getElementById('breakdown-vegetables-lbl').innerText = formatCLP(totalVegetablesCost);
             document.getElementById('breakdown-insumos-lbl').innerText = formatCLP(totalInsumosCostOnly);
             document.getElementById('breakdown-staff-lbl').innerText = formatCLP(totalStaffCost);
-            document.getElementById('breakdown-transport-lbl').innerText = formatCLP(state.logisticsTransport);
+            document.getElementById('breakdown-transport-lbl').innerText = formatCLP(logisticsTransport);
 
             // Update Labels (Internal Screen)
             document.getElementById('net-cost-lbl').innerText = formatCLP(rawCost);
@@ -2009,12 +2023,12 @@
             }
 
             // Update Labels (Client-facing PDF Header and Proposal Card)
-            document.getElementById('pdf-event-name-lbl').innerText = state.eventName || 'Asado Gastronómico';
-            document.getElementById('pdf-event-date-lbl').innerText = formattedDate;
-            document.getElementById('pdf-quote-number-lbl').innerText = state.quoteNumber || '1001';
-            document.getElementById('pdf-guests-count-lbl').innerText = state.guests;
+            document.getElementById('pdf-event-name-lbl').innerText = state.eventName || '';
+            document.getElementById('pdf-event-date-lbl').innerText = state.eventDate ? formattedDate : '';
+            document.getElementById('pdf-quote-number-lbl').innerText = state.quoteNumber === '' ? '' : state.quoteNumber;
+            document.getElementById('pdf-guests-count-lbl').innerText = guestsCount > 0 ? guestsCount : '';
             
-            document.getElementById('pdf-guests-lbl').innerText = state.guests;
+            document.getElementById('pdf-guests-lbl').innerText = guestsCount > 0 ? guestsCount : '0';
             document.getElementById('pdf-total-grams-lbl').innerText = formatDecimalNumber(totalNetGramsPerPerson, 0) + ' g';
             document.getElementById('pdf-ticket-price-lbl').innerText = formatCLP(suggestedTicket);
             document.getElementById('pdf-total-budget-lbl').innerText = formatCLP(projectedRevenue);
@@ -2027,6 +2041,11 @@
 
         // Calculate total selling price from state to show in historical list
         function calculateTotalFromState(s) {
+            const guestsCount = Number(s.guests) || 0;
+            const marginPercent = Number(s.margin) || 0;
+            const logistics = Number(s.logisticsTransport) || 0;
+            const contingencyPercent = Number(s.contingencyPercent) || 0;
+
             let totalProteinsCost = 0;
             
             // 1. Proteins
@@ -2035,7 +2054,7 @@
                     const mermaDecimal = p.merma / 100;
                     let brutoKg = 0;
                     if (mermaDecimal < 1) {
-                        brutoKg = (p.netGrams * s.guests) / (1 - mermaDecimal) / 1000;
+                        brutoKg = (p.netGrams * guestsCount) / (1 - mermaDecimal) / 1000;
                     }
                     totalProteinsCost += brutoKg * p.price;
                 });
@@ -2073,21 +2092,20 @@
                 });
             }
 
-            const logistics = s.logisticsTransport || 0;
-            const contingencyPercent = s.contingencyPercent || 0;
-
             const rawCost = totalProteinsCost + totalCombustiblesCost + totalEquiposCost + totalInsumosCost + totalStaffCost + logistics;
             const contingencyCost = rawCost * (contingencyPercent / 100);
             const grandTotal = rawCost + contingencyCost;
 
-            const costPerGuest = grandTotal / s.guests;
+            const costPerGuest = guestsCount > 0 ? grandTotal / guestsCount : 0;
             let suggestedTicket = 0;
-            if (s.margin < 100) {
-                suggestedTicket = costPerGuest / (1 - (s.margin / 100));
-            } else {
-                suggestedTicket = costPerGuest;
+            if (guestsCount > 0) {
+                if (marginPercent < 100) {
+                    suggestedTicket = costPerGuest / (1 - (marginPercent / 100));
+                } else {
+                    suggestedTicket = costPerGuest;
+                }
             }
-            return suggestedTicket * s.guests;
+            return suggestedTicket * guestsCount;
         }
 
         // Local Storage - Save Scenarios
@@ -2117,14 +2135,14 @@
         function captureState() {
             state.eventName = document.getElementById('event-name').value;
             state.eventDate = document.getElementById('event-date').value;
-            state.quoteNumber = Number(document.getElementById('quote-number').value) || 1001;
-            state.guests = Number(document.getElementById('guests').value);
-            state.margin = Number(document.getElementById('margin').value);
-            state.logisticsTransport = parseCLP(document.getElementById('logistics-transport').value);
-            state.contingencyPercent = Number(document.getElementById('contingency-percent').value);
+            state.quoteNumber = document.getElementById('quote-number').value.trim() === '' ? '' : Number(document.getElementById('quote-number').value);
+            state.guests = document.getElementById('guests').value.trim() === '' ? '' : Number(document.getElementById('guests').value);
+            state.margin = document.getElementById('margin').value.trim() === '' ? '' : Number(document.getElementById('margin').value);
+            state.logisticsTransport = document.getElementById('logistics-transport').value.trim() === '' ? '' : parseCLP(document.getElementById('logistics-transport').value);
+            state.contingencyPercent = document.getElementById('contingency-percent').value.trim() === '' ? '' : Number(document.getElementById('contingency-percent').value);
             state.eventComments = document.getElementById('event-comments').value;
-            state.factorCarbon = Number(document.getElementById('factor-carbon').value) || 1.2;
-            state.factorLena = Number(document.getElementById('factor-lena').value) || 1.0;
+            state.factorCarbon = document.getElementById('factor-carbon').value.trim() === '' ? '' : Number(document.getElementById('factor-carbon').value);
+            state.factorLena = document.getElementById('factor-lena').value.trim() === '' ? '' : Number(document.getElementById('factor-lena').value);
 
             // Proteins
             state.proteins = [];
@@ -2211,14 +2229,14 @@
             // Fill basic fields
             document.getElementById('event-name').value = state.eventName || '';
             document.getElementById('event-date').value = state.eventDate || '';
-            document.getElementById('quote-number').value = state.quoteNumber || 1001;
-            document.getElementById('guests').value = state.guests;
-            document.getElementById('margin').value = state.margin;
-            document.getElementById('logistics-transport').value = formatNumberCLP(state.logisticsTransport || 0);
-            document.getElementById('contingency-percent').value = state.contingencyPercent;
+            document.getElementById('quote-number').value = state.quoteNumber ?? '';
+            document.getElementById('guests').value = state.guests ?? '';
+            document.getElementById('margin').value = state.margin ?? '';
+            document.getElementById('logistics-transport').value = state.logisticsTransport === '' || state.logisticsTransport === null || state.logisticsTransport === undefined ? '' : formatNumberCLP(state.logisticsTransport);
+            document.getElementById('contingency-percent').value = state.contingencyPercent ?? '';
             document.getElementById('event-comments').value = state.eventComments || '';
-            document.getElementById('factor-carbon').value = state.factorCarbon || 1.2;
-            document.getElementById('factor-lena').value = state.factorLena || 1.0;
+            document.getElementById('factor-carbon').value = state.factorCarbon ?? '';
+            document.getElementById('factor-lena').value = state.factorLena ?? '';
 
             // Load custom team logo if exists
             if (state.teamLogo) {
@@ -2257,17 +2275,18 @@
                     addEquipoRow(eq.name, eq.qty, eq.price);
                 });
             } else {
-                // Pre-load default equipments for older saved scenarios
-                addEquipoRow("Parrilla", 1, 15000);
-                addEquipoRow("Fogón", 0, 20000);
-                addEquipoRow("Estaca", 0, 15000);
-                addEquipoRow("Espiedo", 0, 25000);
+                addEquipoRow('', '', 0);
             }
 
             document.querySelector('#insumos-table tbody').innerHTML = '';
             state.insumos.forEach(i => {
                 addInsumoRow(i.name, i.category, i.qty, i.price);
             });
+
+            if (!state.proteins || state.proteins.length === 0) addProteinRow('', '', '', 0);
+            if (!state.combustibles || state.combustibles.length === 0) addCombustibleRow('', '', 0);
+            if (!state.equipos || state.equipos.length === 0) addEquipoRow('', '', 0);
+            if (!state.insumos || state.insumos.length === 0) addInsumoRow('', 'Insumos', '', 0);
 
             renderStaffTable();
             updateCalculations();
