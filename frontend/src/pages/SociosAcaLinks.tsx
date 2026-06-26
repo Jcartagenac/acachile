@@ -62,6 +62,12 @@ const SociosAcaLinks: React.FC = () => {
       description: 'Acceso al portal exclusivo para socios ACA'
     },
     {
+      title: 'Cotizador ACA',
+      url: 'https://acachile.com/cotizador',
+      icon: <FileSpreadsheet className="h-6 w-6" />,
+      description: 'Acceso al cotizador privado de eventos'
+    },
+    {
       title: 'Archivos Oficiales',
       url: 'https://drive.google.com/drive/folders/1ze6yNbu3PMrpzgPkpC5nWqXDeNzE7u6o?usp=sharing',
       icon: <FileText className="h-6 w-6" />,
