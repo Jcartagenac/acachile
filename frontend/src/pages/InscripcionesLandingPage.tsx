@@ -5,7 +5,7 @@ import { SEOHelmet } from '../components/SEOHelmet';
 const CLICK_STORAGE_KEY = 'aca_inscripciones_clicked';
 const COUNTER_ENDPOINT = '/api/landing-inscritos';
 const RICKROLL_VIDEO_ID = 'dQw4w9WgXcQ';
-const YOUTUBE_WATCH_URL = `https://www.youtube.com/watch?v=${RICKROLL_VIDEO_ID}&autoplay=1`;
+const YOUTUBE_WATCH_URL = `https://www.youtube.com/watch?v=${RICKROLL_VIDEO_ID}&autoplay=1&mute=1`;
 
 declare global {
   interface Window {
@@ -97,7 +97,7 @@ const InscripcionesLandingPage = () => {
           autoplay: 1,
           controls: 1,
           loop: 1,
-          mute: 0,
+          mute: 1,
           playlist: RICKROLL_VIDEO_ID,
           playsinline: 1,
           rel: 0,
@@ -106,8 +106,6 @@ const InscripcionesLandingPage = () => {
         events: {
           onReady: (event: { target: { unMute: () => void; setVolume: (value: number) => void; playVideo: () => void } }) => {
             playerRef.current = event.target;
-            event.target.unMute();
-            event.target.setVolume(100);
             event.target.playVideo();
           },
         },
@@ -140,6 +138,24 @@ const InscripcionesLandingPage = () => {
 
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const enableAudio = () => {
+      playerRef.current?.unMute();
+      playerRef.current?.setVolume(100);
+      playerRef.current?.playVideo();
+      window.removeEventListener('pointerdown', enableAudio);
+      window.removeEventListener('keydown', enableAudio);
+    };
+
+    window.addEventListener('pointerdown', enableAudio, { once: true });
+    window.addEventListener('keydown', enableAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', enableAudio);
+      window.removeEventListener('keydown', enableAudio);
     };
   }, []);
 
@@ -186,8 +202,8 @@ const InscripcionesLandingPage = () => {
   return (
     <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,167,38,0.2),_transparent_35%),linear-gradient(160deg,_#130a03_0%,_#2b1302_42%,_#070707_100%)] text-white">
       <SEOHelmet
-        title="Inscripciones ACA Chile"
-        description="Landing privada de inscripciones ACA Chile."
+        title="Taller de IA ACA"
+        description="Inscripciones para el Taller de IA ACA."
         url="https://acachile.com/inscripciones"
       />
 
@@ -196,15 +212,15 @@ const InscripcionesLandingPage = () => {
           <section className="relative">
             <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-orange-200">
               <Flame className="h-4 w-4" />
-              Inscripciones especiales
+              Taller de IA ACA
             </div>
 
             <h1 className="mt-6 max-w-2xl font-serif text-5xl leading-none text-orange-50 sm:text-6xl lg:text-7xl">
-              Últimos cupos para el evento más esperado de ACA.
+              Inscripciones abiertas para el Taller de IA ACA.
             </h1>
 
             <p className="mt-6 max-w-xl text-lg leading-8 text-orange-50/78">
-              Reserva tu lugar antes de que se agoten. El acceso queda confirmado al instante y el contador refleja a quienes ya hicieron click para sumarse.
+              Reserva tu lugar antes de que se agoten. El contador refleja a quienes ya hicieron click para sumarse a este taller.
             </p>
 
             <div className="mt-8 flex flex-wrap items-end gap-4">
@@ -226,7 +242,7 @@ const InscripcionesLandingPage = () => {
                   Video con autoplay
                 </div>
                 <p className="mt-2 max-w-xs">
-                  Intentamos reproducirlo con volumen al máximo. Si el navegador bloquea el audio, el click lo abre igual en YouTube.
+                  Ahora arranca automático en modo compatible. En cuanto detecta tu primer gesto, activa audio al máximo.
                 </p>
               </div>
             </div>
