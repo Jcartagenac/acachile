@@ -40,11 +40,19 @@ const InscripcionesLandingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countError, setCountError] = useState('');
   const playerReadyRef = useRef(false);
+  const pendingAudioActivationRef = useRef(false);
   const playerRef = useRef<{
     playVideo: () => void;
     unMute: () => void;
     setVolume: (value: number) => void;
   } | null>(null);
+
+  const activateVideoAudio = () => {
+    pendingAudioActivationRef.current = true;
+    playerRef.current?.unMute();
+    playerRef.current?.setVolume(100);
+    playerRef.current?.playVideo();
+  };
 
   useEffect(() => {
     setRobotsNoIndex();
@@ -107,6 +115,9 @@ const InscripcionesLandingPage = () => {
           onReady: (event: { target: { unMute: () => void; setVolume: (value: number) => void; playVideo: () => void } }) => {
             playerRef.current = event.target;
             event.target.playVideo();
+            if (pendingAudioActivationRef.current) {
+              activateVideoAudio();
+            }
           },
         },
       });
@@ -143,9 +154,7 @@ const InscripcionesLandingPage = () => {
 
   useEffect(() => {
     const enableAudio = () => {
-      playerRef.current?.unMute();
-      playerRef.current?.setVolume(100);
-      playerRef.current?.playVideo();
+      activateVideoAudio();
       window.removeEventListener('pointerdown', enableAudio);
       window.removeEventListener('keydown', enableAudio);
     };
@@ -193,14 +202,15 @@ const InscripcionesLandingPage = () => {
       setCountError('No se pudo registrar el click, pero el video sigue su curso.');
     } finally {
       setIsSubmitting(false);
-      playerRef.current?.unMute();
-      playerRef.current?.setVolume(100);
-      playerRef.current?.playVideo();
+      activateVideoAudio();
     }
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,167,38,0.2),_transparent_35%),linear-gradient(160deg,_#130a03_0%,_#2b1302_42%,_#070707_100%)] text-white">
+    <div
+      className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,167,38,0.2),_transparent_35%),linear-gradient(160deg,_#130a03_0%,_#2b1302_42%,_#070707_100%)] text-white"
+      onClickCapture={activateVideoAudio}
+    >
       <SEOHelmet
         title="Taller de IA ACA"
         description="Inscripciones para el Taller de IA ACA."
