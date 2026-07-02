@@ -64,6 +64,7 @@ const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 const AdminEcommerce = lazy(() => import('./pages/AdminEcommerce'));
 const EleccionesLandingPage = lazy(() => import('./pages/EleccionesLandingPage'));
 const EleccionesEntrevistasPage = lazy(() => import('./pages/EleccionesEntrevistasPage'));
+const InscripcionesLandingPage = lazy(() => import('./pages/InscripcionesLandingPage'));
 const PortalDelSocioLayout = lazy(() => import('./components/portal/PortalDelSocioLayout'));
 const PortalSectionPage = lazy(() => import('./pages/PortalSectionPage'));
 const AdminPortalDelSocio = lazy(() => import('./pages/AdminPortalDelSocio'));
@@ -81,6 +82,21 @@ const LoadingScreen = () => (
 );
 
 function App() {
+  const isInscripcionesHost =
+    typeof window !== 'undefined' && window.location.hostname.startsWith('inscripciones.');
+
+  if (isInscripcionesHost) {
+    return (
+      <Router>
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            <Route path="*" element={<InscripcionesLandingPage />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    );
+  }
+
   return (
     <Router>
       <Layout>
