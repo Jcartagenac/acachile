@@ -219,7 +219,7 @@ const InscripcionesLandingPage = () => {
 
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">
         <div className="grid flex-1 items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
-          <section className="relative">
+          <section className="relative lg:self-end">
             <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/30 bg-orange-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-orange-200">
               <Flame className="h-4 w-4" />
               Taller de IA ACA
@@ -232,7 +232,22 @@ const InscripcionesLandingPage = () => {
             <p className="mt-6 max-w-3xl text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
               Esto fue hecho con IA en 10 minutos, todo esto y mas aprenderas en el taller.
             </p>
+          </section>
 
+          <section className="relative lg:row-span-2">
+            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-orange-500/25 via-red-500/10 to-transparent blur-2xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-black/45 p-3 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <div className="mb-3 flex items-center justify-between rounded-[1.25rem] border border-white/8 bg-black/30 px-4 py-3 text-xs uppercase tracking-[0.25em] text-orange-100/70">
+                <span>Streaming de bienvenida</span>
+                <span>ACA Live</span>
+              </div>
+              <div className="aspect-video overflow-hidden rounded-[1.4rem] bg-black">
+                <div id="aca-rickroll-player" className="h-full w-full" />
+              </div>
+            </div>
+          </section>
+
+          <section className="relative lg:self-start">
             <p className="mt-6 max-w-xl text-lg leading-8 text-orange-50/78">
               Reserva tu lugar antes de que se agoten. El contador refleja a quienes ya hicieron click para sumarse a este taller.
             </p>
@@ -275,19 +290,6 @@ const InscripcionesLandingPage = () => {
             {countError ? (
               <p className="mt-4 text-sm text-orange-200/80">{countError}</p>
             ) : null}
-          </section>
-
-          <section className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-orange-500/25 via-red-500/10 to-transparent blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-black/45 p-3 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-md">
-              <div className="mb-3 flex items-center justify-between rounded-[1.25rem] border border-white/8 bg-black/30 px-4 py-3 text-xs uppercase tracking-[0.25em] text-orange-100/70">
-                <span>Streaming de bienvenida</span>
-                <span>ACA Live</span>
-              </div>
-              <div className="aspect-video overflow-hidden rounded-[1.4rem] bg-black">
-                <div id="aca-rickroll-player" className="h-full w-full" />
-              </div>
-            </div>
           </section>
         </div>
       </div>
