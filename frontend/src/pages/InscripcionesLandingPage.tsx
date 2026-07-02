@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Flame, Volume2 } from 'lucide-react';
+import { ExternalLink, Flame } from 'lucide-react';
 import { SEOHelmet } from '../components/SEOHelmet';
 
 const CLICK_STORAGE_KEY = 'aca_inscripciones_clicked';
@@ -246,15 +246,6 @@ const InscripcionesLandingPage = () => {
                 </div>
               </div>
 
-              <div className="rounded-[1.8rem] border border-orange-400/20 bg-black/20 px-5 py-4 text-sm leading-6 text-orange-50/80">
-                <div className="flex items-center gap-2 font-semibold text-orange-100">
-                  <Volume2 className="h-4 w-4" />
-                  Video con autoplay
-                </div>
-                <p className="mt-2 max-w-xs">
-                  Ahora arranca automático en modo compatible. En cuanto detecta tu primer gesto, activa audio al máximo.
-                </p>
-              </div>
             </div>
 
             <div className="mt-10 flex flex-wrap gap-4">
