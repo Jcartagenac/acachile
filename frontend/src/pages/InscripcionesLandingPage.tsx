@@ -229,6 +229,10 @@ const InscripcionesLandingPage = () => {
               Inscripciones abiertas para el Taller de IA ACA.
             </h1>
 
+            <p className="mt-6 max-w-3xl text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
+              Esto fue hecho con IA en 10 minutos, todo esto y mas aprenderas en el taller.
+            </p>
+
             <p className="mt-6 max-w-xl text-lg leading-8 text-orange-50/78">
               Reserva tu lugar antes de que se agoten. El contador refleja a quienes ya hicieron click para sumarse a este taller.
             </p>
