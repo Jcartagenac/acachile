@@ -188,7 +188,7 @@ const InscripcionesLandingPage = () => {
       <SEOHelmet
         title="Inscripciones ACA Chile"
         description="Landing privada de inscripciones ACA Chile."
-        url="https://inscripciones.acachile.com"
+        url="https://acachile.com/inscripciones"
       />
 
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 sm:px-10 lg:px-12">

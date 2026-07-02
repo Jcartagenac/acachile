@@ -7,7 +7,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-const STANDALONE_PATHS = new Set(['/cotizador']);
+const STANDALONE_PATHS = new Set(['/cotizador', '/inscripciones']);
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();

@@ -82,21 +82,6 @@ const LoadingScreen = () => (
 );
 
 function App() {
-  const isInscripcionesHost =
-    typeof window !== 'undefined' && window.location.hostname.startsWith('inscripciones.');
-
-  if (isInscripcionesHost) {
-    return (
-      <Router>
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="*" element={<InscripcionesLandingPage />} />
-          </Routes>
-        </Suspense>
-      </Router>
-    );
-  }
-
   return (
     <Router>
       <Layout>
@@ -206,6 +191,7 @@ function App() {
           {/* Página de participación sorteo (acceso directo, sin indexar) */}
           <Route path="/participa" element={<ParticipaPage />} />
           <Route path="/condicionessorteo" element={<CondicionesSorteoPage />} />
+          <Route path="/inscripciones" element={<InscripcionesLandingPage />} />
 
           {/* Elecciones - acceso directo solamente */}
           <Route path="/elecciones" element={<EleccionesLandingPage />} />
